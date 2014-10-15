@@ -1,0 +1,101 @@
+\documentclass[12pt]{article} 
+
+% For LuaTeX with libertine 
+
+\usepackage{libertine}
+\usepackage{amsmath,amssymb,wasysym}
+\newcommand{\textgreek}{\relax}
+\newcommand{\texthebrew}{\relax}
+
+\newcommand{\fl}{$\flat$} % use unicode and Tex Gyre Pagella Math instead
+\newcommand{\sh}{$\sharp$}
+\newcommand{\na}{$\natural$}
+
+% math mode macros
+\newcommand{\musicfig}[2]{$\genfrac{}{}{0pt}{1}{\text{#1}}{\text{#2}}$} 
+\newcommand{\blankfig}{\hphantom{$\sharp$}} 
+
+% elision undertie
+\newcommand{\undertie}{\raisebox{-1ex}{$\smallsmile$}}
+
+
+\usepackage[margin=1in]{geometry}
+\usepackage[doublespacing]{setspace}
+\usepackage[none]{hyphenat}
+\usepackage[document]{ragged2e}
+\frenchspacing\sloppy
+
+\usepackage{csquotes}
+\usepackage[notes,backend=biber,bibencoding=utf8]{biblatex-chicago}
+\addbibresource{../../phd/biblio/phd.bib}
+%*******************
+\begin{document}
+
+eß
+
+%from tipa
+\textgreek{a} \& \textgreek{w} signo\undertie a (\emph{la, mi, re})
+
+% from ams 
+coloration symbols: $\ulcorner$ and $\urcorner$.
+
+%{} only when the space after a macro means a literal space
+\fl6 \fl 6 C\sh, D\na{} plus E\fl{}!
+
+%from waysym
+Jupiter \jupiter Moon \leftmoon \rightmoon
+
+\section{%
+Hebrew and Greek
+}
+
+In the Septuagint, the names of these two instruments are translated as the \textgreek{ψαλτήριον} (``psalterion'') and \textgreek{κιθάρα} (``kithara'').
+These \dots{} are dots.
+Copyright \copyright 2014 Andrew A. Cashner, unicode © 2014.
+St. Jerome rendered this passage in the Latin Vulgate with the words \emph{cithara et organo}, transliterating the Greek \textgreek{κιθάρα} and perhaps trying to recuperate the sense of a wind instrument in the other Hebrew word, which the Septuagint translators had turned into a stringed instrument, the ``psalterion.''
+	%
+\footnote{%
+I am grateful to Hebrew-Bible scholar Drayton Benner for his help with the Hebrew. 
+}
+%
+For Christian theology, the most prominent Biblical locus for the Greek \textgreek{κινύρα} and Latin Vulgate \emph{cithara} is in the New Testament Revelation to John.
+In Rev. 14:2--4, John hears a chorus of 144,000 virgins singing ``a new song before the throne,'' and both the Greek and the Latin almost onomatopoetically echo their sound.
+Among English translations only the 1611 King James version (shown below) tries to render this literally.
+
+%********************
+\begin{quote}
+%
+\textgreek{καὶ ἡ φωνὴ ἣν ἤκουσα ὡς κιθαρῳδῶν κιθαριζόντων ἐν ταῖς κιθάραις αὐτῶν.}\\
+%
+\emph{et vocem quam audivi sicut citharoedorum citharizantium in citharis suis}\\
+%
+and I heard the voice of harpers harping with their harps
+%
+\end{quote}
+%********************
+
+In a 1603 commentary on the Apocalypse (Revelation), the Jesuit Francisco Ribera draws on the venerable Bede to interpret the cithara played by the saints in Rev. 14 as symbolic of the saints' bodily mortification: 
+``Counted among the cithara-players of God are all the saints, who, having crucified their flesh with its vices and sinful desires praise God with the psalter and cithara.''%
+	%
+	\footnote{
+	\autocite[429]{Ribera:Apocalypse}: ``Cum citharista Dei omnes sancti sint, qui carnem suam crucifigentes cum vitijs \& concupiscentiis laudenteum in psaltero \& cithara'' (from a Google Books scan of a copy bearing the \emph{ex libris} marking ``from the library of the noviciate of the Company of Jesus in Madrid'').
+This is probably the symbolism behind the use of this reading for the Mass of the Feast of Holy Innocents (Jan. 28).
+	} 
+	%
+
+%*******************
+\section{%
+Accidentals and Stacked Numerals
+}
+
+In the coplas, Padilla matches the \emph{conceptismo} of the poem with similarly intricate musical symbols.
+As we have discussed, ``peregrino tono'' may mean ``wandering song,'' ``strange song (or tone),'' or the plainchant psalm tone the \emph{tonus peregrinus}.
+
+\musicfig{\fl6}{\blankfig4}-\musicfig{\blankfig5}{\na3}. musicfig
+
+Sharping the F would produce strange results---
+musicfig \musicfig{\fl6}{\sh3} sonority 
+in the Tiple and Altus m.~73, where the \fl6 resolves upward; and in m.~74, since the Tiple can only be F\na, a nearly unthinkable diminished octave between the same two voices. 
+Both Fs occur in melodic patterns (G--F--G) where a singer might be tempted to sing the F as an F\sh{} according to \emph{musica ficta} performance practice, but an F\na\ makes more sense in both places.
+
+\end{document}

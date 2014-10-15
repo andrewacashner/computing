@@ -1,0 +1,19 @@
+/* Create pivot table with student names and scores on each assignment */
+
+SELECT student1 AS classid, lastname, firstname, quiz1, quiz2
+FROM
+(SELECT classid AS student1, score AS quiz1 FROM grades WHERE asst_id = 1),
+(SELECT classid AS student2, score AS quiz2 FROM grades WHERE asst_id = 2)
+JOIN students ON student1 = students.classid
+WHERE student1 = student2
+ORDER BY lastname, firstname
+
+/* Create same table but with duplicated rows (PROBLEM) */
+
+SELECT students.classid, lastname, firstname,
+ (CASE WHEN asst_id = 1 THEN score END) AS quiz1,
+ (CASE WHEN asst_id = 2 THEN SCORE END) AS quiz2
+FROM students
+NATURAL JOIN grades
+ORDER BY lastname;
+

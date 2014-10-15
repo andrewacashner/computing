@@ -1,0 +1,89 @@
+UNIT CONVERTER
+Andrew Cashner, 2012-03-02
+
+PRELIMINARY SPECIFICATION
+
+Program will convert a variety of US standard measurements to metric values.
+In later versions, could also convert between values within either system.
+
+User will enter a numeric value and a measurement (e.g., 6 mi or 4 kg), then
+will enter the desired unit of conversion. 
+
+In the first version of the program, this will be a separate prompt.
+In later versions, it could be like Google, where user enters ("6 mi to kg")
+and program parses the whole phrase.
+
+The program will parse the input strings and then apply mathematical
+operations based on the table below.
+User can type h for help, and receive a list of possible units and their
+abbreviations.
+If user enters a unit outside the program's capability, program displays an
+error message.
+If begin and ending units are not compatible (e.g., km to gal), program displays an error message.
+Program will ask user if repeat is desired and loop if so, quit if not.
+Q will quit in middle.
+
+Accuracy to two decimal points.
+
+Included units:
+STANDARD: in, ft, yd, mi, oz, lb, gal, ºF (in future: include cup, Tb, tsp?)
+METRIC:   mm, cm, m, km, g, kg, ml, L, ºC
+
+Later versions will recognize alternate measurement abbrevs?
+
+********************
+
+Development will start with just inches to mm and cm.
+Values in metric will be decimal.
+Values in standard need to follow all standard (no decimal).
+Input will need to recognize fractional standard input.
+
+Start with standard to metric, decimal only.
+
+1 in = 2.54 cm
+1 cm = 0.393701 in
+
+Scratch program:
+Ask for input (and give h or q options): amount to convert
+Get variable values from input (float, char-string) become (startvalue, startunit)
+Ask for unit to convert to (char-string) becomes (endunit)
+If units are outside scope, print error.
+Determine type of unit and class of conversion based on start and end unit:
+ e.g., length, standard-to-metric. These classes stored as numeric values.
+If units are not compatible, print error.
+
+4 possible conversion types (S = standard, M = metric):
+ 1.  M-M
+ 2.  S-S
+ 3.  M-S
+ 4.  S-M
+ 
+3 basic measurement types:
+  1. length 
+  2. area
+  3. volume
+  4. mass (weight)
+  5. temperature (conversion types 1-2 do not apply)
+
+Each measurement receives double encoding, stored in three-value integer string:
+1st dimension- metric (1) or standard (2)
+2nd dimension- length (1), weight (2), or volume (3)
+3rd dimension- code for specific unit (1=mm...)
+
+Conversion type based on comparison of first dimension
+Compatibility based on comparison of second dimension
+
+Based on class of conversion, apply conversion formula to startvalue and store in endvalue.
+  To do conversion:
+  If (start value) = x then
+  	--if (end value) = y then
+	--- conversion between x and y
+	--else if (end value = z then
+	--- conversion between x and z
+
+Print final statement of full conversion.
+Ask if another conversion is desired. Loop or quit.
+
+Variables: char line[100], float startValue, float endValue, char startUnit, char endUnit, int unitType, int conversionType
+
+

@@ -1,0 +1,29 @@
+/* Practice book list for database entry */
+
+# au, ti, loc, pub, yr
+
+---
+King, Stephen
+The Stand
+Garden City, NY
+Doubleday
+1978
+
+---
+Kendrick, Robert
+Singing Jeremiah: Music and Meaning in Holy Week
+Bloomington, IN
+Indiana University Press
+2014
+
+/* Not sure about the date
+ * on this one */
+
+---
+Child, Julia
+Mastering the Art of French Cooking
+New York
+Alred A. Knopf
+1965?
+
+/*****************************************/

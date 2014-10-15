@@ -1,0 +1,66 @@
+% ATHANASIUS KIRCHER, MUSURGIA UNIVERSALIS (ROME, 1650)
+% BOOK 1, PREFACE
+
+% TODO : 
+%  - adjust baselineskips for different font sizes
+%  - add decoration ornaments
+%  - add drop cap with ornaments
+
+\input eplain
+
+\hoffset=0.75in
+\hsize=5in
+
+\def\S{ſ} %char"017F
+\def\mainfont{Cardo}
+\def\ligatures{+liga;+hlig;+rlig;+dlig;+onum}
+\font\Hugefn="\mainfont:\ligatures;letterspace=20" at 48bp
+\font\hugefn="\mainfont:\ligatures;letterspace=10" at 32bp
+\font\largefn="\mainfont:\ligatures;letterspace=5" at 24bp
+\font\bigfn="\mainfont:letterspace=5" at 14bp
+\font\mainfn="\mainfont:\ligatures" at 10bp
+\def\Huge{\openup\jot\Hugefn}
+\def\huge{\openup\jot\hugefn}
+\def\large{\openup\jot\largefn}
+\def\big{\openup\jot\bigfn}
+\mainfn
+
+\def\bktitle{\begingroup\obeylines}
+\def\endbktitle{\endgroup}
+
+\def\chaptitlefont{\largefn}
+\def\chapsubtitlefont{\bigfn}
+\def\chaptitle #1 {\bgroup\chaptitlefont\center #1 \egroup}
+\def\chapsubtitle #1 {\bgroup\chapsubtitlefont\center #1 \egroup}
+
+\def\AE{A\kern -0.2ex E}
+%****************************************
+
+\bktitle
+\line{\Huge MVSVRGI\AE}
+\centerline{\large VNIVERSALIS}
+\centerline{\big SIVE}
+\centerline{\huge ARTIS MAGN\AE}
+\centerline{{\large CONSONI}{\big \raise 1ex \hbox{\ ,}}}
+\centerline{\big ET}
+\centerline{\large DISSONI}
+\centerline{\huge LIBER PRIMVS}
+\centerline{\large ANATOMICVS}
+\centerline{\big DE NATVRAS SONI ET VOCIS.}
+\endbktitle
+
+\chaptitle{PR\AE{}FATIO.}
+
+\chapsubtitle{De auditus præſtantia, \& nobilitate.}
+
+\uppercase{Constitvtvrus} vniuersalem Artis Conſoni, \& Diſſoni in 
+rebus ſingulis huius mundanæ fabricæ eluceſcentem Ideam, vaſtiſſima
+eius commercia ibi vt ordiar congruum eſt, vbi prima eiuſdem 
+conſtituuntur incunabula; Si itaque nulus in hac viſibili mundi machina 
+machina motus foret, nulla quoque corporum foret impulſio, \& hac ceſſante 
+nulla foret aëris agitatio; ſi nulla aëris agitatio, omnia immobilia 
+\& perpetuo naturæque penitus repugnante ſilentio damnata ſilerent.
+
+%************************************************************************
+\bye
+

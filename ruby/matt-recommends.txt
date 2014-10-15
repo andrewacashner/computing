@@ -1,0 +1,5 @@
+rvm - multiple versions
+awesomeprint gem
+bundler
+ruby-doc.org
+stackoverflow

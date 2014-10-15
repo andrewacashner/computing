@@ -1,0 +1,65 @@
+\documentclass[12pt,oneside]{memoir}
+\usepackage{libertine}
+\usepackage{lipsum}
+
+% PAGE LAYOUT
+% sides
+\setlrmarginsandblock{1in}{1in}{*}
+
+% top
+\newlength{\linespace}
+\setlength{\linespace}{\baselineskip}
+\setlength{\headheight}{\onelineskip}
+\setlength{\headsep}{2\linespace}
+\addtolength{\headsep}{-\topskip}
+\setlength{\uppermargin}{1in}
+\addtolength{\uppermargin}{\headheight}
+\addtolength{\uppermargin}{\headsep}
+
+% bottom
+\setlength{\footskip}{2\onelineskip}
+\setlength{\lowermargin}{1in}
+\setlength{\textheight}{\paperheight}
+\addtolength{\textheight}{-\uppermargin}
+\addtolength{\textheight}{-\footskip}
+\addtolength{\textheight}{-\lowermargin}
+
+\checkandfixthelayout
+
+% PARAGRAPH BUILDING
+\DoubleSpacing
+\frenchspacing
+\setlength{\parskip}{0pt}
+\setlength{\parindent}{0.5in}
+
+% PAGE BUILDING
+%\flushbottom
+\feetbelowfloat
+
+% HEADER
+\newcommand{\authorSurname}{Pseudo-Cicero}
+\newcommand{\shorttitle}{Lorem Ipsum}
+
+\copypagestyle{myheadings}{plain}
+\makeoddhead{myheadings}{\scshape\authorSurname}{\scshape\shorttitle}{\thesubsection}
+\pagestyle{myheadings}
+
+%****************************************
+\begin{document}
+
+\chapter{Lorem}
+
+\section{Ipsum}
+
+\lipsum[1-5]
+
+\subsection{Dolor}
+
+\lipsum[6]
+Sator arepo tenet opera rotas.\footnote{\lipsum[11]}
+\lipsum[7-10]
+
+\lipsum[11-20]
+
+\end{document}
+

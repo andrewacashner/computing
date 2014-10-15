@@ -1,0 +1,39 @@
+* COUNT FREQUENCY OF AN INTEGER IN AN ARRAY OF INTEGERS
+* SEARCH WHOLE WORDS ONLY
+* AAC, 2014-10-07
+*
+QUERY	EQU	7		Integer to search for 
+MAX	EQU	10		Number of memory words to search
+BUF	EQU	2000		Storage location for integer array
+TOTAL	EQU	BUF+MAX+1	Storage location for final sum
+LPR	EQU	18
+	ORIG	3000
+START	IOC	0(LPR)
+	ENT1	MAX		rI1 = i = Array index
+	ENT2	0		rI2 = n = counter for found query integers
+LOOP	LDA	BUF,1		Start at last integer in series
+	CMPA	=QUERY=		Search term as constant
+	JNE	NEXTI
+COUNT	INC2	1		If query is found, add to n
+NEXTI	DEC1	1		In either case, decrement i to move to next word
+	J1P	LOOP		While i > 0, move to next word 
+PRINT	ST2	TOTAL		After all words have been processed, print sum
+	LDA	TOTAL
+	CHAR
+	STX	TOTAL
+	OUT	TOTAL(LPR)
+	HLT
+* VALUES TO BE READ IN
+	ORIG 	BUF
+	CON	7
+	CON	2
+	CON	3
+	CON	7
+	CON	1234
+	CON	7	
+	CON	34
+	CON	77
+	CON	7
+	CON	333		There are four "07"s
+	END	START
+

@@ -1,0 +1,2 @@
+{Person's name} was {verb}ing when {number} {adjective (size)} {plural noun (animal)} appeared.
+Luckily, there was a {noun} nearby, who {verb (past tense)} until everyone felt {adjective (emotion)} and went back inside the {noun (building)}.

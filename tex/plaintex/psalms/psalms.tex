@@ -1,0 +1,48 @@
+\parindent=0pt
+
+% Palatino font
+\font\tenrm=pplr at 10pt
+\font\titlefont=pplr scaled\magstep 4 
+\font\numfont=pplr at 7pt
+\font\sc=pplrc at 10pt
+\font\it=pplri 
+\tenrm
+
+\def\Lord{L{\sc ord}}
+\def\poem{\obeylines} % Typeset new line at \n in input file
+\def\title #1 {\bigskip{\titlefont #1}\smallskip}
+\def\verse #1 {{\numfont #1\enspace }}
+\def\caption #1 {{\it #1}\par\medskip}
+
+%************************************************************************
+\title{Psalm 134}
+\caption{A Song of Ascents.}
+
+{\poem
+\verse 1 Come, bless the \Lord !
+\verse 2 Come, all you servants of the \Lord,
+who stand by night in the house of the \Lord.
+\verse 3 Lift up your hands to the holy place, and bless the \Lord.
+May the \Lord, maker of heaven and earth, bless you from Zion.
+}
+
+\title{Psalm 23}
+
+{\poem
+\verse 1 The \Lord\ is my shepherd, I shall not want.
+\verse 2 He maketh me to lie down in green pastures: 
+he leadeth me beside the still waters.
+\verse 3 He restoreth my soul: 
+he leadeth me in paths of righteousness for his names' sake.
+\verse 4 Yea, though I walk through the valley of the shadow of death, 
+I will fear no evil: for thou art with me; 
+thy rod and thy staff, they comfort me.
+\verse 5 Though preparest a table before me 
+in the presence of mine enemies: 
+thou anointest my head with oil; 
+my cup runneth over.
+\verse 6 Surely goodness and mercy shall follow me all the days of my life, 
+and I will dwell in the house of the \Lord\ forever.
+}
+
+\bye

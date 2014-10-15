@@ -1,0 +1,88 @@
+% Test of luatex-plain
+\parindent=0pt
+\hoffset=1in
+\hsize=4in
+
+% Palatino font
+\font\tenrm=file:Alegreya-Regular at 10pt
+\font\numfont=file:Alegreya-Regular at 7pt
+\font\titlefont=file:Alegreya-Regular at 14pt
+\font\it=file:Alegreya-Italic at 10pt
+\font\bf=file:Alegreya-Bold at 10pt
+\font\sc=file:AlegreyaSC-Regular at 10pt
+\tenrm
+
+\def\title#1{\bigskip\bgroup\titlefont#1\egroup\par}
+\def\verse #1 {\bgroup\numfont#1\enspace\egroup}
+\def\caption#1{\medskip\bgroup\it#1\egroup\par}
+\def\startpoem{\bigskip\begingroup\obeylines} 
+\def\endpoem{\endgroup\medskip}
+\def\Lord{\bgroup\sc Lord\egroup}
+\def\Jah{\bgroup\sc Jah\egroup}
+
+%************************************************************************
+\title{Psalm 134}
+
+\caption{A Song of Ascents.}
+
+\startpoem
+Come, bless the \Lord!
+\verse 2 Come, all you servants of the \Lord,
+who stand by night in the house of the \Lord.
+\verse 3 Lift up your hands to the holy place, and bless the \Lord.
+May the \Lord, maker of heaven and earth, bless you from Zion.
+\endpoem
+
+\title{Psalm 23}
+
+\startpoem
+The \Lord\ is my shepherd, I shall not want.
+\verse 2 He maketh me to lie down in green pastures: 
+he leadeth me beside the still waters.
+\verse 3 He restoreth my soul: 
+he leadeth me in paths of righteousness 
+for his names' sake.
+\verse 4 Yea, though I walk through the valley 
+of the shadow of death, 
+I will fear no evil: for thou art with me; 
+thy rod and thy staff, they comfort me.
+
+\verse 5 Though preparest a table before me 
+in the presence of mine enemies: 
+thou anointest my head with oil; 
+my cup runneth over.
+
+\verse 6 Surely goodness and mercy shall follow me 
+all the days of my life, 
+and I will dwell in the house of the \Lord\ forever.
+\endpoem
+
+\title{Salmo 130}
+
+\caption{Cántico gradual}
+
+\startpoem
+De lo profundo, oh Jehová, a ti clamo.
+\verse 2 Señor, oye mi voz;
+Estén atentos tus oídos
+A la voz de mi súplica.
+
+\verse 3 \Jah, si mirares a los pecados,
+¿Quién, oh Señor, podrá mantenerse?
+\verse 4 Pero en ti hay perdón,
+Para que seas reverenciado.
+
+\verse 5 Esperé yo a Jehová, esperó mi alma;
+En su palabra he esperado.
+\verse 6 Mi alma espera a Jehová
+Más que los centinelas a la mañana,
+Más que los centinelas a la mañana.
+
+\verse 7 Espere Israel a Jehová,
+Porque en Jehová hay misericordia,
+Y abundante redención con él;
+\verse 8 Y él redimirá a Israel
+De todos sus pecados.
+\endpoem
+
+\bye

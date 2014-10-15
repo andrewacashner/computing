@@ -1,0 +1,66 @@
+\documentclass{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[greek,english]{babel}
+
+\newcommand{\musicfig}[2]{{{#1}\atop{#2}}}
+\newcommand{\blankfig}{\hphantom{\sharp}}
+\newcommand{\separate}[2]{#1---#2}
+
+\begin{document}
+%*******************
+
+\section{%
+Greeting
+}
+
+Hello, world!
+\textbf{Grüß Gott!}
+
+¡Buenos días!
+\emph{Bonjour.}
+
+Efflorescence of fine ligatures, \emph{De Ætna}.
+
+%*******************
+\section{%
+Typefaces
+}
+
+\begin{itemize}
+	\item{%
+		\emph{This is italic.}
+	} \item{%
+		\textsc{These are small caps.}
+	} \item{%
+		THESE ARE ALL CAPS.
+	} \item{%
+		\sffamily{This is sans serif and \bfseries{bold}.}
+	} \item{%
+		\ttfamily{This is monospace.}
+	}
+\end{itemize}
+
+%*******************
+\section{%
+Symbols
+}
+
+Musical sharp $\sharp$, flat $\flat$, natural $\natural$. 
+A cadential voice-leading pattern of ${{5\hphantom{\natural}}\atop{3\natural}}-\musicfig{\flat6}{\blankfig4}-\musicfig{\blankfig5}{\sharp3}$.
+From $\Gamma$ to \emph{ut}.
+
+\subsection{%
+Greek
+}
+
+In the Septuagint, the names of these two instruments are translated as the \textgreek{ψαλτήριον} (``psalterion'') and \textgreek{κιθάρα} (``kithara'').
+
+%*******************
+\end{document}
+
+
+
+
+

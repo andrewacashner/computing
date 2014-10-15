@@ -1,0 +1,97 @@
+% Test of XeTeX or LuaTeX without system fonts
+
+\documentclass[12pt]{article} 
+
+\usepackage{fontspec}
+\usepackage{amsmath,amssymb,wasysym}
+\setmainfont{Source Code Pro}
+
+\usepackage[american]{babel}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[doublespacing]{setspace}
+\usepackage[none]{hyphenat}
+\usepackage[document]{ragged2e}
+\frenchspacing\sloppy
+\setlength{\RaggedRightParindent}{0.5in}
+
+\usepackage{csquotes}
+\usepackage[notes,backend=biber,bibencoding=utf8]{biblatex-chicago}
+\addbibresource{../../phd/biblio/phd.bib}
+
+%*******************
+% Special characters
+
+% Accidentals
+\newfontfamily{\musicfont}{Tex Gyre Pagella Math}
+\newcommand{\textmusic}[1]{\bgroup\musicfont #1 \egroup}
+\newcommand{\fl}{\textmusic{\char"266D}}
+\newcommand{\na}{\textmusic{\char"266E}}
+\newcommand{\sh}{\textmusic{\char"266F}}
+% Music figures
+\newcommand{\musfig}[2]{$\genfrac{}{}{0pt}{1}{\text{#1}}{\text{#2}}$} 
+\newcommand{\xfl}{\hphantom{\fl}}
+\newcommand{\xna}{\hphantom{\na}}
+\newcommand{\xsh}{\hphantom{\sh}}
+
+% Elision undertie
+\newcommand{\undertie}{\raisebox{-1ex}{$\smallsmile$}}
+
+% Academic dots
+\newcommand{\Dots}{[\dots]}
+
+% GREEK, HEBREW
+\newcommand{\textgreek}{}
+\newcommand{\texthebrew}{}
+
+%*******************
+\begin{document}
+
+eß---em dash--en dash; manual accent esdr\'julo and unicode esrújulo.
+\textgreek{a} \& \textgreek{w} signo\undertie a (\emph{la, mi, re})
+
+% from ams 
+coloration symbols: $\ulcorner$ and $\urcorner$.
+%{} only when the space after a macro means a literal space
+\fl6 \fl 6 C\sh, D\na\ plus E\fl{}!
+%from waysym
+Jupiter \jupiter\ Moon \leftmoon \rightmoon
+Copyright \copyright 2014 Andrew A. Cashner, unicode © 2014.
+
+In the Septuagint, the names of these two instruments are translated as the \textgreek{ψαλτήριον} (``psalterion'') and \textgreek{κιθάρα} (``kithara'').
+These \Dots{} are dots.
+For Christian theology, the most prominent Biblical locus for the Greek \textgreek{κινύρα} and Latin Vulgate \emph{cithara} is in the New Testament Revelation to John.
+In the Vulgate, the instrument David plays for Saul in 1 Sam 16:16 is a \emph{cithara}; in Hebrew this was again 
+\texthebrew{
+כִּנּוֹר 
+} (``kinnor''), rendered in the Septuagint with another frequently used translation, κινύρα (``kinura'').
+
+%********************
+\begin{quote}
+%
+\textgreek{καὶ ἡ φωνὴ ἣν ἤκουσα ὡς κιθαρῳδῶν κιθαριζόντων ἐν ταῖς κιθάραις αὐτῶν.}\\
+%
+\emph{et vocem quam audivi sicut citharoedorum citharizantium in citharis suis}\\
+%
+and I heard the voice of harpers harping with their harps
+%
+\end{quote}
+%********************
+
+``Counted among the cithara-players of God are all the saints, who, having crucified their flesh with its vices and sinful desires praise God with the psalter and cithara.''%
+	%
+	\footnote{
+	\autocite[429]{Ribera:Apocalypse}: ``Cum citharista Dei omnes sancti sint, qui carnem suam crucifigentes cum vitijs \& concupiscentiis laudenteum in psaltero \& cithara'' (from a Google Books scan of a copy bearing the \emph{ex libris} marking ``from the library of the noviciate of the Company of Jesus in Madrid'').
+	} 
+	%
+
+``Peregrino tono'' may mean ``wandering song,'' ``strange song (or tone),'' or the plainchant psalm tone the \emph{tonus peregrinus}.
+
+\musfig{\fl6}{\xfl4}--\musfig{\xna5}{\na3}. musfig
+
+Sharping the F would produce strange results--
+\musfig{\fl6}{\sh3}--\musfig{4}{2}--\musfig{\xsh3}{\sh1} sonority.
+in the Tiple and Altus m.~73, where the \fl6 resolves upward; and in m.~74, since the Tiple can only be F\na, a nearly unthinkable diminished octave between the same two voices. 
+Both Fs occur in melodic patterns (G--F--G) where a singer might be tempted to sing the F as an F\sh{} according to \emph{musica ficta} performance practice, but an F\na{} makes more sense in both places.
+
+\end{document}
