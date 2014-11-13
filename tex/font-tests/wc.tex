@@ -1,0 +1,20 @@
+\documentclass[12pt]{article}
+\def\yes #1 #2 {%
+	\newcount\wc
+	\wc=#1
+	\loop
+		#2\,
+	\advance\wc by -1
+	\ifnum\wc > 0
+	\repeat
+}
+\setlength{\parindent}{0pt}
+
+%\usepackage[margin=1in]{geometry}
+%\usepackage[doublespacing]{setspace}
+
+\begin{document}
+
+\yes 550 fish
+
+\end{document}

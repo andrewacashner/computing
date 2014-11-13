@@ -1,0 +1,31 @@
+******************************************
+* X = M / N WHILE X > 0
+* STORE EACH X IN NUMERIC ARRAY
+* PRINT ARRAY
+*******************************************
+M	EQU	1024		
+N	EQU	2
+LPR	EQU	18		
+BUF0	EQU	100		
+MSG	EQU	2000		
+LENGTH	EQU	500		
+	ORIG	3000
+START	IOC	0(LPR) 		
+	ENTX	M		
+CALC	STX	BUF0,1 		
+	DIV	=N=		
+	SRAX	5		
+	INC1	1		
+	JXP	CALC		
+	ST1	LENGTH		
+PRINT	LDA	BUF0,2		
+	CHAR			
+	STX	MSG		
+	OUT	MSG(LPR)	
+	INC2	1		
+	CMP2	LENGTH		
+	JNE	PRINT
+	HLT			
+	END	START
+
+
