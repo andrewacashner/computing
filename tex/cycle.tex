@@ -1,0 +1,27 @@
+\documentclass{article}
+\usepackage{rotating}
+\newcounter{MAX}
+\setcounter{MAX}{36}
+\newcounter{degrees}
+\newcounter{degreeIncrement}
+\setcounter{degreeIncrement}{360}
+\newcounter{spokes}
+
+\newcommand{\wheelText}{I can do this with \LaTeX!}
+% #1 Text to rotate, #2 number of times to print text
+\newcommand{\makewheel}[2]{%
+	\setcounter{spokes}{#2}
+	\divide\value{degreeIncrement} by #2
+	\loop
+		\turnbox{\value{degrees}}{#1}
+		\addtocounter{spokes}{-1}
+		\ifnum\value{spokes} > 0
+			\addtocounter{degrees}{\value{degreeIncrement}}
+	\repeat%
+}
+
+\begin{document}
+
+\makewheel{\wheelText}{12}
+
+\end{document}
