@@ -1,0 +1,55 @@
+\documentclass{article}
+\usepackage{pdftexcmds}
+
+% Create an "array" of symbols with increasing numbers in their names.
+% E.g., \DeclareNewSymbol{1}{A} \DeclareNewSymbol{2}{B} would define
+% the macros \symbol1 and \symbol2.
+% Argument #1 has to be an integer; the sequence must start with zero; and it must not skip numbers.
+% Argument #2 is the symbol.
+
+% First checks symbol to see if it has been used before (using command defined below).
+\newcommand{\DeclareNewSymbol}[2]{%
+	\ifnum#1 > 0
+		\TestNewSymbol{#1}{#2}
+	\fi
+	\expandafter\def\csname symbol#1\endcsname{#2}%
+}
+
+
+% We want to check a symbol to see if it has been used before declaring it as a new symbol.
+% This command indexes through the "array" (checks each of the commands with numbers in order) and compare them to a given symbol.
+% Argument #1 is the number for the candidate symbol (same function as argument #1 in \DeclareNewSymbol), argument #2 is the symbol.
+
+\newcounter{arrayindex}
+
+\newcommand{\TestNewSymbol}[2]{%
+	\setcounter{arrayindex}{#1}
+	\loop
+		\ifx#2\csname symbol\thearrayindex\endcsname
+				\typeout{%
+					ERROR: The symbol #2 has already been used 
+					in \string\symbol\thearrayindex.%
+				}
+		\fi
+		\addtocounter{arrayindex}{-1}
+	\ifnum\value{arrayindex} < 0
+	\repeat%
+}
+
+
+\begin{document}
+
+\DeclareNewSymbol{0}{A}
+\DeclareNewSymbol{1}{B}
+\DeclareNewSymbol{2}{C}
+\DeclareNewSymbol{3}{A}
+
+\begin{tabular}{ll}
+\verb|\symbol0| & \csname symbol0\endcsname\\
+\verb|\symbol1| & \csname symbol1\endcsname\\
+\verb|\symbol2| & \csname symbol2\endcsname\\
+\verb|\symbol3| & \csname symbol3\endcsname\\
+\end{tabular}
+
+
+\end{document}

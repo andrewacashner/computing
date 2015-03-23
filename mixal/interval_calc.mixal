@@ -1,0 +1,82 @@
+* INTERVAL CALCULATOR
+* ANDREW A. CASHNER, 2015-03-22
+*
+INPUT	EQU	3000
+RESULT	EQU	3001
+OPERAT	EQU	0:0	operator
+INTERVL	EQU	1:1	interval
+INTQUAL	EQU	2:2	interval quality
+ACC	EQU	3:3	accidental
+OCTAVE	EQU	4:4	octave
+PITCH	EQU	5:5	pitch class
+*
+* STORE INPUT INSTRUCTIONS
+*
+	ORIG	2000
+*
+* Gb5 - m10 = Eb4
+*
+START	ENNA	9		interval (store as one less)
+	STA	INPUT(OPERAT)	operator
+	STA	INPUT(INTERVL)	interval
+	ENTA	1		
+	STA	INPUT(INTQUAL)	interval_quality
+	ENTA	1		
+	STA	INPUT(ACC)	start_accidental
+	ENTA	5		
+	STA	INPUT(OCTAVE)	start_octave
+	ENTA	4		
+	STA	INPUT(PITCH)	start_pc (pitch class)
+*
+* CALCULATE END_OCTAVE		end_octave = start_octave + (interval / 7) * operator
+*
+	ENTA	0
+	LDX	INPUT(INTERVL)	
+	DIV	=7=
+	STA	RESULT(OCTAVE)
+	LD1	INPUT(OPERAT)	is operator '-' ?
+	J1NN	1F		
+	SUB	INPUT(OCTAVE)	if yes, subtract
+	JMP	*+2	
+1H	ADD	INPUT(OCTAVE)	if no, add
+	STA	RESULT(OCTAVE)	
+*
+* CALCULATE END_PITCHCLASS	end_pc_dia = start_pc_dia + (interval mod 7) * operator
+*
+	ENTA	0
+	LDA	INPUT(OPERAT)
+	SLAX	5		rA <- interval mod 7
+	ADD	INPUT(PITCH)	
+	STA	RESULT(PITCH)	
+*
+* ADJUST FOR PITCHCLASS > 7 or < 0
+*
+	JAN	SMALL		end_pc_dia < 0 ?
+BIG	DECA	7		end_pc_dia > 7 ? 
+	JAN	ACCIDEN		if not, go to next step
+	LD2	RESULT(OCTAVE)	
+	INC2	1		add to octave
+	JMP	ADJUST
+*
+SMALL	INCA	7
+	LD2	RESULT(OCTAVE)	
+	DEC2	1		subtract octave
+ADJUST	STA	RESULT(PITCH)
+	ST2	RESULT(OCTAVE)
+*
+* CALCULATE ACCIDENTAL		end_accidental = start_accidental + interval_quality * operator
+*
+ACCIDEN	J1P	*+2
+	LDAN	INPUT(ACC)
+	LDA	INPUT(ACC)
+	ADD	INPUT(INTQUAL)	
+	JAP	DECODE
+	MUL	-1
+DECODE	DECA	2		decode accidental 
+	STA	RESULT(ACC)
+*
+* LOAD RESULT, STOP
+*
+OUTPUT	LDA	RESULT
+STOP	HLT
+	END	START

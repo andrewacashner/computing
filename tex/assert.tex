@@ -1,0 +1,25 @@
+\documentclass{article}
+\usepackage{pdftexcmds}
+
+\newcommand{\symbolI}{A}
+\newcommand{\symbolII}{\pi r^2}
+\newcommand{\symbolIII}{\pi r^2}
+
+\makeatletter
+\newcommand{\TestSameSymbols}[2]{%
+	\ifnum\pdf@strcmp{#1}{#2}=\z@ 
+		\typeout{%
+			ERROR: \noexpand#2 (\expandafter#2) is the same as \noexpand#1.%
+		}
+	\fi%
+}
+\makeatother
+
+\begin{document}
+
+\TestSameSymbols{\symbolI}{\symbolII}
+\TestSameSymbols{\symbolI}{\symbolIII}
+
+\[ \symbolI = \symbolII \]
+
+\end{document}
