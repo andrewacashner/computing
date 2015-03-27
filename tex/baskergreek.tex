@@ -1,0 +1,26 @@
+\documentclass[12pt]{article}
+\usepackage[sups]{Baskervaldx}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[libertine]{newtxmath}
+\usepackage[greek.polutoniko,american]{babel}
+\usepackage{substitutefont}
+\substitutefont{LGR}{\rmdefault}{gfsbaskerville}
+\usepackage{microtype}
+\usepackage{lipsum}
+\begin{document}
+\lipsum[1]
+
+\textsc{Section Heading in \emph{Small} Caps}
+
+The word is \textgreek{λὸγος} or \textgreek{μετανοιεῖτε}.
+
+In 1657, they sang \emph{esdrújulos} like ``plántanos.''\footnote{Note the punctuation.}
+
+They sang A$\flat$ or B$\natural$ or C$\sharp$.
+
+\begin{tabular}{rl}
+1657 	& First year\\
+$1658$ 	& Second year\\
+\end{tabular}
+\end{document}

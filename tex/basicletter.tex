@@ -1,0 +1,54 @@
+\documentclass{article}
+\usepackage{parskip}
+\usepackage[top=1in]{geometry}
+
+\makeatletter
+\newcommand{\senderName}[1]     {\gdef\@senderName{#1}}
+\newcommand{\signatureImage}[1] {\gdef\@signatureImage{#1}} 
+	% normally this is a path to an image file
+
+\newcommand{\letterhead}{%
+	\begin{center}
+	\Huge \@senderName
+	\end{center}
+	\rule{\textwidth}{0.8pt}
+	\bigskip
+}
+\newif\if@blankSignature
+\newcommand{\blankSignature}{\@blankSignaturetrue}
+
+\newcommand{\salutation}{%
+	\if@blankSignature
+		\vspace*{4\baselineskip}\par
+	\else
+		\@signatureImage\par
+	\fi
+	\@senderName\par%
+}
+\makeatother
+
+\AtBeginDocument{%
+	\letterhead\par
+	\today\par
+	\bigskip%
+}
+\AtEndDocument{%
+	\par%
+	\salutation\par%
+}
+
+\usepackage{lipsum}
+
+%***************************************
+
+\senderName{Queequeg}
+\signatureImage{\fbox{\emph{X his mark}}}
+\blankSignature
+
+\begin{document}
+Dear Sir:
+
+\lipsum[1]
+
+Sincerely,
+\end{document}
