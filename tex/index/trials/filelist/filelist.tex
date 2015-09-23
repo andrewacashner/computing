@@ -1,0 +1,15 @@
+\documentclass{report}
+\newcommand{\notetopic}[1]{%
+	\clearpage
+	\section{#1}%
+}
+\makeatletter
+\def\app@exe{\immediate\write18}
+\def\inputAllFiles#1{%
+  \app@exe{ls #1/*.tex | xargs cat > \jobname.tmp}%
+  \InputIfFileExists{\jobname.tmp}{}
+  \AtEndDocument{\app@exe{rm -f #1/\jobname.tmp}}}
+\makeatother
+\begin{document}
+\inputAllFiles{notes}
+\end{document}

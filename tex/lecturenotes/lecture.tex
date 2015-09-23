@@ -1,0 +1,53 @@
+\documentclass{article}
+
+\makeatletter
+\newcommand{\nonzeroparskip}{% from parskip.sty
+		\parindent=\z@
+		\parskip=0.5\baselineskip \advance\parskip by 0pt plus 2pt
+}
+\makeatother
+
+
+\newenvironment{headlist}[1]
+	{%
+		\subsubsection*{#1}%
+		\begin{itemize}%
+	}
+	{\end{itemize}}
+
+\newenvironment{outline}
+	{\nonzeroparskip}
+	{\vspace{\parskip}}
+
+\begin{document}
+
+\section{Main topic}
+
+\begin{headlist}{List of things:}
+\item First
+\item Second
+\item Third
+\end{headlist}
+
+Text after.
+
+\begin{outline}
+First sentence.
+
+Second sentence.
+Second sentence.
+Second sentence.
+Second sentence.
+Second sentence.
+Second sentence.
+Second sentence.
+
+Third sentence.
+\end{outline}
+
+Text after.
+Text after.
+Text after.
+Text after.
+
+\end{document}

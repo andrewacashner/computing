@@ -1,0 +1,92 @@
+\newcount\poem
+\poem=0
+\long\def\poemOrig#1#2{%
+	\expandafter\def\csname #1Orig\endcsname{#2}%
+	\expandafter\def\csname poemlist\the\poem\endcsname{#1}
+	\advance\poem by 1
+}
+\long\def\poemTrans#1#2{%	
+	\expandafter\def\csname #1Trans\endcsname{#2}%
+}
+\def\printpoem#1{%
+	\hbox to 6.5in{%
+	\vtop{\hsize=3in \csname #1Orig\endcsname}%
+	\hfill
+	\vtop{\hsize=3in \csname #1Trans\endcsname}%
+	}\par\vskip 3\baselineskip%
+}
+\def\poet#1{\par\vskip\baselineskip \hskip 1em ---#1\par}
+\let\n\par
+
+\newcount\typenum
+\newcount\listnum
+\newcount\poemnum
+\def\printpoemlist{%
+	\typenum=2
+	\listnum=\poem
+	\poemnum=0
+	\loop	
+		\ifnum\typenum = 2
+			\def\type{Orig}
+		\else
+			\def\type{Trans}
+		\fi
+		{%
+			\loop
+				\edef\thispoem{\csname poemlist\the\poemnum\endcsname}
+				\csname\thispoem\type\endcsname\vskip3\baselineskip
+				\advance\poemnum by 1
+				\advance\listnum by -1
+				\ifnum\listnum > 0
+			\repeat%
+		}
+		\advance\typenum by -1
+		\ifnum\typenum > 0
+	\repeat%
+}
+
+\parindent=0pt
+
+\poemOrig{Gongora:Ruisenores}{%
+No son todos ruise\~nores\n
+los que cantan entre las flores,\n
+sino campanitas de plata\n
+que tocan al Alba,\n
+sino trompeticas de oro\n
+que hacen la salva\n
+a los soles que adoro.\n
+\poet{Luis de G\'ongora}
+}
+
+\poemTrans{Gongora:Ruisenores}{%
+It is not only nightingales\n
+who sing among the flowers,\n
+but also silver chimes\n
+that ring in the Dawn,\n
+and little golden trumpets\n
+that sound their salvo\n
+to the suns that I adore.\n
+}
+
+\poemOrig{Martin:VeoSenora}{%
+Veo, se\~nora, al son de mi instrumento,\n
+cuando entona mi voz tu nombre santo,\n
+parar los r\'{\i}os a escuchar mi canto,\n
+correr los montes, y callar el viento.\n
+\poet{Luis Mart\'{\i}n de la Plaza}
+}
+
+\poemTrans{Martin:VeoSenora}{%
+I see, my lady, at the sound of my instrument,\n
+when my voice intones your holy name,\n
+the rivers stop to listen to my song,\n
+the mountains run, and the wind falls silent.\n
+}
+
+
+%\printpoem{Gongora:Ruisenores}
+%\printpoem{Martin:VeoSenora}
+
+\printpoemlist
+
+\bye

@@ -1,0 +1,18 @@
+\documentclass{article}
+\usepackage{makeidx}
+\makeindex
+\newcommand{\tag}[1]{%
+	#1\index{#1}%
+}
+\usepackage{hyperref}
+\begin{document}
+\section*{Book notes}
+\subsection*{Tags}
+\newcommand{\AdlerGuido}{Adler, Guido}
+
+\tag{Knuth, Donald}; \tag{Seeger, Charles}; \tag{\AdlerGuido}
+
+Donald Knuth wrote about computers but also about the Bible.\index{Knuth, Donald!Religion}
+
+\printindex
+\end{document}

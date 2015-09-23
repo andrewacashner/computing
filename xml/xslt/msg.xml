@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xml>
+  <msg>
+    Hello, world!
+    <note>
+      This is a greeting.
+    </note>
+  </msg>
+  <poemtranslation>
+    <original>
+      Text
+    </original>
+    <translation>
+      Texto
+    </translation>
+  </poemtranslation>
+</xml>

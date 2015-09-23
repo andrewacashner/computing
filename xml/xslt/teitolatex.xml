@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+	<title>Converting TEI to LaTeX using XSLT</title>
+	<author>Andrew A. Cashner</author>
+      </titleStmt>
+      <publicationStmt>
+	<publisher>Self-published</publisher>
+	<date>2015-09-11</date>
+      </publicationStmt>
+      <sourceDesc>
+	<bibl>Sui generis</bibl>
+      </sourceDesc>
+    </fileDesc>
+  </teiHeader>
+  <text>
+    <front>
+      <titlePage>
+	<titlePart type="main">Converting TEI to LaTeX using XSLT</titlePart>
+	<byline>Andrew A. Cashner</byline>
+	<docDate>Sept. 11, 2015</docDate>
+      </titlePage>
+    </front>
+    <body>
+      <div type="section">
+	<head>Summary</head>
+	<p>
+	  Can I convert this text from TEI-XML to LaTeX?
+	  I will <emph>try</emph> using XSLT.
+	</p>
+	<p>
+	  Note that I can also use <soCalled>footnotes</soCalled>.<!--
+	  --><note>This is such a footnote.</note>
+	</p>
+      </div>
+    </body>
+  </text>
+</TEI>

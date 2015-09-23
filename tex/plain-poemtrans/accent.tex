@@ -1,0 +1,42 @@
+% This accent macro works.
+Spelled out: r\'{\i}os
+
+% It also works inside another macro.
+\def\rios{r\'{\i}os}
+Macro: \rios
+
+% When I make a quasi-array by hand it works.
+\expandafter\def\csname word0\endcsname{river}
+\expandafter\def\csname word1\endcsname{r\'{\i}os}
+
+Array by hand:
+\csname word0\endcsname\
+\csname word1\endcsname
+
+% When I make the array automatically and print the results manually, it works.
+\newcount\word
+\word=0
+\def\addtolist #1{
+	\expandafter\def\csname word\the\word\endcsname{#1}
+	\advance\word by 1
+}
+\addtolist{river}
+\addtolist{r\'{\i}os}
+
+Automatic array, print by hand:
+\csname word0\endcsname\
+\csname word1\endcsname
+
+% But when I try to print the list automatically, TeX stumbles over the accented i.
+\newcount\i
+\def\printlist{
+	\i=0
+	\loop
+		\csname word\the\i\endcsname\
+		\advance\i by 1
+		\ifnum\i < \word
+	\repeat
+}
+Automatic array and printing: \printlist
+\bye
+

@@ -1,0 +1,62 @@
+\documentclass{article}
+\usepackage{xparse}
+\usepackage{tocloft}
+
+
+\newcounter{Unit}
+\newcommand{\UnitLabel}{Unit \Roman{Unit}}
+\newcommand{\Unit}[1]{%
+  \stepcounter{Unit}
+  \def\ThisUnit{\makebox[4em][l]{\UnitLabel}#1}
+  \section*{\hangindent=4em \hangafter=1 \ThisUnit}
+  \addcontentsline{toc}{section}{\numberline{\UnitLabel}#1}
+}
+\setlength{\cftsecnumwidth}{4em}
+
+\newcounter{Week}
+\newcommand{\WeekLabel}{Week \theWeek}
+\newcommand{\Week}[1]{%
+  \stepcounter{Week}
+  \def\ThisWeek{\makebox[4em][l]{\WeekLabel}#1}
+  \subsection*{\hangindent=4em \hangafter=1 \ThisWeek}
+  \addcontentsline{toc}{subsection}{\numberline{\WeekLabel}#1}
+}
+\setlength{\cftsubsecnumwidth}{4em}
+
+\newcounter{Class}
+\newcommand{\ClassLabel}{Class \theClass}
+\DeclareDocumentCommand{\Class}{o m}{%A
+  \IfNoValueTF{#1}
+    {\def\ThisClassDate{\relax}}
+    {\def\ThisClassDate{\hfill\mdseries #1}}
+  \stepcounter{Class}
+  \def\ThisClass{\makebox[4em][l]{\ClassLabel}#2\ThisClassDate}
+  \subsubsection*{\hangindent=4em \hangafter=1 \ThisClass}
+  \addcontentsline{toc}{subsubsection}{\numberline{\ClassLabel}#2}
+}
+\setlength{\cftsubsubsecnumwidth}{4em}
+
+
+\usepackage[colorlinks=true]{hyperref}
+
+\begin{document}
+
+\tableofcontents
+
+\section{Schedule of Classes and Assignments}
+
+\Unit{First Stuff}
+
+\Week{Introduction}
+
+\Week{Athanasius Kircher and the World as a Musical Instrument; Neoplatonism, Mysticism, and the Meeting of Magic and New Science}
+
+\Class[2015/10/21]{Why Kircher Is Crazy, or Why I Am Crazy for Reading Him, or Why I Am Crazy about Him}
+
+\Class{Kircher's Theory of Planetary Influence}
+
+\Unit{Rest of Stuff}
+
+\Week{Conclusion}
+
+\end{document}

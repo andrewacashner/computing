@@ -1,0 +1,90 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 2.4 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \sortlist{cms}{cms}
+    \entry{Cashner-PhD}{thesis}{}
+      \name{labelname}{1}{}{%
+        {{hash=ca36ebab34931d9ce9a9392eee033f44}{Cashner}{C\bibinitperiod}{Andrew\bibnamedelima A.}{A\bibinitperiod\bibinitdelim A\bibinitperiod}{}{}{}{}}%
+      }
+      \name{author}{1}{}{%
+        {{hash=ca36ebab34931d9ce9a9392eee033f44}{Cashner}{C\bibinitperiod}{Andrew\bibnamedelima A.}{A\bibinitperiod\bibinitdelim A\bibinitperiod}{}{}{}{}}%
+      }
+      \list{institution}{1}{%
+        {University of Chicago}%
+      }
+      \strng{namehash}{ca36ebab34931d9ce9a9392eee033f44}
+      \strng{fullhash}{ca36ebab34931d9ce9a9392eee033f44}
+      \field{sortinit}{C}
+      \field{sortinithash}{dd0e4ddd17488a6ebf12cd6de2f2c237}
+      \field{labeltitle}{Faith, Hearing, and the Power of Music in Hispanic Villancicos, 1600--1700}
+      \field{title}{Faith, Hearing, and the Power of Music in Hispanic Villancicos, 1600--1700}
+      \field{type}{PhD diss.}
+      \field{year}{2015}
+      \keyw{villancico}
+    \endentry
+    \entry{Knuth-TAOCP1}{book}{}
+      \name{labelname}{1}{}{%
+        {{hash=fcbea740aeb72b8e941e0d4aa9f6a9c6}{Knuth}{K\bibinitperiod}{Donald\bibnamedelima E.}{D\bibinitperiod\bibinitdelim E\bibinitperiod}{}{}{}{}}%
+      }
+      \name{author}{1}{}{%
+        {{hash=fcbea740aeb72b8e941e0d4aa9f6a9c6}{Knuth}{K\bibinitperiod}{Donald\bibnamedelima E.}{D\bibinitperiod\bibinitdelim E\bibinitperiod}{}{}{}{}}%
+      }
+      \list{location}{1}{%
+        {Upper Saddle River, NJ}%
+      }
+      \list{publisher}{1}{%
+        {Prentice Hall}%
+      }
+      \strng{namehash}{fcbea740aeb72b8e941e0d4aa9f6a9c6}
+      \strng{fullhash}{fcbea740aeb72b8e941e0d4aa9f6a9c6}
+      \field{sortinit}{K}
+      \field{sortinithash}{33bf4c961fa093ee6a297ccbd88eacc0}
+      \field{labeltitle}{The Art of Computer Programming: Fundamental Algorithms}
+      \field{title}{The Art of Computer Programming: Fundamental Algorithms}
+      \field{year}{2000}
+      \keyw{textbook}
+    \endentry
+    \entry{Seeger-Unitary}{incollection}{}
+      \name{labelname}{1}{}{%
+        {{hash=e69438ab4ce881ff3ccfe60f4b601908}{Seeger}{S\bibinitperiod}{Charles}{C\bibinitperiod}{}{}{}{}}%
+      }
+      \name{author}{1}{}{%
+        {{hash=e69438ab4ce881ff3ccfe60f4b601908}{Seeger}{S\bibinitperiod}{Charles}{C\bibinitperiod}{}{}{}{}}%
+      }
+      \list{location}{1}{%
+        {Princeton, NJ}%
+      }
+      \list{publisher}{1}{%
+        {Princeton University Press}%
+      }
+      \strng{namehash}{e69438ab4ce881ff3ccfe60f4b601908}
+      \strng{fullhash}{e69438ab4ce881ff3ccfe60f4b601908}
+      \field{sortinit}{S}
+      \field{sortinithash}{4125bb4c3a0eb3eaee3ea6da32eb70c8}
+      \field{labeltitle}{Toward a Unitary Field Theory for Musicology}
+      \field{booktitle}{Studies in Musicology I}
+      \field{title}{Toward a Unitary Field Theory for Musicology}
+      \field{year}{1975}
+      \keyw{musicology}
+    \endentry
+  \endsortlist
+\endrefsection
+\endinput
+

@@ -1,0 +1,150 @@
+\documentclass{article}
+
+% See http://tex.stackexchange.com/questions/172645/more-layers-of-sectioning-in-article-class/172658#172658
+
+\usepackage{titlesec}
+\usepackage{titletoc}
+
+\titleclass{\Unit}{straight}[\section]
+\titleclass{\Week}{straight}[\subsection]
+\titleclass{\Class}{straight}[\subsubsection]
+
+\newcounter{Unit}
+\newcounter{Week}
+\newcounter{Class}
+
+\setcounter{secnumdepth}{6}
+\setcounter{tocdepth}{6}
+
+\renewcommand{\theUnit}{\Roman{Unit}}
+\renewcommand{\theWeek}{\arabic{Week}}
+\renewcommand{\theClass}{\arabic{Class}}
+
+\titleformat{\Unit}
+	{\normalfont\Large\bfseries}
+	{Unit \theUnit}
+	{1em}
+	{}
+\titleformat{\Week}
+	{\normalfont\large\bfseries}
+	{Week \theWeek}
+	{1em}
+	{}
+\titleformat{\Class}
+	{\normalfont\bfseries}
+	{Class \theClass}
+	{1em}
+	{}
+
+
+\newlength{\secspacing}
+\setlength{\secspacing}{3.25ex plus 1ex minus 0.2ex}
+\titlespacing*{\Unit}{0pt}{\secspacing}{1em}
+\titlespacing*{\Week}{0pt}{\secspacing}{1em}
+\titlespacing*{\Class}{0pt}{\secspacing}{1em}
+
+\makeatletter
+\def\toclevel@Unit{1}
+\def\toclevel@Week{2}
+\def\toclevel@Class{3}
+
+\newlength{\tocsep}
+\setlength{\tocsep}{1.5em}
+\newcommand*\l@Unit{\@dottedtocline{1}{\tocsep}{\tocsep}}
+\newcommand*\l@Week{\@dottedtocline{2}{2\tocsep}{\tocsep}}
+\newcommand*\l@Class{\@dottedtocline{3}{3\tocsep}{\tocsep}}
+\makeatother
+
+%***************************************
+
+\newlength{\tocindent}
+\setlength{\tocindent}{1.5em}
+
+\titlecontents{Unit}
+	[\tocindent]
+	{}
+	{\contentspush{Unit \thecontentslabel\hspace*{1em}}}
+	{}
+	{\titlerule*[0.8em]{.}\thecontentspage}
+\titlecontents{Week}
+	[2\tocindent]
+	{}
+	{\contentspush{Week \thecontentslabel\hspace*{1em}}}
+	{}
+	{\titlerule*[0.8em]{.}\thecontentspage}
+\titlecontents{Class}
+	[3\tocindent]
+	{}
+	{\contentspush{Class \thecontentslabel\hspace*{1em}}}
+	{}
+	{\titlerule*[0.8em]{.}\thecontentspage}
+
+
+
+
+%***************************************
+
+\usepackage{enumitem}
+\setlist{noitemsep}
+\newenvironment{Readings}
+	{Readings:\par\begin{enumerate}}
+	{\end{enumerate}}
+
+%***************************************
+
+\usepackage[colorlinks=true]{hyperref}
+
+\begin{document}
+
+\title{Classics 101}
+\author{Frederick Wheelock}
+\maketitle
+
+\tableofcontents
+
+\section{Course Overview}
+
+This is a course on Classical literature.
+
+\section{Schedule of Classes and Assignments}
+
+\Unit{Pagans}
+
+\Week{Greeks}
+
+\begin{Readings}
+\item Plato
+\item Aristotle
+\end{Readings}
+
+\Week{Romans}
+
+\begin{Readings}
+\item Virgil
+\item Cicero
+\end{Readings}
+
+\Unit{Christians}
+
+\Week{Greek and Latin Church Fathers: Origen, John Chrysostom, Ambrose of Milan, Augustine of Hippo}
+
+\Class{Greek Fathers}
+
+\begin{Readings}
+\item Origen
+\item Chrysostom
+\end{Readings}
+
+\Class{Latin Fathers}
+
+\begin{Readings}
+\item Ambrose
+\item Augustine
+\end{Readings}
+
+
+\section{Supplements}
+
+See the class website for further reading and other resources.
+
+\end{document}

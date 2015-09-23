@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{filecontents}
+% Input files
+\begin{filecontents}{file1.tex}
+\section{First file}
+Hello
+\end{filecontents}
+
+\begin{filecontents}{file2.tex}
+\section{Second file}
+Good bye.
+\end{filecontents}
+
+% List of input files (actually created with ls -m dir/*.tex)
+\begin{filecontents}{files.list}
+file1.tex, file2.tex
+\end{filecontents}
+
+\usepackage{pgffor}
+\newread\list
+\newcommand{\readfilelist}{%
+	\openin\list=files.list
+	\read\list to \filelist
+	\foreach\filename in \filelist {%
+%		\include{\filename}  % does not work
+		\input \filename % does work, but I want to use \include
+	}
+	\closein\list%
+}
+
+\begin{document}
+\readfilelist
+\end{document}

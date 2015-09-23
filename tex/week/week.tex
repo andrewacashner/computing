@@ -1,0 +1,37 @@
+\documentclass{article}
+
+\newlength{\WeekLabelWidth}
+\newlength{\WeekTitleWidth}
+
+\settowidth{\WeekLabelWidth}{{\large\bfseries Week 15}}
+\setlength{\WeekTitleWidth}{\linewidth}
+\addtolength{\WeekTitleWidth}{-\WeekLabelWidth}
+
+\newcounter{Week}
+\newcommand{\WeekFont}{\large\bfseries}
+\newcommand{\ThisWeekNum}{Week \theWeek\quad}
+\newcommand{\Week}[1]{%
+  \stepcounter{Week}
+  \par\bigskip\noindent%
+  \parbox[t]{\WeekLabelWidth}{\WeekFont\ThisWeekNum}%
+  \parbox[t]{\WeekTitleWidth}{\WeekFont #1}%
+  \addtocontents{toc}{%
+    \hangindent=\WeekLabelWidth
+    \hangafter=1
+    \ThisWeekNum #1\hfill\thepage\par%
+  }
+}
+
+\begin{document}
+
+\tableofcontents
+
+\section{Schedule of Classes and Assignments}
+
+\Week{Introduction}
+
+\Week{Athanasius Kircher and the World as a Musical Instrument; Neoplatonism, Mysticism, and the Meeting of Magic and New Science}
+
+\Week{Conclusion}
+
+\end{document}

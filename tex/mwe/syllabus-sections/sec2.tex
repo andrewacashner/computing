@@ -1,0 +1,114 @@
+\documentclass{article}
+\usepackage{enumitem}
+\setlist{noitemsep}
+
+\newcounter{Unit}
+\newcounter{Week}
+\newcounter{Class}
+\newcommand{\Unit}[1]{%
+	\stepcounter{Unit}
+	\section{%
+		\texorpdfstring
+			{Unit \Roman{Unit}\quad #1}
+			{\Roman{Unit} #1}%
+	}%
+}
+\newcommand{\Week}[1]{%
+	\stepcounter{Week}
+	\subsection{%
+		\texorpdfstring
+			{Week \theWeek\quad #1}
+			{Wk. \theWeek\ #1}%
+	}%
+}
+\newcommand{\Class}[1]{%
+	\stepcounter{Class}
+	\subsubsection{%
+		\texorpdfstring
+			{Class \theClass\quad #1}
+			{Cl. \theClass\ #1}%
+	}%
+}
+
+\newcounter{PrevSection}
+\newenvironment{ClassSchedule}
+	{%
+		\setcounter{PrevSection}{\value{section}}
+		\setcounter{secnumdepth}{0}%
+	}
+	{%
+		\setcounter{section}{\value{PrevSection}}%
+	}
+
+
+%***************************************
+\newenvironment{Readings}
+	{%
+		Readings:\par
+		\begin{enumerate}%
+	}
+	{%
+		\end{enumerate}%
+	}
+
+%***************************************
+
+\usepackage[colorlinks=true]{hyperref}
+
+\begin{document}
+
+\title{Classics 101}
+\author{Frederick Wheelock}
+\maketitle
+
+\tableofcontents
+
+\section{Course Overview}
+
+This is a course on Classical literature.
+
+\section{Schedule of Classes and Assignments}
+
+\begin{ClassSchedule}
+
+\Unit{Pagans}
+
+\Week{Greeks}
+
+\begin{Readings}
+\item Plato
+\item Aristotle
+\end{Readings}
+
+\Week{Romans}
+
+\begin{Readings}
+\item Virgil
+\item Cicero
+\end{Readings}
+
+\Unit{Christians}
+
+\Week{Greek and Latin Church Fathers: Origen, John Chrysostom, Ambrose of Milan, Augustine of Hippo}
+
+\Class{Greek Fathers}
+
+\begin{Readings}
+\item Origen
+\item Chrysostom
+\end{Readings}
+
+\Class{Latin Fathers}
+
+\begin{Readings}
+\item Ambrose
+\item Augustine
+\end{Readings}
+
+\end{ClassSchedule}
+
+\section{Supplements}
+
+See the class website for further reading and other resources.
+
+\end{document}

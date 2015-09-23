@@ -1,0 +1,51 @@
+\documentclass{article}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage{makeidx}
+\makeindex
+\usepackage[nottoc]{tocbibind}
+
+\usepackage[notes]{biblatex-chicago}
+\immediate\write18{cat bib/*.bib > master.bib}
+\addbibresource{master.bib}
+
+\usepackage{filecontents}
+
+
+
+\newcommand{\inputnotes}{%
+	\immediate\write18{ls notes/*.tex | xargs cat > \jobname.tmp}%
+	\InputIfFileExists{\jobname.tmp}{}
+	\AtEndDocument{%
+		\immediate\write18{rm -f \jobname.tmp}%
+	}%
+}
+\newcommand{\notetopic}[1]{%
+	\clearpage
+	\section{#1}%
+}
+\newenvironment{tags}
+	{%
+		\subsection*{Tags} 
+	 	\begin{itemize}%
+	}
+	{\end{itemize}}
+
+\newcommand{\tag}[1]{%
+	\item{#1\index{#1}}%
+}
+\newcommand{\alttag}[2]{%
+	\item{#1\index{#2}}%
+}
+
+\usepackage{hyperref}
+
+\begin{document}
+\tableofcontents
+\inputnotes
+\clearpage
+\printbibliography
+\printindex
+\end{document}

@@ -1,0 +1,42 @@
+\documentclass[12pt,landscape]{article}
+\usepackage{fbb}
+\usepackage[T1]{fontenc}
+
+\usepackage{tikz}
+
+\usepackage[margin=0.25in]{geometry}
+\parindent=0pt
+
+\newcount\chore
+\newcommand{\newchore}[1]{%
+	\expandafter\def\csname chore\the\chore\endcsname{#1}%
+	\advance\chore by 1%
+}
+
+\begin{document}
+
+\newchore{Put away toys in room}
+\newchore{Pick up in living room}
+\newchore{Set table for lunch}
+\newchore{Clear table after lunch}
+\newchore{Set table for dinner}
+\newchore{Clear table for dinner}
+\newchore{Put away clean clothes}
+\newchore{Help take out trash}
+
+\hfil{\Huge Chores}\hss\par\vfil%
+%
+\hbox{\hsize=\textwidth
+	\newcount\i
+	\vbox to 15cm{\hsize=5cm
+	\loop
+		\vbox to 1cm{%
+			\csname chore\the\i\endcsname
+		}%
+		\advance\i by 1
+		\ifnum\i < 15
+	\repeat
+	}
+	\tikz \draw [step=1cm] (0,0) grid (20,15);%
+}
+\end{document}

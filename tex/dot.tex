@@ -1,0 +1,26 @@
+\documentclass[12pt]{article}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+\usepackage{xcolor}
+\newcommand{\frenchexclamation}{%
+	\mbox{%
+		\makebox[1em][c]{!}%
+		\llap{\makebox[1em][c]{\color{white}\rule[-0.5ex]{1em}{1ex}}}%
+		\llap{\makebox[1em][c]{\color{blue}\kern -.3ex .}}%
+		\llap{\makebox[1em][c]{\color{red}\kern .3ex .}}%
+		}%
+}
+\pagestyle{empty}
+\begin{document}
+\Huge
+\noindent
+\newcount\i
+\i=1000
+\loop
+	\frenchexclamation\space
+	\advance\i by -1
+	\ifnum\i > 0
+\repeat
+
+\end{document}

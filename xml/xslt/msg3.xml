@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?><TEI>
+  <p>
+    Hello, world!
+    <note place="end">
+      This is a greeting.
+    </note>
+  </p>
+  <table cols="2"><row type="data">
+    <cell>
+      Text
+    </cell>
+    <cell>
+    Texto</cell>
+  </row></table>
+</TEI>
