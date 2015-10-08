@@ -1,0 +1,25 @@
+	LD5 	39
+START	LDA	7(0:2)
+	STA	*+2(5:5)
+	LDA	0(5:5)
+	CMP1	0(0:2)
+	STX	0(5:5)
+	LD1	0(5:5)
+	DEC1	15
+	ST1	*+1(5:5)
+	MOVE	0(0:2)
+	STX	*+2(5:5)
+	ST2	*+1(0:2)
+	CMPA	7
+	IOC	0(19)
+1H	OUT	BUF(19)
+	J3Z	*+2
+	HLT
+	ENT3	*
+	ENTA	12,3
+	STA	BUF
+	JMP	1B
+BUF	CON	1
+	END	START
+
+

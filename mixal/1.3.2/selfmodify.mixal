@@ -1,0 +1,9 @@
+	INC1	50
+	HLT
+START	LDA	0(5:5)
+	LDX	0(0:2)
+	STA	0(0:2)
+	STX	0(5:5)
+	JMP	0
+	END	START
+

@@ -1,0 +1,24 @@
+* STORE CHARACTERS IN BUFFER, PRINT BUFFER CONTENTS TO TTY
+* ANDREW CASHNER, 2015/10/08  	    
+BUF	EQU    2000
+TOTAL	EQU    1999
+TTY	EQU    19
+*
+	ORIG   1000
+START	IOC    0(TTY)
+	ENT1   51
+NXCHAR	ENTA   0,1		get character to store
+	STA    BUF,1
+	DEC1   1
+	J1P    NXCHAR
+*
+	ENT2   51		total words stored
+	ST2    TOTAL
+	ENT1   0		index of buf to print
+*
+PRINT	OUT    BUF,1(TTY)
+	INC1   14
+	CMP1   TOTAL
+	JL     PRINT
+	HLT
+	END	START

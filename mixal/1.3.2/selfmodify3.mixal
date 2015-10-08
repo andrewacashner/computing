@@ -1,0 +1,12 @@
+	ENT1	5
+	ST1	0(5:5)
+	DEC1	3
+	ST1	0(4:4)
+	INC1	37
+	ST1	*+6(5:5)
+	STZ	1
+	STZ	2
+	STZ	3
+	STZ	4
+	STZ	5
+	END	0
