@@ -1,0 +1,69 @@
+
+Just a suggestion: Use your operating system as your database, and access it by storing file paths in LaTeX macros.
+
+For example, use a directory structure like this:
+
+    $HOME/
+    $HOME/image
+    $HOME/audio
+    $HOME/video
+
+In the `image` folder you have files like this:
+
+    Bernini-Ecstasy_St_Teresa.png % or .pdf or .jpg
+    Michelangelo-Last_Judgment.png
+    Picasso-Guernica.png
+
+In the `web` directory you would have text files containing URLs:
+
+    `TeX-Stackexchange.tex` 
+    
+The contents of that file would be just this:
+
+    `http://www.tex.stackexchange.com/`
+
+Use macros like this:
+
+    \newcommand{\homepath}{/home/you/}
+
+    \newcommand{\imagepath}{\homepath/image}
+    \newcommand{\audiopath}{\homepath/audio}
+    \newcommand{\videopath}{\homepath/video}
+    \newcommand{\webpath}{\homepath/web}
+
+    \newcommand{\includeimage}[1]{%
+        \includegraphics[width=\textwidth,height=0.3\textheight,keepaspectratio]{\imagepath/#1}%
+    }
+    \newcommand{\includeaudio}[1]{% however you include audio
+    }
+    \newcommand{\includevideo}[1]{% however you include video
+    }
+    \newcommand{\includeweblink}[1]{%
+       \edef\newlink{\input{#1}}
+       \href{\newlink}%
+     }
+
+Then in your document you can write:
+
+    Michelangelo's \emph{Last Judgment} is a very big painting 
+    (see figure~\ref{fig:Michelangelo-Last_Judgment}).
+    
+    \begin{figure}
+    \caption{Michelangelo, \emph{The Last Judgment}}
+    \label{fig:Michelangelo-Last_Judgment}
+    \includeimage{Michelangelo-Last_Judgment} % macro automatically finds the path
+    \end{figure} 
+
+    For more information see \includeweblink{the TeX Stackexchange site}{TeX-Stackexchange}.
+
+You could go farther and wrap the whole figure environment shown above in a macro:
+
+    % #1 image file name, #2 caption
+    \newcommand{\includeimagefloat}[2]{%
+       \begin{figure}
+       \caption{#2}
+       \label{fig:#1}
+       \includeimage{#1}
+       \end{figure}%
+    }
+

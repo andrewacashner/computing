@@ -1,0 +1,26 @@
+\font\libertine="Linux Libertine O"
+\font\libertineitalic="Linux Libertine O Italic"
+\font\libertinebold="Linux Libertine O Bold"
+\let\tenrm\libertine
+\let\tenit\libertineitalic
+\let\tenbf\libertinebold
+\libertine
+
+\def\emph #1{{\it #1\/}}
+
+\def\beginheader{\begingroup\parindent=0pt}
+\def\endheader{\par\endgroup\par\vskip 2\baselineskip}
+\def\title{\par\bf}
+\def\author{\par\rm}
+
+\beginheader
+\title Basic Document Title
+\author Andrew Cashner
+\endheader
+
+What is the simplest format for input?
+Is it possible to write with {\it truly\/} minimal markup?
+Wouldn't it be better to write it \emph{this} way?
+
+\bye
+

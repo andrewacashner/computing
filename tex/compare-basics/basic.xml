@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/css" href="style.css"?>
+<xml>
+  <body>
+    <titleblock>
+      <doctitle>
+	Basic Document Title
+      </doctitle>
+      <docauthor>
+	Andrew Cashner
+      </docauthor>
+    </titleblock>
+    <p>
+      What is the simplest way to write this?
+    </p>
+    <p>
+      Is it possible to have <em>truly</em> minimal markup?
+    </p>
+  </body>
+</xml>

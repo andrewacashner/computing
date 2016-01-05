@@ -1,0 +1,20 @@
+xml {
+    font-family: "Linux Libertine O", serif;
+}
+titleblock {
+    padding-bottom: 2em;
+    display: block;
+}
+doctitle {
+    display: block;
+    font-size: 125%;
+    font-weight: bold;
+    padding-bottom: 0.5em;
+}
+p {
+    display: block;
+    padding-bottom: 1em;
+}
+em {
+    font-style: italic;
+}
