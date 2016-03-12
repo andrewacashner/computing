@@ -1,0 +1,39 @@
+\hoffset=-1in
+\hsize=8.5in
+\voffset=-0.5in
+\vsize=11in
+\nopagenumbers
+
+\newdimen\lineheight
+\newdimen\collegerule
+\collegerule=7mm
+\newdimen\widerule
+\widerule=9mm
+\lineheight=\collegerule
+
+\def\fullrule{%
+  \vskip \lineheight
+  \hrule width\hsize \nobreak
+}
+
+\newdimen\textheight
+\textheight=\vsize
+\newcount\maxlines
+
+% #1 line height in mm or macro for same
+\def\ruledpage#1{%
+  \lineheight = #1
+  \maxlines=\textheight
+  \divide\maxlines by \lineheight
+  \loop
+     \fullrule
+     \advance\maxlines by -1
+     \ifnum\maxlines > 0
+  \repeat
+}
+  
+%*******************
+
+\ruledpage{\collegerule}
+
+\bye

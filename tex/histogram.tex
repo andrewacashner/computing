@@ -1,0 +1,43 @@
+\newcount\units
+\def\chartbar#1{%
+  \units=#1 
+  \leftline{\hbox to 3em{\hfill#1}\quad\loop 
+    {\tt +}%
+    \advance\units by -2 
+    \ifnum\units > 0
+  \repeat}
+}
+
+\newcount\listlength
+\def\list{}
+\def\addtolist#1{%
+  \advance\listlength by 1 
+  \edef\list{\ifx\list\empty #1/\else\list #1/\fi}%
+}
+
+\addtolist{1}
+\addtolist{2}
+\addtolist{45}
+\addtolist{111}
+\addtolist{4}
+
+\list
+
+\the\listlength
+
+\def\dotrule{\par\vskip 1em\hbox to \hsize{\leaders\hbox{.}\hss}\par\vskip 1em}
+
+\def\scan#1{\scanA#1\end}
+\def\scanA#1{\ifx\end#1\else
+  \chartbar{#1}
+   \expandafter \scanA \fi
+}
+
+\dotrule
+
+\scan{{3}{45}{2}{15}{11}}
+
+\dotrule
+
+\scan{ {112} 2 {16} {59} {145} }
+\bye

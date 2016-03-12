@@ -1,0 +1,27 @@
+\documentclass{article}
+% Dummy text
+\usepackage[nopar]{lipsum}  
+
+% Define a real environment for footnotes
+% But how to convert to endnotes?
+\usepackage{environ}
+\NewEnviron{Footnote}{\footnote{\BODY}}                                                       
+
+% Convert footnotes to endnotes
+\usepackage{endnotes}
+\RenewEnviron{Footnote}{\expandafter\footnote\expandafter{\BODY}}
+\let\footnote=\endnote
+\AtEndDocument{\theendnotes}
+
+\begin{document}                                                                              
+
+\lipsum[1]\footnote{\lipsum[2]}
+ 
+\lipsum[3]%                                                                                   
+  \begin{Footnote} % Works normally, but not with endnotes conversion
+  \lipsum[4]
+
+  \lipsum[5]
+  \end{Footnote}  
+
+\end{document}  

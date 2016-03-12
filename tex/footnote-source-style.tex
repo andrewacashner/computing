@@ -1,0 +1,36 @@
+\documentclass{article}
+\newcommand{\sator}{Sator Arepo tenet opera rotas}
+\usepackage[paperheight=4in]{geometry}
+
+\usepackage{environ}
+\NewEnviron{Footnote}{\footnote{\BODY}}
+
+\begin{document}
+
+\sator.\footnote{Footnote following directly in source code, no extra spaces.} % good
+\sator.
+  \footnote{Footnote after newline.} % Produces extra space before footnote number in main text.
+\sator.%
+  \footnote{Footnote after commented-out newline.} % good
+\sator.%
+  \footnote
+    {Footnote with braced argument after newline.} % good
+\sator.%
+  \footnote{
+    Footnote with text of argument on newline after opening brace and with closing brace after newline.
+  } % good
+\sator.%
+  \footnote{%
+    Footnote with text of argument on separate line, but newline after brace commented out, and newline before closing brace commented out.%
+  } % good, not worth the trouble
+\sator.%
+  \begin{footnote}
+    {Footnote inside \LaTeX\ default \texttt{footnote} environment, with footnote text enclosed in curly braces.}
+  \end{footnote} % good, not worth the trouble
+\sator.%
+  \begin{Footnote}
+    Footnote inside \texttt{Footnote} environment created with \texttt{environ} package; no need to wrap footnote text in curly braces.
+  \end{Footnote} % could be valuable for long, multiparagraph notes
+
+\end{document}
+
