@@ -1,0 +1,219 @@
+* INTERVAL CALCULATOR (FOR KNUTH'S MIX)
+* ANDREW A. CASHNER, 2015-03-28
+*
+* MACROS
+*
+* OUTPUT DEVICE
+TTY	EQU	19
+* MEMORY LOCATIONS
+INPUT	EQU	3000	Codes for operator, interval, pitch, accidental, octave
+RESULT	EQU	3001	Output: Pitch, accidental, octave
+TMP	EQU	3002	
+OUTPUT	EQU	3050	Char-code output for printing
+* SWITCHING-TABLE LOCATIONS
+CHROM	EQU	3005	Diatonic to chromatic	
+PCCHAR	EQU	3015	Character codes for pitch classes
+SHARPS	EQU	3030	Character codes for accidentals	
+* PACKED-WORD FIELDS
+OPERAT	EQU	0:0	Operator + or - 
+INTQUAL	EQU	1:1	Interval-quality (d-imp/0, d-perf/1, m/1, M/2, P/2, a/3)
+INTERVL	EQU	2:2	Interval as integer (diatonic or chromatic, P1 = 0)
+PITCH	EQU	3:3	Pitch class as integer (diatonic or chromatic, C = 0)
+ACC	EQU	4:4	Accidental code (bb/0, b/1, n/2, #/3, X/4)
+OCTAVE	EQU	5:5	Octave no. as integer (A440 = A4, octave starts on C)
+*
+* MACROS FOR INPUT DATA
+*
+INOPER	EQU	1	-1 or +1
+INQUAL	EQU	1 	
+ININTV	EQU	5	
+INPC	EQU	1	
+INACC	EQU	1	
+INOCT	EQU	6
+*
+*Y	Eb8 - m3  = Cn8  -->  - | 1 | 2 | 2 | 1 | 8 |
+*Y	Eb8 - M3  = Cb8  -->  - | 2 | 2 | 2 | 1 | 8 | 
+*Y 	Db6 + m6  = Bbb6 -->  + | 1 | 5 | 1 | 1 | 6 |
+*N	C5  - m2  = B4   -->  - | 1 | 1 | 0 | 2 | 5 | B1
+*N	C5  + a10 = E6   -->  + | 3 | 9 | 0 | 2 | 5 | E-6
+*N	C#5 + M14 = B#6  --> + | 2 | 13 | 0 | 3 | 5 | B6
+*N	Fb4 - P5  = Bbb3 -->  - | 2 | 4 | 3 | 1 | 4 | B*1
+*
+* PREPARE OUTPUT DEVICE
+*
+	ORIG	1000
+START	IOC	0(TTY)
+*
+* STORE INPUT INSTRUCTIONS
+*
+	ENTA	INOPER
+	STA	INPUT(OPERAT)
+	ENTA	INQUAL		
+	STA	INPUT(INTQUAL)
+	ENTA	ININTV
+	STA	INPUT(INTERVL)
+	ENTA	INPC	
+	STA	INPUT(PITCH)
+	ENTA	INACC
+	STA	INPUT(ACC)
+	ENTA	INOCT
+	STA	INPUT(OCTAVE)
+*
+* COMPUTE END_OCTAVE	
+*
+*	end_octave = start_octave + (int)(interval / 7) * operator
+*
+	LDA	INPUT(OPERAT)	rA <- sign of operator
+	LDX 	INPUT(INTERVL)	
+	DIV	=7=		rA <- interval / 7, rX <- interval mod 7
+	STA	RESULT(OCTAVE)
+	ADD	INPUT(OCTAVE)
+	STA	RESULT(OCTAVE)
+	STX	TMP(INTERVL)	interval_dia
+*
+* COMPUTE END_PC_DIA (diatonic end pitch class)
+*
+*	end_pc_dia = start_pc_dia * (interval mod 7) * operator
+*
+	LDA	INPUT(OPERAT)
+	SLAX	5		rA <- rX (interval mod 7)
+	ADD	INPUT(PITCH)
+	STA	RESULT(PITCH)
+*
+* ADJUST FOR BASE 7 DIATONIC	
+*	(8 becomes 0, -1 becomes 6)
+*
+*	goto subroutine "base adjust", base = 7, 
+*	store return value in RESULT
+*
+	ENT2	=7=
+	ENT3	RESULT
+	JMP	BASEADJ		
+*
+* COMPUTE END ACCIDENTAL
+*
+* FIRST COMPUTE CHROMATIC START PITCH
+*
+*	start_pc_chrom = (start_pc_dia converted to chrom) + accidental
+*	then adjusted to base 12
+*
+	LD4	INPUT(PITCH)	
+	LDA	CHROM,4			Convert diatonic to chromatic with table
+	ADD	INPUT(ACC)
+	DECA	2			Convert accidental code (-2)
+	STA	TMP(PITCH)
+*
+* ADJUST FOR BASE 12
+*	goto subroutine
+*
+	ENT2	=12=
+	ENT3	TMP
+	JMP	BASEADJ
+*
+* COMPUTE CHROMATIC END PITCH USING CHROMATIC INTERVAL
+*
+*	end_pc_chrom = start_pc_chrom + interval_chrom * operator
+*	interval_chrom = (interval_dia converted to chrom) + interval_quality
+*
+	LD4	TMP(INTERVL)
+	LDA	CHROM,4			Convert diatonic interval to chromatic
+	ADD	INPUT(INTQUAL)	
+	DECA	2			Decode interval quality (-2)
+	SRAX	5
+	LDA	INPUT(OPERAT)		rA * operator
+	SLAX	5	
+	ADD	TMP(PITCH)
+	STA	TMP(PITCH)
+*
+* ADJUST FOR BASE 12
+*
+	ENT2	=12=
+	ENT3	TMP
+	JMP	BASEADJ
+* 
+* COMPUTE END ACCIDENTAL
+*
+*	accidental_adjust = end_pc_chrom - (end_pc_dia converted to chrom)
+*
+	LD4	RESULT(PITCH)
+	LDA	CHROM,4
+	SUB	TMP(PITCH)
+	INCA	2			Encode accidental (+2)
+	STA	RESULT(ACC)
+*
+* PRINT OUTPUT MESSAGE
+*
+	LD4	RESULT(PITCH)
+	LDA 	PCCHAR,4		 Convert pc to charcode by table
+	STA	OUTPUT(PITCH)
+	LDA	RESULT(OCTAVE)
+	CHAR
+	STX	OUTPUT(OCTAVE)
+	LD4	RESULT(ACC)
+	LDA	SHARPS,4		Convert accidental to charcode by table
+	STA	OUTPUT(ACC)
+	OUT	OUTPUT(TTY)
+	HLT
+*
+* SUBROUTINE TO ADJUST PITCH TO GIVEN BASE
+*
+*	rI2 = base, rA = pitch, rI3 = storage location for return value
+*
+BASEADJ	STJ	RETURN
+	JAN	SMALL		pitch < 0?
+	LD1	0,3(OCTAVE)
+*
+BIG	SUB	0,2		if pitch > base, subtract base
+	JAN	RETURN		if not, then done
+	INC1	1		increment octave
+	JMP	ADJUST
+*
+SMALL	ADD	0,2		if pitch < 0, add base
+	DEC1	1		decrement octave
+*
+ADJUST	ST1	0,3(OCTAVE)
+	STA	0,3(PITCH)	adjust pitch
+RETURN	JMP	*		goto main routine
+*
+* SWITCHING TABLES
+*
+* CONVERT DIATONIC TO CHROMATIC
+*
+	ORIG	CHROM
+	CON	0	+0 C diatonic
+	CON	2	1 D
+	CON	4	2 E
+	CON	5	3 F
+	CON	7	4 G
+	CON	9	5 A
+	CON	11	6 B
+*
+* CONVERT PITCHCLASS CODE TO CHAR CODE
+*
+	ORIG	PCCHAR
+	CON	3	+0 C
+	CON	4	1 D
+	CON	5	2 E
+	CON	6	3 F
+	CON	7	4 G
+	CON	1	5 A
+	CON	2	6 B
+*
+* CONVERT ACCIDENTAL CODE TO CHAR CODE
+*
+	ORIG 	SHARPS	
+	CON	48	+0 '=' for double-flat 
+	CON	45	1 '-' for flat 
+	CON	00	2 ' ' for natural
+	CON	44	3 '+' for sharp
+	CON	46	4 '*' for double-sharp
+*
+	END 	START
+
+
+
+
+	
+
+
+

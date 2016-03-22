@@ -1,0 +1,227 @@
+\documentclass[landscape]{article}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{pifont}
+\renewcommand*{\rmdefault}{\sfdefault}
+\usepackage{microtype}
+\usepackage{graphicx}
+
+\usepackage[margin=0.25in]{geometry}
+\setlength{\parindent}{0pt}
+
+\newcounter{weekday}
+\newcounter{dayinmonth}
+\newcounter{totaldaysinmonth}
+\newcounter{firstweekday}
+
+\newlength{\dayskip}
+\setlength{\dayskip}{1.5in}
+
+\newlength{\weekskip}
+\setlength{\weekskip}{1in}
+
+\newlength{\initialblankdayskip}
+
+\newcommand{\monthfont}[1]{%
+	{\Huge\emph{#1}}%
+}
+\newcommand{\daynumberfont}{\Large\bfseries}
+
+\newcommand{\Sunday}{0}
+\newcommand{\Monday}{1}
+\newcommand{\Tuesday}{2}
+\newcommand{\Wednesday}{3}
+\newcommand{\Thursday}{4}
+\newcommand{\Friday}{5}
+\newcommand{\Saturday}{6}
+
+\newcommand{\drawcalendar}{%
+	\clearpage%
+	\setcounter{dayinmonth}{1}%
+	\stepcounter{totaldaysinmonth}%
+	\setcounter{weekday}{\value{firstweekday}}%
+	\setlength{\initialblankdayskip}{\value{firstweekday}\dayskip}%
+	\loop%
+		\schedulingcommands%
+		\ifnum\value{dayinmonth} = 1%
+			\begin{center}
+			\monthfont{\monthname}
+			\end{center}
+			\leavevmode\hspace*{\initialblankdayskip}%
+		\fi%
+		\framebox[\dayskip][l]{%
+			\begin{minipage}[t][\weekskip][t]{\dayskip}
+				\vspace*{1ex}
+				\leavevmode\hspace*{1ex}%
+				{\daynumberfont\thedayinmonth\hfil\dayheadline}\par
+				\begin{center}
+				\eventmessage
+				\end{center}
+			\end{minipage}%
+			}%
+		%
+		\resetdaymessages%
+		\stepcounter{weekday}%
+		\ifnum\value{weekday} = 7%
+			\setcounter{weekday}{0}%
+			\par%
+		\fi%
+		\stepcounter{dayinmonth}%
+	\ifnum\value{dayinmonth} < \value{totaldaysinmonth}%
+	\repeat%
+}
+
+\newcommand{\newmonth}[3]{% %
+	% #1 monthname #2 days in month #3 weekday of first day
+	\gdef\monthname{#1}%
+	\setcounter{totaldaysinmonth}{#2}%
+	\setcounter{firstweekday}{#3}%
+}
+
+\newcommand{\seteventmessage}[1]{%
+	\gdef\eventmessage{#1}%
+}
+
+\newcommand{\setdayheadline}[1]{%
+	\gdef\dayheadline{#1}%
+}
+
+\newcommand{\setschedule}[1]{%
+	\gdef\schedulingcommands{\expandafter #1}%
+}
+
+\newcommand{\eventeveryweekday}[2]{%
+	% #1 day of week (macro) #2 command for that day
+	\ifnum\value{weekday} = #1
+		{#2}%
+	\fi%
+}
+\newcommand{\eventondate}[2]{%
+	% #1 day of week (macro) #2 command for that day
+	\ifnum\value{dayinmonth} = #1
+		{#2}%
+	\fi%
+}
+
+\newcommand{\resetdaymessages}{%
+	\seteventmessage{\relax}%
+	\setdayheadline{\relax}%
+}
+
+%*************************
+\resetdaymessages
+\newmonth{}{0}{0}
+\setschedule{}
+
+
+%***************************************
+\newcommand{\cross}{%
+	\resizebox{0.4\weekskip}{!}{{\Huge\ding{62}}}%
+}
+\newcommand{\bigstar}{%
+	\resizebox{0.4\weekskip}{!}{{\Huge\ding{80}}}%
+}
+\newcommand{\eventimage}[1]{%
+	\includegraphics[height=0.5\weekskip,width=0.9\linewidth,keepaspectratio]{#1}%
+}
+\graphicspath{{img/}}
+
+%***************************************************************************
+
+\begin{document}
+\newmonth{April}{30}{\Wednesday}
+\setschedule{%
+	\eventeveryweekday{\Monday}{%
+		\setdayheadline{SCHOOL}%
+		\seteventmessage{\eventimage{swimmer}}%
+	}%
+	\eventeveryweekday{\Tuesday}{%
+		\seteventmessage{\eventimage{beaker}}%
+	}%
+	\eventeveryweekday{\Wednesday}{%
+		\setdayheadline{SCHOOL}%
+	}%
+	\eventeveryweekday{\Friday}{%
+		\setdayheadline{SCHOOL}%
+	}%
+	\eventeveryweekday{\Sunday}{%
+		\seteventmessage{\cross}%
+	}%
+}
+\drawcalendar
+
+
+\newmonth{May}{31}{\Friday}
+\setschedule{%
+	\eventeveryweekday{\Monday}{%
+		\setdayheadline{SCHOOL}%
+		\seteventmessage{\eventimage{swimmer}}%
+	}%
+	\eventeveryweekday{\Tuesday}{%
+		\seteventmessage{\eventimage{beaker}}%
+	}
+	\eventeveryweekday{\Wednesday}{%
+		\setdayheadline{SCHOOL}%
+	}%
+	\eventeveryweekday{\Friday}{%
+		\setdayheadline{SCHOOL}%
+	}%
+	\eventeveryweekday{\Sunday}{%
+		\seteventmessage{\cross}%
+	}%
+	\eventondate{1}{%
+		\seteventmessage{\eventimage{soccer}}%
+	}%
+	\eventondate{15}{%
+		\seteventmessage{\eventimage{soccer}}%
+	}%
+	\eventondate{21}{%
+		\seteventmessage{{\Huge\bfseries MSI}}%
+	}%
+	\eventondate{29}{%
+		\seteventmessage{%
+			\eventimage{soccer}
+			\eventimage{hotdog}% picnic
+		}%
+	}%
+	\ifnum\value{dayinmonth} > 4
+		\ifnum\value{dayinmonth} < 13
+			\setdayheadline{\relax}%
+			\seteventmessage{\eventimage{pinetree}}% Minnesota
+		\fi%
+	\fi%
+}
+\drawcalendar
+
+\newmonth{June}{30}{\Monday}
+\setschedule{%
+	\eventeveryweekday{\Sunday}{%
+		\seteventmessage{\cross}%
+	}%
+	\eventondate{1}{%
+		\setdayheadline{SCHOOL}%
+		\seteventmessage{\eventimage{trowel}}% plant a garden
+	}%
+	\eventondate{3}{%
+		\setdayheadline{SCHOOL}%
+	}%
+	\eventondate{5}{%
+		\setdayheadline{SCHOOL}%
+		\seteventmessage{\bigstar}% last day
+	}%
+	\eventondate{12}{%
+		\seteventmessage{\eventimage{party}}%
+	}%
+	\eventondate{13}{%
+		\seteventmessage{\eventimage{mortarboard}}%
+	}
+	\ifnum\value{dayinmonth} > 15
+		\ifnum\value{dayinmonth} < 21
+			\seteventmessage{\eventimage{winmiller}}%
+		\fi%
+	\fi%
+}
+\drawcalendar
+
+\end{document}

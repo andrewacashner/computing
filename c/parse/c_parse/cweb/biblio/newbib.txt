@@ -1,0 +1,11 @@
+# au, ti, loc, yr
+Kircher, Athanasius
+Musurgia universalis
+Rome
+1650
+
+# au, ti, note, yr
+Cashner, Andrew
+Faith, Hearing, and the Power of Music in Hispanic Villancicos, 1600--1700
+PhD dissertation, University of Chicago
+2015

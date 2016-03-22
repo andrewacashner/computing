@@ -1,0 +1,31 @@
+\I\X14:Check for environment begin or end\X
+\U13.
+\I\X19:Convert and print end tag\X
+\Us12\ET16.
+\I\X18:Convert and print start tag\X
+\Us13\ET15.
+\I\X5, 20:Function prototypes\X
+\U1.
+\I\X3, 10:Global variables\X
+\U1.
+\I\X8:Main variables\X
+\U1.
+\I\X9:Open files for reading and writing\X
+\U1.
+\I\X11:Process text\X
+\U1.
+\I\X7:Write csname dictionary\X
+\U1.
+\I\X15:case BEGIN environment mode\X
+\U11.
+\I\X17:case COMMENT mode\X
+\U11.
+\I\X13:case CSNAME mode\X
+\U11.
+\I\X16:case END environment mode\X
+\U11.
+\I\X12:case TEXT mode\X
+\U11.
+\I\X4:csname macro labels\X
+\U3.
+

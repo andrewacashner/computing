@@ -1,0 +1,226 @@
+%% Demonstration file for building a small database of personal contact information,
+%% accessible and printable in a variety of ways, with the goal of using this in a syllabus class.
+%%
+%% By Andrew A. Cashner, 2015/07/12
+
+\documentclass{article}
+
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{url}
+
+%% Each personID environment creates a set of macros specific to the person named in that environment.
+%% The argument in brackets to personID specifies the key to be used in the macro names.
+%% If the environment is called as \begin{personID}[professor] and the ID element \name is specified,
+%% then the name will be stored in the macro \professorname.
+%% It is necessary to use roman numerals for, say, multiple teaching assistants (taII instead of ta2).
+%%
+%% These macros are also linked to a numerically ordered array: the first personID is stored as 
+%% person0, the second person1, and so on. The ID element fields are stored always in the same order,
+%% which is set by \fieldorder. Thus \role is always field0, \name is field1, and so on.
+%%
+%% For example, the first ID is entered like so: 
+%%   \begin{personID}[assistant] 
+%%     \name{Juan Rana} 
+%%   \end{personID}
+%% The text 'Juan Rana' is stored in the macro \assistantname, and in the macro \person0field1.
+
+%% The personID environment defines a base control-sequence name for all the ID element fields
+%% that will be defined within it (\csbase). It also increments a counter that will be used
+%% as a unique personID number.
+%% It turns the abbreviation into a control sequence to easily access the person's ID number.
+%% If the abbreviation is 'assistant', the csname is \theassistant (similar to LaTeX counters); 
+%% this is defined to match the current personnum.
+\newcounter{personnum}
+\newenvironment{personID}[1]
+	{%
+		\def\csbase{#1}
+		\global\expandafter\edef\csname the\csbase\endcsname{\thepersonnum}%
+	}
+	{\stepcounter{personnum}}
+
+
+%% \IDelement creates a control sequence based on the base name specified in the argument to personID,
+%% and the type of ID specified in, for example, \name, which is an integer corresponding to an element 
+%% of \field.
+%% #1 \field number #2 text for that field
+\newcommand{\IDelement}[2]{%
+	\def\IDwordbase{\csbase\field{#1}}% mnemonic baseword, e.g, \profname
+	\expandafter\gdef\csname\IDwordbase\endcsname{#2}%
+	%
+	\def\IDnumericbase{person\thepersonnum field#1}% numeric baseword, e.g., \person0field1
+	\expandafter\gdef\csname\IDnumericbase\endcsname{#2}%
+}
+
+%% These commands create ID elements specific to each personID environment.
+\newcommand{\role}[1]	{\IDelement{0}{#1}}
+\newcommand{\name}[1]	{\IDelement{1}{#1}}
+\newcommand{\office}[1]	{\IDelement{2}{#1}}
+\newcommand{\phone}[1]	{\IDelement{3}{#1}}
+\newcommand{\email}[1]	{\IDelement{4}{\url{#1}}}
+
+%% This command selects the proper field name given a number.
+\newcommand{\field}[1]{%
+	\ifcase #1%
+		role\or
+		name\or
+		office\or
+		phone\or
+		email\fi%
+}
+\newcommand{\totalfields}{5}
+
+%% Macros to refer to the field numbers by name.
+\newcommand{\rolefield}{0}
+\newcommand{\namefield}{1}
+\newcommand{\officefield}{2}
+\newcommand{\phonefield}{3}
+\newcommand{\emailfield}{4}
+
+%% These are basic text-substitution macros.
+\newcommand{\professor}{Professor}
+\newcommand{\ta}{Teaching Assistant}
+
+%% This command calls up an ID from its numeric macro.
+\newcommand{\getIDelement}[2]{%
+	\csname person#1field#2\endcsname%
+}
+%% Using the above command, this command prints all data defined by personID environments
+%% using a nested loop.
+\newcounter{thisperson}
+\newcounter{thisfield}
+\newcommand{\listallpeople}{%
+	\setcounter{thisperson}{0}%
+	\begin{itemize}
+	\loop{%
+		\item%
+		\setcounter{thisfield}{0}%
+		\loop	
+			%% Print the contents of \person#field#
+			\getIDelement{\thethisperson}{\thethisfield}%
+			\stepcounter{thisfield}%
+			\ifnum\value{thisfield} < \totalfields%
+			%% After each field, but not the last, do this:
+			,\ % 
+		\repeat%
+		}%
+		%% After each complete set of fields, do this:
+		\par%
+		\stepcounter{thisperson}%
+		\ifnum\value{thisperson} < \value{personnum}%
+	\repeat%
+	\end{itemize}%
+}
+
+%% List data for a single person in tabular format.
+\newcommand{\listperson}[1]{%
+	\def\selectedperson{#1}%
+	\begin{tabular}{@{}l@{}}
+	\textbf{\getIDelement{\selectedperson}{\rolefield}}\\
+	\textbf{\getIDelement{\selectedperson}{\namefield}}\\
+	\getIDelement{\selectedperson}{\officefield}, \getIDelement{\selectedperson}{\phonefield}\\
+	\getIDelement{\selectedperson}{\emailfield}\\
+	\\
+	\end{tabular}%
+}
+%% A formatted list of all personnel in tabular format.
+\newcommand{\listpersonnel}{%
+	\setcounter{thisperson}{0}
+	\noindent
+	\loop
+		\listperson{\thethisperson}\ \ %
+		%
+		\stepcounter{thisperson}
+		\ifnum\value{thisperson} < \value{personnum}
+	\repeat
+}
+
+%% For demonstration
+
+\newcommand{\myrule}{%
+	\bigskip\noindent\rule{\textwidth}{0.4pt}\par%
+}
+
+\newenvironment{explain}
+	{%
+		\myrule
+		\setlength{\parindent}{0pt}%
+	}
+	{\bigskip}
+
+\newcommand{\code}[1]{{\texttt{#1}}}
+\newcommand{\textcsname}[1]{\code{\textbackslash #1}}
+
+%***********************************************************
+\begin{document}
+
+\begin{personID}{prof}
+\role	{\professor}
+\name	{Walrace P. Jug, PhD}
+\phone	{(123) 456-7890}
+\office	{BLDG 123}
+\email  {wpjug@usc.edu}
+\end{personID}
+
+\begin{personID}{taI}
+\role	{\ta}
+\name	{Fulbert M. Sogrobert, M.Mus.}
+\email	{fmsogrob@usc.edu}
+\office	{BLDG 213}
+\phone	{(098) 765-4321}
+\end{personID}
+
+\begin{personID}{taII}
+\role	{\ta}
+\name	{Larissa J. Swift, B.A.}
+\phone	{(744) 322-1425}
+\office	{BLDG 312}
+\email	{ljswift@usc.edu}
+\end{personID}
+
+%****************************************
+
+\begin{explain}
+Calling up individual fields using mnemonic names based on \code{personID} abbreviations.
+\end{explain}
+
+\begin{tabular}{ll}
+Instructor & \profrole\ \profname\\[1ex]
+Assistants & \taIname\\
+		   & \taIIname\\
+\end{tabular}
+
+\begin{explain}
+Calling up fields using \textcsname{getIDelement} with the person number and field number.
+\end{explain}
+
+\begin{tabular}{ll}
+\code{person0field1} & \getIDelement{0}{1}\\
+\code{person1field2} & \getIDelement{1}{2}\\
+\end{tabular}
+
+\begin{explain}
+Print all contact information by looping through the person and field numbers \textcsname{listallpeople}.
+\end{explain}
+
+\listallpeople
+
+\begin{explain}
+Print all contact information in tabular format using \textcsname{listpersonnel}. Must be set \textcsname{raggedright}.
+\end{explain}
+
+\raggedright
+\listpersonnel
+
+\begin{explain}
+Manually formatting a list of contacts in tabular format by using \textcsname{listperson}. 
+The person to display is selected by the abbreviation set earlier, as in \textcsname{theprof}.
+\end{explain}
+
+\listperson{\theprof}
+
+\listperson{\thetaI}\hfill\listperson{\thetaII}
+
+
+\end{document}

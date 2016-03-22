@@ -1,0 +1,35 @@
+\I\X11:Check number of arguments\X
+\U10.
+\I\X19:Check perfect vs. imperfect interval\X
+\U10.
+\I\X21:Compute diatonic end pitch and octave\X
+\U1.
+\I\X23:Compute end accidental\X
+\U1.
+\I\X2:Constants\X
+\U1.
+\I\X26:Error message strings\X
+\U2.
+\I\X5, 7, 27:Function prototypes\X
+\U1.
+\I\X13:Get accidental\X
+\U10.
+\I\X17:Get interval number\X
+\U10.
+\I\X16:Get interval quality\X
+\U10.
+\I\X14:Get octave number\X
+\U10.
+\I\X15:Get operator\X
+\U10.
+\I\X12:Get pitch class\X
+\U10.
+\I\X3:Global variables\X
+\U1.
+\I\X9, 18, 20, 22, 24:Main variables\X
+\U1.
+\I\X25:Print output\X
+\U1.
+\I\X10:Validate and store input\X
+\U1.
+

@@ -1,0 +1,105 @@
+\documentclass[landscape]{article}
+\usepackage[margin=0.25in]{geometry}
+\setlength{\parindent}{0pt}
+
+\newcounter{weekday}
+\newcounter{dayinmonth}
+\newcounter{totaldaysinmonth}
+\newcounter{firstweekday}
+
+\newlength{\dayskip}
+\setlength{\dayskip}{1.5in}
+
+\newlength{\weekskip}
+\setlength{\weekskip}{1in}
+
+\newlength{\initialblankdayskip}
+
+\newcommand{\Sunday}{0}
+\newcommand{\Monday}{1}
+\newcommand{\Tuesday}{2}
+\newcommand{\Wednesday}{3}
+\newcommand{\Thursday}{4}
+\newcommand{\Friday}{5}
+\newcommand{\Saturday}{6}
+
+\newcommand{\drawcalendar}{%
+	\setcounter{dayinmonth}{1}%
+	\stepcounter{totaldaysinmonth}%
+	\setcounter{weekday}{\value{firstweekday}}%
+	\setlength{\initialblankdayskip}{\value{firstweekday}\dayskip}
+	\loop%
+		\schedulingcommands%
+		\ifnum\value{dayinmonth} = 1%
+			\begin{center}
+			{\Huge\itshape\monthname}
+			\end{center}
+			\leavevmode\hspace*{\initialblankdayskip}%
+		\fi%
+		\framebox[\dayskip][c]{%
+			\begin{minipage}[t][\weekskip][t]{\dayskip}
+				\makebox[2em][c]{\thedayinmonth}
+				\begin{center}
+				\eventmessage
+				\end{center}
+			\end{minipage}%
+		}%
+		%
+		\resetdaymessages%
+		\stepcounter{weekday}%
+		\ifnum\value{weekday} = 7%
+			\setcounter{weekday}{0}%
+			\par%
+		\fi%
+		\stepcounter{dayinmonth}%
+	\ifnum\value{dayinmonth} < \value{totaldaysinmonth}%
+	\repeat%
+}
+
+\newcommand{\newmonth}[3]{%
+	\gdef\monthname{#1}%
+	\setcounter{totaldaysinmonth}{#2}%
+	\setcounter{firstweekday}{#3}%
+}
+\newcommand{\setdayheadline}[1]{%
+	\gdef\dayheadline{#1}%
+}
+\newcommand{\seteventmessage}[1]{%
+	\gdef\eventmessage{#1}%
+}
+\newcommand{\setschedule}[1]{%
+	\gdef\schedulingcommands{#1}%
+}
+\newcommand{\resetdaymessages}{%
+	\setdayheadline{\relax}%
+	\seteventmessage{\relax}%
+}
+\setschedule{}
+\resetdaymessages
+
+\newcommand{\eventeveryweekday}[2]{%
+	\ifnum\value{weekday} = #1
+		\seteventmessage{#2}%
+	\fi%
+}
+\newcommand{\eventondate}[2]{%
+	\ifnum\value{dayinmonth} = #1
+		\seteventmessage{#2}%
+	\fi%
+}
+
+\begin{document}
+
+
+\newmonth{May}{31}{\Friday}
+\setschedule{%
+	\eventeveryweekday{\Monday}{School}%
+	\eventeveryweekday{\Friday}{TGIF}%
+	\eventondate{7}{Party}%
+	\eventondate{20}{Birthday}%
+}
+\drawcalendar
+
+\end{document}
+
+

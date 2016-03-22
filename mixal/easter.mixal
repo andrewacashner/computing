@@ -1,0 +1,123 @@
+* CALCULATE THE DATE OF EASTER
+* SUBROUTINE ONLY
+* ANDREW CASHNER, 2015/11/09
+*
+TTY	EQU	19
+TTYLINE	EQU	14			MIX words per line
+PERROW	EQU	3			Output statements per TTY row
+MONTH	EQU	895
+YRLAST	EQU	2000
+YRMAX	EQU	50
+TABLE	EQU	1000
+TABMAX	EQU	YRMAX*4+30
+TABLAST	EQU	TABLE+TABMAX
+*
+G	EQU	900
+X	EQU	G+1
+Z	EQU	G+2
+D	EQU	G+3
+N	EQU	G+4
+*
+START	ENN1	YRMAX
+	ENN2	TABMAX
+ROW	ENN3	PERROW
+WORD	JMP	EASTER
+	CHAR
+	STX	TABLAST,2(1:2)		Store DD...
+	LDA	MONTH,4(1:2)		
+	LDX	MONTH+1,4		rAX <= ...MM | MMM,.
+	STA	TABLAST,2(4:5)
+	STX	TABLAST+1,2
+	ENTA	YRLAST,1		Get year
+	CHAR
+	STX	TABLAST+2,2(2:5)    	.YYYY
+	INC2	4			Move to next print position
+	INC1	1
+	INC3	1			
+	J3Z	1F			End of row?
+	J1NP	WORD			All years done?
+1H	INC2	2			If end of row, add two-word space
+	J1NP	ROW			
+*
+	ENN2	TABMAX
+PRINT	OUT	TABLAST,2(TTY)
+	INC2	TTYLINE
+	J2NP	PRINT
+	HLT
+*
+EASTER	STJ	EXIT1
+	STZ	G		Initialize variables to 0
+	STZ	X
+	STZ	Z
+	STZ	D
+	STZ	N
+	ENT4	0		rI4 is month flag: 0 = March, 2 = April
+	ENTA	YRLAST,1	Algorithm step E1
+	ENT5	19		rI5 = divisor in subroutine
+	JMP	MODULO		after, rA = year mod 19
+	INCA	1		rA = g
+	STA	G		g = year mod 19 + 1
+	ENTA	0
+	ENTX	YRLAST,1	E2. rX = year
+	DIV	=100=
+	INCA	1		rA = c
+	MUL	=3=		E3.
+	DIV	=4=
+	DECA	12		rA = x
+	STA	X
+	MUL	=8=
+	INCX	5
+	DIV	=25=
+	DECA	5		rA = z
+	STA	Z
+	ENTA	YRLAST,1	E4.
+	MUL	=5=
+	DIV	=4=
+	SUB	X
+	DECA	10		rA = d
+	STA	D
+	LDA	G		E5.
+	MUL	=11=
+	SLAX	5
+	INCA	=20=
+	ADD	Z
+	SUB	X
+	JANN	2F
+	MUL	=-1=		Get absolute value if negative
+	SLAX	5
+2H	ENT5	30		rA mod 30
+	JMP	MODULO		rA = e
+	MUL	=-1=		rX = -e
+	SLAX	5		rA = -e
+	ADD	=44=		E6. rA = -e + 44
+	CMPA	=21=		rA = n
+	JGE	3F
+	INCA	30
+3H	STA	N		rA = n
+	ADD	D		E7.
+	ENT5	7		rA <= rA mod 7
+	JMP	MODULO
+	MUL	=-1=
+	INCX	7
+	SLAX	5
+	ADD	N		rA = n
+	CMPA	=31=		E8.
+	JLE	EXIT1		rI4 = month = 0 = March
+	DECA	31		rA = day
+	INC4	2		rI4 = month = 2 = April
+EXIT1	JMP	*		return
+*
+MODULO	STJ	EXIT2		rA = quotient, rI5 = divisor
+4H	DECA	0,5
+	JAP	4B
+	INCA	0,5		rA = remainder
+EXIT2	JMP	*
+*
+	ORIG	MONTH
+	ALF     MA
+	ALF	RCH,
+	ALF	AP
+	ALF	RIL,
+	END	START
+	
+	

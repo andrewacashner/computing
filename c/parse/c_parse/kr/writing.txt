@@ -1,0 +1,8 @@
+Hello world
+This is my first document
+
+written in my homemade text editor.
+
+So far I am impressed
+		with its features!!
+

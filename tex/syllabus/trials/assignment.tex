@@ -1,0 +1,49 @@
+\documentclass{article}
+\newenvironment{Asst}[1]
+	{%
+		\par\medskip\noindent#1\par
+		\begin{enumerate}%
+	}
+	{\end{enumerate}}
+
+\newcommand{\setAsstHeader}[2]{%
+	\newcommand{#1}{#2}%
+}
+
+\newcommand{\PreNote}[1]{%
+	\makebox[1.5em][l]{(#1)}%
+}
+\newcommand{\srcI}{\PreNote{i}}
+\newcommand{\srcII}{\PreNote{ii}}
+
+\begin{document}
+
+\setAsstHeader{\Reading}{Close Reading}
+\setAsstHeader{\Music}{Listening and Score Study}
+
+\begin{Asst}{\Reading}
+\item Plato
+\item Augustine
+\end{Asst}
+
+\begin{Asst}{\Music}
+\item Machaut
+\item Debussy
+\end{Asst}
+
+\begin{Asst}{Busywork}
+\item Write all your knowledge on a $3 \times 5$ card.
+\end{Asst}
+
+\begin{Asst}{Reformation Theologians}
+\item Luther
+\item Erasmus
+\item Calvin
+\end{Asst}
+
+\begin{Asst}{Readings on Neoplatonism and Music}
+\item \srcI\ Boethius
+\item \srcII\ Bower
+\end{Asst}
+
+\end{document}

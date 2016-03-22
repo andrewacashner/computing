@@ -1,0 +1,40 @@
+\newtoks\tmptoks
+\newtoks\mytoks
+\def\prepend#1\par{%
+        \tmptoks{\par #1}
+        \mytoks\expandafter{\the\expandafter\tmptoks\the\mytoks}%
+}
+\def\tac#1{%
+        \mytoks{\relax}
+        \everypar{\prepend}
+        \obeylines
+        #1
+}
+
+% Works with explicit \prepend and \par
+\prepend one\par
+\prepend two\par
+\prepend three\par
+\prepend four\par
+\the\mytoks
+
+\bye % Works up to this point
+
+% Using \obeylines to supply the \par commands doesn't work
+\mytoks{\relax}
+\obeylines
+
+\prepend hello
+\prepend world
+\prepend of
+\prepend earth
+
+% Using \everypar to supply \prepend and \obeylines to supply \par definitely doesn't work
+% This interface is the goal: \tac{\input{file}}
+\tac{
+hello
+world
+of
+earth
+}
+

@@ -1,0 +1,73 @@
+\documentclass{article}
+\usepackage{xparse}
+
+\newcounter{week}
+\newcommand{\Week}[1]{%
+	\stepcounter{week}%
+	\subsection*{Week \theweek: #1}%
+}
+\newcounter{class}
+\DeclareDocumentCommand{\Class}{ o m }{%
+	\stepcounter{class}%
+	\IfNoValueTF{#1}{\def\classday{\relax}}
+		{\def\classday{\ (#1)}}
+	\subsubsection*{Class \theclass \classday: #2}
+}
+\newenvironment{Reading}
+	{\noindent\ReadingHeader\par\begin{enumerate}}
+	{\end{enumerate}}
+\newenvironment{Listening}
+	{\noindent\MusicHeader\par\begin{enumerate}}
+	{\end{enumerate}}
+
+\newcommand{\ReadingHeader}	{Reading:}
+\newcommand{\MusicHeader}	{Music listening and score study:}
+
+\DeclareDocumentCommand{\Text}{ o m }{%
+	\IfNoValueTF{#1}
+		{\item{#2}}
+		{\item{\makebox[2em][l]{(\romannumeral#1\relax)}#2}}%
+}
+\newcommand{\Music}[1]{%
+	\item{#1}%
+}
+	
+
+\newcommand{\ti}[1]{%
+	\emph{#1}%
+}
+
+%************************************************************************
+\begin{document}
+
+\section*{Unit I: Early Baroque, 1590--1680}
+\subsection*{Opera}
+
+%**************************************
+\Week{Italy}
+\Class[M]{Private opera}
+
+\begin{Reading}
+\Text[1]{Strunk xx}
+\Text[2]{Heller 3}
+\end{Reading}
+
+\begin{Listening}
+\Music{Monteverdi, \ti{L'Orfeo}}
+\Music{Landi, \ti{Il Sant'Alessio}}
+\end{Listening}
+
+%*******************
+\Class[W]{Public opera}
+
+\begin{Reading}
+\Text[1]{Strunk xx}
+\Text[2]{Heller 6}
+\end{Reading}
+
+\begin{Listening}
+\Music{Cavalli, \ti{Il Giasone}}
+\Music{Cesti, \ti{La Griselda}}
+\end{Listening}
+
+\end{document}

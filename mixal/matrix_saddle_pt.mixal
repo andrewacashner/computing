@@ -1,0 +1,195 @@
+* MATRIX SADDLE POINT -- ANDREW CASHNER 2015-04-04
+* 
+* KNUTH TAOCP 1.3.2, EX. 10 (P. 159)
+*
+* FIND SADDLE POINT OF MATRIX OF INTEGERS 
+* Search rows and columns of 2d array,
+* find the address of value that is least in row and greatest in column.
+*
+* SYMBOLIC CONSTANTS
+*
+TTY	EQU	19
+ROWNUM	EQU	9
+COLNUM	EQU	8
+*
+* MEMORY LOCATIONS
+*
+MATRIX	EQU	2000
+LAST	EQU	ROWNUM*COLNUM-1
+ROWMIN	EQU	MATRIX+LAST+1
+COLMAX	EQU	ROWMIN+ROWNUM+1
+*
+* FIND MINIMUM VALUE IN EACH ROW 
+*
+	ORIG	1000
+START	IOC	0(TTY)	
+	ENT4	MATRIX+LAST	rI4 <- current address
+	ENT2	ROWNUM		rI2 <- row position
+NXTROW	ENT3	COLNUM		rI3 <- column position
+1H	LDA	0,4		rA  <- new test value
+	ENT1	0,4		rI1 <- address of current minimum value
+2H	DEC3	1		
+	J3Z	ENDROW		end of row?
+	DEC4	1
+	CMPA	0,4		compare to next matrix value
+	JLE	2B		if rA is less than next value, keep rA as min
+	JMP	1B		if not, store next value as new min
+ENDROW	ST1	ROWMIN,2	store address of row minimum in result array
+	DEC2	1
+	J2NN	NXTROW		next row
+*
+* FIND MAXIMUM VALUE IN EACH COLUMN
+*
+*	Same algorithm as for rows, but rows & cols reversed, and
+*	searching for greatest instead of least
+*
+	ENT4	MATRIX+LAST
+	ENT3	COLNUM
+NXTCOL	ENT2	ROWNUM
+3H	LDA	0,4
+	ENT1	0,4
+4H	DEC2	1
+	J2Z	ENDCOL
+	DEC4	COLNUM		next address = current address - num of cols
+	CMPA	0,4
+	JGE	4B
+	JMP	3B
+ENDCOL	ST1	COLMAX,3
+	INC4	LAST-ROWNUM-1	move to end of next column
+	DEC3	1
+	J3NN	NXTCOL
+*
+* COMPARE ROWMIN AND COLMAX, FIND FIRST ADDRESS COMMON TO BOTH
+*
+	ENT2	ROWNUM
+5H	ENT3	COLNUM
+	LD1	ROWMIN,2	rI1 <- current test address from result array
+6H	CMP1	COLMAX,3
+	JE	FOUND
+	DEC3	1		
+	J3P	6B		next COLMAX value
+	DEC2	1
+	J2P	5B		next ROWMIN value
+*
+* HALT WITH ADDRESS OF SADDLE POINT IN RI1 AND VALUE OF SADDLE POINT IN RA
+* RETURN -1 in RI1 and RA IF NONE FOUND
+*
+	ENN1	1		
+	ENTA	0
+	JMP 	*+1
+FOUND	LDA	0,1
+*
+* DEBUG
+*
+	ENT5	ROWNUM		Print ROWMIN
+PTROW	LDA	ROWMIN,5
+	CHAR
+	STX	500,5
+	DEC5	1
+	J5P	PTROW
+	OUT	500(TTY)
+*
+	ENT5	COLNUM		Print COLMAX
+PTCOL	LDA	COLMAX,5
+	CHAR	
+	STX	500,5
+	DEC5	1
+	J5P	PTCOL
+*
+	OUT	500(TTY)
+*
+	LDA	ROWMIN+4	Should be saddle point
+	ENTX	0
+	HLT
+	CHAR
+	STX	400
+	OUT	400(TTY)
+	HLT			
+*
+* STORE MATRIX VALUES
+*
+	ORIG	MATRIX
+* ROW 0
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+* ROW 1 
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+* ROW 2
+	CON 	1
+	CON 	1
+	CON 	1
+	CON 	1
+	CON 	1
+	CON 	1
+	CON 	1
+	CON 	1
+* ROW 3
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+* ROW 4
+	CON	3
+	CON	3
+	CON	3
+	CON	3
+	CON	2	saddle point [4][4] (address 2036)
+	CON	3
+	CON	3
+	CON	3
+* ROW 5
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+* ROW 6
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+* ROW 7
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+* ROW 8
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+	CON	1
+*
+	END	START
+

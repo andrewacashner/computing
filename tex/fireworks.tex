@@ -1,0 +1,81 @@
+\documentclass{article}
+\usepackage{rotating, color}
+
+\newcounter{degrees}
+\newcounter{degreeIncrement}
+
+% More than 360 repetitions will max out TeX's memory
+% Print error message and end document if more than 360 reps are requested
+\newcommand{\textwheelErrorTest}[1]{%
+	\ifnum#1 > 360 
+		\typeout{%
+			ERROR: You asked for #1 repetitions in 
+			\noexpand\textwheel, but the maximum is 360.
+			I am stopping before TeX exceeds its memory capacity.%
+		}%
+		\def\erroraction{\end{document}}
+	\else
+		\def\erroraction{\relax}
+	\fi
+	\erroraction
+}
+
+% For calculating length of string for kerning
+\newlength{\strlen}
+
+% #1 text to repeat, #2 color of text, #3 number of times to repeat it
+\newcommand{\textwheel}[3]{%
+	\textwheelErrorTest{#3}
+	%
+	\setcounter{degreeIncrement}{360}
+	\setcounter{degrees}{0}
+	\divide\value{degreeIncrement} by #3
+	\settowidth{\strlen}{#1}
+	%
+	\loop
+		\rlap{%
+			\turnbox{\value{degrees}}{\color{#2}\quad#1}%
+		}\kern -0.5\strlen%
+		%
+		\addtocounter{degrees}{\value{degreeIncrement}}
+	\ifnum\value{degrees} < 360
+	\repeat%
+}
+
+\begin{document}
+\pagecolor{black}
+
+\begin{minipage}{0.45\linewidth}
+%
+\textwheel{\TeX}{yellow}{6}
+
+\vspace{10\baselineskip}
+\textwheel{\LaTeX}{cyan}{12}
+
+\vspace{10\baselineskip}
+\textwheel{Xe\TeX}{red}{8}
+
+\vspace{10\baselineskip}
+\textwheel{Lua\TeX}{green}{5}
+
+\vspace{15\baselineskip}
+\textwheel{Con\TeX t}{magenta}{4}
+%
+\end{minipage}%
+\hfill%
+\begin{minipage}{0.45\linewidth}
+%
+\textwheel{\LaTeX}{white}{20}
+
+\vspace{10\baselineskip}
+\textwheel{\LaTeX}{green}{45}
+
+\vspace{15\baselineskip}
+\textwheel{\LaTeX}{yellow}{90}
+
+\vspace{25\baselineskip}
+\textwheel{\LaTeX}{red}{180}
+%
+\end{minipage}
+
+\end{document}

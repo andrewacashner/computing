@@ -1,0 +1,22 @@
+\documentclass{article}
+\newcounter{personnum}
+\newenvironment{personID}[1]
+	{\global\expandafter\edef\csname the#1\endcsname{\thepersonnum}}
+	{\stepcounter{personnum}}
+
+\begin{document}
+
+\begin{personID}{director}
+% contact info fields
+\end{personID}
+
+\begin{personID}{assistant}
+% contact info fields
+\end{personID}
+
+Director \thedirector, Assistant \theassistant
+
+\end{document}
+
+	
+

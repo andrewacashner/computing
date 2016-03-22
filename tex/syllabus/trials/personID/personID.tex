@@ -1,0 +1,80 @@
+\documentclass{article}
+\usepackage{url}
+
+\newcounter{personnum}
+\newcounter{fieldnum}
+\newcounter{currentperson}
+
+\newenvironment{personID}
+	{%
+		\def\csbase{person\thepersonnum}
+		\setcounter{fieldnum}{0}
+	} 
+	{%
+		\newcounter{\csbase totalfields}
+		\setcounter{\csbase totalfields}{\thefieldnum}
+		\stepcounter{personnum}
+	}
+\def\IDelement#1#2{%
+	\expandafter\gdef\csname\csbase #1\endcsname{#2}%
+	\expandafter\gdef\csname\csbase field\thefieldnum\endcsname{#1}%
+	\stepcounter{fieldnum}
+}
+\def\name#1{\IDelement{name}{#1}}
+\def\office#1{\IDelement{office}{#1}}
+\def\phone#1{\IDelement{phone}{#1}}
+\def\email#1{\IDelement{email}{\url{#1}}}
+\def\officehours#1{\IDelement{officehours}{Office hours: #1}}
+
+\def\listpersonnel{%	
+	\setcounter{currentperson}{0}%
+		\loop{%
+			\noindent%
+			\def\thisperson{person\thecurrentperson}%
+			\setcounter{fieldnum}{0}%
+			\loop
+				\def\thisfield{%
+					\csname\thisperson field\thefieldnum\endcsname%
+				}%
+				\def\thisfieldinfo{%
+					\csname\thisperson\thisfield\endcsname%
+				}%
+				\thisfieldinfo%
+				\stepcounter{fieldnum}%
+				\ifnum\value{fieldnum} < %
+					\value{\thisperson totalfields}%
+				,\ %
+			\repeat%
+		}%
+		\stepcounter{currentperson}%
+		\ifnum\value{currentperson} <  \value{personnum}%
+		\par\bigskip%
+	\repeat%
+}
+			
+\begin{document}
+
+\begin{personID}
+\name{Prof. Andrew A. Cashner, PhD}
+\office{MUS 304}
+\phone{(555) 212-1212}
+\email{andrewacashner@gmail.com}
+\officehours{Thursdays, 2--4 p.m.}
+\end{personID}
+
+\begin{personID}
+\name{T. A. One}
+\office{MUS 304}
+\email{taone@usc.edu}
+\end{personID}
+
+\begin{personID}
+\name{T. A. Two}
+\office{MUS 304}
+\phone{(555) 654-3210}
+\officehours{Mondays, 1--2 p.m.}
+\end{personID}
+
+\listpersonnel
+
+\end{document}

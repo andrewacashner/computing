@@ -1,0 +1,84 @@
+\input cwebmac
+% 2015-05-03 -- biblio.w by Andrew A. Cashner
+
+\N{1}{1}Introduction.
+This is \.{biblio}, a program to build a bibliographic database from input with
+minimal markup.
+The goal is to allow a simple way to add to a database in \.{biblatex} format.
+
+Normally a \.{biblatex} entry looks like this:
+
+\.{\\fi
+
+\M{2}Book{Kircher:Musurgia,
+author   = {Kircher, Athanasius},
+title    = {Musurgia universalis},
+location = {Rome},
+year     = 1650,
+}}
+
+In our system the user specifies in advance which fields will be included for
+each entry, like so:
+
+%\verbatim\PB{${\#}\\{au},\\{ti},\\{loc},\\{yr}\MOD\\{Kircher},\\{Athanasius}%
+%\MOD\\{Musurgia}\\{universalis}\MOD\\{Rome}\MOD\T{1650}$}endverbatim
+
+Each entry is separated by a blank line, just like paragraphs in \TeX.
+A line beginning with \.{\#} specifies the contents of the fields for every
+subsequent entry.
+\TeX-style comment lines starting with \.{\%} are ignored.
+
+In this way authors can add many entries in a similar format at once, adding
+another \.{\#} instruction line if a new setup of fields is needed.
+The user may specify a default set of fields by writing a field-instruction
+line
+that begins \.{\#DEFAULT}, like so:
+
+\verbatim #DEFAULT au, ti, loc, pub, yr\PB{\\{endverbatim}\\{Then}\\{after}%
+\\{changing}\\{the}\\{field}\\{instruction}\\{with}\|a\ $.$ $\{\$ $\#$ $\}$ %
+\&{line} $,$ \\{the}\\{user}\\{may}\\{restore}\\{the}\&{default} \\{by}%
+\\{writing}\|a \&{line} \\{with} \\{only}\ $.$ $\{\$ $\#\$ $\#$ $\}$ $.$ %
+\\{The}\\{user}\\{may}\\{use}\\{the}\\{exact}\\{field}\\{names} (\ $.$ $\{%
+\\{author}\}$ $,\$ $.$ $\{\\{title}\},{\Xand}\\{so}\\{on}$ ) $,$ ${\Xor}\|a{}$%
+\&{default} \\{set}\\{of}\\{abbreviations} \&{for} \\{the} \\{fields} (\ $.$ $%
+\{\\{au}\}$ $,\$ $.$ $\{\\{ti}\}$ ) $.$ \\{The}\\{user}\\{may}\\{also}%
+\\{specify}\\{custom}\\{abbreviations} \&{using} \\{an}\${}.\{\{\#}\.{ABBREV}\}%
+\\{instruction},{}$ \\{as}\\{follows} :\ $\\{verbatim}\#\.{ABBREV}\\{kw}{}$: %
+\\{keyword}\\{od}: \\{origdate}}endverbatim
+
+Each abbreviation is followed by a colon and then the full field name, and each
+abbreviation is separated by a space.
+
+% TODO give full example in separate file
+
+\Y\B\4\D$\.{MAX\_FILENAME}$ \5
+\T{50}\par
+\fi
+
+\M{3}Dummy program
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\6
+\8\#\&{include} \.{<stdlib.h>}\7
+\&{int} \\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1%
+\2\2\6
+${}\{{}$\1\6
+\&{char} \\{infilename}[\.{MAX\_FILENAME}];\6
+\&{char} \\{outfilename}[\.{MAX\_FILENAME}];\6
+\&{FILE} \\{infile};\6
+\&{FILE} \\{outfile};\7
+\&{if} ${}(\\{argc}\I\T{3}){}$\5
+${}\{{}$\1\6
+${}\\{fprintf}(\\{stderr},\39\.{"Incorrect\ number\ of}\)\.{\ arguments.%
+\\n"});{}$\6
+\\{exit}(\.{EXIT\_FAILURE});\6
+\4${}\}{}$\2\6
+${}\\{printf}(\.{"Read\ file\ \%s\ and\ ad}\)\.{d\ to\ bib\ file\ \%s.\\n"},\39%
+\\{argv}[\T{1}],\39\\{argv}[\T{2}]);{}$\6
+\&{return} (\T{0});\6
+\4${}\}\{}$\2\6
+\\{bye}\par
+\fi
+
+\inx
+\fin
+\con

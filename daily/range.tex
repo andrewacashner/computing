@@ -1,0 +1,19 @@
+\documentclass{article}
+
+% Ranges of measures, lines (Latin locus, place; loca, region)
+\newcommand{\loc}[2]{#1.~#2}    % e.g., m.~13
+\newcommand{\loca}[2]{#1#1.~#2} % e.g., mm.~13--14
+
+% Or I could do this
+\newcommand{\measure}[1]{m.~#1}
+\newcommand{\measures}[1]{mm.~#1}
+\newcommand{\poemline}[1]{l.~#1}
+\newcommand{\poemlines}[1]{ll.~#1}
+
+\begin{document}
+
+At \loca{l}{13--14} in the poem, the composer puts accents on all the wrong syllables (\loca{m}{44--46}). 
+
+At \poemlines{15--16} the composer puts accents on all the right syllables (\measures{47--48}).
+
+\end{document}

@@ -1,0 +1,32 @@
+\documentclass{article}
+\usepackage{booktabs}
+
+\makeatletter
+\def\@AssignmentValues{}
+\newcommand{\setAssignmentValue}[2]{%
+	\def\@NextValues{$#1\%$ & #2\tabularnewline}%
+	\edef\@AssignmentValues{\@AssignmentValues\@NextValues}%
+}
+\newcommand{\printAssignmentValues}{%
+	\begin{tabular}{rl}
+	\toprule
+	\@AssignmentValues
+	\midrule
+	$100\%$ & Total\\
+	\bottomrule
+	\end{tabular}%
+}
+\makeatother
+
+\begin{document}
+
+\setAssignmentValue{30}{Essay exam 1}
+\setAssignmentValue{30}{Essay exam 2}
+\setAssignmentValue{30}{Edition and performance group project}
+\setAssignmentValue{10}{In-class participation, including performance}
+
+\printAssignmentValues
+
+\end{document}
+
+

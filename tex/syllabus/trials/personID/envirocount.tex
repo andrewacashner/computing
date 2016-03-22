@@ -1,0 +1,42 @@
+\documentclass{article}
+\newcounter{enviro}
+\newcounter{thing}
+\newenvironment{envirocount}
+	{	
+		\setcounter{thing}{0}
+		Count \theenviro:\par%
+	}
+	{%
+		Total things: \thething
+		\newcounter{enviro\theenviro thing}
+		\setcounter{enviro\theenviro thing}{\thething}
+		Total things: \csname theenviro\theenviro thing\endcsname
+		\stepcounter{enviro}
+		\par\bigskip
+	}
+\def\newthing{%
+	\stepcounter{thing}
+	Thing \thething\newline%
+}
+\setlength{\parindent}{0pt}
+\begin{document}
+\begin{envirocount}
+\newthing
+\newthing
+\newthing
+\end{envirocount}
+
+\begin{envirocount}
+\newthing
+\newthing
+\end{envirocount}
+
+\begin{envirocount}
+\newthing
+\end{envirocount}
+
+enviro0thing: \csname theenviro0thing\endcsname
+enviro1thing: \csname theenviro1thing\endcsname
+enviro2thing: \csname theenviro2thing\endcsname
+
+\end{document}

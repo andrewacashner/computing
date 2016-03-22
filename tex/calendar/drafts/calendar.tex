@@ -1,0 +1,55 @@
+% Calendar for Ben of our move to California, 2015
+\documentclass[landscape]{article}
+\usepackage[margin=1in]{geometry}
+\setlength{\parindent}{0pt}
+\usepackage{tikz}
+\usepackage{pgfcalendar}
+\usetikzlibrary{calendar}
+
+\newlength{\calendarboxwidth}
+\setlength{\calendarboxwidth}{\textwidth}
+\divide\calendarboxwidth by 7
+\addtolength{\calendarboxwidth}{-1em}
+\newlength{\calendarboxheight}
+\setlength{\calendarboxheight}{0.75\calendarboxwidth}
+
+\begin{document}
+\newcounter{weekday}
+\tikz \calendar[dates=2015-04-01 to 2015-04-30, %2015-08-31,
+				execute at begin day scope=
+				{%
+				\setcounter{weekday}{\pgfcalendarcurrentweekday}
+				\stepcounter{weekday}
+				\ifnum\value{weekday} > 0
+					\addtocounter{weekday}{-7}
+				\fi
+				\pgftransformxshift{\theweekday em}%
+				},
+				execute after day scope=
+				{%
+				\ifdate{Saturday}{%
+					\pgftransformyshift{-1em}%
+				}
+				{}}];
+\end{document}
+\newcounter{\weekday}
+\pgfcalendar{cal}{2015-04-01}{2015-04-30}
+{%
+	\ifdate{day of month=1}{%
+		\setcounter{\weekday}{pgfcalendar
+	\begin{tikzpicture}
+	\node (\pgfcalendarsuggestedname) at (0,0)
+		[anchor=base,draw,rectangle]
+			{\pgfcalendarcurrentday};
+	\end{tikzpicture}%
+	\ifdate{Saturday}{\par}{}%
+}
+	\ifdate{day of month=1}{%
+		\par\clearpage
+		{\hfil\Huge\itshape
+		\pgfcalendarshorthand mt%
+		\hss}%
+		\par\vfill%
+	}{}%
+	\leavevmode%
+

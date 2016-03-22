@@ -1,0 +1,24 @@
+\def\L{\let}\L\D\def\L\C\catcode
+\C`\+13 \D+#1 #2{\expandafter\D\csname #1\endcsname{#2}}
++a z+b y+c x+d w+e v+f u+g t+h s+i r+j q+k p+l o+m n+n m+o l+p k+q j+r i+s h+t g+u f+v e+w d+x c+y b+z a
+\begingroup
+\C`\ 0{}
+ h e l l o, w o r l d!
+\endgroup
+
+\begingroup
+\D+#1 #2{\D#1{#2}}
+\C`\a13 +a z
+\C`\b13 +b y
+\C`\c13 +c x
+abc
+\endgroup
+
+\L\O\or
+\D\S#1{\ifcase\csname#1\endcsname z\O y\O x\O w\O v\O u\O t\O s\O r\O q\O p\O o\O n\O m\O l\O k\O j\O i\O h\O g\O f\O e\O d\O c\O b\O a\fi}
++a 0+b 1+c 2
+\S a\S b\S c
+
+
+
+\bye

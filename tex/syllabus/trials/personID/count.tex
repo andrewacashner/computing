@@ -1,0 +1,14 @@
+\newcount\totalfields
+\totalfields=7
+\def\csbase{person0}
+\expandafter\def\csname\csbase totalfields\endcsname{\the\totalfields}
+\def\thistotal{\csname\csbase totalfields\endcsname}
+\thistotal\ 
+\newcount\test
+\test=5
+\ifnum\test < \thistotal
+	less
+\else
+	greater
+\fi
+\bye

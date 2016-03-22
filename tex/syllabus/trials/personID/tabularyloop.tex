@@ -1,0 +1,25 @@
+\documentclass{article}
+\usepackage{tabulary}
+
+\newcommand{\mytable}{%
+	\begin{tabulary}{0.5\textwidth}{@{}L@{}}
+	Text\\
+	Text\\[2ex]
+	\end{tabulary}%
+}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+% Why are these less than 0.5\textwidth?
+\mytable 
+\mytable 
+\mytable 
+\mytable
+
+\makebox[0.5\textwidth]{\mytable}
+\makebox[0.5\textwidth]{\mytable}
+\makebox[0.5\textwidth]{\mytable}
+\makebox[0.5\textwidth]{\mytable}
+
+\end{document}

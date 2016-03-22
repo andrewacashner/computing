@@ -1,0 +1,46 @@
+\documentclass{article}
+
+\usepackage{libertine}
+\usepackage[T1]{fontenc}
+\usepackage[libertine]{newtxmath}
+
+% Octave subscripts
+\usepackage{subscript} % Needed for \textsubscript command
+\newcommand{\octave}[1]{%
+	\textsubscript{#1}%
+}
+
+% Accidentals
+\newcommand{\fl}{$\flat$}
+\newcommand{\sh}{$\sharp$}
+\newcommand{\na}{$\natural$}
+
+% Figured bass or voice leading, stacked numerals with accidentals
+\usepackage{harmony}
+\newcommand{\musfig}[2]{%
+	\Takt{#1}{#2}%
+}
+% Blank accidental, needed to balance alignment when using figured bass with accidental in one voice only
+\newcommand{\bl}{\hphantom{$\sharp$}}
+
+\newcommand{\term}[1]{%
+	\emph{#1}%
+}
+\usepackage{csquotes}
+\newcommand{\socalled}[1]{%
+	\enquote{#1}%
+}
+
+\begin{document}
+
+According to \term{una nota super la} rule of \term{musica ficta}, a singer in colonial Mexico would in most cases perform the written pattern D--E--D as D--E\fl--D. 
+Since Spanish notation at the time lacked a natural (\na) sign, a sharp sign could be added to the E as a \socalled{cautionary accidental}, so a singer reading D--E\sh--D would actually sing E\na.
+
+The Alto's B\fl\octave{4} forms an imperfect consonance with the G\octave{3} in the Bass.
+When the Bass moves down to F\sh{} on the downbeat, it creates a \musfig{\fl 6}{\sh 3} sonority (in the first mode).
+
+Another voice-leading pattern is \musfig{\fl 6}{\bl 3}--\musfig{5}{3}.
+
+\end{document}
+
+

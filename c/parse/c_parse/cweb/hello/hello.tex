@@ -1,0 +1,29 @@
+\input cwebmac
+This is \.{hello}, a program that prints a greeting message to standard output.
+It is a first attempt at using \.{CWEB}, by Andrew Cashner, \today.
+
+
+\M{1}Include header files.
+
+\Y\B\8\#\&{include} \.{<stdio.h>}\par
+\fi
+
+\M{2}Define the string to print.
+
+\Y\B\&{static} \&{const} \&{char} \\{greeting}[\,]${}\K\.{"Hello,\ world!"}{}$;%
+\par
+\fi
+
+\M{3}Print the message and return.
+
+\Y\B\&{int} \\{main}(\&{void})\1\1\2\2\6
+${}\{{}$\1\6
+${}\\{printf}(\.{"\%s\\n"},\39\\{greeting});{}$\6
+\&{return} (\T{0});\6
+\4${}\}{}$\2\par
+\fi
+
+
+\inx
+\fin
+\end
