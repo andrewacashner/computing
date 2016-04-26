@@ -1,0 +1,62 @@
+\documentclass{memoir}
+\usepackage{fbb}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[american]{babel}
+\usepackage{microtype}
+
+\usepackage{xparse}
+\NewDocumentCommand{\bibchapter}{ m }{\MakeTextUppercase{#1}\par\bigskip}
+
+\NewDocumentCommand{\bibv}{ m }{\marginpar{\tiny #1}}
+\NewDocumentCommand{\bibch}{ m }{\marginpar{\Huge #1}}
+\paragraphfootnotes
+\renewcommand*{\thefootnote}{\emph{\alph{footnote}}}
+\NewDocumentCommand{\bibfn}{ o m }{\footnote[#1]{#2}}
+\NewDocumentCommand{\mentioned}{}{\emph} % word used as word
+\NewDocumentCommand{\variant}{ m m }{#1\ \mentioned{#2}}
+
+\begin{document}
+
+\bibchapter{Matthew}
+
+\bibch{5}
+When Jesus\bibfn[21]{\variant{Gk}{he}} saw the crowds, he went up the mountain;
+and after he sat down, his disciples came to him.
+\bibv{2} Then he began to speak, and taught them, saying:
+
+\begin{verse}
+\bibv{3} ``Blessed are the poor in spirit, 
+for theirs is the kingdom of heaven. \\
+\bibv{4} ``Blessed are those who mourn, 
+for they will be comforted. \\
+\bibv{5} ``Blessed are the meek, 
+for they will inherit the earth. \\
+\bibv{6} ``Blessed are those who hunger and thirst for righteousness, 
+for they will be filled. \\
+\bibv{7} ``Blessed are the merciful, 
+for they will receive mercy. \\
+\bibv{8} ``Blessed are the pure in heart, 
+for they will see God. \\
+\bibv{9} ``Blessed are the peacemakers, 
+for they will be called children of God. \\
+\bibv{10} ``Blessed are those who are persecuted for righteousness' sake, 
+for theirs is the kingdom of heaven. \\
+\bibv{11} ``Blessed are you when people revile you and persecute you 
+and utter all kinds of evil against you 
+falsely\bibfn[22]{Other ancient authorities lack \mentioned{falsely}} on my account.
+\bibv{12} Rejoice and be glad, for your reward is great in heaven, 
+for in the same way they persecuted the prophets who were before you.
+\end{verse}
+
+\bibv{13} ``You are the salt of the earth; but if salt has lost its taste, how can its saltiness be restored?
+It is no longer good for anything, but is thrown out and trampled under foot.
+
+\bibv{14} ``You are the light of the world. 
+A city build on a hill cannot be hid.
+\bibv{15} No one after lighting a lamp puts it under the bushel basket, 
+but on the lampstand, and it gives light to all in the house.
+\bibv{16} In the same way, let your light shine before others,
+so that they may see your good works and give glory to your Father in heaven.''
+
+\end{document}
