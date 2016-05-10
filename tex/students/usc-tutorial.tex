@@ -1,0 +1,112 @@
+\documentclass{article}
+
+\begin{document}
+
+\title{Representations of Dogs in Mongolian Harp Music}
+\author{Ahmed A. Researcher}
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+This is the introduction.
+Every LaTeX document begins with a command that tells the program to use a particular set of predefined commands for a certain type of document.
+In our case that's the article class, which is designed for academic journal articles.
+
+After that, the body text of your document should be enclosed inside a `document' environment.
+Put \verb|\begin{document}| at the beginning and \verb|\end{document}| at the end. 
+The `verb' command I just used allows me to include commands as regular text instead of actually using them as commands. 
+Don't worry about it for now.
+
+After that, you just type your document.
+You have lots of freedom in how you type it.
+For example, it doesn't matter if you have extra   spaces   between   words,
+  or if you go to a new line. The extra
+    spaces will be ignored.
+You can use the percent character to tell the program to ignore everything that follows % such as all these words
+on the same line.
+% Advice
+Use these for comments that won't be printed in the document.
+
+It's a good practice, though, to begin a new sentence on a new line.
+That makes it easier to edit your document, and helps in thinking about writing structure.
+
+Skip a line to start a new paragraph.
+The program will automatically format the paragraph spacing, indentation, and so on.
+After this I'll start a new section, and the program will format the heading according to pre-programmed default settings.
+
+\section{Commands}
+
+LaTeX is really a programming language based on macros.
+Macros, also known as commands, tell the program to substitute something else in place of the macro.
+When you type \LaTeX, the program prints its own name with a special format.
+You can print today's date with the macro \today.
+
+Macros can also have arguments: this is text that will be processed by the command, and is normally enclosed in curly brackets.
+You've already seen this with the sectioning command above.
+Another example: to put text in boldface font, you can use \textbf{word}. 
+Whatever is inside the curly brackets after the command will be set in bold.
+
+Another kind of command is an environment, such as the ``document'' environment we're using now.
+Environments are used to group a whole section of text that needs special treatment, like a numbered list, which we'll cover below.
+
+\subsection{Formatting Commands}
+
+Macros are used to control formatting so that you can separate meaning from presentation.
+You can emphasize something with \emph{this command}, which is pre-programmed to be set in italic font.
+You can put something in quotation marks ``like this.''
+
+You should also know the commands for different types of dashes:
+type one dash for a hyphen as in free-spirited; 
+type two dashes for an ``en dash'' as in a range of dates like 1987--1995;
+type three dashes for an ``em dash'' to mark an interruption in thought---like this.
+
+
+There are other font commands, like \textbf{bold}, \textsc{small caps}, and \MakeUppercase{upper case}.
+You can define your own commands, and redefine existing commands, however you like.
+It's better to define ``semantic commands'' to use instead of these, so you don't have to think directly about formatting as you write.
+We'll do that later.
+
+\section{Footnotes}
+
+To write footnotes, we use a built-in command.\footnote{This is a footnote.}
+It can be easier to maintain your document if you put footnotes on a separate line, and indent the footnotes to separate them from the rest.
+The only trick with this is that you have to make sure no space is added between the text and the footnote number.
+So just put a comment character (percent character) at the end of the line.%
+  \footnote{See how I did that?}
+That's easier to keep track of.
+
+\section{Lists}
+
+There are two kinds of lists: un-numbered bullet lists, created using an ``itemize'' environment; and numbered lists, made with the ``enumerate'' environment.
+You could list three numbered items like this:
+\begin{enumerate}
+\item Thing one
+\item Thing two
+\item Thing three
+\end{enumerate}
+
+You could list three bullet-list items like this:
+\begin{itemize}
+\item Thing one
+\item Thing two
+\item Thing three
+\end{itemize}
+
+\end{document}
+
+\section{Custom Commands}
+
+It is simple to define your own commands.
+The uses for this are endless, but the most common is to allow for ``semantic'' markup;
+in other words, create commands to hide specific formatting so you can adjust it later.
+The \verb|\emph{}| command is a good example.
+The direct-formatting command would be \verb|\textit{}|; but with \verb|\emph| you don't think ``italics,'' you think ``emphasis.''
+You could reprogram the command later to put all emphasized words in bold or something else.
+
+
+
+\end{document}
+
+
