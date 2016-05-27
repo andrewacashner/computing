@@ -1,0 +1,47 @@
+\documentclass{article}
+
+% This selects a pretty font
+\usepackage{ebgaramond}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+% This allows TeX to fine-tune the justification of text
+\usepackage{microtype}
+
+% This calls the package that makes the cutout
+\usepackage{cutwin}
+% This sets up the commands for cutting out the shape:
+% For a centered image, these are pairs specifying the length of the *text* on either side of the cutout
+\newcommand*{\cutoutcross}{%
+  0.4\textwidth, 0.4\textwidth,
+  0.4\textwidth, 0.4\textwidth,
+  0.4\textwidth, 0.4\textwidth,
+  0.4\textwidth, 0.4\textwidth,
+  0.4\textwidth, 0.4\textwidth,
+  0.2\textwidth, 0.2\textwidth,
+  0.2\textwidth, 0.2\textwidth,  
+  0.2\textwidth, 0.2\textwidth,
+  0.2\textwidth, 0.2\textwidth,
+  0.4\textwidth, 0.4\textwidth,
+  0.4\textwidth, 0.4\textwidth,
+  0.4\textwidth, 0.4\textwidth,
+  0.4\textwidth, 0.4\textwidth,
+  0.4\textwidth, 0.4\textwidth,
+  0.4\textwidth, 0.4\textwidth,  
+  0.4\textwidth, 0.4\textwidth,  
+  0.38\textwidth, 0.38\textwidth,  
+  0.36\textwidth, 0.36\textwidth,
+  0.34\textwidth, 0.34\textwidth,
+  0.32\textwidth, 0.32\textwidth
+}
+
+\begin{document}
+
+% First number is how many lines from top to start cutout (7)
+% Second is how many lines tall is the cutuot (20, from the command defined above)
+% Third argument is the cutout specifications, which we stored in the command \cutoutcross
+
+\begin{shapedcutout}{7}{20}{\cutoutcross}
+\input{1John3.txt} % Plain text in separate file
+\end{shapedcutout}
+
+\end{document}
