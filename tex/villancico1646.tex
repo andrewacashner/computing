@@ -1,0 +1,80 @@
+\input eplain
+
+\font\bodyfont=mdugmr7t at 10pt
+\font\bigfont=mdugmr7t at 12pt
+\font\largefont=mdugmr7t at 16pt
+\font\hugefont=mdugmr7t at 32pt
+\font\dropcapfont=mdugmr7t at 24pt
+\bodyfont
+
+
+\def\large{\largefont}
+\def\huge{\hugefont}
+\def\big{\bigfont}
+
+\hsize=4.5in
+\let\textwidth\hsize
+
+\parindent=0pt
+
+
+\def\centerlines#1{\par{%
+  \tabskip=0pt plus 1fill
+  \let\\\cr
+  \halign to \hsize{\hfill##\hfill\cr#1\crcr}}%
+  \par
+}
+
+\def\startdropcap#1{%
+  \noindent{\dropcapfont #1}\par
+  \vskip -24pt
+  \parindent=2pc
+}
+\def\enddropcap{\parindent=0pt}
+
+\def\vctitle#1{\centerline{#1}\par\vskip 1em}
+
+
+%*********************************
+
+\centerlines{%
+{\large VILLANCICOS}\\
+{\huge QVE SE CANTARON}\\
+{\large EN LA S. IGLESIA METROPOLYTANA}\\
+{\big DE SEVILLA,}\\
+{\large EN LOS MAYTINES DE LOS SANTOS}\\
+{\big Reyes. En este a\~no de mil y seiscientos}\\
+{\big y quarenta y siete.}\\
+}
+
+%fleuron
+\vskip 2em
+\doublecolumns
+
+\vctitle{VILLANCICO .I.}
+
+\obeylines
+\startdropcap TOqu\~{e} las chirimias, y las caxas
+afuera, afuera, aparta, aparta,\enddropcap
+oyga el Orbe, escuche el Cielo
+el Cartel que pone el suelo
+en vnas justas Reles,
+que a tres Reyes Orientales
+preuienen con mil primores
+los Pastores,
+que se han de juntar aqui,
+y dize assi.
+\columnfill
+
+\startdropcap OY sustenta vn hombre
+que es Dios, y tambien\enddropcap
+que no ay mal que no tenga,
+mas ninguno en el:
+Y dize bien,
+y que \'{e}l solo tiene amor,
+hagan pla\c{c}a, esten atentos,
+suenen todos los instrumentos,
+que sale el Mantenedor.
+
+
+\bye
