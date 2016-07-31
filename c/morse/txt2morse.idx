@@ -1,0 +1,83 @@
+\I\.{A\_CH}, 2.
+\I\.{AMPERSAND}, 2.
+\I\.{APOSTROPHE}, 2.
+\I\\{argc}, \[1].
+\I\\{argv}, \[1].
+\I\\{ascii\_char}, \[2], \[3].
+\I\.{AT}, 2.
+\I\.{B\_CH}, 2.
+\I\.{C\_CH}, 2.
+\I\\{char\_code}, \[2].
+\I\\{char\_index}, \[2].
+\I\.{CHAR\_SPC}, 2.
+\I\\{code}, \[2], 3.
+\I\.{COLON}, 2.
+\I\.{COMMA}, 2.
+\I\.{D\_CH}, 2.
+\I\.{DASH}, 2.
+\I\.{DOLLAR}, 2.
+\I\.{DOT}, 2.
+\I\.{E\_CH}, 2.
+\I\.{EIGHT}, 2.
+\I\.{END\_PAREN}, 2.
+\I\.{EQUALS}, 2.
+\I\.{EXCLAMATION}, 2.
+\I\.{F\_CH}, 2.
+\I\\{fgetc}, 3.
+\I\.{FIVE}, 2.
+\I\.{FOUR}, 2.
+\I\.{G\_CH}, 2.
+\I\.{H\_CH}, 2.
+\I\|{i}, \[2], \[3].
+\I\.{I\_CH}, 2.
+\I\\{infile}, 3.
+\I\.{J\_CH}, 2.
+\I\.{K\_CH}, 2.
+\I\.{L\_CH}, 2.
+\I\\{length}, \[2], 3.
+\I\.{M\_CH}, 2.
+\I\\{main}, \[1].
+\I\.{MAX\_CHAR\_LENGTH}, 2.
+\I\.{MAX\_CHAR\_SEQ}, \[2], 3.
+\I\.{MAX\_CHARS}, \[2].
+\I\.{MAX\_OUTPUT\_STR}, \[2], 3.
+\I\.{MINUS}, 2.
+\I\.{N\_CH}, 2.
+\I\\{new\_sign}, \[2].
+\I\.{NINE}, 2.
+\I\.{O\_CH}, 2.
+\I\.{ONE}, 2.
+\I\\{output\_str}, \[3].
+\I\.{P\_CH}, 2.
+\I\.{PERIOD}, 2.
+\I\.{PLUS}, 2.
+\I\.{Q\_CH}, 2.
+\I\.{QUESTION}, 2.
+\I\.{QUOTE}, 2.
+\I\.{R\_CH}, 2.
+\I\.{S\_CH}, 2.
+\I\.{SEMICOLON}, 2.
+\I\.{SEVEN}, 2.
+\I\\{sign}, \[2], 3.
+\I\\{sign\_char\_type}, \[3].
+\I\\{sign\_output\_str}, \[2], 3.
+\I\\{sign\_type}, \[2].
+\I\.{SIX}, 2.
+\I\.{SLASH}, 2.
+\I\.{START\_PAREN}, 2.
+\I\\{strcat}, 3.
+\I\.{T\_CH}, 2.
+\I\\{this\_code}, \[2].
+\I\\{this\_length}, \[2].
+\I\.{THREE}, 2.
+\I\.{TWO}, 2.
+\I\.{U\_CH}, 2.
+\I\.{UNDERSCORE}, 2.
+\I\.{V\_CH}, 2.
+\I\.{W\_CH}, 2.
+\I\.{WORD\_SPC}, 2.
+\I\.{X\_CH}, 2.
+\I\.{Y\_CH}, 2.
+\I\.{Z\_CH}, 2.
+\I\.{ZERO}, 2.
+

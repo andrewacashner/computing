@@ -1,0 +1,153 @@
+\input cwebmac
+
+\N{1}{1}Introduction.
+This is \.{txt2morse}.
+The program reads in text from a file or standard input, converts the text to
+morse code, and outputs the result to a variety of formats.
+Written by Andrew A. Cashner, July 2016.
+
+\Y\B\8\#\&{include} \.{"stdio.h"}\6
+\8\#\&{include} \.{"string.h"}\6
+\X2:Define values for lookup tables\X;\7
+\&{int} \\{main}(\&{int} \\{argc}${},\39{}$\&{char} ${}{*}\\{argv}[\,]){}$\1\1%
+\2\2\6
+${}\{{}$\1\6
+\X3:Build lookup tables\X;\6
+\&{return} (\T{0});\6
+\4${}\}{}$\2\par
+\fi
+
+\M{2}Teach the computer morse code.
+
+\Y\B\4\X2:Define values for lookup tables\X${}\E{}$\6
+\8\#\&{define} \.{MAX\_CHARS} \5\T{54}\6
+\8\#\&{define} \.{MAX\_CHAR\_SEQ} \5\T{8}\6
+\8\#\&{define} \.{MAX\_OUTPUT\_STR} \5\T{24}\6
+\&{enum} ${}\{{}$\1\6
+${}\.{DOT},\39\.{DASH},\39\.{CHAR\_SPC},\39\.{WORD\_SPC}{}$\2\6
+${}\}{}$ \\{sign\_type};\6
+\&{char} ${}{*}\\{sign\_output\_str}[\.{MAX\_OUTPUT\_STR}]\K\{\.{".\ "},\39%
+\.{"---\ "},\39\.{"\ \ "},\39\.{"\ \ \ \ \ \ "}\};{}$\6
+\&{struct} ${}\{{}$\1\6
+\&{int} \\{length};\6
+\&{int} \\{code}[\.{MAX\_CHAR\_SEQ}];\2\6
+${}\}{}$ \\{sign}[\.{MAX\_CHARS}];\6
+\&{int} \\{char\_code}[\.{MAX\_CHARS}][\.{MAX\_CHAR\_LENGTH}]${}\K\{\3{-1}{}$%
+\C{ A }\6
+${}\{\.{DOT},\39\.{DASH}\},\3{-1}{}$\C{ B }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DOT},\39\.{DOT}\},\3{-1}{}$\C{ C }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DASH},\39\.{DOT}\},\3{-1}{}$\C{ D }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DOT}\},\3{-1}{}$\C{ E }\6
+${}\{\.{DOT}\},\3{-1}{}$\C{ F }\6
+${}\{\.{DOT},\39\.{DOT},\39\.{DASH},\39\.{DOT}\},\3{-1}{}$\C{ G }\6
+${}\{\.{DASH},\39\.{DASH},\39\.{DOT}\},\3{-1}{}$\C{ H }\6
+${}\{\.{DOT},\39\.{DOT},\39\.{DOT},\39\.{DOT}\},\3{-1}{}$\C{ I }\6
+${}\{\.{DOT},\39\.{DOT}\},\3{-1}{}$\C{ J }\6
+${}\{\.{DOT},\39\.{DASH},\39\.{DASH},\39\.{DASH}\},\3{-1}{}$\C{ K }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DASH}\},\3{-1}{}$\C{ L }\6
+${}\{\.{DOT},\39\.{DASH},\39\.{DOT},\39\.{DOT}\},\3{-1}{}$\C{ M }\6
+${}\{\.{DASH},\39\.{DASH}\},\3{-1}{}$\C{ N }\6
+${}\{\.{DASH},\39\.{DOT}\},\3{-1}{}$\C{ O }\6
+${}\{\.{DASH},\39\.{DASH},\39\.{DASH}\},\3{-1}{}$\C{ P }\6
+${}\{\.{DOT},\39\.{DASH},\39\.{DASH},\39\.{DOT}\},\3{-1}{}$\C{ Q }\6
+${}\{\.{DASH},\39\.{DASH},\39\.{DOT},\39\.{DASH}\},\3{-1}{}$\C{ R }\6
+${}\{\.{DOT},\39\.{DASH},\39\.{DOT}\},\3{-1}{}$\C{ S }\6
+${}\{\.{DOT},\39\.{DOT},\39\.{DOT}\},\3{-1}{}$\C{ T }\6
+${}\{\.{DASH}\},\3{-1}{}$\C{ U }\6
+${}\{\.{DOT},\39\.{DOT},\39\.{DASH}\},\3{-1}{}$\C{ V }\6
+${}\{\.{DOT},\39\.{DOT},\39\.{DOT},\39\.{DASH}\},\3{-1}{}$\C{ W }\6
+${}\{\.{DOT},\39\.{DASH},\39\.{DASH}\},\3{-1}{}$\C{ X }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DOT},\39\.{DASH}\},\3{-1}{}$\C{ Y }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DASH},\39\.{DASH}\},\3{-1}{}$\C{ Z }\6
+${}\{\.{DASH},\39\.{DASH},\39\.{DOT},\39\.{DOT}\},\3{-1}{}$\C{ 0 }\6
+${}\{\.{DASH},\39\.{DASH},\39\.{DASH},\39\.{DASH},\39\.{DASH}\},\3{-1}{}$\C{ 1
+}\6
+${}\{\.{DOT},\39\.{DASH},\39\.{DASH},\39\.{DASH},\39\.{DASH}\},\3{-1}{}$\C{ 2 }%
+\6
+${}\{\.{DOT},\39\.{DOT},\39\.{DASH},\39\.{DASH},\39\.{DASH}\},\3{-1}{}$\C{ 3 }\6
+${}\{\.{DOT},\39\.{DOT},\39\.{DOT},\39\.{DASH},\39\.{DASH}\},\3{-1}{}$\C{ 4 }\6
+${}\{\.{DOT},\39\.{DOT},\39\.{DOT},\39\.{DOT},\39\.{DASH}\},\3{-1}{}$\C{ 5 }\6
+${}\{\.{DOT},\39\.{DOT},\39\.{DOT},\39\.{DOT},\39\.{DOT}\},\3{-1}{}$\C{ 6 }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DOT},\39\.{DOT},\39\.{DOT}\},\3{-1}{}$\C{ 7 }\6
+${}\{\.{DASH},\39\.{DASH},\39\.{DOT},\39\.{DOT},\39\.{DOT}\},\3{-1}{}$\C{ 8 }\6
+${}\{\.{DASH},\39\.{DASH},\39\.{DASH},\39\.{DOT},\39\.{DOT}\},\3{-1}{}$\C{ 9 }\6
+${}\{\.{DASH},\39\.{DASH},\39\.{DASH},\39\.{DASH},\39\.{DOT}\},\3{-1}{}$\C{ . }%
+\6
+${}\{\.{DOT},\39\.{DASH},\39\.{DOT},\39\.{DASH},\39\.{DOT},\39\.{DASH}\},%
+\3{-1}{}$\C{ , }\6
+${}\{\.{DASH},\39\.{DASH},\39\.{DOT},\39\.{DOT},\39\.{DASH},\39\.{DASH}\},%
+\3{-1}{}$\C{ ? }\6
+${}\{\.{DOT},\39\.{DOT},\39\.{DASH},\39\.{DASH},\39\.{DOT},\39\.{DOT}\},%
+\3{-1}{}$\C{ ' }\6
+${}\{\.{DOT},\39\.{DASH},\39\.{DASH},\39\.{DASH},\39\.{DASH},\39\.{DOT}\},%
+\3{-1}{}$\C{ ! }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DASH},\39\.{DOT},\39\.{DASH},\39\.{DASH}\},%
+\3{-1}{}$\C{ / }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DOT},\39\.{DASH},\39\.{DOT}\},\3{-1}{}$\C{ ( }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DASH},\39\.{DASH},\39\.{DOT}\},\3{-1}{}$\C{ ) }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DASH},\39\.{DASH},\39\.{DOT},\39\.{DASH}\},%
+\3{-1}{}$\C{ ampersand }\6
+${}\{\.{DOT},\39\.{DASH},\39\.{DOT},\39\.{DOT},\39\.{DOT}\},\3{-1}{}$\C{ : }\6
+${}\{\.{DASH},\39\.{DASH},\39\.{DASH},\39\.{DOT},\39\.{DOT},\39\.{DOT}\},%
+\3{-1}{}$\C{ ; }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DASH},\39\.{DOT},\39\.{DASH},\39\.{DOT}\},%
+\3{-1}{}$\C{ = }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DOT},\39\.{DOT},\39\.{DASH}\},\3{-1}{}$\C{ + }\6
+${}\{\.{DOT},\39\.{DASH},\39\.{DOT},\39\.{DASH},\39\.{DOT}\},\3{-1}{}$\C{ - }\6
+${}\{\.{DASH},\39\.{DOT},\39\.{DOT},\39\.{DOT},\39\.{DOT},\39\.{DASH}\},%
+\3{-1}{}$\C{ underscore }\6
+${}\{\.{DOT},\39\.{DOT},\39\.{DASH},\39\.{DASH},\39\.{DOT},\39\.{DASH}\},%
+\3{-1}{}$\C{ " }\6
+${}\{\.{DOT},\39\.{DASH},\39\.{DOT},\39\.{DOT},\39\.{DASH},\39\.{DOT}\},%
+\3{-1}{}$\C{ \$ }\6
+${}\{\.{DOT},\39\.{DOT},\39\.{DOT},\39\.{DASH},\39\.{DOT},\39\.{DOT},\39%
+\.{DASH}\},\3{-1}{}$\C{ @ }\6
+${}\{\.{DOT},\39\.{DASH},\39\.{DASH},\39\.{DOT},\39\.{DASH},\39\.{DOT}\}\};{}$\6
+\&{enum} ${}\{{}$\1\6
+${}\.{A\_CH},\39\.{B\_CH},\39\.{C\_CH},\39\.{D\_CH},\39\.{E\_CH},\39\.{F\_CH},%
+\39\.{G\_CH},\39\.{H\_CH},\39\.{I\_CH},\39\.{J\_CH},\39\.{K\_CH},\39\.{L\_CH},%
+\39\.{M\_CH},\39\.{N\_CH},\39\.{O\_CH},\39\.{P\_CH},\39\.{Q\_CH},\39\.{R\_CH},%
+\39\.{S\_CH},\39\.{T\_CH},\39\.{U\_CH},\39\.{V\_CH},\39\.{W\_CH},\39\.{X\_CH},%
+\39\.{Y\_CH},\39\.{Z\_CH},\39\.{ZERO},\39\.{ONE},\39\.{TWO},\39\.{THREE},\39%
+\.{FOUR},\39\.{FIVE},\39\.{SIX},\39\.{SEVEN},\39\.{EIGHT},\39\.{NINE},\39%
+\.{PERIOD},\39\.{COMMA},\39\.{QUESTION},\39\.{APOSTROPHE},\39\.{EXCLAMATION},%
+\39\.{SLASH},\39\.{START\_PAREN},\39\.{END\_PAREN},\39\.{AMPERSAND},\39%
+\.{COLON},\39\.{SEMICOLON},\39\.{EQUALS},\39\.{PLUS},\39\.{MINUS},\39%
+\.{UNDERSCORE},\39\.{QUOTE},\39\.{DOLLAR},\39\.{AT}{}$\2\6
+${}\}{}$ \\{char\_index};\7
+\&{void} \\{new\_sign}(\&{char} \\{ascii\_char}${},\39{}$\&{int} \\{this%
+\_length}${},\39{}$\&{int} \\{this\_code}[\,])\1\1\2\2\6
+${}\{{}$\1\6
+\&{int} \|i;\7
+${}\\{sign}[\\{ascii\_char}].\\{length}\K\\{this\_length};{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ \|i${},\39\this.\\{length};{}$ ${}\PP\|i){}$\5
+${}\{{}$\1\6
+${}\\{sign}[\\{ascii\_char}].\\{code}[\|i]\K\\{this\_code}[\|i];{}$\6
+\4${}\}{}$\2\6
+\&{return};\6
+\4${}\}{}$\2\par
+\U1.\fi
+
+\M{3}Now we put it together to build to the lookup tables.
+
+\Y\B\4\X3:Build lookup tables\X${}\E{}$\6
+\&{int} \\{ascii\_char}${},{}$ \|i${},{}$ \\{sign\_char\_type};\6
+\&{char} ${}\\{output\_str}[\.{MAX\_OUTPUT\_STR}*\.{MAX\_CHAR\_SEQ}];{}$\7
+\&{while} ${}((\\{ascii\_char}\K\\{fgetc}(\\{infile}))\I\T{0}){}$\5
+${}\{{}$\1\6
+${}\\{output\_str}[\T{0}]\K\.{'\\0'};{}$\6
+\&{for} ${}(\|i\K\T{0};{}$ ${}\|i<\\{sign}[\\{ascii\_char}].\\{length};{}$ ${}%
+\PP\|i){}$\5
+${}\{{}$\1\6
+${}\\{sign\_char\_type}\K\\{sign}[\\{ascii\_char}].\\{code}[\|i];{}$\6
+${}\\{strcat}(\\{output\_str},\39\\{sign\_output\_str}[\\{sign\_char%
+\_type}]);{}$\6
+\4${}\}{}$\2\6
+\4${}\}{}$\2\par
+
+\U1.\fi
+
+
+\inx
+\fin
+\con
