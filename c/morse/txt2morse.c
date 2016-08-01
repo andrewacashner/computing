@@ -11,12 +11,13 @@
 #define MAX_CHARS 55
 #define MAX_CHAR_SEQ 8
 #define MAX_OUTPUT_STR 24
+#define MAX_ASCII 117
 
 /* Data needed to create lookup tables */
-const enum { DOT, DASH, CHAR_SPC, WORD_SPC } sign_type;
+const enum { EMPTY, DOT, DASH, CHAR_SPC, WORD_SPC } sign_type;
 
 const char *sign_output_str[MAX_OUTPUT_STR] = {
-  ". ", "--- ", "  ", "      "
+  "[]", ". ", "--- ", "  ", "      "
 };
 
 const enum { ALPHA_NAME, ALPHA_LENGTH } alphabet_index;
@@ -95,7 +96,7 @@ int char_code[MAX_CHARS][MAX_CHAR_SEQ] = {
 struct {
   int length;
   int code[MAX_CHAR_SEQ];
-} sign[MAX_CHARS];
+} sign[MAX_ASCII];
 
 void new_sign(int ascii_char, int this_length, int this_code[]);
 
@@ -148,7 +149,7 @@ int main(int argc, char *argv[])
     fprintf(outfile, "%s", output_str);
   }
   fprintf(outfile, "\n");
-  
+
   fclose(infile);
   fclose(outfile);
   return (0);
@@ -159,9 +160,11 @@ void new_sign(int ascii_char, int this_length, int this_code[])
    ASCII code */
 {
   int i;
-  sign[ascii_char].length = this_length;
-  for (i = 0; i < this_length; ++i ) {
-    sign[ascii_char].code[i] = this_code[i];
+  if (ascii_char < MAX_ASCII) {
+    sign[ascii_char].length = this_length;
+    for (i = 0; i < this_length; ++i ) {
+      sign[ascii_char].code[i] = this_code[i];
+    }
   }
   return;
 }
