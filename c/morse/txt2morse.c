@@ -19,17 +19,20 @@ const char *sign_output_str[MAX_OUTPUT_STR] = {
   ". ", "--- ", "  ", "      "
 };
 
-const enum { 
-  A_CH, B_CH, C_CH, D_CH, E_CH, F_CH, G_CH, H_CH, 
-  I_CH, J_CH, K_CH, L_CH, M_CH, N_CH, O_CH, P_CH, 
-  Q_CH, R_CH, S_CH, T_CH, U_CH, V_CH, W_CH, X_CH, Y_CH, Z_CH,
-  ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, 
-  SEVEN, EIGHT, NINE, 
-  PERIOD, COMMA, QUESTION, APOSTROPHE,
-  EXCLAMATION, SLASH, START_PAREN, END_PAREN,
-  AMPERSAND, COLON, SEMICOLON, EQUALS, PLUS,
-  MINUS, UNDERSCORE, QUOTE, DOLLAR, AT, SPACE_CH
-} char_index;
+const enum { ALPHA_NAME, ALPHA_LENGTH } alphabet_index;
+
+int alphabet[MAX_CHARS][MAX_CHAR_SEQ] = {
+  {'A', 2},  {'B', 4},  {'C', 4},  {'D', 3},  {'E', 1},  {'F', 4},
+  {'G', 3},  {'H', 4},  {'I', 2},  {'J', 4},  {'K', 3},  {'L', 4},
+  {'M', 2},  {'N', 2},  {'0', 3},  {'P', 4},  {'Q', 4},  {'R', 3},
+  {'S', 3},  {'T', 1},  {'U', 3},  {'V', 4},  {'W', 3},  {'X', 4},
+  {'Y', 4},  {'Z', 4},  {'0', 5},  {'1', 5},  {'2', 5},  {'3', 5},
+  {'4', 5},  {'5', 5},  {'6', 5},  {'7', 5},  {'8', 5},  {'9', 5},
+  {'.', 6},  {',', 6},  {'?', 6},  {'\'', 5},  {'!', 6},  {'/', 5},
+  {'(', 5},  {')', 6},  {'&', 5},  {':', 6},  {';', 6},  {'=', 5},
+  {'+', 5},  {'-', 6},  {'_', 6},  {'\"', 6},  {'$', 7},  {'@', 6},
+  {' ', 1}
+};
 
 int char_code[MAX_CHARS][MAX_CHAR_SEQ] = { 
    /* A */ { DOT, DASH }, 
@@ -125,62 +128,10 @@ int main(int argc, char *argv[])
   }
 
   /* Build lookup table */
-  new_sign('A', 2, char_code[A_CH]);
-  new_sign('B', 4, char_code[B_CH]);
-  new_sign('C', 4, char_code[C_CH]);
-  new_sign('D', 3, char_code[D_CH]);
-  new_sign('E', 1, char_code[E_CH]);
-  new_sign('F', 4, char_code[F_CH]);
-  new_sign('G', 3, char_code[G_CH]);
-  new_sign('H', 4, char_code[H_CH]);
-  new_sign('I', 2, char_code[I_CH]);
-  new_sign('J', 4, char_code[J_CH]);
-  new_sign('K', 3, char_code[K_CH]);
-  new_sign('L', 4, char_code[L_CH]);
-  new_sign('M', 2, char_code[M_CH]);
-  new_sign('N', 2, char_code[N_CH]);
-  new_sign('O', 3, char_code[O_CH]);
-  new_sign('P', 4, char_code[P_CH]);
-  new_sign('Q', 4, char_code[Q_CH]);
-  new_sign('R', 3, char_code[R_CH]);
-  new_sign('S', 3, char_code[S_CH]);
-  new_sign('T', 1, char_code[T_CH]);
-  new_sign('U', 3, char_code[U_CH]);
-  new_sign('V', 4, char_code[V_CH]);
-  new_sign('W', 3, char_code[W_CH]);
-  new_sign('X', 4, char_code[X_CH]);
-  new_sign('Y', 4, char_code[Y_CH]);
-  new_sign('Z', 4, char_code[Z_CH]);
-  new_sign('0', 5, char_code[ZERO]);
-  new_sign('1', 5, char_code[ONE]);
-  new_sign('2', 5, char_code[TWO]);
-  new_sign('3', 5, char_code[THREE]);
-  new_sign('4', 5, char_code[FOUR]);
-  new_sign('5', 5, char_code[FIVE]);
-  new_sign('6', 5, char_code[SIX]);
-  new_sign('7', 5, char_code[SEVEN]);
-  new_sign('8', 5, char_code[EIGHT]);
-  new_sign('9', 5, char_code[NINE]);
-  new_sign('.', 6, char_code[PERIOD]);
-  new_sign(',', 6, char_code[COMMA]);
-  new_sign('?', 6, char_code[QUESTION]);
-  new_sign('\'', 5, char_code[APOSTROPHE]);
-  new_sign('!', 6, char_code[EXCLAMATION]);
-  new_sign('/', 5, char_code[SLASH]);
-  new_sign('(', 5, char_code[START_PAREN]);
-  new_sign(')', 6, char_code[END_PAREN]);
-  new_sign('&', 5, char_code[AMPERSAND]);
-  new_sign(':', 6, char_code[COLON]);
-  new_sign(';', 6, char_code[SEMICOLON]);
-  new_sign('=', 5, char_code[EQUALS]);
-  new_sign('+', 5, char_code[PLUS]);
-  new_sign('-', 6, char_code[MINUS]);
-  new_sign('_', 6, char_code[UNDERSCORE]);
-  new_sign('\"', 6, char_code[QUOTE]);
-  new_sign('$', 7, char_code[DOLLAR]);
-  new_sign('@', 6, char_code[AT]);
-  new_sign(' ', 1, char_code[SPACE_CH]);
-
+  for (i = 0; i < MAX_CHARS; ++i) {
+    new_sign(alphabet[i][ALPHA_NAME], alphabet[i][ALPHA_LENGTH], char_code[i]);
+  }
+  
   /* Read in characters, look up series of dots and dashes in sign
      table, output appropriate format for each dot, dash, or space. */
 
