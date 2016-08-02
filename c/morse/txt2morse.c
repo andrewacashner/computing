@@ -22,83 +22,66 @@ const char *sign_output_str[MAX_OUTPUT_STR] = {
 
 const enum { ALPHA_NAME, ALPHA_LENGTH } alphabet_index;
 
-int alphabet[MAX_CHARS][MAX_CHAR_SEQ] = {
-  {'A', 2},  {'B', 4},  {'C', 4},  {'D', 3},  {'E', 1},  {'F', 4},
-  {'G', 3},  {'H', 4},  {'I', 2},  {'J', 4},  {'K', 3},  {'L', 4},
-  {'M', 2},  {'N', 2},  {'0', 3},  {'P', 4},  {'Q', 4},  {'R', 3},
-  {'S', 3},  {'T', 1},  {'U', 3},  {'V', 4},  {'W', 3},  {'X', 4},
-  {'Y', 4},  {'Z', 4},  {'0', 5},  {'1', 5},  {'2', 5},  {'3', 5},
-  {'4', 5},  {'5', 5},  {'6', 5},  {'7', 5},  {'8', 5},  {'9', 5},
-  {'.', 6},  {',', 6},  {'?', 6},  {'\'', 5},  {'!', 6},  {'/', 5},
-  {'(', 5},  {')', 6},  {'&', 5},  {':', 6},  {';', 6},  {'=', 5},
-  {'+', 5},  {'-', 6},  {'_', 6},  {'\"', 6},  {'$', 7},  {'@', 6},
-  {' ', 1}
+int morse_table[MAX_CHARS][MAX_CHAR_SEQ + 2] = {
+  {'A', 2, DOT, DASH },
+  {'B', 4, DASH, DOT, DOT, DOT },
+  {'C', 4, DASH, DOT, DASH, DOT },
+  {'D', 3, DASH, DOT, DOT },
+  {'E', 1, DOT },
+  {'F', 4, DOT, DOT, DASH, DOT },
+  {'G', 3, DASH, DASH, DOT },
+  {'H', 4, DOT, DOT, DOT, DOT },
+  {'I', 2, DOT, DOT },
+  {'J', 4, DOT, DASH, DASH, DASH },
+  {'K', 3, DASH, DOT, DASH },
+  {'L', 4, DOT, DASH, DOT, DOT },
+  {'M', 2, DASH, DASH },
+  {'N', 2, DASH, DOT },
+  {'0', 3, DASH, DASH, DASH },
+  {'P', 4, DOT, DASH, DASH, DOT },
+  {'Q', 4, DASH, DASH, DOT, DASH },
+  {'R', 3, DOT, DASH, DOT },
+  {'S', 3, DOT, DOT, DOT },
+  {'T', 1, DASH },
+  {'U', 3, DOT, DOT, DASH },
+  {'V', 4, DOT, DOT, DOT, DASH },
+  {'W', 3, DOT, DASH, DASH },
+  {'X', 4, DASH, DOT, DOT, DASH },
+  {'Y', 4, DASH, DOT, DASH, DASH },
+  {'Z', 4, DASH, DASH, DOT, DOT },
+  {'0', 5, DASH, DASH, DASH, DASH, DASH },
+  {'1', 5, DOT, DASH, DASH, DASH, DASH },
+  {'2', 5, DOT, DOT, DASH, DASH, DASH },
+  {'3', 5, DOT, DOT, DOT, DASH, DASH },
+  {'4', 5, DOT, DOT, DOT, DOT, DASH },
+  {'5', 5, DOT, DOT, DOT, DOT, DOT },
+  {'6', 5, DASH, DOT, DOT, DOT, DOT },
+  {'7', 5, DASH, DASH, DOT, DOT, DOT },
+  {'8', 5, DASH, DASH, DASH, DOT, DOT },
+  {'9', 5, DASH, DASH, DASH, DASH, DOT },
+  {'.', 6, DOT, DASH, DOT, DASH, DOT, DASH },
+  {',', 6, DASH, DASH, DOT, DOT, DASH, DASH },
+  {'?', 6, DOT, DOT, DASH, DASH, DOT, DOT },
+  {'\'', 5, DOT, DASH, DASH, DASH, DASH, DOT },
+  {'!', 6, DASH, DOT, DASH, DOT, DASH, DASH },
+  {'/', 5, DASH, DOT, DOT, DASH, DOT },
+  {'(', 5, DASH, DOT, DASH, DASH, DOT },
+  {')', 6, DASH, DOT, DASH, DASH, DOT, DASH}, 
+  {'&', 5, DOT, DASH, DOT, DOT, DOT },
+  {':', 6, DASH, DASH, DASH, DOT, DOT, DOT },
+  {';', 6, DASH, DOT, DASH, DOT, DASH, DOT },
+  {'=', 5, DASH, DOT, DOT, DOT, DASH },
+  {'+', 5, DOT, DASH, DOT, DASH, DOT },
+  {'-', 6, DASH, DOT, DOT, DOT, DOT, DASH },
+  {'_', 6, DOT, DOT, DASH, DASH, DOT, DASH },
+  {'\"', 6, DOT, DASH, DOT, DOT, DASH, DOT },
+  {'$', 7, DOT, DOT, DOT, DASH, DOT, DOT, DASH },
+  {'@', 6, DOT, DASH, DASH, DOT, DASH, DOT },
+  {' ', 1, WORD_SPC }
 };
 
-int char_code[MAX_CHARS][MAX_CHAR_SEQ] = { 
-   /* A */ { DOT, DASH }, 
-   /* B */ { DASH, DOT, DOT, DOT },
-   /* C */ { DASH, DOT, DASH, DOT },
-   /* D */ { DASH, DOT, DOT },
-   /* E */ { DOT },
-   /* F */ { DOT, DOT, DASH, DOT },
-   /* G */ { DASH, DASH, DOT },
-   /* H */ { DOT, DOT, DOT, DOT },
-   /* I */ { DOT, DOT },
-   /* J */ { DOT, DASH, DASH, DASH },
-   /* K */ { DASH, DOT, DASH },
-   /* L */ { DOT, DASH, DOT, DOT },
-   /* M */ { DASH, DASH },
-   /* N */ { DASH, DOT },
-   /* O */ { DASH, DASH, DASH },
-   /* P */ { DOT, DASH, DASH, DOT },
-   /* Q */ { DASH, DASH, DOT, DASH },
-   /* R */ { DOT, DASH, DOT },
-   /* S */ { DOT, DOT, DOT },
-   /* T */ { DASH },
-   /* U */ { DOT, DOT, DASH },
-   /* V */ { DOT, DOT, DOT, DASH },
-   /* W */ { DOT, DASH, DASH },
-   /* X */ { DASH, DOT, DOT, DASH },
-   /* Y */ { DASH, DOT, DASH, DASH },
-   /* Z */ { DASH, DASH, DOT, DOT },
-   /* 0 */ { DASH, DASH, DASH, DASH, DASH },
-   /* 1 */ { DOT, DASH, DASH, DASH, DASH },
-   /* 2 */ { DOT, DOT, DASH, DASH, DASH },
-   /* 3 */ { DOT, DOT, DOT, DASH, DASH },
-   /* 4 */ { DOT, DOT, DOT, DOT, DASH },
-   /* 5 */ { DOT, DOT, DOT, DOT, DOT },
-   /* 6 */ { DASH, DOT, DOT, DOT, DOT },
-   /* 7 */ { DASH, DASH, DOT, DOT, DOT },
-   /* 8 */ { DASH, DASH, DASH, DOT, DOT },
-   /* 9 */ { DASH, DASH, DASH, DASH, DOT },
-   /* . */ { DOT, DASH, DOT, DASH, DOT, DASH },
-   /* , */ { DASH, DASH, DOT, DOT, DASH, DASH },
-   /* ? */ { DOT, DOT, DASH, DASH, DOT, DOT },
-   /* ' */ { DOT, DASH, DASH, DASH, DASH, DOT },
-   /* ! */ { DASH, DOT, DASH, DOT, DASH, DASH },
-   /* / */ { DASH, DOT, DOT, DASH, DOT },
-   /* ( */ { DASH, DOT, DASH, DASH, DOT },
-   /* ) */ { DASH, DOT, DASH, DASH, DOT, DASH}, 
-   /* & */ { DOT, DASH, DOT, DOT, DOT },
-   /* : */ { DASH, DASH, DASH, DOT, DOT, DOT },
-   /* ; */ { DASH, DOT, DASH, DOT, DASH, DOT },
-   /* = */ { DASH, DOT, DOT, DOT, DASH },
-   /* + */ { DOT, DASH, DOT, DASH, DOT },
-   /* - */ { DASH, DOT, DOT, DOT, DOT, DASH },
-   /* _ */ { DOT, DOT, DASH, DASH, DOT, DASH },
-   /* " */ { DOT, DASH, DOT, DOT, DASH, DOT },
-   /* $ */ { DOT, DOT, DOT, DASH, DOT, DOT, DASH },
-   /* @ */ { DOT, DASH, DASH, DOT, DASH, DOT },
-   /* [space] */ { WORD_SPC }
-};
-
-struct {
-  int length;
-  int code[MAX_CHAR_SEQ];
-} sign[MAX_ASCII];
-
-void new_sign(int ascii_char, int this_length, int this_code[]);
+/* Need array of addresses matching ASCII number indices to above
+   entries */
 
 int main(int argc, char *argv[]) 
 {
@@ -128,10 +111,6 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  /* Build lookup table */
-  for (i = 0; i < MAX_CHARS; ++i) {
-    new_sign(alphabet[i][ALPHA_NAME], alphabet[i][ALPHA_LENGTH], char_code[i]);
-  }
   
   /* Read in characters, look up series of dots and dashes in sign
      table, output appropriate format for each dot, dash, or space. */
@@ -155,18 +134,6 @@ int main(int argc, char *argv[])
   return (0);
 }
 
-void new_sign(int ascii_char, int this_length, int this_code[])
-/* Add a new entry in the lookup table (struct sign[]), keyed to the
-   ASCII code */
-{
-  int i;
-  if (ascii_char < MAX_ASCII) {
-    sign[ascii_char].length = this_length;
-    for (i = 0; i < this_length; ++i ) {
-      sign[ascii_char].code[i] = this_code[i];
-    }
-  }
-  return;
-}
+
 
 
