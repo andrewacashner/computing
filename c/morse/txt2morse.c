@@ -94,7 +94,8 @@ int main(int argc, char *argv[])
      command-line arguments */
   
   if (argc != 3) {
-    fprintf(stderr, "Incorrect number of arguments. Usage: txt2morse <input file> <output file>\n");
+    fprintf(stderr, "Incorrect number of arguments. "
+            "Usage: txt2morse <input file> <output file>\n");
     exit(EXIT_FAILURE);
   }
   strcpy(infile_name, argv[1]);
@@ -145,14 +146,5 @@ int main(int argc, char *argv[])
   fclose(outfile);
   return (0);
 }
-
-    /* i = 1; */
-    /* do { */
-    /*   morse_table_index = ascii_table[ascii_char]; */
-    /*   sign_char_type = morse_table[morse_table_index][i]; */
-    /*   strcat(output_str, sign_output_str[sign_char_type]); */
-    /*   ++i; */
-    /* } while (sign_char_type != ENDCODE); */
-
 
 
