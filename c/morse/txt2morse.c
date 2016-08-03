@@ -13,78 +13,76 @@
 #define MAX_OUTPUT_STR 24
 #define MAX_ASCII 117
 
-/* Data needed to create lookup tables */
-const enum { EMPTY, DOT, DASH, CHAR_SPC, WORD_SPC } sign_type;
+/* For lookup tables */
+const enum { DOT, DASH, CHAR_SPC, WORD_SPC, ENDCODE } sign_type;
 
 const char *sign_output_str[MAX_OUTPUT_STR] = {
-  "[]", ". ", "--- ", "  ", "      "
+  ". ", "--- ", "  ", "      "
 };
 
-const enum { ALPHA_NAME, ALPHA_LENGTH } alphabet_index;
-
-int morse_table[MAX_CHARS][MAX_CHAR_SEQ + 2] = {
-  {'A', 2, DOT, DASH },
-  {'B', 4, DASH, DOT, DOT, DOT },
-  {'C', 4, DASH, DOT, DASH, DOT },
-  {'D', 3, DASH, DOT, DOT },
-  {'E', 1, DOT },
-  {'F', 4, DOT, DOT, DASH, DOT },
-  {'G', 3, DASH, DASH, DOT },
-  {'H', 4, DOT, DOT, DOT, DOT },
-  {'I', 2, DOT, DOT },
-  {'J', 4, DOT, DASH, DASH, DASH },
-  {'K', 3, DASH, DOT, DASH },
-  {'L', 4, DOT, DASH, DOT, DOT },
-  {'M', 2, DASH, DASH },
-  {'N', 2, DASH, DOT },
-  {'0', 3, DASH, DASH, DASH },
-  {'P', 4, DOT, DASH, DASH, DOT },
-  {'Q', 4, DASH, DASH, DOT, DASH },
-  {'R', 3, DOT, DASH, DOT },
-  {'S', 3, DOT, DOT, DOT },
-  {'T', 1, DASH },
-  {'U', 3, DOT, DOT, DASH },
-  {'V', 4, DOT, DOT, DOT, DASH },
-  {'W', 3, DOT, DASH, DASH },
-  {'X', 4, DASH, DOT, DOT, DASH },
-  {'Y', 4, DASH, DOT, DASH, DASH },
-  {'Z', 4, DASH, DASH, DOT, DOT },
-  {'0', 5, DASH, DASH, DASH, DASH, DASH },
-  {'1', 5, DOT, DASH, DASH, DASH, DASH },
-  {'2', 5, DOT, DOT, DASH, DASH, DASH },
-  {'3', 5, DOT, DOT, DOT, DASH, DASH },
-  {'4', 5, DOT, DOT, DOT, DOT, DASH },
-  {'5', 5, DOT, DOT, DOT, DOT, DOT },
-  {'6', 5, DASH, DOT, DOT, DOT, DOT },
-  {'7', 5, DASH, DASH, DOT, DOT, DOT },
-  {'8', 5, DASH, DASH, DASH, DOT, DOT },
-  {'9', 5, DASH, DASH, DASH, DASH, DOT },
-  {'.', 6, DOT, DASH, DOT, DASH, DOT, DASH },
-  {',', 6, DASH, DASH, DOT, DOT, DASH, DASH },
-  {'?', 6, DOT, DOT, DASH, DASH, DOT, DOT },
-  {'\'', 5, DOT, DASH, DASH, DASH, DASH, DOT },
-  {'!', 6, DASH, DOT, DASH, DOT, DASH, DASH },
-  {'/', 5, DASH, DOT, DOT, DASH, DOT },
-  {'(', 5, DASH, DOT, DASH, DASH, DOT },
-  {')', 6, DASH, DOT, DASH, DASH, DOT, DASH}, 
-  {'&', 5, DOT, DASH, DOT, DOT, DOT },
-  {':', 6, DASH, DASH, DASH, DOT, DOT, DOT },
-  {';', 6, DASH, DOT, DASH, DOT, DASH, DOT },
-  {'=', 5, DASH, DOT, DOT, DOT, DASH },
-  {'+', 5, DOT, DASH, DOT, DASH, DOT },
-  {'-', 6, DASH, DOT, DOT, DOT, DOT, DASH },
-  {'_', 6, DOT, DOT, DASH, DASH, DOT, DASH },
-  {'\"', 6, DOT, DASH, DOT, DOT, DASH, DOT },
-  {'$', 7, DOT, DOT, DOT, DASH, DOT, DOT, DASH },
-  {'@', 6, DOT, DASH, DASH, DOT, DASH, DOT },
-  {' ', 1, WORD_SPC }
-};
-
-/* Need array of addresses matching ASCII number indices to above
-   entries */
 
 int main(int argc, char *argv[]) 
 {
+
+  int morse_table[MAX_CHARS][MAX_CHAR_SEQ + 1] = {
+    {'A', DOT, DASH, ENDCODE },
+    {'B', DASH, DOT, DOT, DOT, ENDCODE },
+    {'C', DASH, DOT, DASH, DOT, ENDCODE },
+    {'D', DASH, DOT, DOT, ENDCODE },
+    {'E', DOT, ENDCODE },
+    {'F', DOT, DOT, DASH, DOT, ENDCODE },
+    {'G', DASH, DASH, DOT, ENDCODE },
+    {'H', DOT, DOT, DOT, DOT, ENDCODE },
+    {'I', DOT, DOT, ENDCODE },
+    {'J', DOT, DASH, DASH, DASH, ENDCODE },
+    {'K', DASH, DOT, DASH, ENDCODE },
+    {'L', DOT, DASH, DOT, DOT, ENDCODE },
+    {'M', DASH, DASH, ENDCODE },
+    {'N', DASH, DOT, ENDCODE },
+    {'0', DASH, DASH, DASH, ENDCODE },
+    {'P', DOT, DASH, DASH, DOT, ENDCODE },
+    {'Q', DASH, DASH, DOT, DASH, ENDCODE },
+    {'R', DOT, DASH, DOT, ENDCODE },
+    {'S', DOT, DOT, DOT, ENDCODE },
+    {'T', DASH, ENDCODE },
+    {'U', DOT, DOT, DASH, ENDCODE },
+    {'V', DOT, DOT, DOT, DASH, ENDCODE },
+    {'W', DOT, DASH, DASH, ENDCODE },
+    {'X', DASH, DOT, DOT, DASH, ENDCODE },
+    {'Y', DASH, DOT, DASH, DASH, ENDCODE },
+    {'Z', DASH, DASH, DOT, DOT, ENDCODE },
+    {'0', DASH, DASH, DASH, DASH, DASH, ENDCODE },
+    {'1', DOT, DASH, DASH, DASH, DASH, ENDCODE },
+    {'2', DOT, DOT, DASH, DASH, DASH, ENDCODE },
+    {'3', DOT, DOT, DOT, DASH, DASH, ENDCODE },
+    {'4', DOT, DOT, DOT, DOT, DASH, ENDCODE },
+    {'5', DOT, DOT, DOT, DOT, DOT, ENDCODE },
+    {'6', DASH, DOT, DOT, DOT, DOT, ENDCODE },
+    {'7', DASH, DASH, DOT, DOT, DOT, ENDCODE },
+    {'8', DASH, DASH, DASH, DOT, DOT, ENDCODE },
+    {'9', DASH, DASH, DASH, DASH, DOT, ENDCODE },
+    {'.', DOT, DASH, DOT, DASH, DOT, DASH, ENDCODE },
+    {',', DASH, DASH, DOT, DOT, DASH, DASH, ENDCODE },
+    {'?', DOT, DOT, DASH, DASH, DOT, DOT, ENDCODE },
+    {'\'', DOT, DASH, DASH, DASH, DASH, DOT, ENDCODE },
+    {'!', DASH, DOT, DASH, DOT, DASH, DASH, ENDCODE },
+    {'/', DASH, DOT, DOT, DASH, DOT, ENDCODE },
+    {'(', DASH, DOT, DASH, DASH, DOT, ENDCODE },
+    {')', DASH, DOT, DASH, DASH, DOT, DASH, ENDCODE }, 
+    {'&', DOT, DASH, DOT, DOT, DOT, ENDCODE },
+    {':', DASH, DASH, DASH, DOT, DOT, DOT, ENDCODE },
+    {';', DASH, DOT, DASH, DOT, DASH, DOT, ENDCODE },
+    {'=', DASH, DOT, DOT, DOT, DASH, ENDCODE },
+    {'+', DOT, DASH, DOT, DASH, DOT, ENDCODE },
+    {'-', DASH, DOT, DOT, DOT, DOT, DASH, ENDCODE },
+    {'_', DOT, DOT, DASH, DASH, DOT, DASH, ENDCODE },
+    {'\"', DOT, DASH, DOT, DOT, DASH, DOT, ENDCODE },
+    {'$', DOT, DOT, DOT, DASH, DOT, DOT, DASH, ENDCODE },
+    {'@', DOT, DASH, DASH, DOT, DASH, DOT, ENDCODE },
+    {' ', WORD_SPC, ENDCODE }
+  };
+
+  int ascii_table[MAX_ASCII];
 
   FILE *infile, *outfile;
   char infile_name[MAX_FILENAME], outfile_name[MAX_FILENAME];
@@ -111,6 +109,10 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
+  /* Make lookup table to access morse codes through ascii values */
+  for (i = 0; i < MAX_CHARS; ++i) {
+    ascii_table[morse_table[i][0]] = i;
+  }
   
   /* Read in characters, look up series of dots and dashes in sign
      table, output appropriate format for each dot, dash, or space. */
@@ -119,9 +121,8 @@ int main(int argc, char *argv[])
   while ((ascii_char = fgetc(infile)) != EOF) {
     output_str[0] = '\0';
     /* Build string for each morse character signal */
-    for (i = 0; i < sign[ascii_char].length; ++i) {
-      sign_char_type = sign[ascii_char].code[i];
-      strcat(output_str, sign_output_str[sign_char_type]);
+    for (i = 1; morse_table[ascii_table[ascii_char]][i] != ENDCODE; ++i) {
+      strcat(output_str, sign_output_str[morse_table[ascii_table[ascii_char]][i]]);
     }
     /* Add space between characters */
     strcat(output_str, sign_output_str[CHAR_SPC]); 
