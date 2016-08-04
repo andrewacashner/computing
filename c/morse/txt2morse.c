@@ -11,7 +11,7 @@
 #define MAX_CHARS 55
 #define MAX_CHAR_SEQ 8
 #define MAX_OUTPUT_STR 4
-#define MAX_ASCII 118
+#define MAX_ASCII 127
 
 /* For lookup tables */
 const enum { DOT, DASH, CHAR_SPC, WORD_SPC, ENDCODE } sign_type;
@@ -91,9 +91,10 @@ int main(int argc, char *argv[])
   FILE *infile, *outfile;
   char infile_name[MAX_FILENAME], outfile_name[MAX_FILENAME];
 
+  int lower_upper_ascii_difference = 'a' - 'A';
+
   /* Process options, open files for input and output from
      command-line arguments */
-  
   if (argc != 3) {
     fprintf(stderr, "Incorrect number of arguments. "
             "Usage: txt2morse <input file> <output file>\n");
@@ -115,7 +116,7 @@ int main(int argc, char *argv[])
   /* Make lookup table to access morse codes through ASCII values */
   /* First make empty ASCII entries point to space character, which
      is last value of morse_table */
-  for (i = 0; i < MAX_ASCII; ++i) {
+  for (i = 0; i <= MAX_ASCII; ++i) {
     ascii_char = morse_table[MAX_CHARS][0];
   }
   for (i = 0; i < MAX_CHARS; ++i) {
@@ -127,7 +128,7 @@ int main(int argc, char *argv[])
      table, output appropriate format for each dot, dash, or space. */
   while ((ascii_char = fgetc(infile)) != EOF) {
     /* Ensure valid input */
-    if (ascii_char >= MAX_ASCII) {
+    if (ascii_char > MAX_ASCII) {
       break;
     }
     /* Preserve newlines, no processing needed */
@@ -136,12 +137,13 @@ int main(int argc, char *argv[])
       continue;
     }
     /* Convert lowercase to uppercase */
-    else if (ascii_char > 'a' && ascii_char < 'z') {
-      ascii_char += 'A' - 'a'; 
+    else if (ascii_char >= 'a' && ascii_char <= 'z') {
+      ascii_char -= lower_upper_ascii_difference; 
     }
     
-    /* Build string for each morse character signal */
+    /* Build new string for each morse character signal */
     output_str[0] = '\0';
+    
     /* Get morse output patterns for each component character from
        lookup table, so 'A' -> DOT, DASH -> ". ---" */
     i = 1;
@@ -157,6 +159,7 @@ int main(int argc, char *argv[])
     
     /* Add space between characters */
     strcat(output_str, sign_output_str[CHAR_SPC]); 
+
     fprintf(outfile, "%s", output_str);
   }
   fprintf(outfile, "\n");
