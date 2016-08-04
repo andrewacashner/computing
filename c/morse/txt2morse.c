@@ -10,14 +10,14 @@
 #define MAX_FILENAME 48
 #define MAX_CHARS 55
 #define MAX_CHAR_SEQ 8
-#define MAX_OUTPUT_STR 24
-#define MAX_ASCII 117
+#define MAX_OUTPUT_STR 4
+#define MAX_ASCII 118
 
 /* For lookup tables */
 const enum { DOT, DASH, CHAR_SPC, WORD_SPC, ENDCODE } sign_type;
 
 const char *sign_output_str[MAX_OUTPUT_STR] = {
-  ". ", "--- ", "  ", "      "
+  ".", "-", " ", "   "
 };
 
 
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     {'L', DOT, DASH, DOT, DOT, ENDCODE },
     {'M', DASH, DASH, ENDCODE },
     {'N', DASH, DOT, ENDCODE },
-    {'0', DASH, DASH, DASH, ENDCODE },
+    {'O', DASH, DASH, DASH, ENDCODE },
     {'P', DOT, DASH, DASH, DOT, ENDCODE },
     {'Q', DASH, DASH, DOT, DASH, ENDCODE },
     {'R', DOT, DASH, DOT, ENDCODE },
@@ -84,11 +84,12 @@ int main(int argc, char *argv[])
 
   int ascii_table[MAX_ASCII];
   int morse_table_index;
+
+  int i, ascii_char, sign_char_type;
+  char output_str[MAX_OUTPUT_STR * MAX_CHAR_SEQ];
   
   FILE *infile, *outfile;
   char infile_name[MAX_FILENAME], outfile_name[MAX_FILENAME];
-  int i, ascii_char, sign_char_type;
-  char output_str[MAX_OUTPUT_STR * MAX_CHAR_SEQ];
 
   /* Process options, open files for input and output from
      command-line arguments */
@@ -111,7 +112,12 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  /* Make lookup table to access morse codes through ascii values */
+  /* Make lookup table to access morse codes through ASCII values */
+  /* First make empty ASCII entries point to space character, which
+     is last value of morse_table */
+  for (i = 0; i < MAX_ASCII; ++i) {
+    ascii_char = morse_table[MAX_CHARS][0];
+  }
   for (i = 0; i < MAX_CHARS; ++i) {
     ascii_char = morse_table[i][0];
     ascii_table[ascii_char] = i;
@@ -119,19 +125,32 @@ int main(int argc, char *argv[])
   
   /* Read in characters, look up series of dots and dashes in sign
      table, output appropriate format for each dot, dash, or space. */
-
-  /** Need to convert to uppercase and ignore bad characters **/
   while ((ascii_char = fgetc(infile)) != EOF) {
+    /* Ensure valid input */
+    if (ascii_char >= MAX_ASCII) {
+      break;
+    }
+    /* Preserve newlines, no processing needed */
+    else if (ascii_char == '\n') {
+      fprintf(outfile, "\n");
+      continue;
+    }
+    /* Convert lowercase to uppercase */
+    else if (ascii_char > 'a' && ascii_char < 'z') {
+      ascii_char += 'A' - 'a'; 
+    }
     
     /* Build string for each morse character signal */
     output_str[0] = '\0';
     /* Get morse output patterns for each component character from
        lookup table, so 'A' -> DOT, DASH -> ". ---" */
     i = 1;
-    while (1) {
+    while (1) {     
       morse_table_index = ascii_table[ascii_char];
       sign_char_type = morse_table[morse_table_index][i];
-      if (sign_char_type == ENDCODE) break;
+      if (sign_char_type == ENDCODE) {
+	break;
+      }
       strcat(output_str, sign_output_str[sign_char_type]);
       ++i;
     }
