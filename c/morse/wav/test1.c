@@ -11,22 +11,43 @@
   #define M_PI 3.14159265358979323846
 #endif
 
-#define NUM_SAMPLES WAVFILE_SAMPLES_PER_SECOND / 8
-#define TOTAL_DURATION NUM_SAMPLES*5
 
 #define TONE volume*sin(frequency*t*2*M_PI)
-#define DOT(START_I, SIGNAL_NUM) {\
-  for (i = START_I; i < SIGNAL_NUM * unit_duration; ++i) {\
-    t = (double) i / WAVFILE_SAMPLES_PER_SECOND;\
-    waveform[i] = TONE;\
-  }\
-}
-#define REST(START_I, SIGNAL_NUM) {\
-    for (i = START_I; i < SIGNAL_NUM * unit_duration; ++i) {	\
-      waveform[i] = 0;\
-    }\
-}
-  
+
+#define DOT {						\
+    for (i = 0; i < unit_duration; ++i) {		\
+      t = (double) i / WAVFILE_SAMPLES_PER_SECOND;	\
+      waveform[i] = TONE;				\
+    }							\
+    for (; i < (2 * unit_duration); ++i) {		\
+      waveform[i] = 0;					\
+    }							\
+    wavfile_write(outfile,waveform,length);		\
+  }
+
+#define DASH {						\
+    for (i = 0; i < (3 * unit_duration); ++i) {		\
+      t = (double) i / WAVFILE_SAMPLES_PER_SECOND;	\
+      waveform[i] = TONE;				\
+    }							\
+    for (; i < (4 * unit_duration); ++i) {		\
+      waveform[i] = 0;					\
+    }							\
+    wavfile_write(outfile,waveform,length);		\
+  }
+
+#define SPACE {					\
+    for (i = 0; i < (6 * unit_duration); ++i) {	\
+      waveform[i] = 0;				\
+    }						\
+    wavfile_write(outfile,waveform,length);	\
+  }
+
+#define NUM_SAMPLES WAVFILE_SAMPLES_PER_SECOND / 16
+#define DOT_DURATION NUM_SAMPLES * 2
+#define DASH_DURATION NUM_SAMPLES * 4
+#define SPACE_DURATION NUM_SAMPLES * 6
+#define TOTAL_DURATION DOT_DURATION * 2 + DASH_DURATION * 2 + SPACE_DURATION
 
 int main(void)
 {
@@ -47,13 +68,9 @@ int main(void)
     exit(EXIT_FAILURE);
   }
 
-  DOT(0, 1);
-  REST(i, 2);
-  DOT(i, 3);
-  DOT(i, 4);
-  DOT(i, 5);
+  DOT; DASH; SPACE;
+  DASH; DOT;
 
-  wavfile_write(outfile,waveform,length*3);
   wavfile_close(outfile);
 
   return (0);
