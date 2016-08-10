@@ -5,6 +5,8 @@ For complete documentation, see:
 http://www.nd.edu/~dthain/courses/cse20211/fall2013/wavfile
 */
 
+/* Modified to conform with ANSI C by Andrew Cashner, 2016 */
+
 #include "wavfile.h"
 
 #include <stdio.h>
