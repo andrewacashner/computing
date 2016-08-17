@@ -1,0 +1,73 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 2.7 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \sortlist[entry]{cms/global/}
+    \entry{Britten:Aspen}{book}{}
+      \name{author}{1}{}{%
+        {{hash=1d8f8866ba60db89a8d75d5acacf4cdd}{%
+           family={Britten},
+           family_i={B\bibinitperiod},
+           given={Benjamin},
+           given_i={B\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {London}%
+      }
+      \list{publisher}{1}{%
+        {Faber \& Faber}%
+      }
+      \strng{namehash}{1d8f8866ba60db89a8d75d5acacf4cdd}
+      \strng{fullhash}{1d8f8866ba60db89a8d75d5acacf4cdd}
+      \field{sortinit}{B}
+      \field{sortinithash}{4ecbea03efd0532989d3836d1a048c32}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{shorttitle}{On Receiving the First Aspen Award}
+      \field{title}{On Receiving the First Aspen Award: A Speech}
+      \field{year}{1964}
+      \keyw{20C,UK,Britten,music-politics,music-society}
+    \endentry
+    \entry{Robertson:PaleFace}{article}{}
+      \name{author}{1}{}{%
+        {{hash=2e88587a782c1723f2065f68e96fcd6d}{%
+           family={Robertson},
+           family_i={R\bibinitperiod},
+           given={Anne\bibnamedelima Walters},
+           given_i={A\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
+      }
+      \strng{namehash}{2e88587a782c1723f2065f68e96fcd6d}
+      \strng{fullhash}{2e88587a782c1723f2065f68e96fcd6d}
+      \field{sortinit}{R}
+      \field{sortinithash}{c7387613477035a752d935acfc3e3ea2}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{journaltitle}{Journal of Musicology}
+      \field{number}{4}
+      \field{shorttitle}{The Man with the Pale Face}
+      \field{title}{The Man with the Pale Face, The Shroud, and Du Fay's Missa \mkbibquote{Se la face ay pale}}
+      \field{volume}{27}
+      \field{pages}{377\bibrangedash 434}
+      \range{pages}{58}
+      \keyw{15C,DuFay,polyphonic-mass,chanson,chanson-mass,symbolism}
+    \endentry
+  \endsortlist
+\endrefsection
+\endinput
+

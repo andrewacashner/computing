@@ -1,0 +1,40 @@
+\documentclass{usc-muhl-article}
+%\setmainfont{Palatino} % use any OpenType or TrueType font installed on your system
+
+\addbibresource{mybib.bib} % no spaces in file name, .bib extension
+
+\title{Insert Title Here} % Insert information
+\author{Insert Name Here}
+% \date{Insert date other than today's date if needed} % Default is \today (current date)
+
+\begin{document}
+\maketitle
+
+% This is a comment that won't be printed.
+% Below is just dummy text for demonstration. 
+Insert text here.
+It's best to use a new line for each sentence.
+
+Leave a blank line between paragraphs.%
+  \footnote{Do footnotes like this.} 
+Or do footnotes like this.%
+  \begin{Footnote}
+  Footnote text, with a citation. See \autocite{Robertson:PaleFace}.
+  \end{Footnote}
+Do bibliographic citations like this, using the key from your .bib file.%
+  \autocite{Britten:Aspen} 
+
+\section{Special Formatting}
+
+Mark up technical terms like \term{this}.
+Mark up quotations like ``this'' or---better---like \quoted{this}.
+Write musical accidentals like B\fl{}, F\na{}, or C\sh{}.
+Write meters or figured bass like this: \musfig{3}{4} meter, a \musfig{6--5}{4--3} cadential sequence.
+
+\subsection{Foreign Characters}
+
+Enter accent marks and foreign characters directly like \term{esdrújulo} or \worktitle{Sechs kleine Kavierstücke}; or you can write them with commands like esdr\'ujulo and Klavierst\"ucke.
+
+\printbibliography
+
+\end{document}

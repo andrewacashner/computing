@@ -1,0 +1,16 @@
+[0] Config.pm:343> INFO - This is Biber 2.5
+[0] Config.pm:346> INFO - Logfile is 'template.blg'
+[50] biber:290> INFO - === Wed Aug 10, 2016, 08:06:16
+[78] Biber.pm:351> INFO - Reading 'template.bcf'
+[218] Biber.pm:776> INFO - Found 2 citekeys in bib section 0
+[237] Biber.pm:3493> INFO - Processing section 0
+[254] Biber.pm:3657> INFO - Looking for bibtex format file 'mybib.bib' for section 0
+[256] bibtex.pm:1187> INFO - Decoding LaTeX character macros into UTF-8
+[258] bibtex.pm:1048> INFO - Found BibTeX data source 'mybib.bib'
+[277] UCollate.pm:66> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[277] UCollate.pm:66> INFO - Overriding locale 'en-US' defaults 'level = 4' with 'level = 2'
+[277] UCollate.pm:66> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[278] Biber.pm:3306> INFO - Sorting list 'cms/global/' of type 'entry' with scheme 'cms' and locale 'en-US'
+[278] Biber.pm:3310> INFO - No sort tailoring available for locale 'en-US'
+[282] bbl.pm:526> INFO - Writing 'template.bbl' with encoding 'UTF-8'
+[283] bbl.pm:619> INFO - Output to template.bbl
