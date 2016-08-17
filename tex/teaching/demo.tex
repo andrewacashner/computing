@@ -1,0 +1,54 @@
+\documentclass{article}
+
+\usepackage{lipsum} % this is how you include a package
+% this one just generates dummy text in pseudo-Latin.
+
+\usepackage{booktabs} % better table commands and layout
+
+\title{Demonstration}
+\author{Andrew Cashner}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\listoftables
+
+\section{Introduction}
+
+This is a sample document created with the \LaTeX{} document-processing system.
+It is good to start each sentence starts on a new line for more convenient editing and tracking changes.%
+  \footnote{This is optional but recommended, just like putting footnotes on a separate line.}
+
+A blank line starts a new paragraph.
+There are various commands to mark up different types of text for \emph{emphasis}, \textbf{bold}, and ``quotations.''
+
+\lipsum
+
+\subsection{Environments}
+
+To create a table, use an environment.
+Table~\ref{environments} is an example, and this sentence is an example of a cross-reference.
+
+\lipsum
+
+\begin{table}
+
+\begin{tabular}{ll} % two left-aligned columns
+\toprule
+Name & Description\\ 
+\midrule
+table & Creates a ``float'' for your table, positioned automatically\\
+tabular & Align material vertically\\
+quote & For a block quotation\\
+verse & For poetry\\
+\bottomrule
+\end{tabular}
+
+\caption{Environments}
+\label{environments} % this establishes the cross-reference
+
+\end{table}
+
+\end{document}
+
