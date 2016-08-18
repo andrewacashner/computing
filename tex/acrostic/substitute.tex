@@ -1,0 +1,64 @@
+\def\scan#1{\scanA#1\end}
+\def\scanA#1{\ifx\end#1\else
+  \def\testA{#1}%
+%  \ifx\test\testA(#1)\else#1\fi
+  (#1)
+  \expandafter\scanA\fi
+}
+\def\test{a}
+
+\scan{abacdeag}
+
+\def\newarray#1{\csname newcount\expandafter\endcsname\csname #1index\endcsname}
+\def\arrayinsert#1#2{%
+  \expandafter\def\csname #1\the\csname #1index\endcsname\endcsname{#2}%
+  \advance\csname #1index\endcsname by 1
+}
+\def\arrayread#1#2{\csname #1#2\endcsname}
+
+\newarray{string}
+\arrayinsert{string}{c}
+\arrayinsert{string}{a}
+\arrayinsert{string}{t}
+
+\newarray{stringII}
+\arrayinsert{stringII}{o}
+\arrayinsert{stringII}{h}
+
+
+
+
+\newcount\loopcounter
+\newcount\loopmax
+\long\def\arrayprint#1{%
+  \loopcounter=0 
+  \loopmax=\csname #1index\endcsname
+  \loop
+%    #1[\the\loopcounter] = \arrayread{#1}{\the\loopcounter}\endgraf
+    \arrayread{#1}{\the\loopcounter}%
+    \advance\loopcounter by 1
+    \ifnum\loopcounter < \loopmax
+  \repeat
+}
+
+\long\def\arrayscan#1#2{%
+  \loopcounter=0 
+  \loopmax=\csname #1index\endcsname
+  \def\comparand{#2}
+  \loop
+    \edef\thischar{\arrayread{#1}{\the\loopcounter}}%
+    \ifx\comparand=\thischar (\thischar)\else\thischar\fi
+    \advance\loopcounter by 1
+    \ifnum\loopcounter < \loopmax
+  \repeat
+}
+  
+\tt 
+
+\arrayprint{string}
+\arrayprint{stringII}
+
+\arrayscan{string}{a}
+
+
+\bye
