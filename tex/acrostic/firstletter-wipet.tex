@@ -1,0 +1,31 @@
+
+% \firstletters{Never gonna give you up}
+
+% Scan every letter of the argument, ignoring spaces
+% from @wipet, 
+% http://tex.stackexchange.com/questions/233085/basics-of-parsing/233227#233227
+\def\scan#1{\scanA#1\end}
+\def\scanA#1{\ifx\end#1\else
+  \isinlist\keyphrase{#1}\iftrue(#1)\else#1\fi
+  \expandafter\scanA\fi
+}
+
+% Scan for first letters of each word
+\def\firstletters{\bgroup \catcode`-=10 \catcode`(=10 \filA}
+\def\filA#1{\filB#1 {\end} }
+\def\filB#1#2 {\ifx\end#1\egroup \else#1\expandafter\filB\fi} 
+
+% Check if characters of argument are in specified string 
+% from opmac.tex
+\long\def\isinlist#1#2#3{\long\def\tmp##1#2##2\end{\def\tmp{##2}%
+   \ifx\tmp\empty \csname iffalse\expandafter\endcsname \else
+                  \csname iftrue\expandafter\endcsname \fi}% end of \def\tmp
+   \expandafter\tmp#1\endlistsep#2\end
+}
+
+\def\keyphrase{ace}
+
+\scan{any bacon creates delight everywhere}
+
+                
+\bye
