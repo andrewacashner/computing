@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{xparse}
+\usepackage{stackengine}
+
+\NewDocumentCommand{\square}{ m }{%
+  \begin{tabular}{@{}l @{}r @{}}
+    \multicolumn{2}{c}{#1}\\
+    \rotatebox[origin=c]{90}{#1} & \rotatebox[origin=c]{270}{#1}\\
+    \multicolumn{2}{c}{\rotatebox[origin=c]{180}{#1}}\\
+  \end{tabular}%
+}
+
+\newlength{\scalefactor}
+
+\newlength{\outerboxwidth}
+\newlength{\innerboxwidth}
+
+\NewDocumentCommand{\sizedsquare}{ m m }{%
+  \resizebox{#1}{!}{\square{#2}}%
+}
+% #1 start value of \scalefactor
+% #2 start value of \outerboxwidth and \innerboxwidth
+\NewDocumentCommand{\infinitesquares}{ O{-1.5\baselineskip} O{\linewidth} m }{%
+  \setlength{\scalefactor}{#1}%
+  \setlength{\outerboxwidth}{#2}%
+  \setlength{\innerboxwidth}{#2}%
+  \addtolength{\innerboxwidth}{\scalefactor}%
+  \ifdim\innerboxwidth > 0pt
+    \noindent\stackinset{c}{}{c}{}
+      {\infinitesquares[\scalefactor][\innerboxwidth]{#3}}
+      {\sizedsquare{\outerboxwidth}{#3}}
+    \addtolength{\scalefactor}{0.01\scalefactor}%
+    \addtolength{\outerboxwidth}{2\scalefactor}%
+    \addtolength{\innerboxwidth}{2\scalefactor}%
+  \fi
+}
+
+
+\begin{document}
+
+\def\knuth{This is \TeX, a document compiler intended to produce typesetting of high quality.}
+\infinitesquares{\knuth} 
+
+
+\end{document}

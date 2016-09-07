@@ -1,0 +1,11 @@
+\newdimen\rulelength
+\def\shrinkingrule#1{%
+  \rulelength=#1
+  \hrule width\rulelength height .01pt
+  \ifdim\rulelength > 0pt
+    \advance\rulelength by -.01pt
+    \shrinkingrule{\rulelength}
+  \fi
+}
+\shrinkingrule{\hsize}
+\bye

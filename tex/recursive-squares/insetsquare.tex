@@ -1,0 +1,31 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{stackengine}
+
+\newcommand{\squaretext}{}
+\newcommand{\square}[1]{%
+  \renewcommand{\squaretext}{#1}%
+  \begin{tabular}{@{}l @{}r @{}}
+    \multicolumn{2}{c}{\squaretext}\\
+    \rotatebox[origin=c]{90}{\squaretext} & \rotatebox[origin=c]{270}{\squaretext}\\
+    \multicolumn{2}{c}{\rotatebox[origin=c]{180}{\squaretext}}\\
+  \end{tabular}%
+}
+\newlength{\testwidthI}
+\newlength{\testwidthII}
+\newcommand{\insetsquares}[2]{%
+  \settowidth{\testwidthI}{#1}
+  \settowidth{\testwidthII}{#2}
+  \ifdim\testwidthII > \testwidthI
+    \def\outersquare{#2}\def\innersquare{#1}
+  \else
+    \def\outersquare{#1}\def\innersquare{#2}
+  \fi
+  \stackinset{c}{}{c}{}{\square{\innersquare}}{\square{\outersquare}}
+}
+
+\begin{document}
+\def\squareI{A square has four equal sides.}
+\def\squareII{This is \TeX, a document compiler intended to produce typesetting of high quality.}
+\insetsquares{\squareII}{\squareI}
+\end{document}
