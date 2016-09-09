@@ -1,0 +1,41 @@
+\documentclass{article}
+\usepackage{graphicx}
+
+\def\squaretext#1{%
+  \begin{tabular}{@{}l @{}r @{}}
+    \multicolumn{2}{c}{#1}\\
+    \rotatebox[origin=c]{90}{#1} & \rotatebox[origin=c]{270}{#1}\\
+    \multicolumn{2}{c}{\rotatebox[origin=c]{180}{#1}}\\
+  \end{tabular}%
+}
+
+\newdimen\scalefactor
+\newdimen\outerboxwidth
+\newdimen\innerboxwidth
+
+\long\def\infinitesquares#1{%
+  \scalefactor=12pt 
+  \outerboxwidth=18\scalefactor % any bigger results in arithmetic overflow
+  \noindent
+  \loop
+    \innerboxwidth=\dimexpr\outerboxwidth-\scalefactor
+    \resizebox{\outerboxwidth}{!}{\squaretext{#1}}%
+    \kern-\innerboxwidth%
+    \advance\outerboxwidth by -2\scalefactor
+    \advance\scalefactor by -.1\scalefactor % any different results in TeX capacity exceeded
+    \ifdim\outerboxwidth > \scalefactor
+  \repeat
+}
+
+\begin{document}    
+
+\def\knuth{This is \TeX, a document compiler intended to produce typesetting of high quality.} % texdoc tex, line 1
+\def\ezekiel{And the altar shall be twelve cubits long, twelve broad, square in the four squares thereof.} % Ezekiel 43:15, KJV
+
+\infinitesquares{\knuth} 
+
+\vfill
+
+\infinitesquares{\ezekiel}
+
+\end{document}
