@@ -1,0 +1,56 @@
+% answer by David Carlisle to fix arithmetic overflow
+\documentclass{article}
+\usepackage{graphicx}
+
+\def\squaretext#1{%                                                                                                                                                                                                                
+  \begin{tabular}{@{}l @{}r @{}}
+    \multicolumn{2}{c}{#1}\\
+    \rotatebox[origin=c]{90}{#1} & \rotatebox[origin=c]{270}{#1}\\
+    \multicolumn{2}{c}{\rotatebox[origin=c]{180}{#1}}\\
+  \end{tabular}%                                                                                                                                                                                                                   
+}
+
+\newdimen\scalefactor
+\newdimen\outerboxwidth
+\newdimen\innerboxwidth
+
+\long\def\infinitesquares#1{%                                                                                                                                                                                                      
+  \scalefactor=12pt
+  \outerboxwidth=20\scalefactor % any bigger results in arithmetic overflow                                                                                                                                                        
+  \noindent
+  \loop
+    \innerboxwidth=\dimexpr\outerboxwidth-\scalefactor
+    \resizebox{\outerboxwidth}{!}{\squaretext{#1}}%                                                                                                                                                                                
+    \kern-\innerboxwidth%                                                                                                                                                                                                          
+    \advance\outerboxwidth by -2\scalefactor
+    \advance\scalefactor by -.1\scalefactor % any different results in TeX capacity exceeded                                                                                                                                       
+    \ifdim\outerboxwidth > \scalefactor
+  \repeat
+}
+
+\usepackage{expl3}
+\ExplSyntaxOn
+\cs_set:cpn { Gscale@div } #1 #2 #3
+ {
+  \cs_set:Npx #1
+   {
+    \fp_to_decimal:n
+     {
+      \dim_to_decimal_in_sp:n { #2 } / \dim_to_decimal_in_sp:n { #3 }
+     }
+   }
+ }
+\ExplSyntaxOff
+
+\begin{document}
+
+\def\knuth{This is \TeX, a document compiler intended to produce typesetting of high quality.} % texdoc tex, line 1                                                                                                                
+\def\ezekiel{And the altar shall be twelve cubits long, twelve broad, square in the four squares thereof.} % Ezekiel 43:15, KJV                                                                                                    
+\errorcontextlines500
+\infinitesquares{\knuth}
+
+\vfill
+
+\infinitesquares{\ezekiel}
+
+\end{document}
