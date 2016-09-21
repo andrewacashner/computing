@@ -1,0 +1,1 @@
+int c,j,b;main(){char*f[]={"bo","nu","ni","pi","ki",""},a[]={65,69,73,79,85,97,101,105,111,117},s[]={14,16,0,-14,-12};while(c=getchar()){for(b=j=0;j<10;++j){if(c==a[j]){c+=s[j%=5];b=1;break;}}printf("%c%s",c,f[b?j:5]);}}
