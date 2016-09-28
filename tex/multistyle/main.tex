@@ -1,0 +1,49 @@
+\documentclass[rainbowtitle]{example1}
+% Available class options:
+  %  palatino -- use palatino fonts with different arrangement of styles
+  %  notranslation -- hide the translation in poemtranslation environment
+  %  rainbowtitle -- display the title in rainbow colors!
+
+\title{Cascading Styles in \LaTeX}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+This is an example of a \LaTeX{} file whose appearance can be changed drastically by using a different class.
+
+\section{Custom Commands}
+
+The difference between \code{article} and \code{memoir} classes is striking enough, not to mention \code{beamer}.
+\keyword{Packages} or (in older terminology) style files can be used with multiple classes to change only one aspect, while the \keyword{class} file is more comprehensive, including packages.
+
+\section{Custom Environments}
+
+\begin{notabene}
+Please note that this list is not exhaustive.
+\end{notabene}
+
+\begin{itemize}
+\item \code{article}
+\item \code{report}
+\item \code{book}
+\item \code{memoir}
+\end{itemize}
+
+Here is another example of a custom environment that can be completely redefined.
+
+\begin{poemtranslation}
+\begin{original}
+Uno, dos, tres, cuatro, \eol
+cinco, seis, siete, \eol
+nuevo, diez. \eol
+\end{original}
+\begin{translation}
+One, two, three, four \eol
+five, six, seven, \eol
+eight, nine.
+\end{translation}
+\end{poemtranslation}
+
+\end{document}
