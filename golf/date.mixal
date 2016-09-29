@@ -1,0 +1,8 @@
+*main(){puts("1990");}/*\newwrite\O\openout\O=O\write\O{1982}\bye
+START	ENTA	1997	
+	CHAR
+	STX	15
+	OUT	15(19)
+	HLT
+	END	START	*/
+
