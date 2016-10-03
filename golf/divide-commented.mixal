@@ -1,0 +1,11 @@
+N	EQU	17	Constants used for input
+D	EQU	8	
+START	LDX	=N=	Put value 'n' into rX
+	DIV	=D=     Divide rAX by value 'd'; rA <= quotient; rX <= remainder
+	ENTA	30	Replace rA value with character code for '0'
+	JXZ	T	If rX == 0, then d is a divisor of n, go to 'T'
+	INCA	1	Else (there is a remainder), add 1 to rA charcode for '1'
+T	STA	9	Store rA charcode at address 9 (after end of program)
+	OUT	9(19)   Send contents starting at address 9 to TTY output device
+	HLT		
+	END	START
