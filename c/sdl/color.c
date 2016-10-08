@@ -7,8 +7,11 @@ int main(void)
 {
   SDL_Window *window;
   SDL_Renderer *renderer;
+  SDL_Surface *surface;
+  SDL_Texture *texture;
   SDL_Event event;
   bool quit = false;
+  bool cats = false;
   int i;
   int rgb_rainbow[6][3] = { {255, 0, 0},
 			    {255, 127, 0},
@@ -29,11 +32,50 @@ int main(void)
     return(3);
   }
 
+  surface = SDL_LoadBMP("cats.bmp");
+  if (!surface) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+		 "Couldn't create surface from image: %s", SDL_GetError());
+    return(3);
+  }
+  texture = SDL_CreateTextureFromSurface(renderer, surface);
+  if (!texture) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+		 "Couldn't create texture from surface: %s", SDL_GetError());
+  }
+  SDL_FreeSurface(surface);
+
   while (quit == false) {
     for (i = 0; i < 6; ++i ) {
-      SDL_PollEvent(&event);
-      if (event.type == SDL_QUIT) {
-	quit = true;
+      while (SDL_PollEvent(&event)) {
+	switch (event.type) {
+	case SDL_QUIT:
+	  quit = true;
+	  break;
+	case SDL_WINDOWEVENT:
+	  switch (event.window.event) {
+	  case SDL_WINDOWEVENT_CLOSE:
+	    quit = true;
+	    break;
+	  default:
+	    ; /* Do nothing */
+	  }
+	case SDL_KEYDOWN:
+	  switch (event.key.keysym.sym) {
+	  case SDLK_ESCAPE:
+	    quit = true;
+	    break;
+	  case SDLK_c:
+	    cats = true;
+	    break;
+	  default:
+	    ; /* Do nothing */
+	  }
+	default:
+	  ; /* Do nothing */
+	}
+      }
+      if (quit == true) {
 	break;
       }
       SDL_SetRenderDrawColor(renderer,
@@ -41,11 +83,21 @@ int main(void)
 			     rgb_rainbow[i][1],
 			     rgb_rainbow[i][2], 255);
       SDL_RenderClear(renderer);
-      SDL_RenderPresent(renderer);
-      SDL_Delay(500);
+      
+      if (cats == true) {
+	SDL_RenderCopy(renderer, texture, NULL, NULL);
+	SDL_RenderPresent(renderer);
+	SDL_Delay(1000);
+	cats = false;
+      } else {
+	SDL_RenderPresent(renderer);
+	SDL_Delay(500);
+      }
+
     }
   }
 
+  SDL_DestroyTexture(texture);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
 
