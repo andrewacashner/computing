@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
      FILE *configfile;
      char configfilename[MAX_STR];
      char line[MAX_LINE];
-     int i, fields_found;
+     int i, j, fields_found;
 
      struct {
 	  char key[MAX_STR];
@@ -26,8 +26,19 @@ int main(int argc, char *argv[])
      } setting[MAX_FIELDS];
      char *new_str;
 
-     if (argc != 3) {
-	  fprintf(stderr, "Incorrect arguments. Usage: fileoptions <configuration file> <output file>\n");
+     char *key_string[] = { "FirstName", "LastName", "Age", "Occupation", "E-mail" };
+     enum { FIRSTNAME, LASTNAME, AGE, OCCUPATION, EMAIL } key_num;
+     char firstname[MAX_STR], lastname[MAX_STR], age[MAX_STR], occupation[MAX_STR], email[MAX_STR];
+     char *key_var[5];
+     key_var[FIRSTNAME] = firstname;
+     key_var[LASTNAME] = lastname;
+     key_var[AGE] = age;
+     key_var[OCCUPATION] = occupation;
+     key_var[EMAIL] = email;
+
+     
+     if (argc != 2) {
+	  fprintf(stderr, "Incorrect arguments. Usage: fileoptions <configuration file>\n");
 	  exit(EXIT_FAILURE);
      }
 
@@ -48,12 +59,16 @@ int main(int argc, char *argv[])
 	  sscanf(new_str, "%s", setting[i].value);
      }
 
-     /* fields_found = i; */
-     /* for (i = 0; i < fields_found; ++i) { */
-     /* 	  fprintf(outfile, "| %d | %-*s | %-*s |\n", */
-     /* 		  i, key_length, setting[i].key,  */
-     /* 		  value_length, setting[i].value); */
-     /* } */
+     fields_found = i;
+     for (i = 0; i < fields_found; ++i) {
+	  for (j = 0; j < MAX_FIELDS; ++j) {
+	       if (strcmp(setting[i].key, key_string[j]) == 0) {
+		    strcpy(key_var[j], setting[i].value);
+	       }
+	  }
+     }
+
+     printf("Last name: %s, Occupation: %s.\n", lastname, occupation);
      
      fclose(configfile);
 
