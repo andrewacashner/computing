@@ -1,0 +1,10 @@
+Add routine to check output file for duplicate entries;
+if found then read through links and increment counter, add new link to end with counter value
+
+fgets lines from outfile
+if strcmp outfile_lines matches infile_line
+	sscanf outfile_line for %s, search string for [%d](%s)
+	if found, 
+		++link_counter
+		when newline is found, delete it and fprintf("[%d](%s)\n", link_counter, infilename)	
+
