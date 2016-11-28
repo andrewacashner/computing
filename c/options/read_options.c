@@ -1,4 +1,6 @@
-/* read_options.c -- Read command line options
+/* read_options.c -- Read command line options and print appropriate
+ *                   error messages
+ *                  
  * Andrew A. Cashner, 2016/11/27
  * 
  * Usage: read_options [-s <#> --long <#>] filename.ext
@@ -18,7 +20,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 
 /* Function prototypes */
