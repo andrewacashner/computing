@@ -8,10 +8,11 @@
 #include <string.h>
 
 #define MAX_STRING 80
+#define MAX_RANGE  10000
 
 const char roman_char[] = "IVXLCDM";
 const int roman_int[] = {1, 5, 10, 50, 100, 500, 1000};
-const int max_roman_chars = 7;
+const int max_roman_chars = 6;
 
 int to_roman(int arabic, char *roman);
 
@@ -41,23 +42,23 @@ int main(int argc, char *argv[])
 
 int to_roman(int arabic, char *roman)
 {
-     int i;
+     int i = max_roman_chars;
      int roman_index = 0;
 
-     if (arabic <= 0 || arabic >= 1000*1000) {
+     if (arabic <= 0 || arabic >= MAX_RANGE) {
 	  return(1);
      }
      while (arabic > 0) {
-	  for (i = max_roman_chars; i > 0; --i) {
+	  while (i > 0) {
 	       if (arabic >= roman_int[i]) {
 		    break;
 	       }
+	       --i;
 	  }
 	  roman[roman_index] = roman_char[i];
 	  ++roman_index;
 	  arabic -= roman_int[i];
      }
-
      roman[roman_index] = '\0';
      return(0);
 }
