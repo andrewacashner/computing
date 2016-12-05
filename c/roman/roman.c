@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <stdbool.h>
 
 #define MAX_STRING 80
 #define MAX_RANGE  10000
@@ -42,23 +42,45 @@ int main(int argc, char *argv[])
 
 int to_roman(int arabic, char *roman)
 {
-     int i = max_roman_chars;
+     int i, j;
      int roman_index = 0;
+     bool subtract = false;
 
      if (arabic <= 0 || arabic >= MAX_RANGE) {
 	  return(1);
      }
+
+     i = max_roman_chars;
      while (arabic > 0) {
-	  while (i > 0) {
+	  for (; i > 0; --i) {
 	       if (arabic >= roman_int[i]) {
 		    break;
 	       }
-	       --i;
 	  }
-	  roman[roman_index] = roman_char[i];
-	  ++roman_index;
-	  arabic -= roman_int[i];
+
+	  
+	  if (arabic != roman_int[i]) {
+	       j = i + 1;
+	       if (arabic == roman_int[j] - roman_int[i]) {
+		    subtract = true;
+	       } else if (arabic == roman_int[j] - roman_int[i - 1]) {
+		    --i;
+		    subtract = true;
+	       }
+	  }
+	
+	  if (subtract == true) {
+	       roman[roman_index++] = roman_char[i];
+	       roman[roman_index++] = roman_char[j];
+	       subtract = false;
+	       arabic -= roman_int[j] - roman_int[i];
+	  } else {
+	       roman[roman_index++] = roman_char[i];
+	       arabic -= roman_int[i];
+	  }
      }
+
      roman[roman_index] = '\0';
+
      return(0);
 }
