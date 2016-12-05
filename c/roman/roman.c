@@ -6,13 +6,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #define MAX_STRING 80
 #define MAX_RANGE  10000
 
-const char roman_char[] = "IVXLCDM";
-const int roman_int[] = {1, 5, 10, 50, 100, 500, 1000};
-const int max_roman_chars = 6;
+const int max_roman_nums = 12;
+const char *roman_str[] = {
+     "I", "IV", "V", "IX",
+     "X", "LX", "L", "XC",
+     "C", "CD", "D", "CM",
+     "M"
+};
+const int roman_int[] = {
+     1,   4,   5,   9,
+     10,  40,  50,  90,
+     100, 400, 500, 900,
+     1000
+};
+
 
 int to_roman(int arabic, char *roman);
 
@@ -42,45 +54,23 @@ int main(int argc, char *argv[])
 
 int to_roman(int arabic, char *roman)
 {
-     int i, j;
-     int roman_index = 0;
-     bool subtract = false;
+     int i;
+     roman[0] = '\0';
 
      if (arabic <= 0 || arabic >= MAX_RANGE) {
 	  return(1);
      }
 
-     i = max_roman_chars;
+     i = max_roman_nums;
      while (arabic > 0) {
 	  for (; i > 0; --i) {
 	       if (arabic >= roman_int[i]) {
 		    break;
 	       }
 	  }
-
-	  
-	  if (arabic != roman_int[i]) {
-	       j = i + 1;
-	       if (arabic == roman_int[j] - roman_int[i]) {
-		    subtract = true;
-	       } else if (arabic == roman_int[j] - roman_int[i - 1]) {
-		    --i;
-		    subtract = true;
-	       }
-	  }
-	
-	  if (subtract == true) {
-	       roman[roman_index++] = roman_char[i];
-	       roman[roman_index++] = roman_char[j];
-	       subtract = false;
-	       arabic -= roman_int[j] - roman_int[i];
-	  } else {
-	       roman[roman_index++] = roman_char[i];
-	       arabic -= roman_int[i];
-	  }
+	  strcat(roman, roman_str[i]);
+	  arabic -= roman_int[i];
      }
-
-     roman[roman_index] = '\0';
 
      return(0);
 }
