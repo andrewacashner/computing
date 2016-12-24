@@ -28,16 +28,13 @@ const enum {
 
 /* Function prototypes */
 void exit_SDL_error(int error_code);
-void display_picture(char *image_filename, SDL_Renderer *renderer,
-		     SDL_Surface *surface, SDL_Texture *texture);
-
+void display_picture(char *image_filename, SDL_Renderer *renderer);
+		
 
 int main(void)
 {
   SDL_Window *window;
   SDL_Renderer *renderer;
-  SDL_Surface *surface;
-  SDL_Texture *texture;
   SDL_Event event;
   
   char image_filename[] = "img/a.bmp";
@@ -73,7 +70,7 @@ int main(void)
 	  quit = true;
 	  break;
 	} else if (event.key.keysym.sym >= SDLK_a &&
-		   event.key.keysym.sym <= SDLK_d) {
+		   event.key.keysym.sym <= SDLK_z) {
 	  image_filename[image_filename_directory_length]
 	    = (char)(event.key.keysym.sym - SDLK_a + 'a');
 	  show_picture = true;
@@ -91,10 +88,10 @@ int main(void)
       SDL_RenderClear(renderer);
 
       if (show_picture == true) {
-	display_picture(image_filename, renderer, surface, texture);
+	display_picture(image_filename, renderer);
 	show_picture = false;
       } else {
-	display_picture(NULL, renderer, surface, texture);
+	display_picture(NULL, renderer);
       }
     }
   }
@@ -119,9 +116,11 @@ void exit_SDL_error(int error_code)
   exit(EXIT_FAILURE);
 }
   
-void display_picture(char *image_filename, SDL_Renderer *renderer,
-		     SDL_Surface *surface, SDL_Texture *texture)
+void display_picture(char *image_filename, SDL_Renderer *renderer)
 {
+  SDL_Surface *surface;
+  SDL_Texture *texture;
+
   if (image_filename == NULL) {
         SDL_RenderCopy(renderer, NULL, NULL, NULL);
 	SDL_RenderPresent(renderer);
