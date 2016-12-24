@@ -43,6 +43,14 @@ int main(void)
   bool quit = false;
   bool show_picture = false;
 
+  int i;
+  int rgb_rainbow[6][3] = { {255, 0, 0},
+			    {255, 127, 0},
+			    {255, 255, 0},
+			    {0, 255, 0},
+			    {0, 0, 255},
+			    {75, 0, 130} };
+      
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     exit_SDL_error(INITIALIZE_ERROR);
   }
@@ -52,47 +60,52 @@ int main(void)
   }
 
   while (quit == false) {
-    while (SDL_PollEvent(&event)) {
-      switch (event.type) {
-      case SDL_QUIT:
-	quit = true;
-	break;
-      case SDL_WINDOWEVENT:
-	switch (event.window.event) {
-	case SDL_WINDOWEVENT_CLOSE:
-	  quit = true;
-	  break;
-	default:
-	  ; /* Do nothing */
-	}
-      case SDL_KEYDOWN:
-	if (event.key.keysym.sym == SDLK_ESCAPE) {
-	  quit = true;
-	  break;
-	} else if (event.key.keysym.sym >= SDLK_a &&
-		   event.key.keysym.sym <= SDLK_z) {
-	  image_filename[image_filename_directory_length]
-	    = (char)(event.key.keysym.sym - SDLK_a + 'a');
-	  show_picture = true;
-	  break;
-	}
-      default:
-	; /* Do nothing */
-      }
+    for (i = 0; i < 6; ++i) {
+          while (SDL_PollEvent(&event)) {
+	    switch (event.type) {
+	    case SDL_QUIT:
+	      quit = true;
+	      break;
+	    case SDL_WINDOWEVENT:
+	      switch (event.window.event) {
+	      case SDL_WINDOWEVENT_CLOSE:
+		quit = true;
+		break;
+	      default:
+		; /* Do nothing */
+	      }
+	    case SDL_KEYDOWN:
+	      if (event.key.keysym.sym == SDLK_ESCAPE) {
+		quit = true;
+		break;
+	      } else if (event.key.keysym.sym >= SDLK_a &&
+			 event.key.keysym.sym <= SDLK_z) {
+		image_filename[image_filename_directory_length]
+		  = (char)(event.key.keysym.sym - SDLK_a + 'a');
+		show_picture = true;
+		break;
+	      }
+	    default:
+	      ; /* Do nothing */
+	    }
 
-      if (quit == true) {
-	break;
-      }
+	    if (quit == true) {
+	      break;
+	    }
+	    
+	    SDL_SetRenderDrawColor(renderer,
+				   rgb_rainbow[i][0],
+				   rgb_rainbow[i][1],
+				   rgb_rainbow[i][2], 255);
+	    SDL_RenderClear(renderer);
 
-      SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0x00);
-      SDL_RenderClear(renderer);
-
-      if (show_picture == true) {
-	display_picture(image_filename, renderer);
-	show_picture = false;
-      } else {
-	display_picture(NULL, renderer);
-      }
+	    if (show_picture == true) {
+	      display_picture(image_filename, renderer);
+	      show_picture = false;
+	    } else {
+	      display_picture(NULL, renderer);
+	    }
+	  }
     }
   }
 
