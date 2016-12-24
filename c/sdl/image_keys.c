@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
+
+#define MAX_STRING 80
 
 int main(void)
 {
@@ -13,13 +16,11 @@ int main(void)
   SDL_Renderer *renderer;
   SDL_Surface *surface;
   SDL_Texture *texture;
-  char *img[] = { 
-    "img/aardvark.bmp",
-    "img/bat.bmp",
-    "img/cat.bmp"
-  };
-  char *picture_file;
   SDL_Event event;
+  
+  char image_filename[] = "img/a.bmp";
+  int image_filename_directory_length = 4;
+
   bool quit = false;
   bool show_picture = false;
 
@@ -50,26 +51,20 @@ int main(void)
 	  ; /* Do nothing */
 	}
       case SDL_KEYDOWN:
-	switch (event.key.keysym.sym) {
-	case SDLK_ESCAPE:
+	if (event.key.keysym.sym == SDLK_ESCAPE) {
 	  quit = true;
 	  break;
-	case SDLK_a:
-	  picture_file = img['a' - 'a'];
+	} else if (event.key.keysym.sym >= SDLK_a &&
+		   event.key.keysym.sym <= SDLK_d) {
+	  image_filename[image_filename_directory_length]
+	    = (char)(event.key.keysym.sym - SDLK_a + 'a');
 	  show_picture = true;
 	  break;
-	case SDLK_b:
-	  picture_file = img['b' - 'a'];
-	  show_picture = true;
-	  break;
-	case SDLK_c:
-	  picture_file = img['c' - 'a'];
-	  show_picture = true;
-	  break;
-	default:
-	  ; /* Do nothing */
 	}
+      default:
+	; /* Do nothing */
       }
+
       if (quit == true) {
 	break;
       }
@@ -78,7 +73,7 @@ int main(void)
       SDL_RenderClear(renderer);
 
       if (show_picture == true) {
-	surface = SDL_LoadBMP(picture_file);
+	surface = SDL_LoadBMP(image_filename);
 	if (!surface) {
 	  SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
 		       "Couldn't create surface from image: %s", SDL_GetError());
@@ -98,7 +93,11 @@ int main(void)
 	SDL_Delay(1000);
 	SDL_DestroyTexture(texture);
 	show_picture = false;
-      } 
+	
+      } else {
+	SDL_RenderCopy(renderer, NULL, NULL, NULL);
+	SDL_RenderPresent(renderer);
+      }
     }
   }
 
