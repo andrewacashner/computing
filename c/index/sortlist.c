@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define MAX_STRING 80*4
 
@@ -19,12 +20,11 @@ typedef struct node {
 
 node_ptr list_create_item(char *word);
 node_ptr list_append(node_ptr list, char *word);
+node_ptr list_search(node_ptr list, char *word);
+node_ptr list_insert_sorted(node_ptr list, char *word);
 void list_print(node_ptr list);
 void list_destroy(node_ptr list);
 
-/* TODO (ignore for now) */
-/* node_ptr list_search(node_ptr list, char *word);  */
-/* node_ptr list_insert_sorted(node_ptr list, char *word); */
 
 int main(int argc, char **argv) {
     FILE *infile;
@@ -75,13 +75,57 @@ node_ptr list_append(node_ptr head, char *word) {
         return(list);
     } else {
         list = head;
+        while (list->next != NULL) {
+            list = list->next;
+        }
+        list->next = new_node;
+        return(head);
     }
-    while (list->next != NULL) {
-        list = list->next;
-    }
-    list->next = new_node;
-    return(head);
 }
+
+node_ptr list_search(node_ptr head, char *word) { 
+    node_ptr list = head;
+    node_ptr insertion_point = NULL;
+    int word_len = strlen(word);
+    int i;
+    int matched_chars = 0;
+    bool found;
+
+    while (list->next != NULL) {
+        if (list->word[0] <= word[0]) {
+            insertion_point = list->next;
+        } 
+    }
+    return(match);
+}
+
+node_ptr find_minimum_char(node_ptr head, char *word) {
+    node_ptr list = head;
+    while (list->next != NULL) {
+        if (list->word[0] <= word[0]) {
+            list->next = find_minimum_char(list->next, list->word);
+        } 
+
+
+node_ptr list_insert_sorted(node_ptr head, char *word) {
+    node_ptr list, position;
+    node_ptr new_node = list_create_item(word);
+
+    if (head == NULL) {
+        list = new_node;
+        return(list);
+    } else {
+        list = head;
+        position = list_search(list, word);
+        if (position == NULL) {
+            list->next = new_node;
+        } else {
+            new_node->next = position;
+        }
+        return(head);
+    }
+}
+
 
 void list_print(node_ptr list) {
     if (list != NULL) {
@@ -100,33 +144,4 @@ void list_destroy(node_ptr list) {
 }
 
 
-/* TODO (ignore for now)
-* XXX this searches for exact matches only *
-node_ptr list_search(node_ptr list, char *word) { 
-    node_ptr test = list;
-    node_ptr match = NULL;
-    while (test->next != NULL) {
-        if (strcmp(test->word, word) == 0) {
-            printf("Test word %s matches list word %s\n", test->word, word);
-            match = test;
-            break;
-        }
-    }
-    return(match);
-}
-            
-node_ptr list_insert_sorted(node_ptr list, char *word) {
-    node_ptr position = NULL;
-    
-    node_ptr new_node = malloc(sizeof(node_ptr));
-    new_node->word = word;
-    new_node->next = NULL;
-
-    position = list_search(list, word);
-    if (position != NULL) {
-        new_node->next = position;
-    }
-    return(list);
-}
-*/
 
