@@ -40,14 +40,8 @@ int main(int argc, char *argv[]) {
     copy_words(infile, start_order, &start_order_top);
     print_word_list(start_order);
 
-   /*  group_by_first_letter(start_order, &start_order_top, 
-            lettergroups, sort_keys);
-    sort_alpha_groups(sort_order, &sort_order_top, lettergroups, sort_keys);
-    */
-
     sort_alpha(start_order, &start_order_top,
             sort_order, &sort_order_top);
-    
     print_word_list(sort_order);
 
     return(0);
