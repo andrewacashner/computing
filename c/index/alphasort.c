@@ -30,30 +30,26 @@ word create_word(char *new_text);
 void push(word new_word, word stack[], int *top);
 word pop(word stack[], int *top);
 void print_word_list(word word_list[]);
-void group_by_first_letter(word word_list[], int *top,
-        word lettergroups[MAX_ALPHA][MAX_WORDS], 
-        int sort_keys[MAX_ALPHA][2]);
-void sort_alpha_groups(word word_list[], int *top, 
-        word lettergroups[MAX_ALPHA][MAX_WORDS], 
-        int sort_keys[MAX_ALPHA][2]);
-
+void sort_alpha(word input[], int *input_top,
+        word output[], int *output_top);
 
 int main(int argc, char *argv[]) {
     FILE *infile = setup_input(argc, argv);
-    word lettergroups[MAX_ALPHA][MAX_WORDS];
-    int sort_keys[MAX_ALPHA][2];
-    
     start_order_top = sort_order_top = 0;
 
     copy_words(infile, start_order, &start_order_top);
     print_word_list(start_order);
 
-    group_by_first_letter(start_order, &start_order_top, 
+   /*  group_by_first_letter(start_order, &start_order_top, 
             lettergroups, sort_keys);
-
     sort_alpha_groups(sort_order, &sort_order_top, lettergroups, sort_keys);
-   print_word_list(sort_order);
+    */
+
+    sort_alpha(start_order, &start_order_top,
+            sort_order, &sort_order_top);
     
+    print_word_list(sort_order);
+
     return(0);
 }
 
@@ -140,65 +136,62 @@ void print_word_list(word word_list[]) {
     return;
 }
  
-void group_by_first_letter(word word_list[], int *top,
-        word lettergroups[MAX_ALPHA][MAX_WORDS], 
-        int sort_keys[MAX_ALPHA][2]) {
-
+void sort_alpha(word input[], int *input_top,
+        word output[], int *output_top) {
+    
+    int alphacount[MAX_ALPHA] = { 0 };
+    word alphawords[MAX_ALPHA][MAX_WORDS];
     word this_word;
-    int row, col, i;
+    int row, col, i, j, k;
 
-    for (i = start_order_top; i > 0; --i) {
-        this_word = pop(start_order, &start_order_top);
+    for (i = 0; i < MAX_ALPHA; ++i) {
+        for (j = 0; j < MAX_WORDS; ++j) {
+            for (k = 0; k < MAX_STRING; ++k) {
+                alphawords[i][j].text[k] = '\0';
+            }
+        }
+    }
+    
+    for (i = *input_top; i > 0; --i) {
+        this_word = pop(input, input_top);
         row = this_word.text[0];
     
         /* Adjust case */
         if (row >= 'a' && row <= 'z') {
             row -= 'a';
         } else row -= 'A';
-
-        /* Find next empty slot in this alphabetic row */
-        for (col = 0; lettergroups[row][col].text[0] != '\0' &&
-                col < MAX_WORDS; ++col); /* Just count */
-       
-        lettergroups[row][col] = this_word;
+        
+        ++alphacount[row];
+        col = alphacount[row];
+        alphawords[row][col] = this_word; 
+    }
+    for (row = 0; row < MAX_ALPHA; ++row) {
+        for (col = 0; col < MAX_WORDS; ++col) {
+            if (alphawords[row][col].text[0] != '\0') {
+                push(alphawords[row][col], output, output_top); 
+            }
+        }
     }
 
     for (row = 0; row < MAX_ALPHA; ++row) {
-        sort_keys[row][0] = row;
-        for (col = 0; lettergroups[row][col].text[0] != '\0' &&
-                col < MAX_WORDS; ++col); /* Just count */
-        sort_keys[row][1] = col;
-    }
-    sort_keys[row][0] = END_ARRAY;
-
-    return;
-}
-
-void sort_alpha_groups(word word_list[], int *top, 
-        word lettergroups[MAX_ALPHA][MAX_WORDS], 
-        int sort_keys[MAX_ALPHA][2]) {
-
-    int row, col, i;
-    word test;
-
-    for (row = 0; sort_keys[row][0] != END_ARRAY; ++row) {
-        for (col = 0; col < sort_keys[row][1]; ++col) {
-            test = lettergroups[row][col];
-            if (lettergroups[row][col + 1].text[0] != '\0') {
-                for (i = 0; test.text[i] != '\0'; ++i) {
-                    if (test.text[i] >
-                            lettergroups[row][col + 1].text[i]) {
-                        lettergroups[row][col] =
-                            lettergroups[row][col + 1];
-                        lettergroups[row][col + 1] = test;
-                        break;
+        if (alphacount[row] > 1 ) {
+            for (col = 0; col < alphacount[row]; ++col) {
+                this_word = alphawords[row][col];
+                if (alphawords[row][col + 1].text[0] != '\0') {
+                    for (i = 0; this_word.text[i] != '\0'; ++i) {
+                        if (this_word.text[i] >
+                                alphawords[row][col + 1].text[i]) {
+                            alphawords[row][col] = alphawords[row][col + 1];
+                            alphawords[row][col + 1] = this_word;
+                            break;
+                        }
                     }
                 }
+                push(alphawords[row][col], output, output_top); 
             }
-            push(lettergroups[row][col], word_list, top);
         }
     }
+
     return;
 }
-
 
