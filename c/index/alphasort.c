@@ -10,14 +10,12 @@
 #define MAX_STRING 80
 #define MAX_WORDS 120
 #define MAX_STACK MAX_WORDS
-#define END_ARRAY -999
 
 enum { NO_WORD, WORD } read_state_value;
 
 /* Word lists (stacks) */
 typedef struct {
     char text[MAX_STRING];
-    int  length;
 } word;
 word start_order[MAX_WORDS];
 word sort_order[MAX_WORDS];
@@ -97,7 +95,6 @@ void copy_words(FILE *infile, word word_list[], int *top) {
 word create_word(char *new_text) {
     word this_word;
     strcpy(this_word.text, new_text);
-    this_word.length = strlen(new_text);
     return(this_word);
 }
 
