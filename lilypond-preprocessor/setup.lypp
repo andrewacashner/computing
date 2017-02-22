@@ -1,0 +1,29 @@
+# version
+2.19
+
+# include
+standard-extensions, early-music,
+music, lyrics
+
+# header
+title =      "Laudate Dominum a 6"
+composer =   "MIGUEL MATEO DE DALLO Y LANA (d. 1705)"
+editor =     "Edited by Andrew A. Cashner"
+poet =       "Psalm 116 (Vulgate)"
+source =     "Mexico City, Cathedral Archive (MEX-Mc: A0113)"
+copyright =  "Copyright © 2017 Andrew A. Cashner"
+
+
+# score
+choirStaff: ChI, CHORUS I
+staff (incipit, music, lyrics): AI, ALTO I, A. I
+staff (incipit, music, lyrics): TI, TENOR I, T. I
+
+choirStaff: ChII, CHORUS II
+staff (incipit, music, lyrics): SII, TIPLE II, Ti. II
+staff (incipit, music, lyrics): AII, ALTO II, A. II
+staff (incipit, music, lyrics): TII, TENOR II, T. II
+staff (incipit, music): BII, BAJO II, B. II
+
+staff (incipit, music): Ac, ACOMP., Ac.
+
