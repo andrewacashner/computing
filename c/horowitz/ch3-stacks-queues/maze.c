@@ -9,6 +9,8 @@
  * write stack functions: create, push, pop
  * write path-finding function from Horowitz
  * set up user-input maze size
+ * TODO++
+ * write a program to create the maze to begin with
  */
 
 #include <stdio.h>
@@ -16,20 +18,27 @@
 #include <stdbool.h>
 
 /* FUNCTION PROTOTYPES *********************************/
+void exit_error(int error_code, char *extra_info);
 void print_maze(void);
 void find_path(void);
 
 /* GLOBAL DEFINITIONS AND VARIABLES ********************/
+
+#define MAX_STR 80
 
 /* The maze is stored as an array of 0s and 1s,
  * with the open spaces as 0s.
  * The outside borders of the maze are all 1.
  * The entrance of the maze is at (x,y) position (1,1);
  * the exit is at (MAZE_HEIGHT - 1, MAZE_WIDTH - 1).
-* We will use a random number generator to populate our maze.
+ * We build the maze based on an input file that 
+ * represents the maze as a block of 1s and 0s:
+ * "111111111\n"
+ * "101011111\n"
+ * ...
  */
-#define MAZE_HEIGHT 25
-#define MAZE_WIDTH 25
+#define MAZE_WIDTH  10
+#define MAZE_HEIGHT 10
 #define MAZE_EXIT maze[MAZE_HEIGHT - 2][MAZE_WIDTH - 2]
 int maze[MAZE_HEIGHT][MAZE_WIDTH];
 enum { 
@@ -58,12 +67,15 @@ typedef struct {
 element stack[MAX_STACK_SIZE];
 int top; 
 
-/* We will create 'move', an array of 'offset' structs, to store the 
+/* We will create 'move', an array of integer pairs, to store the 
  * moves for each direction.
- * The data for 'move' are in 'offset_value': [0] horizontal, [1] vertical
  */
 #define MAX_DIRECTIONS 8
-int offset_value[MAX_DIRECTIONS][2] = {
+enum {
+    VERT = 0,
+    HORIZ
+} move_index;
+int move[MAX_DIRECTIONS][2] = {
     {-1, 0},    /* N  */
     {-1, -1},   /* NE */
     {0, 1},     /* E  */
@@ -73,36 +85,66 @@ int offset_value[MAX_DIRECTIONS][2] = {
     {0, -1},    /* NW */
     {-1, -1}
 };
-typedef struct {
-    short int vert, horiz;
-} offset;
-offset move[MAX_DIRECTIONS]; 
+
+/* Error messages */
+enum {
+    ERR_ARGS,
+    ERR_FILE,
+    ERR_INPUT,
+    ERR_TOO_HIGH,
+    ERR_TOO_WIDE,
+    ERR_UNKNOWN
+} error_code;
+const char *error_msg[] = {
+    "Usage: maze <maze input file name>",
+    "Could not open file for reading: ",
+    "Invalid input maze",
+    "Input maze too high",
+    "Input maze too wide",
+    "Unknown error"
+};
+
 
 
 /* MAIN *************************************************/
 
-int main(void) {
+int main(int argc, char *argv[]) {
+    FILE *infile;
+    char *infile_name;
+    char line[MAX_STR];
     int i, j;
-    /* Populate the maze:
-     * The outside rows and columns are MAZE_OCCUPIED (1);
-     * the start and end position are MAZE_UNOCCUPIED (0);
-     * the rest are randomly generated. 
-     * */
-    for (i = 0; i < MAZE_HEIGHT; ++i) {
-        for (j = 0; j < MAZE_WIDTH; ++j) {
-
-            if (i > 0 && i < MAZE_HEIGHT - 1 &&
-                    j > 0 && j < MAZE_WIDTH - 1) {
-                /* Inside maze, random 1 or 0 */
-                maze[i][j] = rand() % 2; 
-            } else { 
-                /* Borders = 1 */
-                maze[i][j] = MAZE_OCCUPIED;
+    bool is_occupied;
+   
+    /* Open input file to get maze data */
+    if (argc != 2) {
+        exit_error(ERR_ARGS, NULL);
+    }
+    infile_name = argv[1];
+    infile = fopen(infile_name, "r");
+    if (infile == NULL) {
+        exit_error(ERR_FILE, NULL);
+    }
+    /* Read and validate maze date */
+    /* TODO for now we assume the input maze is a correct size
+     *      ideally we would build our maze based on the input alone
+     */
+    for (i = 0; fgets(line, sizeof(line), infile) != NULL; ++i) {
+        for (j = 0; line[j] != '\n'; ++j) {
+            if (i > MAZE_HEIGHT) {
+                exit_error(ERR_TOO_HIGH, NULL);
+            } else if (j > MAZE_WIDTH) {
+                exit_error(ERR_TOO_WIDE, NULL);
             }
+            if (line[j] == '1') {
+                is_occupied = true;
+            } else if (line[j] == '0') {
+                is_occupied = false;
+            } else {
+                exit_error(ERR_INPUT, NULL);
+            }
+            maze[i][j] = is_occupied;
         }
     }
-    /* Start and end positions */
-    maze[1][1] = MAZE_EXIT = MAZE_UNOCCUPIED;
 
     /* Populate the 'mark' array with 0s, except for the borders */
     for (i = 0; i < MAZE_HEIGHT; ++i) {
@@ -117,12 +159,6 @@ int main(void) {
         }
     }
  
-    /* Populate 'move' array with data from 'offset_value' */
-    for (i = 0; i < MAX_DIRECTIONS; ++i) {
-        move[i].vert  = offset_value[i][0];
-        move[i].horiz = offset_value[i][1];
-    }
-
     print_maze();
    
     find_path();
@@ -132,15 +168,23 @@ int main(void) {
 
 /* FUNCTIONS ************************************/
 
+void exit_error(int error_code, char *extra_info) {
+    if (extra_info == NULL) {
+        fprintf(stderr, "%s\n", error_msg[error_code]);
+    } else {
+        fprintf(stderr, "%s: %s\n", error_msg[error_code], extra_info);
+    }
+    exit(EXIT_FAILURE);
+}
+
 void print_maze(void) {
     int i, j;
     for (i = 0; i < MAZE_HEIGHT; ++i) {
         for (j = 0; j < MAZE_HEIGHT; ++j) {
-            printf("%d ", maze[i][j]); 
+            printf("%s", maze[i][j] == true ? "[]" : "  "); 
         }
         printf("\n");
     }
-    printf("\n");
     return;
 }
 
