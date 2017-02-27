@@ -34,7 +34,9 @@
  */
 #define MAZE_WIDTH  10
 #define MAZE_HEIGHT 10
-#define MAZE_EXIT maze[MAZE_HEIGHT - 2][MAZE_WIDTH - 2]
+#define MAZE_EXIT_ROW MAZE_HEIGHT - 2
+#define MAZE_EXIT_COL MAZE_WIDTH - 2
+
 int maze[MAZE_HEIGHT][MAZE_WIDTH];
 enum { 
     MAZE_UNOCCUPIED = false,
@@ -56,6 +58,7 @@ enum {
  * We use 'top' to track the top position in the stack.
  */
 #define MAX_STACK_SIZE MAZE_WIDTH*MAZE_HEIGHT
+#define STACK_EMPTY -99 /* Error code */
 typedef struct {
     short int row, col, dir;
 } element;
@@ -70,13 +73,13 @@ int top = -1;
 #define MOVE_HORIZ(x) move[x][1]
 int move[MAX_DIRECTIONS][2] = {
     {-1, 0},    /* N  */
-    {-1, -1},   /* NE */
+    {-1, 1},    /* NE */
     {0, 1},     /* E  */
     {1, 1},     /* SE */
-    {1, 0},     /* SW */
-    {1, -1},    /* W  */
-    {0, -1},    /* NW */
-    {-1, -1}
+    {1, 0},     /* S  */
+    {1, -1},    /* SW */
+    {0, -1},    /* W  */
+    {-1, -1}    /* NW */
 };
 
 /* Error messages */
@@ -115,7 +118,6 @@ int main(int argc, char *argv[]) {
     char *infile_name;
     char line[MAX_STR];
     int i, j;
-    bool is_occupied;
    
     /* Open input file to get maze data */
     if (argc != 2) {
@@ -137,14 +139,13 @@ int main(int argc, char *argv[]) {
             } else if (j > MAZE_WIDTH) {
                 exit_error(ERR_TOO_WIDE);
             }
-            if (line[j] == '1') {
-                is_occupied = true;
-            } else if (line[j] == '0') {
-                is_occupied = false;
+            if (line[j] == '0') {
+                maze[i][j] = MAZE_UNOCCUPIED;
+            } else if (line[j] == '1') {
+                maze[i][j] = MAZE_OCCUPIED;
             } else {
                 exit_error(ERR_INPUT);
             }
-            maze[i][j] = is_occupied;
         }
     }
 
@@ -154,9 +155,9 @@ int main(int argc, char *argv[]) {
 
             if (i > 0 && i < MAZE_HEIGHT - 1 &&
                     j > 0 && j < MAZE_HEIGHT - 1) {
-                mark[i][j] = MARK_VISITED;
-            } else {
                 mark[i][j] = MARK_UNVISITED;
+            } else {
+                mark[i][j] = MARK_VISITED;
             }
         }
     }
@@ -187,7 +188,7 @@ void push(element new_element, element stack[], int *top) {
 element pop(element stack[], int *top) {
     element new_element;
     if (*top == -1) {
-        new_element = NULL;
+        new_element.row = STACK_EMPTY;
     }
     new_element = stack[*top];
     --(*top);
@@ -198,7 +199,7 @@ void print_maze(void) {
     int i, j;
     for (i = 0; i < MAZE_HEIGHT; ++i) {
         for (j = 0; j < MAZE_HEIGHT; ++j) {
-            printf("%s", maze[i][j] == true ? "[]" : "  "); 
+            printf("%s", maze[i][j] == MAZE_OCCUPIED ? "[]" : "  "); 
         }
         printf("\n");
     }
@@ -206,7 +207,59 @@ void print_maze(void) {
 }
 
 void find_path(void) {
+    /* Output a path through the maze if there is one */
+    int i, row, col, next_row, next_col, dir;
+    bool found = false;
+    element position;
 
+    mark[1][1] = 1;
+    top = 0;
+    stack[0].row = stack[0].col = 1;
+    stack[0].dir = 0;
+
+    while (top > -1 && found == false) {
+        position = pop(stack, &top);
+
+        row = position.row;
+        col = position.col;
+        dir = position.dir;
+
+        while (dir < MAX_DIRECTIONS && found == false) {
+            /* Move in next direction, given in 'dir' */
+            next_row = row + MOVE_VERT(dir);
+            next_col = col + MOVE_HORIZ(dir);
+            if (next_row == MAZE_EXIT_ROW && next_col == MAZE_EXIT_COL) {
+                found = true;
+            } else if (maze[next_row][next_col] == MAZE_UNOCCUPIED &&
+                    mark[next_row][next_col] == MARK_UNVISITED) {
+
+                mark[next_row][next_col] = MARK_VISITED;
+                position.row = row;
+                position.col = col;
+                ++dir;
+                position.dir = dir;
+               
+                push(position, stack, &top);
+                row = next_row;
+                col = next_col;
+                dir = 0;
+
+            } else {
+                ++dir;
+            }
+        }
+    }
+    if (found == true) {
+        printf("The path is:\n");
+        printf("row  col\n");
+        for (i = 0; i <= top; ++i) {
+            printf("%2d%5d\n", stack[i].row, stack[i].col);
+        }
+        printf("%2d%5d\n", row, col);
+        printf("%2d%5d\n", MAZE_EXIT_ROW, MAZE_EXIT_COL);
+    } else {
+        printf("The maze does not have a path.\n");
+    }
     return;
 }
 
