@@ -17,11 +17,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-/* FUNCTION PROTOTYPES *********************************/
-void exit_error(int error_code, char *extra_info);
-void print_maze(void);
-void find_path(void);
-
 /* GLOBAL DEFINITIONS AND VARIABLES ********************/
 
 #define MAX_STR 80
@@ -65,16 +60,14 @@ typedef struct {
     short int row, col, dir;
 } element;
 element stack[MAX_STACK_SIZE];
-int top; 
+int top = -1;
 
 /* We will create 'move', an array of integer pairs, to store the 
  * moves for each direction.
  */
 #define MAX_DIRECTIONS 8
-enum {
-    VERT = 0,
-    HORIZ
-} move_index;
+#define MOVE_VERT(x)  move[x][0]
+#define MOVE_HORIZ(x) move[x][1]
 int move[MAX_DIRECTIONS][2] = {
     {-1, 0},    /* N  */
     {-1, -1},   /* NE */
@@ -93,16 +86,25 @@ enum {
     ERR_INPUT,
     ERR_TOO_HIGH,
     ERR_TOO_WIDE,
+    STACK_FULL,
     ERR_UNKNOWN
 } error_code;
 const char *error_msg[] = {
     "Usage: maze <maze input file name>",
-    "Could not open file for reading: ",
+    "Could not open file for reading",
     "Invalid input maze",
     "Input maze too high",
     "Input maze too wide",
+    "Stack capacity exceeded.",
     "Unknown error"
 };
+
+/* FUNCTION PROTOTYPES *********************************/
+
+void exit_error(int error_code);
+void push(element new_element, element stack[], int *top);
+void print_maze(void);
+void find_path(void);
 
 
 
@@ -117,12 +119,12 @@ int main(int argc, char *argv[]) {
    
     /* Open input file to get maze data */
     if (argc != 2) {
-        exit_error(ERR_ARGS, NULL);
+        exit_error(ERR_ARGS);
     }
     infile_name = argv[1];
     infile = fopen(infile_name, "r");
     if (infile == NULL) {
-        exit_error(ERR_FILE, NULL);
+        exit_error(ERR_FILE);
     }
     /* Read and validate maze date */
     /* TODO for now we assume the input maze is a correct size
@@ -131,16 +133,16 @@ int main(int argc, char *argv[]) {
     for (i = 0; fgets(line, sizeof(line), infile) != NULL; ++i) {
         for (j = 0; line[j] != '\n'; ++j) {
             if (i > MAZE_HEIGHT) {
-                exit_error(ERR_TOO_HIGH, NULL);
+                exit_error(ERR_TOO_HIGH);
             } else if (j > MAZE_WIDTH) {
-                exit_error(ERR_TOO_WIDE, NULL);
+                exit_error(ERR_TOO_WIDE);
             }
             if (line[j] == '1') {
                 is_occupied = true;
             } else if (line[j] == '0') {
                 is_occupied = false;
             } else {
-                exit_error(ERR_INPUT, NULL);
+                exit_error(ERR_INPUT);
             }
             maze[i][j] = is_occupied;
         }
@@ -158,7 +160,7 @@ int main(int argc, char *argv[]) {
             }
         }
     }
- 
+
     print_maze();
    
     find_path();
@@ -168,13 +170,28 @@ int main(int argc, char *argv[]) {
 
 /* FUNCTIONS ************************************/
 
-void exit_error(int error_code, char *extra_info) {
-    if (extra_info == NULL) {
-        fprintf(stderr, "%s\n", error_msg[error_code]);
-    } else {
-        fprintf(stderr, "%s: %s\n", error_msg[error_code], extra_info);
-    }
+void exit_error(int error_code) {
+    fprintf(stderr, "%s\n", error_msg[error_code]);
     exit(EXIT_FAILURE);
+}
+
+void push(element new_element, element stack[], int *top) {
+    if (*top > MAX_STACK_SIZE) {
+        exit_error(STACK_FULL);
+    } 
+    stack[*top] = new_element;
+    ++(*top);
+    return;
+}
+
+element pop(element stack[], int *top) {
+    element new_element;
+    if (*top == -1) {
+        new_element = NULL;
+    }
+    new_element = stack[*top];
+    --(*top);
+    return(new_element);
 }
 
 void print_maze(void) {
