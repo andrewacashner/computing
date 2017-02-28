@@ -66,6 +66,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <assert.h>
 
 /* DEBUGGING *******************************************/
 #ifdef DEBUG
@@ -76,18 +77,18 @@
 
 /* GLOBAL DEFINITIONS AND VARIABLES ********************/
 
-#define MAX_STR 180 /* String size */
-
-#define MAZE_WIDTH  10
-#define MAZE_HEIGHT 10
-#define MAZE_EXIT_ROW MAZE_HEIGHT - 2
-#define MAZE_EXIT_COL MAZE_WIDTH - 2
-#define MAX_STACK_SIZE MAZE_WIDTH * MAZE_HEIGHT
+#define MAX_STR 80*4 /* String size */
+int maze_height, maze_width;
+#define MAX_MAZE_WIDTH  100
+#define MAX_MAZE_HEIGHT 100
+#define MAZE_EXIT_ROW maze_height - 2
+#define MAZE_EXIT_COL maze_width - 2
+#define MAX_STACK_SIZE MAX_MAZE_WIDTH * MAX_MAZE_HEIGHT
 
 /* We create a maze_array for the maze itself and for 'mark', which tracks
  * positions we've visited.
  */
-typedef int maze_array[MAZE_HEIGHT][MAZE_WIDTH];
+typedef int maze_array[MAX_MAZE_HEIGHT][MAX_MAZE_WIDTH];
 
 /* Flags for setting the state of the maze and mark arrays. */
 enum { 
@@ -146,6 +147,7 @@ const char *error_msg[] = {
 
 void exit_error(int error_code);
 FILE *setup_input(int argc, char *argv[]);
+int *array_value(maze_array maze, int col, int row);
 void setup_maze(FILE *infile, maze_array maze, maze_array mark);
 void push(element new_element, element stack[], int *top);
 element pop(element stack[], int *top);
@@ -192,41 +194,81 @@ FILE *setup_input(int argc, char *argv[]) {
     }
     return(infile);
 }
- 
+
+int *array_value(maze_array maze, int col, int row) {
+    /* Access a maze array element by coordinates,
+     * if the coordinates are valid. */
+    assert(col >= 0 && col < maze_height);
+    assert(row >= 0 && row < maze_width);
+    return(&maze[col][row]);
+}
+
 void setup_maze(FILE *infile, maze_array maze, maze_array mark) {
     /* Read and validate maze data, set up mark array to beginning state */
 
     /* TODO for now we assume the input maze is a correct size
      *      ideally we would build our maze based on the input alone
      */
-    int i, j; 
+    int row, col, prev_row_length;
     char line[MAX_STR];
-    for (i = 0; fgets(line, sizeof(line), infile) != NULL; ++i) {
-        for (j = 0; line[j] != '\n'; ++j) {
-            if (i > MAZE_HEIGHT) {
-                exit_error(ERR_TOO_HIGH);
-            } else if (j > MAZE_WIDTH) {
-                exit_error(ERR_TOO_WIDE);
-            }
-            if (line[j] == '0') {
-                maze[i][j] = MAZE_UNOCCUPIED;
-            } else if (line[j] == '1') {
-                maze[i][j] = MAZE_OCCUPIED;
-            } else {
-                exit_error(ERR_INPUT);
-            }
+    char input_maze[MAX_MAZE_HEIGHT][MAX_MAZE_HEIGHT];
+
+    col = prev_row_length = 0;
+    for (row = 0; fgets(line, sizeof(line), infile) != NULL; ++row) {
+        if (col != prev_row_length) {
+            /* Make sure all the lines are the same length,
+             * ignoring blank lines */
+            exit_error(ERR_INPUT);
+        }
+        for (col = 0; line[col] != '\0'; ++col) {
+           /* Make sure input is within correct size and contains only 1s, 0s */
+           if (row > MAX_MAZE_HEIGHT) {
+               exit_error(ERR_TOO_HIGH);
+           } else if (col > MAX_MAZE_WIDTH) {
+               exit_error(ERR_TOO_WIDE);
+           } else if (line[col] == '\n') {
+               if (col > 0) {
+                   /* End string and store line length */
+                   input_maze[row][col] = '\0';
+                   prev_row_length = col;
+                   DEBUG_PRINT(("this line length: %d\n", col));
+               } else {
+                   exit_error(ERR_INPUT);
+               }
+               break;
+           } else if (line[col] == '0' || line[col] == '1') {
+               DEBUG_PRINT(("Read: %c |", line[col]));
+               input_maze[row][col] = line[col];
+           }
+        }
+    /* TODO deal with trailing newline */
+    }
+    /* Store dimensions of input maze */
+    maze_height = row;
+    maze_width = --prev_row_length;
+    DEBUG_PRINT(("found maze_height %d maze_width %d\n", maze_height, maze_width));
+    assert(maze_height > 0 && maze_height < MAX_MAZE_HEIGHT);
+    assert(maze_width > 0 && maze_width < MAX_MAZE_WIDTH);
+
+    for (row = 0; row < maze_height; ++row) {
+        for (col = 0; col < maze_width; ++col) {
+            if (input_maze[row][col] == '0') {
+                *array_value(maze, row, col) = MAZE_UNOCCUPIED;
+            } else if (input_maze[row][col] == '1') {
+                *array_value(maze, row, col) = MAZE_OCCUPIED;
+            } 
         }
     }
 
     /* Populate the 'mark' array with 0s, except for the borders */
-    for (i = 0; i < MAZE_HEIGHT; ++i) {
-        for (j = 0; j < MAZE_WIDTH; ++j) {
+    for (row = 0; row < maze_height; ++row) {
+        for (col = 0; col < maze_width; ++col) {
 
-            if (i > 0 && i < MAZE_HEIGHT - 1 &&
-                    j > 0 && j < MAZE_HEIGHT - 1) {
-                mark[i][j] = MARK_UNVISITED;
+            if (row > 0 && row < maze_height - 1 &&
+                    col > 0 && col < maze_width - 1) {
+                *array_value(mark, row, col) = MARK_UNVISITED;
             } else {
-                mark[i][j] = MARK_VISITED;
+                *array_value(mark, row, col) = MARK_VISITED;
             }
         }
     }
@@ -259,7 +301,6 @@ void print_maze(maze_array maze) {
     /* Print the maze to stdout showing walls, openings, and the path through if
      * one has been found */
     int i, j;
-
     char *block_str[] = {   /* Characters to print, matches maze_state enum */
         "   ",              /* MAZE_UNOCCUPIED  */
         "[@]",              /* MAZE_OCCUPIED    */ 
@@ -267,10 +308,13 @@ void print_maze(maze_array maze) {
     };
     int block_str_index;
 
+    assert(maze_height > 0 && maze_height < MAX_MAZE_HEIGHT);
+    assert(maze_width > 0 && maze_width < MAX_MAZE_WIDTH);
+    
     printf("\n");
-    for (i = 0; i < MAZE_HEIGHT; ++i) {
-        for (j = 0; j < MAZE_HEIGHT; ++j) {
-            block_str_index = maze[i][j];
+    for (i = 0; i < maze_width; ++i) {
+        for (j = 0; j < maze_height; ++j) {
+            block_str_index = *array_value(maze, i, j);
             printf("%s", block_str[block_str_index]);
         }
         printf("\n");
@@ -290,7 +334,7 @@ void find_path(maze_array maze, maze_array mark, element_ptr position_stack, int
      * Since we start in top left corner, there is no way we can move north, so
      * start at east (move[1]) instead
      */
-    mark[1][1] = MARK_VISITED;
+    *array_value(mark, 1, 1) = MARK_VISITED;
     position_stack[0].row = position_stack[0].col = 1;
     position_stack[0].dir = 1; 
 
@@ -311,10 +355,10 @@ void find_path(maze_array maze, maze_array mark, element_ptr position_stack, int
             if (next_row == MAZE_EXIT_ROW && next_col == MAZE_EXIT_COL) {
                 /* We found the exit and we're done */
                 found = true;
-            } else if (maze[next_row][next_col] == MAZE_UNOCCUPIED &&
-                    mark[next_row][next_col] == MARK_UNVISITED) {
+            } else if (*array_value(maze, next_row, next_col) == MAZE_UNOCCUPIED &&
+                    *array_value(mark, next_row, next_col) == MARK_UNVISITED) {
                 /* We found an unoccupied, unvisited square: Move to it */
-                mark[next_row][next_col] = MARK_VISITED;
+                *array_value(mark, next_row, next_col) = MARK_VISITED;
                 position.row = row;
                 position.col = col;
                 ++dir; /* Oscillate through directions in saved position */
@@ -334,11 +378,11 @@ void find_path(maze_array maze, maze_array mark, element_ptr position_stack, int
     if (found == true) {
         /* Save the path in the maze for printing */
         for (i = 0; i <= *top; ++i) {
-            maze[position_stack[i].row][position_stack[i].col] = MAZE_PATH;
+            *array_value(maze, position_stack[i].row, position_stack[i].col) = MAZE_PATH;
         }
         /* Also current position and the exit position */
-        maze[row][col] = MAZE_PATH;
-        maze[MAZE_EXIT_ROW][MAZE_EXIT_COL] = MAZE_PATH;
+        *array_value(maze, row, col) = MAZE_PATH;
+        *array_value(maze, MAZE_EXIT_ROW, MAZE_EXIT_COL) = MAZE_PATH;
     } else {
         exit_error(NO_PATH);
     }
