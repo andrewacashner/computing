@@ -11,12 +11,11 @@
  *
  * PURPOSE
  * This program takes in a maze represented by a text file with a block of 1s
- * and 0s, where the zeros are the open spaces and the ones are the walls.
- * It prints out a visual representation of the maze (for now, on the command
- * line).
- * It then finds a solution for the maze, if there is one, and prints out
- * another representation of the maze showing the successful path through it.
- * If there is no solution, it prints a message saying so.
+ * and 0s, where the zeros are the open spaces and the ones are the walls.  It
+ * prints out a visual representation of the maze (for now, on the command
+ * line).  It then finds a solution for the maze, if there is one, and prints
+ * out another representation of the maze showing the successful path through
+ * it.  If there is no solution, it prints a message saying so.
  *
  * IMPLEMENTATION
  * We represent the maze with a two-dimensional integer array which we typedef
@@ -25,17 +24,20 @@
  * enum flags: MAZE_UNOCCUPIED vs MAZE_OCCUPIED vs (if a square is part of a
  * valid path through the maze) MAZE_PATH, and MARK_UNVISITED vs MARK_VISITED.
  * 
- * We read the maze data from an input file, which for the time being we assume
- * is in the correct format.  The maze is stored as an array of 0s and 1s, with
- * the open spaces as 0s.  The outside borders of the maze are all 1.  The
- * entrance of the maze is at (x,y) position (1,1); the exit is at (MAZE_HEIGHT
- * - 1, MAZE_WIDTH - 1).  We build the maze based on an input file that
- * represents the maze as a block of 1s and 0s:
- *     "111111111\n"
- *     "101011111\n"
- *     ...
+ * We read the maze data from an input file, which should be a text file with a
+ * block of 1s and 0s, with the open spaces as 0. We validate the file and copy
+ * its contents into a character array; in so doing we determine the height and
+ * width of our maze.  We ensure that these are within correct boundaries and
+ * there are no characters other than '1', '0', and '\n'; the file must end with
+ * a blank line.
  *
- * We use a stack to keep track of the last succesful position we visited; by
+ * Based on the input file, we then create a maze array of 0s and 1s.  The
+ * outside borders of the maze are all 1.  The entrance of the maze is at (x,y)
+ * position (1,1); the exit is at (MAZE_HEIGHT - 1, MAZE_WIDTH - 1).  If this is
+ * all correct, we store MAZE_OCCUPIED or MAZE_UNOCCUPIED values in the maze
+ * array.
+ *
+ * We create a stack to keep track of the last succesful position we visited; by
  * popping from the stack we can return to the previous succesful position.  We
  * implement a stack here as a simple array of 'element' structs with the row,
  * column, and direction of motion.  We use 'top' to track the top position in
@@ -81,6 +83,7 @@
 int maze_height, maze_width;
 #define MAX_MAZE_WIDTH  100
 #define MAX_MAZE_HEIGHT 100
+#define MIN_MAZE_HEIGHT 2
 #define MAZE_EXIT_ROW maze_height - 2
 #define MAZE_EXIT_COL maze_width - 2
 #define MAX_STACK_SIZE MAX_MAZE_WIDTH * MAX_MAZE_HEIGHT
@@ -126,6 +129,10 @@ enum {
     ERR_INPUT,
     ERR_TOO_HIGH,
     ERR_TOO_WIDE,
+    ERR_TOO_SHORT,
+    ERR_UNEVEN_ROWS,
+    ERR_BAD_CHAR,
+    ERR_CORNERS,
     STACK_FULL,
     STACK_EMPTY,
     NO_PATH,
@@ -133,10 +140,14 @@ enum {
 } error_code;
 const char *error_msg[] = {
     "Usage: maze <maze input file name>",
-    "Could not open file for reading",
-    "Invalid input maze",
-    "Input maze too high",
-    "Input maze too wide",
+    "Could not open file for reading.",
+    "Invalid format for input maze.",
+    "The input maze is too high.",
+    "The input maze is too wide.",
+    "The input maze is not high enough.",
+    "The rows of the input maze are not the same length.",
+    "The input maze contains forbidden characters.",
+    "The start and exit locations are occupied.",
     "Stack capacity exceeded.",
     "Stack empty.",
     "The maze does not have a path.",
@@ -195,19 +206,17 @@ FILE *setup_input(int argc, char *argv[]) {
     return(infile);
 }
 
-int *array_value(maze_array maze, int col, int row) {
+int *array_value(maze_array maze, int row, int col) {
     /* Access a maze array element by coordinates,
      * if the coordinates are valid. */
-    assert(col >= 0 && col < maze_height);
-    assert(row >= 0 && row < maze_width);
+    assert(row >= 0 && row < maze_height);
+    assert(col >= 0 && col < maze_width);
     return(&maze[col][row]);
 }
 
 void setup_maze(FILE *infile, maze_array maze, maze_array mark) {
-    /* Read and validate maze data, set up mark array to beginning state */
-
-    /* TODO for now we assume the input maze is a correct size
-     *      ideally we would build our maze based on the input alone
+    /* Read and validate maze data, set up mark array to beginning state. 
+     * We set the maze size based on the input file data.
      */
     int row, col, prev_row_length;
     char line[MAX_STR];
@@ -215,49 +224,68 @@ void setup_maze(FILE *infile, maze_array maze, maze_array mark) {
 
     col = prev_row_length = 0;
     for (row = 0; fgets(line, sizeof(line), infile) != NULL; ++row) {
-        if (col != prev_row_length) {
-            /* Make sure all the lines are the same length,
-             * ignoring blank lines */
-            exit_error(ERR_INPUT);
+        if (line[0] == '\n') {
+            /* Blank line = end of file */
+            if (row < MIN_MAZE_HEIGHT) {
+                exit_error(ERR_TOO_SHORT);
+            } else {
+                break;
+            }
         }
         for (col = 0; line[col] != '\0'; ++col) {
            /* Make sure input is within correct size and contains only 1s, 0s */
-           if (row > MAX_MAZE_HEIGHT) {
-               exit_error(ERR_TOO_HIGH);
-           } else if (col > MAX_MAZE_WIDTH) {
-               exit_error(ERR_TOO_WIDE);
-           } else if (line[col] == '\n') {
-               if (col > 0) {
-                   /* End string and store line length */
-                   input_maze[row][col] = '\0';
-                   prev_row_length = col;
-                   DEBUG_PRINT(("this line length: %d\n", col));
-               } else {
-                   exit_error(ERR_INPUT);
-               }
-               break;
-           } else if (line[col] == '0' || line[col] == '1') {
-               DEBUG_PRINT(("Read: %c |", line[col]));
-               input_maze[row][col] = line[col];
-           }
+            if (row > MAX_MAZE_HEIGHT) {
+                exit_error(ERR_TOO_HIGH);
+            } else if (col > MAX_MAZE_WIDTH) {
+                exit_error(ERR_TOO_WIDE);
+            }  
+            switch(line[col]) {
+                case '\n':
+                    /* End of line found; End line and store line length if input is
+                     * valid 
+                     */
+                    if (row > 0 && col != prev_row_length) {
+                        /* Make sure rows are the same length */
+                        exit_error(ERR_UNEVEN_ROWS);
+                    } else {
+                        input_maze[row][col] = '\0';
+                        prev_row_length = col;
+                    }
+                    break;
+                case '0':
+                    /* Fall through: Store 0s or 1s in middle of line */
+                case '1':
+                    input_maze[row][col] = line[col];
+                    break;
+                default:
+                    exit_error(ERR_BAD_CHAR);
+                    break;
+            }
         }
-    /* TODO deal with trailing newline */
     }
     /* Store dimensions of input maze */
     maze_height = row;
-    maze_width = --prev_row_length;
+    maze_width = prev_row_length;
     DEBUG_PRINT(("found maze_height %d maze_width %d\n", maze_height, maze_width));
     assert(maze_height > 0 && maze_height < MAX_MAZE_HEIGHT);
     assert(maze_width > 0 && maze_width < MAX_MAZE_WIDTH);
 
+    /* Populate maze with proper values */
     for (row = 0; row < maze_height; ++row) {
         for (col = 0; col < maze_width; ++col) {
+            assert(input_maze[row][col] == '0' || input_maze[row][col] == '1');
             if (input_maze[row][col] == '0') {
                 *array_value(maze, row, col) = MAZE_UNOCCUPIED;
             } else if (input_maze[row][col] == '1') {
                 *array_value(maze, row, col) = MAZE_OCCUPIED;
             } 
         }
+    }
+
+    /* Make sure correct start and exit points are unoccupied */
+    if (*array_value(maze, 1, 1) == MAZE_OCCUPIED ||
+            *array_value(maze, MAZE_EXIT_ROW, MAZE_EXIT_COL) == MAZE_OCCUPIED) {
+        exit_error(ERR_CORNERS);
     }
 
     /* Populate the 'mark' array with 0s, except for the borders */
@@ -300,7 +328,7 @@ element pop(element_ptr stack, int *top) {
 void print_maze(maze_array maze) {
     /* Print the maze to stdout showing walls, openings, and the path through if
      * one has been found */
-    int i, j;
+    int row, col;
     char *block_str[] = {   /* Characters to print, matches maze_state enum */
         "   ",              /* MAZE_UNOCCUPIED  */
         "[@]",              /* MAZE_OCCUPIED    */ 
@@ -312,9 +340,9 @@ void print_maze(maze_array maze) {
     assert(maze_width > 0 && maze_width < MAX_MAZE_WIDTH);
     
     printf("\n");
-    for (i = 0; i < maze_width; ++i) {
-        for (j = 0; j < maze_height; ++j) {
-            block_str_index = *array_value(maze, i, j);
+    for (row = 0; row < maze_height; ++row) {
+        for (col = 0; col < maze_width; ++col) {
+            block_str_index = *array_value(maze, row, col);
             printf("%s", block_str[block_str_index]);
         }
         printf("\n");
