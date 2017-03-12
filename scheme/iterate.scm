@@ -1,0 +1,6 @@
+(define (num i max)
+  (display i)
+  (if (< i max)
+    (num (+ 1 i) max)
+    (newline)))
+(num 1 10)
