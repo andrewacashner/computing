@@ -1,0 +1,20 @@
+* FIZZ BUZZ, ANDREW CASHNER, 2017-03-12
+TTY     EQU     19
+MSG     EQU     2000
+MAX     EQU     100
+TTYMAX  EQU     MAX/14
+START   ORIG    1000
+        ENN1    MAX
+LOOP    ENTA    1+MAX,1
+        CHAR 
+        STX     MSG+MAX,1
+        INC1    1 
+        J1N     LOOP
+        ENN1    TTYMAX 
+        ENT2    0
+PRINT   OUT     MSG,2(TTY)
+        INC1    1
+        INC2    14
+        J1NP    PRINT
+        HLT
+        END     START
