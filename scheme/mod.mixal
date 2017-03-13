@@ -1,0 +1,5 @@
+START   ORIG    1000
+        ENTX    5
+        DIV     =2=
+        HLT
+        END     START

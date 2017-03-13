@@ -1,0 +1,47 @@
+* FIZZ BUZZ, ANDREW CASHNER, 2017-03-13
+* For GNU MIX Development Kit
+* Compile: mixasm fizzbuzz.mixal
+* Run:     mixvm -r fizzbuzz.mix
+TTY     EQU     19
+BUF     EQU     2000
+MAX     EQU     100
+TTYMAX  EQU     MAX/14
+MSG     ALF     " FBZ "
+        ALF     " FIZ "
+        ALF     " BUZ "
+START   ORIG    1000
+        ENN1    MAX
+1H      ENTA    0
+        ENTX    1+MAX,1
+        DIV     =15=
+        JXP     THREE
+        ENT3    0
+        JMP     FZBZ
+THREE   ENTA    0
+        ENTX    1+MAX,1
+        DIV     =3=
+        JXP     FIVE
+        ENT3    1
+        JMP     FZBZ
+FIVE    ENTA    0
+        ENTX    1+MAX,1
+        DIV     =5=
+        JXP     NUMB
+        ENT3    2
+        JMP     FZBZ
+NUMB    ENTA    1+MAX,1
+        ENTX    0
+        CHAR 
+        JMP     STORE
+FZBZ    LDX     MSG,3
+STORE   STX     BUF+MAX,1
+3H      INC1    1 
+        J1N     1B
+        ENN1    TTYMAX 
+        ENT2    0
+4H      OUT     BUF,2(TTY)
+        INC1    1
+        INC2    14
+        J1NP    4B
+        HLT
+        END     START
