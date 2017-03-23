@@ -7,8 +7,10 @@
 #include <stdlib.h>
 
 #define MAX_OPERANDS 12
+#define END_ARRAY -999
 
-int add_array(int array[], int i, int max_array, int count);
+int add_array(int num[], int i, int total);
+int add_array_ptr(int *num, int total);
 
 int main(int argc, char *argv[])
 {
@@ -24,26 +26,31 @@ int main(int argc, char *argv[])
         scantest = sscanf(argv[i], "%d", &operands[i]);
         if (scantest < 1) {
             exit(EXIT_FAILURE);
-        } else {
-            printf(" + %d", operands[i]);
-        }
+        } 
     }
-    printf("\n");
+    operands[i] = END_ARRAY;
+
     if (argv[1][0] == '+') {
-        result = add_array(operands, 0, argc - 1, 0);
+/*        result = add_array(operands, argc - 1, 0); */
+        result = add_array_ptr(operands, 0);
     }
     printf("%d\n", result);
     return(0);
 }
-int add_array(int array[], int i, int max_array, int count)
-{   
-    int n;
-    if (i > max_array) {
-        n = 0;
+
+int add_array(int num[], int i, int total)
+{
+    if (i == 0) {
+        return(total);
     } else {
-        n = array[i];
-        printf("+ %d (%d) ", n, count);
-        n += add_array(array, i + 1, max_array, count + 1);
-    } 
-    return(n);
+        return(total += num[i] + add_array(num, i - 1, total));
+    }
+}
+int add_array_ptr(int *num, int total)
+{
+    if ((*num) == END_ARRAY) {
+        return(total);
+    } else {
+        return(total += (*num) + add_array_ptr(num + 1, total));
+    }
 }
