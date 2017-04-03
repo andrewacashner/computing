@@ -9,6 +9,7 @@ github
 *.bcf
 *.bmp
 *.cx
+*.ccx
 *.dvi
 *.jpg
 *.jpeg
