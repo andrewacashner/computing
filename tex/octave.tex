@@ -1,0 +1,32 @@
+\documentclass{article}
+\usepackage{octave}
+
+\newcommand{\demotext}{%
+    The gamut runs from \pitch{G}{2} to \pitch{E}{5}.
+    Middle C is \pitch{C}{4}.
+
+    \begin{tabular}{ll}
+        Octave & Designation\\
+        -1 & \pitch{c}{-1}\\
+        0 & \pitch{c}{0}\\
+        1 & \pitch{c}{1}\\
+        2 & \pitch{c}{2}\\
+        3 & \pitch{c}{3}\\
+        4 & \pitch{c}{4}\\
+        5 & \pitch{c}{5}\\
+        6 & \pitch{c}{6}\\
+        7 & \pitch{c}{7}\\
+    \end{tabular}
+}
+\begin{document}
+
+\section{Numbers}
+\demotext
+
+\section{Primes}
+
+\octaveprimes
+\demotext
+       
+
+\end{document}
