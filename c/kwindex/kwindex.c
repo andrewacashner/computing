@@ -41,7 +41,7 @@
  * Check input files, exit with error message if files not found or not valid
  * Create empty linked list for index words (structs with string + filename)
  * For each input file...
- *   - Search file for keywords section delimiters, save start and end locations,
+ *   - Search file for keywords section delimiter, save start and end locations,
  *     count bytes between
  *   - If found, allocate necessary memory and read keyword section into memory
  *      * If not, move on to next file; or if last file, exit
@@ -59,6 +59,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 #include <getopt.h>
 
 /* CONSTANTS, LOOKUP TABLES */
@@ -89,6 +90,7 @@ const char *message[] = {
 char *default_outfile_name = "kwindex.md";
 char *default_auxfile_name = "keywords.aux";
 
+const char *delimiter = ";";
 const char *search_string = "# Keywords\n";
 #define SEARCH_STRLEN 12
 
@@ -97,6 +99,7 @@ void quit_msg(int);
 void quit_error_msg(int, char[]);
 int find_keywords(FILE*, FILE*);
 int create_index(FILE*, FILE*);
+char *trim_initial_whitespace(char*);
 
 /* MAIN */
 int main(int argc, char *argv[]) {
@@ -136,7 +139,7 @@ int main(int argc, char *argv[]) {
         quit_error_msg(WRITE_FILE_OPEN_FAILURE, outfile_name);
     }
     /* Open and check auxiliary file */
-    auxfile = fopen(auxfile_name, "w");
+    auxfile = fopen(auxfile_name, "w+");
     if (auxfile == NULL) {
         quit_error_msg(WRITE_FILE_OPEN_FAILURE, auxfile_name);
     }
@@ -144,7 +147,6 @@ int main(int argc, char *argv[]) {
     /* Then open, check, and process input files */
     for ( ; optind < argc; ++optind) {
         infile_name = argv[optind];
-        /* TODO move file opening & closing for infile & auxfile to function */
         infile = fopen(infile_name, "r");
         if (infile == NULL) {
             quit_error_msg(READ_FILE_OPEN_FAILURE, infile_name);
@@ -197,9 +199,9 @@ void quit_error_msg(int message_code, char detail_msg[]) {
 int find_keywords(FILE *infile, FILE *auxfile) {
 
     bool found = false;
-    int linecount = 0;
+    int c = 0, 
+        linecount = 0;
     char line[MAX_LINE] = "";
-    int c;
     
     assert(infile != NULL && auxfile != NULL);
 
@@ -215,12 +217,15 @@ int find_keywords(FILE *infile, FILE *auxfile) {
              * we skip blank lines, count valid lines,
              * and look for end of section (= next section heading or EOF)
              */
-            if (line[0] == ' ' || line[0] == '\n') {
+            if (isspace(line[0]) != false) {
                 continue;
             } else if (line[0] == '#') {
                 break;
             } else {
                 ++linecount;
+                /* End line with delimiter so that multiple files don't run
+                 * together */
+                strcpy(&line[strlen(line) - 1], delimiter);
                 fputs(line, auxfile);
             }
         } else if (found == false) {
@@ -233,27 +238,40 @@ int find_keywords(FILE *infile, FILE *auxfile) {
     return(linecount);
 }
 
+/* create_index -- Make a sorted index from keywords in the aux file
+ * Read the keywords from the auxiliary file, separated by the delimiter;
+ * enter them in sorted order into a linked list.
+ * RETURN: Number of keywords found
+ */
 int create_index(FILE *outfile, FILE *auxfile) {
-/* TODO need to open auxfile for READING this time */
     int items = 0;
-    char line[MAX_LINE] = "";
-    char keyword[MAX_STR] = "";
+    char line[MAX_LINE] = "",
+         keyword[MAX_STR] = "";
     char *keyword_ptr = NULL;
-    char delimiters[] = "; \n";
 
     assert(outfile != NULL && auxfile != NULL);
+    rewind(auxfile);
 
     while (fgets(line, sizeof(line), auxfile) != NULL) {
-        if (items == 0) {
-            keyword_ptr = strtok(line, delimiters);
-        } else {
-            keyword_ptr = strtok(NULL, delimiters);
+        keyword_ptr = strtok(line, delimiter);
+        while (keyword_ptr != NULL) {
+            ++items;
+            keyword_ptr = trim_initial_whitespace(keyword_ptr);
+            strcpy(keyword, keyword_ptr);
+            printf("%d %s\n", items, keyword);
+            keyword_ptr = strtok(NULL, delimiter);
         }
-        sscanf(keyword_ptr, "%s", keyword);
-        ++items;
-        printf("%d %s\n", items, keyword);
     }
 
     return(items);
 }
 
+char *trim_initial_whitespace(char *string) {
+    char *begin = string;
+    int c = 0;
+    while (*begin != '\0' && (c = isspace(*begin)) != false) {
+        /* Move pointer past initial whitespace */
+        ++begin;
+    }
+    return(begin);
+} 
