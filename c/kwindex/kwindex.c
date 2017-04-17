@@ -54,6 +54,10 @@
  *
  */
 
+/* TODO
+ * Keep track of more data: e.g. filename from which keywords came for indexing
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -88,7 +92,6 @@ const char *message[] = {
 
 /* DEFAULT VALUES */
 char *default_outfile_name = "kwindex.md";
-char *default_auxfile_name = "keywords.aux";
 
 const char *delimiter = ";";
 const char *search_string = "# Keywords\n";
@@ -121,7 +124,6 @@ int main(int argc, char *argv[]) {
          *auxfile = NULL,
          *infile = NULL;
     char *outfile_name = default_outfile_name, 
-         *auxfile_name = default_auxfile_name,
          *infile_name = NULL;
     node_ptr index = NULL;
 
@@ -151,9 +153,9 @@ int main(int argc, char *argv[]) {
         quit_error_msg(WRITE_FILE_OPEN_FAILURE, outfile_name);
     }
     /* Open and check auxiliary file */
-    auxfile = fopen(auxfile_name, "w+");
+    auxfile = tmpfile();
     if (auxfile == NULL) {
-        quit_error_msg(WRITE_FILE_OPEN_FAILURE, auxfile_name);
+        quit_error_msg(WRITE_FILE_OPEN_FAILURE, "temporary file");
     }
 
     /* Then open, check, and process input files */
@@ -176,7 +178,6 @@ int main(int argc, char *argv[]) {
     /* Clean up */
     delete_index(index);
     fclose(outfile);
-    fclose(auxfile);
     return (0);
 }
 
