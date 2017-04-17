@@ -94,24 +94,36 @@ const char *delimiter = ";";
 const char *search_string = "# Keywords\n";
 #define SEARCH_STRLEN 12
 
+/* GLOBAL DATA STRUCTURES */
+typedef struct node *node_ptr;
+struct node {
+    char word[MAX_STR];
+    /* TODO other data needed for indexing */
+    node_ptr next;
+} node;
+
 /* FUNCTION PROTOTYPES */
 void quit_msg(int);
 void quit_error_msg(int, char[]);
 int find_keywords(FILE*, FILE*);
-int create_index(FILE*, FILE*);
+node_ptr create_index(FILE*, FILE*);
 char *trim_initial_whitespace(char*);
+node_ptr index_insert_sorted(node_ptr, char*);
+void print_index(FILE*, node_ptr);
+void delete_index(node_ptr);
 
 /* MAIN */
 int main(int argc, char *argv[]) {
 
-    int c = 0;
+    int c = 0,
+        keyword_lines = 0;
     FILE *outfile = NULL, 
          *auxfile = NULL,
          *infile = NULL;
     char *outfile_name = default_outfile_name, 
          *auxfile_name = default_auxfile_name,
          *infile_name = NULL;
-    int keyword_lines = 0;
+    node_ptr index = NULL;
 
     /* Process command-line arguments */
     while ((c = getopt(argc, argv, "hvo:")) != -1) {
@@ -158,11 +170,13 @@ int main(int argc, char *argv[]) {
     if (keyword_lines == 0) {
         quit_error_msg(NO_KEYWORDS_FOUND, NULL);
     }
-    create_index(outfile, auxfile);
+    index = create_index(outfile, auxfile);
+    print_index(outfile, index);
 
+    /* Clean up */
+    delete_index(index);
     fclose(outfile);
     fclose(auxfile);
-
     return (0);
 }
 
@@ -241,13 +255,12 @@ int find_keywords(FILE *infile, FILE *auxfile) {
 /* create_index -- Make a sorted index from keywords in the aux file
  * Read the keywords from the auxiliary file, separated by the delimiter;
  * enter them in sorted order into a linked list.
- * RETURN: Number of keywords found
+ * RETURN: Linked list in sorted order
  */
-int create_index(FILE *outfile, FILE *auxfile) {
-    int items = 0;
-    char line[MAX_LINE] = "",
-         keyword[MAX_STR] = "";
+node_ptr create_index(FILE *outfile, FILE *auxfile) {
+    char line[MAX_LINE] = "";
     char *keyword_ptr = NULL;
+    node_ptr index = NULL;
 
     assert(outfile != NULL && auxfile != NULL);
     rewind(auxfile);
@@ -255,23 +268,83 @@ int create_index(FILE *outfile, FILE *auxfile) {
     while (fgets(line, sizeof(line), auxfile) != NULL) {
         keyword_ptr = strtok(line, delimiter);
         while (keyword_ptr != NULL) {
-            ++items;
             keyword_ptr = trim_initial_whitespace(keyword_ptr);
-            strcpy(keyword, keyword_ptr);
-            printf("%d %s\n", items, keyword);
+            index = index_insert_sorted(index, keyword_ptr);
             keyword_ptr = strtok(NULL, delimiter);
         }
     }
 
-    return(items);
+    return(index);
 }
 
+/* trim_initial_whitespace -- Move start of string pointer to first
+ * non-whitespace character
+ * RETURN: char pointer to start of new string
+ */
 char *trim_initial_whitespace(char *string) {
     char *begin = string;
     int c = 0;
+
+    assert(string != NULL);
+
     while (*begin != '\0' && (c = isspace(*begin)) != false) {
         /* Move pointer past initial whitespace */
         ++begin;
     }
     return(begin);
-} 
+}
+
+
+node_ptr index_insert_sorted(node_ptr head, char *keyword) {
+    node_ptr list = NULL;
+    node_ptr new_node = (node_ptr)malloc(sizeof(node));
+    bool found = false;
+
+    /* Create new node with given data */
+    strcpy(new_node->word, keyword);
+    new_node->next = NULL;
+
+    /* Create new list from new node if head is empty */
+    if (head == NULL) {
+        return(new_node);
+    } else if (strcmp(new_node->word, head->word) <= 0) {
+        /* If new_node goes at beginning of list, 
+         * connect it to list and return new_node as the head
+         */
+        new_node->next = head;
+        return(new_node);
+    } else {
+        /* Otherwise find insertion point and insert */
+        for (list = head; list->next != NULL; list = list->next) {
+            if (strcmp(new_node->word, list->next->word) <= 0) {
+                new_node->next = list->next;
+                list->next = new_node;
+                found = true;
+                break;
+            }
+        }
+        if (found == false) {
+            /* No insertion point found, so append to list */
+            list->next = new_node;
+        }
+    }
+    return(head);
+}
+
+void print_index(FILE *outfile, node_ptr list) {
+    if (list != NULL) {
+        fprintf(outfile, "%s\n", list->word);
+        print_index(outfile, list->next);
+    }
+    return;
+}
+
+void delete_index(node_ptr list) {
+    if (list != NULL) {
+        delete_index(list->next);
+        free(list);
+    }
+    return;
+}
+
+
