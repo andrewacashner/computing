@@ -83,6 +83,7 @@ node_ptr list_append(node_ptr head, char *word) {
     }
 }
 
+/* NB this is apparently a draft: edit before compiling! 4/18/17 */
 node_ptr list_search(node_ptr head, char *word) { 
     node_ptr list = head;
     node_ptr insertion_point = NULL;
