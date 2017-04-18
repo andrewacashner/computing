@@ -12,7 +12,7 @@ Text, text; text.
 #. *Text*
 #. **Text**
 #. `Text`
-#. (Text)[http://www.example.com]
+#. [Text](http://www.example.com)
 
 # Text
 
@@ -25,6 +25,6 @@ twelve; thirteen;
 
 fourteen; fifteen
 
-uno; último; Última; zebra
+uno; último; Última; zebra;
 
-
+double

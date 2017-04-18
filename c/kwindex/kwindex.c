@@ -93,8 +93,10 @@ const char *message[] = {
 
 /* DEFAULT VALUES */
 char *default_outfile_name = "kwindex.md";
-const char *delimiter = ";";
-const char *search_string = "# Keywords";
+const char *keyword_delimiter = ";";
+const char *filename_delimiter = ":";
+const char *filegroup_delimiter = "|";
+const char *header_string = "# Keywords";
 
 /* GLOBAL DATA STRUCTURES */
 /* Node for singly-linked list of index data */
@@ -102,7 +104,7 @@ typedef struct node *node_ptr;
 struct node {
     char word[MAX_STR];         /* Keyword for index */
     char sort_word[MAX_STR];    /* Version of word for sort order */
-    char filename[MAX_STR];     /* Source of keyword */
+    char filename[MAX_LINE];     /* Source of keyword */
     node_ptr next;              /* Address of next node in list */
 } node;
 
@@ -113,6 +115,8 @@ int find_keywords(FILE*, char*, FILE*);
 node_ptr create_index(FILE*, FILE*);
 node_ptr list_create_node(char*, char*);
 node_ptr list_insert_sorted(node_ptr, char*, char*);
+void list_insert_duplicate(node_ptr, node_ptr);
+void index_file_print(FILE*, node_ptr);
 void list_print(FILE*, node_ptr);
 void list_delete(node_ptr);
 char *trim_initial_whitespace(char*);
@@ -157,7 +161,7 @@ int main(int argc, char *argv[]) {
         quit_error_msg(WRITE_FILE_OPEN_FAILURE, outfile_name);
     }
     /* Open and check auxiliary file */
-    auxfile = tmpfile();
+    auxfile = tmpfile(); 
     if (auxfile == NULL) {
         quit_error_msg(WRITE_FILE_OPEN_FAILURE, "temporary file");
     }
@@ -177,16 +181,20 @@ int main(int argc, char *argv[]) {
         quit_error_msg(NO_KEYWORDS_FOUND, NULL);
     }
     index = create_index(outfile, auxfile);
-    list_print(outfile, index);
+    index_file_print(outfile, index);
 
     /* Clean up */
-    list_delete(index);
+    list_delete(index); 
     fclose(outfile);
     fclose(auxfile);
     return (0);
 }
 
-/* FUNCTIONS */
+/************************************
+ * FUNCTIONS 
+ ************************************/
+
+/* EXIT AND ERROR FUNCTIONS */
 
 /* FUNCTION quit_msg 
  * Print a message to stdout and quit with no error code 
@@ -216,12 +224,17 @@ void quit_error_msg(int message_code, char detail_msg[]) {
 }
 
 
+/* PARSING AND INDEXING FUNCTIONS */
+
 /* FUNCTION find_keywords 
  * For the given input file, search for a section of keywords
- * and write them to auxiliary file
- * Before printing keywords, write name of source file from which they were
- * taken, followed by '::'.
- * End each group of keywords taken from a single file with '::' again.
+ * and write them to auxiliary file as follows:
+ *   filename1:
+ *   keyword1; keyword2; keyword3;
+ *
+ *   filename2:
+ *   keyword4; keyword5
+ *
  * We have ensured the files are open and valid, and we will close them
  * elsewhere.
  * RETURN: number of lines of keywords found
@@ -231,17 +244,13 @@ void quit_error_msg(int message_code, char detail_msg[]) {
 int find_keywords(FILE *infile, char *infile_name, FILE *auxfile) {
 
     bool found = false;
-    int c = 0, 
-        linecount = 0;
+    int linecount = 0;
     char line[MAX_LINE] = "";
     
     assert(infile != NULL && infile_name != NULL && auxfile != NULL);
 
-    while ((c = fgetc(auxfile)) != EOF) {
-        /* Just go to end of aux file */
-        /* TODO do this with fseek? */
-        ;
-    }
+    /* Go to end of aux file */
+    fseek(auxfile, 0L, SEEK_END);
 
     while (fgets(line, sizeof(line), infile) != NULL) {
         if (found == true) {
@@ -256,53 +265,70 @@ int find_keywords(FILE *infile, char *infile_name, FILE *auxfile) {
                 break;
             } else {
                 ++linecount;
-                /* End line with delimiter so that multiple files don't run
-                 * together */
-                strcpy(&line[strlen(line) - 1], delimiter);
+                /* End line with keyword_delimiter so that multiple lines or files don't run
+                 * together as a single keyword */
+                strcpy(&line[strlen(line) - 1], keyword_delimiter);
                 fprintf(auxfile, "%s", line);
             }
         } else if (found == false) {
             /* Look for `# Keywords` heading */
-            if (strncmp(line, search_string, strlen(search_string)) == 0) {
+            if (strncmp(line, header_string, strlen(header_string)) == 0) {
                 found = true;
                 /* Put source of index terms first in auxfile entry */
-                fprintf(auxfile, "%s::", infile_name); 
+                fprintf(auxfile, "%s%s\n", infile_name, filename_delimiter); 
             }
         }
     }
     if (found == true) {
         /* At end of section, add closing tag for source filename */
-        fprintf(auxfile, "::");
+        fprintf(auxfile, "%s\n", filegroup_delimiter);
     }
     return(linecount);
 }
 
 /* FUNCTION create_index 
  * Make a sorted index from keywords in the aux file
- * Read the keywords from the auxiliary file, separated by the delimiter;
+ * Read the filenames and keywords from the auxiliary file
  * enter them in sorted order into a linked list.
  * RETURN: Linked list in sorted order
  */
 node_ptr create_index(FILE *outfile, FILE *auxfile) {
-    char line[MAX_LINE] = "";
-    char *keyword_ptr = NULL,
-         *sourcefile_ptr = NULL;
+    char line[MAX_LINE] = "",
+         this_filename[MAX_STR] = "",
+         *keyword_ptr = NULL,
+         *filename_ptr = NULL;
     node_ptr index = NULL;
 
     assert(outfile != NULL && auxfile != NULL);
     rewind(auxfile);
 
+    /* Find keywords separated by keyword_delimiter and enter them into index
+     * linked list in sorted order
+     */
     while (fgets(line, sizeof(line), auxfile) != NULL) {
-        sourcefile_ptr = strtok(line, "::");
-        keyword_ptr = strtok(line, delimiter);
-        while (sourcefile_ptr != NULL) {
+        /* Find filename in format "%s:" */
+        filename_ptr = strtok(line, filename_delimiter);
+        strcpy(this_filename, filename_ptr);
+       
+        /* Read another line to find keywords */
+        if (fgets(line, sizeof(line), auxfile) != NULL) {
+
+            /* Find group of keywords after filename in format "%s|" */
+            keyword_ptr = strtok(line, filegroup_delimiter);
+
+            /* Find individual keywords within that group in format "%s;" */
+            keyword_ptr = strtok(keyword_ptr, keyword_delimiter);
             while (keyword_ptr != NULL) {
+
+                /* Insert this keyword, minus initial whitespace, and this
+                 * filename into index */
                 keyword_ptr = trim_initial_whitespace(keyword_ptr);
-                index = list_insert_sorted(index, keyword_ptr, sourcefile_ptr);
-                keyword_ptr = strtok(NULL, delimiter);
-            }
-            sourcefile_ptr = strtok(line, "::");
-        }
+                index = list_insert_sorted(index, keyword_ptr, this_filename);
+                
+                /* Find next keyword */
+                keyword_ptr = strtok(NULL, keyword_delimiter);
+            } 
+        } 
     }
     return(index);
 }
@@ -333,11 +359,18 @@ node_ptr list_insert_sorted(node_ptr head, char *keyword, char *sourcefile) {
     bool found = false;
     node_ptr list = NULL,
              new_node = list_create_node(keyword, sourcefile);
+    int strtest = 0;
 
     /* Start new list from new node if head is empty */
     if (head == NULL) {
         return(new_node);
-    } else if (strcmp(new_node->sort_word, head->sort_word) <= 0) {
+    } 
+    strtest = strcmp(new_node->sort_word, head->sort_word);
+    if (strtest == 0) {
+        /* If new keyword is already in index, add filename to existing index
+         * node and free unused new_node */
+        list_insert_duplicate(head, new_node);
+    } else if (strtest < 0) {
         /* If new_node goes at beginning of list,
          * connect it to list and return new_node as the head */
         new_node->next = head;
@@ -345,7 +378,15 @@ node_ptr list_insert_sorted(node_ptr head, char *keyword, char *sourcefile) {
     } else {
         /* Otherwise find insertion point and insert */
         for (list = head; list->next != NULL; list = list->next) {
-            if (strcmp(new_node->sort_word, list->next->sort_word) <= 0) {
+            
+            strtest = strcmp(new_node->sort_word, list->next->sort_word);
+            if (strtest == 0) {
+                /* Duplicate found */ 
+                list_insert_duplicate(list, new_node);
+                break;
+            
+            } else if (strtest < 0) {
+                /* Insertion point found, insert new_node here */
                 new_node->next = list->next;
                 list->next = new_node;
                 found = true;
@@ -360,6 +401,39 @@ node_ptr list_insert_sorted(node_ptr head, char *keyword, char *sourcefile) {
     return(head);
 }
 
+/* FUNCTION list_insert_duplicate
+ * When a duplicate keyword is found, we do not need to add a new node to the
+ * list; we just need to add a new filename to the filename field of the current
+ * node, then we can free the unused new node that was created
+ * RETURN void
+ */
+void list_insert_duplicate(node_ptr match_node, node_ptr new_node) {
+    assert(match_node != NULL && new_node != NULL);
+  
+    strcat(match_node->filename, ", ");
+    strcat(match_node->filename, new_node->filename);
+    free(new_node); 
+    return;
+}
+
+
+/* FUNCTION index_file_print
+ * Print the index file with table format
+ * Print header and footer, and call list_print to print the internal contents
+ * recursively
+ * RETURN void
+ */
+void index_file_print(FILE *outfile, node_ptr list) {
+    if (list != NULL) {
+        fprintf(outfile, "# Index of Keywords\n\n"
+                "--------------------  --------------------\n");
+        list_print(outfile, list);
+        fprintf(outfile, 
+                "--------------------  --------------------\n");
+    }
+    return;
+}
+
 /* FUNCTION list_print
  * Print the data from the index linked-list in order, in specified format, to
  * given output file;
@@ -368,7 +442,7 @@ node_ptr list_insert_sorted(node_ptr head, char *keyword, char *sourcefile) {
  */
 void list_print(FILE *outfile, node_ptr list) {
     if (list != NULL) {
-        fprintf(outfile, "%s | %s\n", list->word, list->filename);
+        fprintf(outfile, "%-20s  %s\n", list->word, list->filename);
         list_print(outfile, list->next);
     }
     return;
