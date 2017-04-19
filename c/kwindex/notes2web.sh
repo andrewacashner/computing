@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 
-# mdmake.sh -- Andrew Cashner, 2017/04/18
+# notes2web.sh -- Andrew Cashner, 2017/04/18
 
 # USAGE
-# sh mdmake.sh input output
+# sh notes2web.sh input output
 
 # Take markdown files from given input directory and produce a tree of HTML
 # files in given output directory including index of keywords
@@ -22,7 +22,9 @@ inputDir="$1"
 outputDir="$2"
 
 # Clear output directory
-rm "$outputDir"/*
+if [ -f "$outputDir"/* ]; then 
+    rm "$outputDir"/*
+fi
 
 # Make the index of keywords in markdown
 ./kwindex.cx -o "$outputDir"/kwindex.md "$inputDir"/*.md
