@@ -67,6 +67,12 @@
 #include <ctype.h>
 #include <getopt.h>
 
+/* DEBUGGING */
+#ifdef DEBUG
+#define DEBUG_PRINT(x) printf x
+#else
+#define DEBUG_PRINT(x) {};
+#endif
 /* CONSTANTS, LOOKUP TABLES */
 #define MAX_STR 80
 #define MAX_LINE MAX_STR*4
@@ -162,8 +168,11 @@ int main(int argc, char *argv[]) {
         quit_error_msg(WRITE_FILE_OPEN_FAILURE, outfile_name);
     }
     /* Open and check auxiliary file */
-    /* auxfile = tmpfile();  */
+#ifdef DEBUG
     auxfile = fopen("kwindex.aux", "w+");
+#else
+    auxfile = tmpfile();
+#endif
     if (auxfile == NULL) {
         quit_error_msg(WRITE_FILE_OPEN_FAILURE, "temporary file");
     }
@@ -240,8 +249,6 @@ void quit_error_msg(int message_code, char detail_msg[]) {
  * We have ensured the files are open and valid, and we will close them
  * elsewhere.
  * RETURN: number of lines of keywords found
- *
- * TODO doesn't work, fix filename strtok algorithm
 */
 int find_keywords(FILE *infile, char *infile_name, FILE *auxfile) {
 
@@ -293,12 +300,15 @@ int find_keywords(FILE *infile, char *infile_name, FILE *auxfile) {
  * Read the filenames and keywords from the auxiliary file
  * enter them in sorted order into a linked list.
  * RETURN: Linked list in sorted order
+ * TODO doesn't work, fix strtok for keywords?
  */
 node_ptr create_index(FILE *outfile, FILE *auxfile) {
     char line[MAX_LINE] = "",
          this_filename[MAX_STR] = "",
-         *keyword_ptr = NULL,
-         *filename_ptr = NULL;
+         this_keyword[MAX_STR] = "",
+         *filename_ptr = NULL,
+         *keyword_group_ptr = NULL,
+         *keyword_ptr = NULL;
     node_ptr index = NULL;
 
     assert(outfile != NULL && auxfile != NULL);
@@ -311,24 +321,33 @@ node_ptr create_index(FILE *outfile, FILE *auxfile) {
         /* Find filename in format "%s:" */
         filename_ptr = strtok(line, filename_delimiter);
         strcpy(this_filename, filename_ptr);
+        DEBUG_PRINT(("Found filename '%s'...\n", this_filename));
        
         /* Read another line to find keywords */
         if (fgets(line, sizeof(line), auxfile) != NULL) {
 
             /* Find group of keywords after filename in format "%s|" */
-            keyword_ptr = strtok(line, filegroup_delimiter);
+            keyword_group_ptr = strtok(line, filegroup_delimiter);
+            DEBUG_PRINT(("Found keyword group '%s'...\n", keyword_group_ptr));
 
             /* Find individual keywords within that group in format "%s;" */
-            keyword_ptr = strtok(keyword_ptr, keyword_delimiter);
+            keyword_ptr = strtok(keyword_group_ptr, keyword_delimiter);
             while (keyword_ptr != NULL) {
 
+                DEBUG_PRINT(("Found keyword '%s'...\n", keyword_ptr));
                 /* Insert this keyword, minus initial whitespace, and this
                  * filename into index */
-                keyword_ptr = trim_initial_whitespace(keyword_ptr);
-                index = list_insert_sorted(index, keyword_ptr, this_filename);
+                strcpy(this_keyword, trim_initial_whitespace(keyword_ptr));
+                DEBUG_PRINT(("Inserting keyword '%s' and filename '%s' into index...\n", this_keyword, this_filename));
+
+                index = list_insert_sorted(index, this_keyword, this_filename);
                 
                 /* Find next keyword */
                 keyword_ptr = strtok(NULL, keyword_delimiter);
+                /* TODO problem is here, not finding another keyword in the
+                 * keyword_group
+                 */
+                DEBUG_PRINT(("Found next keyword '%s'...\n", keyword_ptr));
             } 
         } 
     }
@@ -355,7 +374,9 @@ node_ptr list_create_node(char *keyword, char *sourcefile) {
     strcpy(new_node->filename, format_filename);
     
     new_node->next = NULL;
-   
+  
+    DEBUG_PRINT(("\nCreating new node for sort_word %s and format_filename %s...\n", 
+            new_node->sort_word, new_node->filename));
     return(new_node);
 }
 
@@ -365,13 +386,14 @@ node_ptr list_create_node(char *keyword, char *sourcefile) {
  * RETURN node_ptr containing address of head of sorted list
  */
 node_ptr list_insert_sorted(node_ptr head, char *keyword, char *sourcefile) {
+    int strtest = 0;
     bool found = false;
     node_ptr list = NULL,
              new_node = list_create_node(keyword, sourcefile);
-    int strtest = 0;
 
     /* Start new list from new node if head is empty */
     if (head == NULL) {
+        DEBUG_PRINT(("Starting new list for keyword %s...\n", new_node->word));
         return(new_node);
     } 
     strtest = strcmp(new_node->sort_word, head->sort_word);
@@ -383,9 +405,11 @@ node_ptr list_insert_sorted(node_ptr head, char *keyword, char *sourcefile) {
         /* If new_node goes at beginning of list,
          * connect it to list and return new_node as the head */
         new_node->next = head;
+        DEBUG_PRINT(("Adding node with keyword %s to head of list...\n", new_node->word));
         return(new_node);
     } else {
         /* Otherwise find insertion point and insert */
+        /* TODO find a way to avoid duplicating code here */
         for (list = head; list->next != NULL; list = list->next) {
             
             strtest = strcmp(new_node->sort_word, list->next->sort_word);
@@ -398,6 +422,7 @@ node_ptr list_insert_sorted(node_ptr head, char *keyword, char *sourcefile) {
                 /* Insertion point found, insert new_node here */
                 new_node->next = list->next;
                 list->next = new_node;
+                DEBUG_PRINT(("Inserting node with keyword %s before node with keyword %s...\n", new_node->word, new_node->next->word));
                 found = true;
                 break;
             }
@@ -405,6 +430,7 @@ node_ptr list_insert_sorted(node_ptr head, char *keyword, char *sourcefile) {
         if (found == false) {
             /* No insertion point found, so append to list */
             list->next = new_node;
+            DEBUG_PRINT(("Appending node with keyword %s to end of list...\n", new_node->word));
         }
     }
     return(head);
@@ -525,24 +551,28 @@ void convert_sort_format(char *format_word, char *orig_word) {
  */
 void convert_filename_format(char *format_filename, char *orig_filename) {
     int i = 0;
-    char *basename = NULL;
+    char basename[MAX_STR] = "",
+         *basename_ptr = NULL;
 
     assert(format_filename != NULL && orig_filename != NULL);
 
-    /* Strip suffix */
-    basename = strtok(orig_filename, ".md"); 
+    /* Copy string and strip suffix */
+    strcpy(format_filename, orig_filename);
+    basename_ptr = strtok(format_filename, ".md"); 
 
     /* Strip off directory path:
      * Move pointer to end of string, then move backwards until '/' is found, or
      * to beginning of string
      */
-    for (i = strlen(basename), basename += i; i >= 0; --i, --basename) {
-        if (*basename == '/') {
-            ++basename; /* Go forward one to start of basename */
+    for (i = strlen(basename_ptr), basename_ptr += i; i >= 0; --i, --basename_ptr) {
+        if (*basename_ptr == '/') {
+            ++basename_ptr; /* Go forward one to start of basename */
             break;
         }
     }
-
+    /* Copy the string starting at basename_ptr to basename and rewrite the
+     * format_filename string in the proper format */
+    strcpy(basename, basename_ptr);
     sprintf(format_filename, "[%s](%s%s)", basename, basename, ".html");
     return;
 }
