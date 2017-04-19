@@ -69,6 +69,11 @@
 #include <ctype.h>
 #include <getopt.h>
 
+#include "include/kw_message.h"
+#include "include/kw_convert_strings.h"
+#include "include/kw_message.c"
+#include "include/kw_convert_strings.c"
+
 /* DEBUGGING */
 #ifdef DEBUG
 #define DEBUG_PRINT(x) printf x
@@ -78,26 +83,6 @@
 /* CONSTANTS, LOOKUP TABLES */
 #define MAX_STR 12*12
 #define MAX_LINE MAX_STR*12
-
-enum { 
-    HELP,
-    VERSION,
-    NO_INFILE_SPECIFIED,
-    READ_FILE_OPEN_FAILURE,
-    WRITE_FILE_OPEN_FAILURE,
-    NO_KEYWORDS_FOUND,
-    MAX_MSG
-} message_code;
-
-const char *message[] = {
-    /* TODO: Supply real messages */
-    "Help message.",
-    "Version message.",
-    "No input file specified.",
-    "Could not open file for reading.",
-    "Could not open file for writing.",
-    "No keywords found."
-};
 
 /* DEFAULT VALUES */
 char *default_outfile_name      = "kwindex.md";
@@ -117,8 +102,6 @@ struct node {
 } node;
 
 /* FUNCTION PROTOTYPES */
-void quit_msg(int);
-void quit_error_msg(int, char[]);
 int find_keywords(FILE*, char*, FILE*);
 node_ptr create_index(FILE*, FILE*);
 node_ptr list_create_node(char*, char*);
@@ -127,9 +110,6 @@ void list_insert_duplicate(node_ptr, node_ptr);
 void index_file_print(FILE*, node_ptr);
 void list_print(FILE*, node_ptr);
 void list_delete(node_ptr);
-char *convert_trim_whitespace(char*);
-void convert_sort_format(char*, char*);
-void convert_filename_format(char*, char*);
 
 
 /* MAIN */
@@ -206,36 +186,6 @@ int main(int argc, char *argv[]) {
 /************************************
  * FUNCTIONS 
  ************************************/
-
-/* EXIT AND ERROR FUNCTIONS */
-
-/* FUNCTION quit_msg 
- * Print a message to stdout and quit with no error code 
- * RETURN void
- */
-void quit_msg(int message_code) {
-    assert(message_code >= 0 && message_code < MAX_MSG);
-    printf("%s\n", message[message_code]);
-    exit(0);
-}
-
-/* FUNCTION quit_error_msg 
- * Print a message to stderr and quit with error code 
- * RETURN void
- */
-void quit_error_msg(int message_code, char detail_msg[]) {
-    assert(message_code >= 0 && message_code < MAX_MSG);
-    if (detail_msg != NULL) {
-        /* TODO: redo with varargs? 
-         * e.g., to allow error message like "Could not open %s for reading"
-         */
-        fprintf(stderr, "%s (%s)\n", message[message_code], detail_msg);
-    } else {
-        fprintf(stderr, "%s\n", message[message_code]);
-    }
-    exit(EXIT_FAILURE);
-}
-
 
 /* PARSING AND INDEXING FUNCTIONS */
 
@@ -479,93 +429,6 @@ void list_delete(node_ptr list) {
         list_delete(list->next);
     }
     free(list);
-    return;
-}
-
-/* STRING PROCESSING FUNCTIONS */
-
-/* FUNCTION convert_trim_whitespace 
- * Find position of first non-whitespace character.
- * RETURN address (char ptr) of string starting at that position
- */
-char *convert_trim_whitespace(char *string) {
-    int i = 0;
-    char *string_ptr = NULL;
-    
-    assert(string != NULL);
-
-    for (i = 0; string[i] != '\0'; ++i) {
-        if (isspace(string[i]) == false) {
-           break;
-        }
-    }
-    string_ptr = &string[i];
-    return(string_ptr);
-}
-
-/* FUNCTION convert_sort_format 
- * Take a string and convert it to a specified format for sorting:
- *   - Convert all uppercase letters to lowercase
- * RETURN void
- *
- * TODO: 
- *   - Convert accented characters to their non-accented equivalents
- *   - Or sort them specially without this function and without the sort_word
- *   element in the data structure
- * Replace with functions from locale.h and/or ICU collator for UTF-8 sorting?
- * (http://userguide.icu-project.org/collation/api)
- */
-void convert_sort_format(char *format_word, char *orig_word) {
-    int i = 0, c = 0;
-
-    assert(format_word != NULL && orig_word != NULL);
-
-    strcpy(format_word, orig_word);
-
-    for (i = 0; format_word[i] != '\0'; ++i) {
-        c = format_word[i];
-        if (isupper(c) != false) {
-            format_word[i] = tolower(c);
-        }
-    }
-    return;
-}
-
-/* FUNCTION convert_filename_format
- * Strip input suffix and path from given filename and format string as a
- * Markdown link 
- * RETURN void 
- */
-void convert_filename_format(char *format_filename, char *orig_filename) {
-    char tmp_str[MAX_STR] = "",
-         basename[MAX_STR] = "";
-    char *basename_ptr = NULL,
-         *file_ext_ptr = NULL;
-
-    assert(format_filename != NULL && orig_filename != NULL);
-
-    strcpy(tmp_str, orig_filename);
-
-    /* Strip off directory path: Move pointer to just past the last '/' in string;
-     * if not found (strrchr returns NULL pointer), then use the whole string */
-    basename_ptr = strrchr(tmp_str, '/');
-    if (basename_ptr != NULL) {
-        ++basename_ptr;
-        strcpy(basename, basename_ptr);
-    } else {
-        strcpy(basename, tmp_str);
-    }
-   
-    /* Strip suffix: Move pointer to start of file extension and if found,
-     * replace the character at that position with the end-of-string '\0'
-     * character */
-    file_ext_ptr = strstr(basename, ".md");
-    if (file_ext_ptr != NULL) {
-        *file_ext_ptr = '\0'; 
-    }
-
-    /* Write the format_filename string in the proper format */
-    sprintf(format_filename, "[%s](%s%s)", basename, basename, ".html");
     return;
 }
 
