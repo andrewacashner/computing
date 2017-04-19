@@ -121,6 +121,7 @@ void list_print(FILE*, node_ptr);
 void list_delete(node_ptr);
 char *trim_initial_whitespace(char*);
 char *convert_sort_format(char*);
+char *convert_filename_format(char*);
 
 
 /* MAIN */
@@ -344,7 +345,8 @@ node_ptr list_create_node(char *keyword, char *sourcefile) {
     
     strcpy(new_node->word, keyword);
     strcpy(new_node->sort_word, convert_sort_format(keyword));
-    strcpy(new_node->filename, sourcefile);
+/*    strcpy(new_node->filename, convert_filename_format(sourcefile)); */
+    strcpy(new_node->filename, sourcefile); 
     new_node->next = NULL;
    
     return(new_node);
@@ -494,7 +496,6 @@ char *trim_initial_whitespace(char *string) {
  * Replace with functions from locale.h and/or ICU collator for UTF-8 sorting?
  * (http://userguide.icu-project.org/collation/api)
  */
-
 char *convert_sort_format(char *string) {
     int i = 0, c = 0;
 
@@ -509,4 +510,23 @@ char *convert_sort_format(char *string) {
     return(string);
 }
 
+/* FUNCTION convert_filename_format
+ * Strip input suffix from given filename and format string as a Markdown link
+ * RETURN address of a formatted string with a link to the file with output
+ * suffix (e.g., html)
+ * TODO doesn't work!
+ */
+const char *convert_filename_format(char *filename) {
+    char format_filename[MAX_STR] = "",
+         *basename = NULL,
+         *input_suffix = ".md",
+         *output_suffix = ".html";
 
+    assert(filename != NULL);
+
+    basename = strtok(filename, input_suffix);
+    sprintf(format_filename, "[%s](%s%s)", basename, basename, output_suffix);
+    strcpy(filename, format_filename);
+    
+    return(filename);
+}
