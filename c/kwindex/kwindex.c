@@ -120,8 +120,8 @@ void index_file_print(FILE*, node_ptr);
 void list_print(FILE*, node_ptr);
 void list_delete(node_ptr);
 char *trim_initial_whitespace(char*);
-char *convert_sort_format(char*);
-char *convert_filename_format(char*);
+void convert_sort_format(char*, char*);
+void convert_filename_format(char*, char*);
 
 
 /* MAIN */
@@ -162,7 +162,8 @@ int main(int argc, char *argv[]) {
         quit_error_msg(WRITE_FILE_OPEN_FAILURE, outfile_name);
     }
     /* Open and check auxiliary file */
-    auxfile = tmpfile(); 
+    /* auxfile = tmpfile();  */
+    auxfile = fopen("kwindex.aux", "w+");
     if (auxfile == NULL) {
         quit_error_msg(WRITE_FILE_OPEN_FAILURE, "temporary file");
     }
@@ -342,11 +343,17 @@ node_ptr create_index(FILE *outfile, FILE *auxfile) {
  */
 node_ptr list_create_node(char *keyword, char *sourcefile) {
     node_ptr new_node = (node_ptr)malloc(sizeof(node));
+    char format_sort_word[MAX_STR] = "",
+         format_filename[MAX_STR] = "";
     
     strcpy(new_node->word, keyword);
-    strcpy(new_node->sort_word, convert_sort_format(keyword));
-/*    strcpy(new_node->filename, convert_filename_format(sourcefile)); */
-    strcpy(new_node->filename, sourcefile); 
+
+    convert_sort_format(format_sort_word, keyword);
+    strcpy(new_node->sort_word, format_sort_word);
+    
+    convert_filename_format(format_filename, sourcefile);
+    strcpy(new_node->filename, format_filename);
+    
     new_node->next = NULL;
    
     return(new_node);
@@ -487,7 +494,7 @@ char *trim_initial_whitespace(char *string) {
 /* FUNCTION convert_sort_format 
  * Take a string and convert it to a specified format for sorting:
  *   - Convert all uppercase letters to lowercase
- * RETURN: address of reformatted string 
+ * RETURN void
  *
  * TODO: 
  *   - Convert accented characters to their non-accented equivalents
@@ -496,37 +503,46 @@ char *trim_initial_whitespace(char *string) {
  * Replace with functions from locale.h and/or ICU collator for UTF-8 sorting?
  * (http://userguide.icu-project.org/collation/api)
  */
-char *convert_sort_format(char *string) {
+void convert_sort_format(char *format_word, char *orig_word) {
     int i = 0, c = 0;
 
-    assert(string != NULL);
+    assert(format_word != NULL && orig_word != NULL);
 
-    for (i = 0; string[i] != '\0'; ++i) {
-        c = string[i];
+    strcpy(format_word, orig_word);
+
+    for (i = 0; format_word[i] != '\0'; ++i) {
+        c = format_word[i];
         if (isupper(c) != false) {
-            string[i] = tolower(c);
+            format_word[i] = tolower(c);
         }
     }
-    return(string);
+    return;
 }
 
 /* FUNCTION convert_filename_format
  * Strip input suffix from given filename and format string as a Markdown link
- * RETURN address of a formatted string with a link to the file with output
- * suffix (e.g., html)
- * TODO doesn't work!
+ * RETURN void 
  */
-const char *convert_filename_format(char *filename) {
-    char format_filename[MAX_STR] = "",
-         *basename = NULL,
-         *input_suffix = ".md",
-         *output_suffix = ".html";
+void convert_filename_format(char *format_filename, char *orig_filename) {
+    int i = 0;
+    char *basename = NULL;
 
-    assert(filename != NULL);
+    assert(format_filename != NULL && orig_filename != NULL);
 
-    basename = strtok(filename, input_suffix);
-    sprintf(format_filename, "[%s](%s%s)", basename, basename, output_suffix);
-    strcpy(filename, format_filename);
-    
-    return(filename);
+    /* Strip suffix */
+    basename = strtok(orig_filename, ".md"); 
+
+    /* Strip off directory path:
+     * Move pointer to end of string, then move backwards until '/' is found, or
+     * to beginning of string
+     */
+    for (i = strlen(basename), basename += i; i >= 0; --i, --basename) {
+        if (*basename == '/') {
+            ++basename; /* Go forward one to start of basename */
+            break;
+        }
+    }
+
+    sprintf(format_filename, "[%s](%s%s)", basename, basename, ".html");
+    return;
 }
