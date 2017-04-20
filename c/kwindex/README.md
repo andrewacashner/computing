@@ -13,10 +13,10 @@
 ## System Requirements
 
 - A C compiler to compile `kwindex.c` (`gcc`, `clang`)
-  * This should compile and run on any Unix-based system, including Mac OSX
-  * It has been tested on Fedora Linux and Mac OSX
+    * This should compile and run on any Unix-based system, including Mac OSX
+    * It has been tested on Fedora Linux and Mac OSX
 - A shell to run `notes2web.sh` and/or `test.sh` (`bash`, `dash`)
-  * On Mac OSX, open `Terminal` app
+    * On Mac OSX, open `Terminal` app
 - The program `pandoc`, available for multiple platforms at <http://www.pandoc.org/>
 - A text editor for creating your own Markdown files (`vim`, `emacs`, etc.)
 - A web browser for viewing the results (`elinks`, `firefox`, etc.)
