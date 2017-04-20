@@ -2,7 +2,13 @@
 # Andrew Cashner, 2014/04/20
 
 CC = gcc
-CFLAGS = -g -Wall -Wextra -pedantic -ansi
+CFLAGS = -Wall -Wextra -pedantic -ansi
+
+DEBUG ?= 1
+ifeq ($(DEBUG), 1)
+    CFLAGS += -g -DDEBUG
+endif
+
 # LFLAGS
 # LIBS
 

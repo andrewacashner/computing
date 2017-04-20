@@ -60,6 +60,7 @@
  * Separate more modules with headers
  */
 
+#include "kw_debug_print.h"
 #include "kw_max_sizes.h"
 #include "kw_message.h"
 #include "kw_convert_strings.h"
@@ -72,14 +73,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <getopt.h>
+#include <locale.h>
 
-
-/* DEBUGGING */
-#ifdef DEBUG
-#define DEBUG_PRINT(x) printf x
-#else
-#define DEBUG_PRINT(x) {};
-#endif
 
 /* DEFAULT VALUES */
 char *default_outfile_name      = "kwindex.md";

@@ -5,13 +5,16 @@
 #ifndef KW_CONVERT_STRINGS_H
 #define KW_CONVERT_STRINGS_H
 
+#include "kw_debug_print.h"
+#include "kw_max_sizes.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <locale.h>
 
-#include "kw_max_sizes.h"
 
 /* Trim initial whitespace from string */
 extern char *convert_trim_whitespace(char*);

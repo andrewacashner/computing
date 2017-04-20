@@ -5,6 +5,7 @@
 #ifndef KW_LIST_H
 #define KW_LIST_H
 
+#include "kw_debug_print.h"
 #include "kw_max_sizes.h"
 #include "kw_convert_strings.h"
 
@@ -32,7 +33,14 @@ extern node_ptr list_insert_sorted(node_ptr, char*, char*);
 
 /* Add only select data (filename) from new node to existing node when one field
  * (sort_word) is a duplicate; free the memory for the unused new node  */
-extern void list_insert_duplicate(node_ptr, node_ptr);
+extern node_ptr list_insert_duplicate(node_ptr, node_ptr);
+
+/* Determine which of two nodes should go first in sorted order 
+ * Returns 0 if equal, <0 if new_node goes before next_node */
+extern int compare_nodes(node_ptr, node_ptr);
+
+/* Add a node to the end of the list */
+extern node_ptr list_append(node_ptr, node_ptr);
 
 /* Print the whole list in a given format (recursive) */
 extern void list_print(FILE*, node_ptr);

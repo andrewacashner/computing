@@ -5,6 +5,8 @@
 #ifndef KW_MESSAGE_H
 #define KW_MESSAGE_H
 
+#include "kw_debug_print.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
