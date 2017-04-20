@@ -4,6 +4,17 @@
 
 #include "kw_message.h"
 
+const char *message[] = {
+    /* TODO: Supply real messages */
+    "Help message.",
+    "Version message.",
+    "No input file specified.",
+    "Could not open file for reading.",
+    "Could not open file for writing.",
+    "No keywords found."
+};
+
+
 /* FUNCTION quit_msg 
  * Print a message to stdout and quit with no error code 
  * RETURN void

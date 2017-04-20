@@ -60,6 +60,7 @@
  * Separate modules with headers
  */
 
+#include "kw_max_sizes.h"
 #include "kw_message.h"
 #include "kw_convert_strings.h"
 #include "kw_list.h"
@@ -72,10 +73,6 @@
 #include <ctype.h>
 #include <getopt.h>
 
-#include "kw_message.c"
-#include "kw_convert_strings.c"
-#include "kw_list.c"
-
 
 /* DEBUGGING */
 #ifdef DEBUG
@@ -83,10 +80,6 @@
 #else
 #define DEBUG_PRINT(x) {};
 #endif
-
-/* CONSTANTS, LOOKUP TABLES */
-#define MAX_STR 12*12
-#define MAX_LINE MAX_STR*12
 
 /* DEFAULT VALUES */
 char *default_outfile_name      = "kwindex.md";

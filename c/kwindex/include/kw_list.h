@@ -5,11 +5,12 @@
 #ifndef KW_LIST_H
 #define KW_LIST_H
 
-#include "stdio.h"
-#include "stdlib.h"
-#include "stdbool.h"
-#include "assert.h"
-#include "string.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <assert.h>
+#include <string.h>
+#include "kw_max_sizes.h"
 
 /* Node for singly-linked list of index data */
 typedef struct node *node_ptr;

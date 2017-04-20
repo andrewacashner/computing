@@ -19,15 +19,8 @@ enum {
     MAX_MSG
 } message_codes;
 
-const char *message[] = {
-    /* TODO: Supply real messages */
-    "Help message.",
-    "Version message.",
-    "No input file specified.",
-    "Could not open file for reading.",
-    "Could not open file for writing.",
-    "No keywords found."
-};
+/* Message strings */ /* TODO multiple definition */
+extern const char *message[MAX_MSG];
 
 /* Exit program successfully after displaying message (e.g., help) */
 extern void quit_msg(int);

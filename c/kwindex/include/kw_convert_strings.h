@@ -11,8 +11,7 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#define MAX_STR 12*12
-#define MAX_LINE MAX_STR*12
+#include "kw_max_sizes.h"
 
 /* Trim initial whitespace from string */
 extern char *convert_trim_whitespace(char*);
