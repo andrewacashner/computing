@@ -38,7 +38,7 @@ cp "$inputDir"/*.md "$outputDir"/
 cd "$outputDir"
 for file in *.md; do 
     # Add a link to the home page
-    echo -e "\n[Home](./index.html)" >> "$file"
+    printf "\n[Home](./index.html)" >> "$file"
 
     # Convert it to html
     pandoc -s -o "${file%.md}".html "$file";
@@ -46,7 +46,7 @@ done
 
 
 # Write an index file in markdown with links to the contents
-echo "# Contents" > index.md
+printf "# Contents\n" > index.md
 for file in *.html; do
     echo "- [${file%.html}]($file)" >> index.md
 done

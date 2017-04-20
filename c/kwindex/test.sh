@@ -6,7 +6,7 @@
 set -e
 
 sh notes2web.sh test/input test/output
-firefox test/output/index.html &
+xdg-open test/output/index.html &
 
 exit 0
 
