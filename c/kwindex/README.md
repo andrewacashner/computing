@@ -19,16 +19,16 @@
   preceded with the heading line `# Keywords`, and the keywords are separated by
   semicolons. 
 
-    ~~~
+    ``` 
     # Keywords
 
     one; two; three, four
-    ~~~
+    ``` 
 
 - `kwindex` will take this input file and produce this output file. Note that it
   changes the file extensions to what `notes2web` will generate (html, not md).
 
-   ~~~
+   ```
    # Index of Keywords
 
    ---------- ---------
@@ -37,7 +37,7 @@
    three      [input1](input1.html)
    two        [input1](input1.html)
    ---------- ---------
-   ~~~
+   ```
 
 ## Usage
 
