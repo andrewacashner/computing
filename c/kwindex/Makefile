@@ -1,18 +1,20 @@
+# Makefile for kwindex.c
+# Andrew Cashner, 2014/04/20
+
 CC = gcc
-
 CFLAGS = -g -Wall -Wextra -pedantic -ansi
-
 # LFLAGS
-
 # LIBS
 
 TARGET = kwindex.cx
 
-INCLUDES = -I./include 
+INCLUDEDIR = include
+SOURCEDIR = src
 
-SOURCES = $(wildcard src/*.c)
+INCLUDES = -I$(INCLUDEDIR)
+SOURCES = $(wildcard $(SOURCEDIR)/*.c)
 
-OBJECTS = $(SOURCES:.c=.o)
+OBJECTS = $(patsubst $(SOURCEDIR)/%.c, $(BUILDDIR)/%.o,$(SOURCES:.c=.o))
 
 MAIN = kwindex
 

@@ -21,8 +21,8 @@ fi
 inputDir="$1"
 outputDir="$2"
 
-# Clear output directory
-if [ -f "$outputDir"/* ]; then 
+# Clear output directory if it is not empty
+if [ "$(ls -A $outputDir)" ]; then 
     rm "$outputDir"/*
 fi
 
@@ -57,4 +57,4 @@ pandoc -s -o index.html index.md
 # Clean up
 rm ./*.md
 
-
+exit 0

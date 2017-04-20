@@ -18,6 +18,7 @@ github
 *.log
 *.mix
 *.mp3
+*.o
 *.pdf
 *.png
 *.pdf
