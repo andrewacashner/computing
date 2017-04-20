@@ -57,4 +57,6 @@ pandoc -s -o index.html index.md
 # Clean up
 rm ./*.md
 
+printf "New website created at $outputDir/index.html\n"
+
 exit 0
