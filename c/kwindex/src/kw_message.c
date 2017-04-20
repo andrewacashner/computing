@@ -5,9 +5,13 @@
 #include "kw_message.h"
 
 const char *message[] = {
-    /* TODO: Supply real messages */
-    "Help message.",
-    "Version message.",
+    "Usage: kwindex [-h -v] [-o <OUTPUT_FILE>] [INPUT FILES]\n"
+        "\v-h\t Display help message and exit\n"
+        "-v\t Display version information and exit\n"
+        "-o\t Specify <OUTPUT_FILE> as output filename\n",
+
+    "kwindex -- Version 0.1 by Andrew A. Cashner, 2017\n",
+
     "No input file specified.",
     "Could not open file for reading.",
     "Could not open file for writing.",

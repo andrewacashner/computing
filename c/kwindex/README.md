@@ -46,4 +46,6 @@ you want to run it by itself, call it like this:
 
     ./kwindex -o [OUTPUT_DIR] [INPUT_FILES]
 
+## Compiling
 
+Just the command `make` will compile `kwindex.cx` from the source files.
