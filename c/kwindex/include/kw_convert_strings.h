@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
 #include <assert.h>
 
 #define MAX_STR 12*12
@@ -22,6 +23,6 @@ extern void convert_sort_format(char*, char*);
 /* Convert filename into desired format for index file */
 extern void convert_filename_format(char*, char*);
 
-#endif
+#endif /* KW_CONVERT_STRINGS_H */
 
 

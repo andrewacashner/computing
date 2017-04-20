@@ -9,12 +9,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-/* Exit program successfully after displaying message (e.g., help) */
-extern void quit_msg(int);
-
-/* Exit program with error code and message (e.g., file read error) */
-extern void quit_error_msg(int, char[]);
-
 enum { 
     HELP,
     VERSION,
@@ -35,4 +29,10 @@ const char *message[] = {
     "No keywords found."
 };
 
-#endif
+/* Exit program successfully after displaying message (e.g., help) */
+extern void quit_msg(int);
+
+/* Exit program with error code and message (e.g., file read error) */
+extern void quit_error_msg(int, char[]);
+
+#endif /* KW_MESSAGE_H */

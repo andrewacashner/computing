@@ -55,11 +55,14 @@
  */
 
 /* TODO
- * Keep track of more data: e.g. filename from which keywords came for indexing
  * Do locale-based sorting (handle UTF-8 accents)
  * Too many void functions?
  * Separate modules with headers
  */
+
+#include "kw_message.h"
+#include "kw_convert_strings.h"
+#include "kw_list.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,10 +72,10 @@
 #include <ctype.h>
 #include <getopt.h>
 
-#include "include/kw_message.h"
-#include "include/kw_convert_strings.h"
-#include "include/kw_message.c"
-#include "include/kw_convert_strings.c"
+#include "kw_message.c"
+#include "kw_convert_strings.c"
+#include "kw_list.c"
+
 
 /* DEBUGGING */
 #ifdef DEBUG
@@ -80,6 +83,7 @@
 #else
 #define DEBUG_PRINT(x) {};
 #endif
+
 /* CONSTANTS, LOOKUP TABLES */
 #define MAX_STR 12*12
 #define MAX_LINE MAX_STR*12
@@ -91,26 +95,10 @@ const char *keyword_delimiter   = ";",
       *filegroup_delimiter      = "|",
       *header_string            = "# Keywords";
 
-/* GLOBAL DATA STRUCTURES */
-/* Node for singly-linked list of index data */
-typedef struct node *node_ptr;
-struct node {
-    char word[MAX_STR],         /* Keyword for index */
-         sort_word[MAX_STR],    /* Version of word for sort order */
-         filename[MAX_LINE];    /* Source of keyword */
-    node_ptr next;              /* Address of next node in list */
-} node;
-
 /* FUNCTION PROTOTYPES */
 int find_keywords(FILE*, char*, FILE*);
 node_ptr create_index(FILE*, FILE*);
-node_ptr list_create_node(char*, char*);
-node_ptr list_insert_sorted(node_ptr, char*, char*);
-void list_insert_duplicate(node_ptr, node_ptr);
 void index_file_print(FILE*, node_ptr);
-void list_print(FILE*, node_ptr);
-void list_delete(node_ptr);
-
 
 /* MAIN */
 int main(int argc, char *argv[]) {
@@ -186,8 +174,6 @@ int main(int argc, char *argv[]) {
 /************************************
  * FUNCTIONS 
  ************************************/
-
-/* PARSING AND INDEXING FUNCTIONS */
 
 /* FUNCTION find_keywords 
  * For the given input file, search for a section of keywords
@@ -299,95 +285,6 @@ node_ptr create_index(FILE *outfile, FILE *auxfile) {
 }
 
 
-/* FUNCTION list_create_node
- * Create a new node (allocating necessary memory) for linked list using given
- * data
- * RETURN address of node in node_ptr
- */
-node_ptr list_create_node(char *keyword, char *sourcefile) {
-    node_ptr new_node = (node_ptr)malloc(sizeof(node));
-    char format_sort_word[MAX_STR] = "";
-    
-    strcpy(new_node->word, keyword);
-
-    convert_sort_format(format_sort_word, keyword);
-    strcpy(new_node->sort_word, format_sort_word);
-    
-    strcpy(new_node->filename, sourcefile);
-    
-    new_node->next = NULL;
-  
-    return(new_node);
-}
-
-/* FUNCTION list_insert_sorted
- * Insert a new node in correct sort order into a linked list
- * Create a new linked list if necessary
- * RETURN node_ptr containing address of head of sorted list
- */
-node_ptr list_insert_sorted(node_ptr head, char *keyword, char *sourcefile) {
-    int strtest = 0;
-    bool found = false;
-    node_ptr list = NULL,
-             new_node = list_create_node(keyword, sourcefile);
-
-    /* Start new list from new node if head is empty */
-    if (head == NULL) {
-        return(new_node);
-    } 
-    strtest = strcmp(new_node->sort_word, head->sort_word);
-    if (strtest == 0) {
-        /* If new keyword is already in index, add filename to existing index
-         * node and free unused new_node */
-        list_insert_duplicate(head, new_node);
-    } else if (strtest < 0) {
-        /* If new_node goes at beginning of list,
-         * connect it to list and return new_node as the head */
-        new_node->next = head;
-        return(new_node);
-    } else {
-        /* Otherwise find insertion point and insert */
-        /* TODO find a way to avoid duplicating code here */
-        for (list = head; list->next != NULL; list = list->next) {
-            
-            strtest = strcmp(new_node->sort_word, list->next->sort_word);
-            if (strtest == 0) {
-                /* Duplicate found */ 
-                list_insert_duplicate(list, new_node);
-                break;
-            
-            } else if (strtest < 0) {
-                /* Insertion point found, insert new_node here */
-                new_node->next = list->next;
-                list->next = new_node;
-                found = true;
-                break;
-            }
-        }
-        if (found == false) {
-            /* No insertion point found, so append to list */
-            list->next = new_node;
-        }
-    }
-    return(head);
-}
-
-/* FUNCTION list_insert_duplicate
- * When a duplicate keyword is found, we do not need to add a new node to the
- * list; we just need to add a new filename to the filename field of the current
- * node, then we can free the unused new node that was created
- * RETURN void
- */
-void list_insert_duplicate(node_ptr match_node, node_ptr new_node) {
-    assert(match_node != NULL && new_node != NULL);
-  
-    strcat(match_node->filename, ", ");
-    strcat(match_node->filename, new_node->filename);
-    free(new_node); 
-    return;
-}
-
-
 /* FUNCTION index_file_print
  * Print the index file with table format
  * Print header and footer, and call list_print to print the internal contents
@@ -404,32 +301,4 @@ void index_file_print(FILE *outfile, node_ptr list) {
     }
     return;
 }
-
-/* FUNCTION list_print
- * Print the data from the index linked-list in order, in specified format, to
- * given output file;
- * Recursive function
- * RETURN void
- */
-void list_print(FILE *outfile, node_ptr list) {
-    if (list != NULL) {
-        fprintf(outfile, "%-20s  %s\n", list->word, list->filename);
-        list_print(outfile, list->next);
-    }
-    return;
-}
-
-/* FUNCTION list_delete
- * Free the memory used for the linked-list index;
- * Using recursive call to access all list elements
- * RETURN void
- */
-void list_delete(node_ptr list) {
-    if (list != NULL) {
-        list_delete(list->next);
-    }
-    free(list);
-    return;
-}
-
 
