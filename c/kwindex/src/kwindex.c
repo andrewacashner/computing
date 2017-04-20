@@ -55,9 +55,9 @@
  */
 
 /* TODO
- * Do locale-based sorting (handle UTF-8 accents)
+ * Do locale-based sorting (can't currently handle UTF-8 accents properly)
  * Too many void functions?
- * Separate modules with headers
+ * Separate more modules with headers
  */
 
 #include "kw_max_sizes.h"
@@ -231,7 +231,6 @@ int find_keywords(FILE *infile, char *infile_name, FILE *auxfile) {
  * Read the filenames and keywords from the auxiliary file
  * enter them in sorted order into a linked list.
  * RETURN: Linked list in sorted order
- * TODO doesn't work, fix strtok for keywords?
  */
 node_ptr create_index(FILE *outfile, FILE *auxfile) {
     char line[MAX_LINE] = "",

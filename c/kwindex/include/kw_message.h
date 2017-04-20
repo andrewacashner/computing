@@ -19,9 +19,6 @@ enum {
     MAX_MSG
 } message_codes;
 
-/* Message strings */ /* TODO multiple definition */
-/*extern const char *message[MAX_MSG];*/
-
 /* Exit program successfully after displaying message (e.g., help) */
 extern void quit_msg(int);
 
