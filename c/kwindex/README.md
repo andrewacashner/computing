@@ -1,4 +1,4 @@
-# notes2web
+# `notes2web`
 
 - A shell script that takes a set of files written in Markdown, and convert them
   into a complete website (tree of linked HTML pages).
@@ -10,7 +10,7 @@
 
     sh notes2web.sh [INPUT_DIRECTORY] [OUTPUT_DIRECTORY]
 
-# kwindex
+# `kwindex`
 
 - Takes one or more Markdown files, searches them for a section of keywords, and
   then extracts the keywords and the filenames and creates an alphabetized index
@@ -19,25 +19,25 @@
   preceded with the heading line `# Keywords`, and the keywords are separated by
   semicolons. 
 
-    ``` 
-    # Keywords
+``` 
+# Keywords
 
-    one; two; three, four
-    ``` 
+one; two; three, four
+``` 
 
 - `kwindex` will take this input file and produce this output file. Note that it
   changes the file extensions to what `notes2web` will generate (html, not md).
 
-   ```
-   # Index of Keywords
+```
+# Index of Keywords
 
-   ---------- ---------
-   four       [input1](input1.html)
-   one        [input1](input1.html)
-   three      [input1](input1.html)
-   two        [input1](input1.html)
-   ---------- ---------
-   ```
+---------- ---------
+four       [input1](input1.html)
+one        [input1](input1.html)
+three      [input1](input1.html)
+two        [input1](input1.html)
+---------- ---------
+```
 
 ## Usage
 
