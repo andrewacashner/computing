@@ -10,7 +10,7 @@
 
 set -e
 
-usage="USAGE: mdmake.sh input output"
+usage="USAGE: notes2web.sh [INPUT] [OUTPUT]"
 
 # Ensure that there are two arguments for input and output directory
 if [ $# -lt 2 ] ; then 
