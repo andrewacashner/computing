@@ -78,6 +78,7 @@
 
 /* DEFAULT VALUES */
 char *default_outfile_name      = "kwindex.md";
+/* Character delimieters used in find_keywords & create_index functions */
 const char *keyword_delimiter   = ";",
       *filename_delimiter       = ":",
       *filegroup_delimiter      = "|",
@@ -99,6 +100,8 @@ int main(int argc, char *argv[]) {
     char *outfile_name = default_outfile_name, 
          *infile_name = NULL;
     node_ptr index = NULL;
+
+    setlocale(LC_ALL, "");
 
     /* Process command-line arguments */
     while ((c = getopt(argc, argv, "hvo:")) != -1) {
@@ -167,10 +170,10 @@ int main(int argc, char *argv[]) {
  * For the given input file, search for a section of keywords
  * and write them to auxiliary file as follows:
  *   filename1:
- *   keyword1; keyword2; keyword3;
+ *   keyword1; keyword2; keyword3;|
  *
  *   filename2:
- *   keyword4; keyword5
+ *   keyword4; keyword5|
  *
  * We have ensured the files are open and valid, and we will close them
  * elsewhere.
@@ -230,18 +233,19 @@ int find_keywords(FILE *infile, char *infile_name, FILE *auxfile) {
 node_ptr create_index(FILE *outfile, FILE *auxfile) {
     char line[MAX_LINE] = "",
          filename[MAX_STR] = "",
-         format_filename[MAX_STR] = "",
+         format_filename[MAX_STR] = "", 
          keyword_group[MAX_STR] = "",
          keyword[MAX_STR] = "";
     char *search_ptr = NULL;
-    node_ptr index = NULL;
+    node_ptr new_node = NULL, 
+             index = NULL;
 
     assert(outfile != NULL && auxfile != NULL);
     rewind(auxfile);
 
-    /* Find keywords separated by keyword_delimiter and enter them into index
-     * linked list in sorted order
-     */
+    /* Find filenames and keywords and create an unsorted linked list of nodes
+     * containing these data. */
+
     while (fgets(line, sizeof(line), auxfile) != NULL) {
         /* Find filename in format "%s:" */
         strcpy(filename, strtok(line, filename_delimiter));
@@ -251,22 +255,24 @@ node_ptr create_index(FILE *outfile, FILE *auxfile) {
         if (fgets(line, sizeof(line), auxfile) != NULL) {
 
             /* Find group of keywords after filename in format "%s|" */
-            strcpy(keyword_group, strtok(line, filegroup_delimiter)); 
+            strcpy(keyword_group, strtok(line, filegroup_delimiter));
 
-            /* Find individual keywords within that group in format "%s;" */
+            /* Find individiual keywords within that group in format "%s;" */
             search_ptr = strtok(keyword_group, keyword_delimiter);
             while (search_ptr != NULL) {
-                
-                /* Insert this keyword, minus initial whitespace, and this
-                 * filename into index */
+
+                /* Create a new node with this keyword, minus initial
+                 * whitespace, and this formatted filename; insert unsorted into
+                 * index */
                 search_ptr = convert_trim_whitespace(search_ptr);
                 strcpy(keyword, search_ptr);
-                index = list_insert_sorted(index, keyword, format_filename);
-                
+                new_node = list_create_node(keyword, format_filename);
+                index = list_append(index, new_node);
+
                 /* Find next keyword */
                 search_ptr = strtok(NULL, keyword_delimiter);
-            } 
-        } 
+            }
+        }
     }
     return(index);
 }
@@ -280,11 +286,8 @@ node_ptr create_index(FILE *outfile, FILE *auxfile) {
  */
 void index_file_print(FILE *outfile, node_ptr list) {
     if (list != NULL) {
-        fprintf(outfile, "# Index of Keywords\n\n"
-                "--------------------  --------------------\n");
+        fprintf(outfile, "# Index of Keywords\n\n");
         list_print(outfile, list);
-        fprintf(outfile, 
-                "--------------------  --------------------\n");
     }
     return;
 }

@@ -143,10 +143,13 @@ node_ptr list_append(node_ptr head, node_ptr new_node) {
  * given output file;
  * Recursive function
  * RETURN void
+ * TODO If you want to do a table format, the fprintf format width specifier
+ * (%-20s) does not work with accented characters; to fix that requires major
+ * changes; so let's stick with a simple list
  */
 void list_print(FILE *outfile, node_ptr list) {
     if (list != NULL) {
-        fprintf(outfile, "%-20s  %s\n", list->word, list->filename);
+        fprintf(outfile, "| %s %s\n", list->word, list->filename);
         list_print(outfile, list->next);
     }
     return;

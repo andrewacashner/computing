@@ -57,31 +57,25 @@ void convert_sort_format(char *format_word, char *orig_word) {
  * RETURN void 
  */
 void convert_filename_format(char *format_filename, char *orig_filename) {
-    char tmp_str[MAX_STR] = "",
-         basename[MAX_STR] = "";
-    char *basename_ptr = NULL,
-         *file_ext_ptr = NULL;
+    char basename[MAX_STR] = "";
+    char *str_ptr = NULL;
 
     assert(format_filename != NULL && orig_filename != NULL);
 
-    strcpy(tmp_str, orig_filename);
-
     /* Strip off directory path: Move pointer to just past the last '/' in string;
      * if not found (strrchr returns NULL pointer), then use the whole string */
-    basename_ptr = strrchr(tmp_str, '/');
-    if (basename_ptr != NULL) {
-        ++basename_ptr;
-        strcpy(basename, basename_ptr);
-    } else {
-        strcpy(basename, tmp_str);
-    }
+    str_ptr = strrchr(orig_filename, '/');
+    if (str_ptr != NULL) {
+        ++str_ptr;
+        strcpy(basename, str_ptr);
+    } 
    
     /* Strip suffix: Move pointer to start of file extension and if found,
      * replace the character at that position with the end-of-string '\0'
      * character */
-    file_ext_ptr = strstr(basename, ".md");
-    if (file_ext_ptr != NULL) {
-        *file_ext_ptr = '\0'; 
+    str_ptr = strstr(basename, ".md");
+    if (str_ptr != NULL) {
+        *str_ptr = '\0'; 
     }
 
     /* Write the format_filename string in the proper format */
