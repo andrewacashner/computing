@@ -28,13 +28,6 @@ struct node {
 /* Create a new node with given data */
 extern node_ptr list_create_node(char*, char*);
 
-/* Insert existing new node into list in sorted order */
-extern node_ptr list_insert_sorted(node_ptr, char*, char*);
-
-/* Add only select data (filename) from new node to existing node when one field
- * (sort_word) is a duplicate; free the memory for the unused new node  */
-extern node_ptr list_insert_duplicate(node_ptr, node_ptr);
-
 /* Determine which of two nodes should go first in sorted order 
  * Returns 0 if equal, <0 if new_node goes before next_node */
 extern int compare_nodes(node_ptr, node_ptr);
