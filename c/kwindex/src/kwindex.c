@@ -74,10 +74,13 @@
 #include <ctype.h>
 #include <getopt.h>
 #include <locale.h>
+#include <sqlite3.h>
 
 
 /* DEFAULT VALUES */
 char *default_outfile_name      = "kwindex.md";
+char *default_db_name           = "kwindex.db";
+
 /* Character delimieters used in find_keywords & create_index functions */
 const char *keyword_delimiter   = ";",
       *filename_delimiter       = ":",
@@ -93,13 +96,15 @@ void index_file_print(FILE*, node_ptr);
 int main(int argc, char *argv[]) {
 
     int c = 0,
-        keyword_lines = 0;
+        keyword_lines = 0,
+        sql_test = 0;
     FILE *outfile = NULL, 
          *auxfile = NULL,
          *infile = NULL;
     char *outfile_name = default_outfile_name, 
          *infile_name = NULL;
     node_ptr index = NULL;
+    sqlite3 *db = NULL;
 
     setlocale(LC_ALL, "");
 
@@ -153,10 +158,26 @@ int main(int argc, char *argv[]) {
         quit_error_msg(NO_KEYWORDS_FOUND, NULL);
     }
     index = create_index(outfile, auxfile);
+   
+    sql_test = sqlite3_open(default_db_name, &db);
+    if (sql_test != 0) {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        exit(EXIT_FAILURE);
+    }
+/*    sql_test = sqlite3_exec(db, index, db_insert, 0, &zErrMsg);
+    if (sql_test != SQLITE_OK) {
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    }
+*/
+
+    
     index_file_print(outfile, index);
 
     /* Clean up */
     list_delete(index); 
+    sqlite3_close(db);
     fclose(outfile);
     fclose(auxfile);
     return (0);

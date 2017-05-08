@@ -4,12 +4,13 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -ansi
 
-DEBUG ?= 1
-ifeq ($(DEBUG), 1)
+DEBUG ?= 0 
+ifeq ($(DEBUG), 0)
     CFLAGS += -g -DDEBUG
 endif
 
-# LFLAGS
+LFLAGS = -lsqlite3 -lpthread -ldl
+
 # LIBS
 
 TARGET = kwindex.cx
@@ -17,7 +18,7 @@ TARGET = kwindex.cx
 INCLUDEDIR = include
 SOURCEDIR = src
 
-INCLUDES = -I$(INCLUDEDIR)
+INCLUDES = -I$(INCLUDEDIR) 
 SOURCES = $(wildcard $(SOURCEDIR)/*.c)
 
 OBJECTS = $(patsubst $(SOURCEDIR)/%.c, $(BUILDDIR)/%.o,$(SOURCES:.c=.o))
