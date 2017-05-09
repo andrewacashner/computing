@@ -1,0 +1,20 @@
+# Convert Markdown to PDF (using LaTeX internally); including bibliography
+# Set bibliography and style in YAML block in the file
+
+pandoc --filter pandoc-citeproc -o file.pdf file.md
+
+# Convert Markdown to HTML with smart typography (quotes, dashes) and
+# bibliography; make standalone web page
+
+pandoc --filter pandoc-citeproc -S -s -o file.html file.md
+
+## Convert Markdown to MS Word docx with smart typography and biblio
+
+pandoc --filter pandoc-citeproc -S -o file.docx file.md
+
+## Add variables to -o pdf command for LaTeX formatting:
+## or specify these in YAML block in file
+
+pandoc --filter pandoc-citeproc -o file.pdf -V geometry:margin=1in \ 
+-V fontsize:12pt -V fontfamily:libertine file.md
+
