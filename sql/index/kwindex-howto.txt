@@ -1,0 +1,16 @@
+$ sqlite3 keywords.db
+> CREATE TABLE keywords (word, file);
+> INSERT INTO keywords VALUES ('one', '[file1](file1.html)'),
+                              ('two', '[file2](file2.html)'),
+                              ('one', '[file2](file2.html)'),
+                              ('three', '[file0](file0.html)'),
+                              ('one', '[file0](file0.html)');
+> .mode column
+> .width 20 80
+> SELECT word, GROUP_CONCAT(file, ', ') 
+     FROM (SELECT word, file FROM keywords ORDER BY file)
+     GROUP BY word;
+
+one                   [file0](file0.html), [file1](file1.html), [file2](file2.html)                   
+three                 [file0](file0.html)                                                             
+two                   [file2](file2.html)
