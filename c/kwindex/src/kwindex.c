@@ -97,14 +97,25 @@ int main(int argc, char *argv[]) {
 
     int c = 0,
         keyword_lines = 0,
-        sql_test = 0;
+        sql_test = 0,
+        i = 0;
     FILE *outfile = NULL, 
          *auxfile = NULL,
          *infile = NULL;
     char *outfile_name = default_outfile_name, 
          *infile_name = NULL;
     node_ptr index = NULL;
+
     sqlite3 *db = NULL;
+    char *sql_string[] = {
+        "CREATE TABLE keywords (word, file)",
+
+        "SELECT word, GROUP_CONCAT(file) "
+            "FROM (SELECT word, file FROM keywords ORDER BY file) GROUP BY word"
+    };
+    char *sql_string_ptr = sql_string[0];
+    const char *sql_tail_ptr = NULL;
+    sqlite3_stmt *sql_statement = NULL;
 
     setlocale(LC_ALL, "");
 
@@ -165,13 +176,30 @@ int main(int argc, char *argv[]) {
         sqlite3_close(db);
         exit(EXIT_FAILURE);
     }
-/*    sql_test = sqlite3_exec(db, index, db_insert, 0, &zErrMsg);
-    if (sql_test != SQLITE_OK) {
-        fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-    }
-*/
 
+    for (i = 0; i < 2; ++i) {
+
+        sql_test = sqlite3_prepare_v2(db, sql_string[i], -1, &sql_statement, &sql_tail_ptr);
+        if (sql_test != SQLITE_OK) {
+            fprintf(stderr, "SQL prepare error\n");
+        }
+
+        sql_test = sqlite3_step(sql_statement);
+        if (sql_test == SQLITE_DONE) {
+            printf("Just did this: %s\n", sql_string[i]);
+        } else {
+            fprintf(stderr, "SQL step error\n");
+        }
+        sql_test = sqlite3_reset(sql_statement);
+        if (sql_test != SQLITE_OK) {
+            fprintf(stderr, "SQL reset error\n");
+        }
+    }
+
+    sql_test = sqlite3_finalize(sql_statement);
+    if (sql_test != SQLITE_OK) {
+        fprintf(stderr, "SQL finalize error\n");
+    }
     
     index_file_print(outfile, index);
 
