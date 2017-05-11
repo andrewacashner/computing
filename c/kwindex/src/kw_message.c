@@ -46,4 +46,22 @@ void quit_error_msg(int message_code, char detail_msg[]) {
     exit(EXIT_FAILURE);
 }
 
+/* FUNCTION error_msg 
+ * Print a message to stderr but don't quit.
+ * RETURN void
+ */
+void error_msg(int message_code, char detail_msg[]) {
+    assert(message_code >= 0 && message_code < MAX_MSG);
+    if (detail_msg != NULL) {
+        /* TODO: redo with varargs? 
+         * e.g., to allow error message like "Could not open %s for reading"
+         */
+        fprintf(stderr, "%s (%s)\n", message[message_code], detail_msg);
+    } else {
+        fprintf(stderr, "%s\n", message[message_code]);
+    }
+    return;
+}
+
+
 

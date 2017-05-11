@@ -9,9 +9,8 @@ ifeq ($(DEBUG), 0)
     CFLAGS += -g -DDEBUG
 endif
 
-LFLAGS = -lsqlite3 -lpthread -ldl
-
-# LIBS
+LFLAGS = -lsqlite3 -lpthread -ldl 
+# -DSQLITE_ENABLE_ICU -L/usr/local/lib/ -lSqliteIcu
 
 TARGET = kwindex.cx
 
@@ -31,7 +30,7 @@ all: $(MAIN)
 	@echo Compiled $(TARGET)
 
 $(MAIN): $(OBJECTS)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJECTS) $(LFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJECTS) $(LFLAGS) 
 
 .c.o:
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@

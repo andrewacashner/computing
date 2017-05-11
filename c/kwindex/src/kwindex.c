@@ -56,8 +56,8 @@
 
 /* TODO
  * Do locale-based sorting (can't currently handle UTF-8 accents properly)
- * Too many void functions?
- * Separate more modules with headers
+ * Encapsulate SQL functions
+ * Specify output directory
  */
 
 #include "kw_debug_print.h"
@@ -87,34 +87,49 @@ const char *keyword_delimiter   = ";",
       *filegroup_delimiter      = "|",
       *header_string            = "# Keywords";
 
+const char *sql_string[] = {
+/*         "SELECT icu_load_collation('en_EN', 'english')", */
+        "CREATE TABLE IF NOT EXISTS keywords (word, file, PRIMARY KEY (word, file))", 
+        "INSERT OR IGNORE INTO keywords (word, file) VALUES (?1, ?2)",
+        "SELECT word, GROUP_CONCAT(file, ', ')" 
+            "FROM (SELECT word, file FROM keywords ORDER BY file) GROUP BY word" 
+            /* "COLLATE english" */
+    };
+enum { 
+/*    KW_SQL_SETUP_COLLATION, */
+    KW_SQL_CREATE_TABLE,
+    KW_SQL_INSERT,
+    KW_SQL_SELECT_KEYWORDS,
+    KW_SQL_MAX
+} kw_sql_string_code;
+enum {
+    KW_SQL_TEST_GOOD,
+    KW_SQL_TEST_BAD
+} kw_sql_error_code;
+
+#define SQL_TEST(ERRCODE)  { sql_test = kw_sql_test(sql_test, ERRCODE, db); }
+
 /* FUNCTION PROTOTYPES */
 int find_keywords(FILE*, char*, FILE*);
-node_ptr create_index(FILE*, FILE*);
+node_ptr create_index(FILE*);
 void index_file_print(FILE*, node_ptr);
+int kw_sql_test(int, int, sqlite3*);
 
 /* MAIN */
 int main(int argc, char *argv[]) {
 
     int c = 0,
         keyword_lines = 0,
-        sql_test = 0,
-        i = 0;
+        sql_test = 0;
     FILE *outfile = NULL, 
          *auxfile = NULL,
          *infile = NULL;
     char *outfile_name = default_outfile_name, 
          *infile_name = NULL;
-    node_ptr index = NULL;
+    node_ptr index = NULL,
+             list = NULL;
 
     sqlite3 *db = NULL;
-    char *sql_string[] = {
-        "CREATE TABLE keywords (word, file)",
-
-        "SELECT word, GROUP_CONCAT(file) "
-            "FROM (SELECT word, file FROM keywords ORDER BY file) GROUP BY word"
-    };
-    char *sql_string_ptr = sql_string[0];
-    const char *sql_tail_ptr = NULL;
     sqlite3_stmt *sql_statement = NULL;
 
     setlocale(LC_ALL, "");
@@ -140,7 +155,7 @@ int main(int argc, char *argv[]) {
     } 
 
     /* Open and check specified or default output file */
-    outfile = fopen(outfile_name, "w");
+    outfile = fopen(outfile_name, "w+");
     if (outfile == NULL) {
         quit_error_msg(WRITE_FILE_OPEN_FAILURE, outfile_name);
     }
@@ -166,10 +181,12 @@ int main(int argc, char *argv[]) {
     } 
 
     if (keyword_lines == 0) {
-        quit_error_msg(NO_KEYWORDS_FOUND, NULL);
+        error_msg(NO_KEYWORDS_FOUND, NULL);
+        goto cleanup;
     }
-    index = create_index(outfile, auxfile);
-   
+    index = create_index(auxfile);
+  
+    /* create db */
     sql_test = sqlite3_open(default_db_name, &db);
     if (sql_test != 0) {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -177,33 +194,56 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    for (i = 0; i < 2; ++i) {
+    /* set up unicode sorting */
+/*
+    sql_test = sqlite3_prepare_v2(db, sql_string[KW_SQL_SETUP_COLLATION], -1, &sql_statement, NULL);
+    SQL_TEST(SQLITE_OK);
+    sql_test = sqlite3_step(sql_statement);
+    SQL_TEST(SQLITE_DONE);
+    sql_test = sqlite3_reset(sql_statement);
+    SQL_TEST(SQLITE_OK);
+*/
+    /* create table */
+    sql_test = sqlite3_prepare_v2(db, sql_string[KW_SQL_CREATE_TABLE], -1, &sql_statement, NULL);
+    SQL_TEST(SQLITE_OK);
+    sql_test = sqlite3_step(sql_statement);
+    SQL_TEST(SQLITE_DONE);
+    sql_test = sqlite3_reset(sql_statement);
+    SQL_TEST(SQLITE_OK);
 
-        sql_test = sqlite3_prepare_v2(db, sql_string[i], -1, &sql_statement, &sql_tail_ptr);
-        if (sql_test != SQLITE_OK) {
-            fprintf(stderr, "SQL prepare error\n");
-        }
-
+    /* insert values */
+    for (list = index; list != NULL; list = list->next) {
+        sql_test = sqlite3_prepare_v2(db, sql_string[KW_SQL_INSERT], -1, &sql_statement, NULL);
+        SQL_TEST(SQLITE_OK);
+        sql_test = sqlite3_bind_text(sql_statement, 1, list->word, -1, SQLITE_STATIC);
+        SQL_TEST(SQLITE_OK);
+        sql_test = sqlite3_bind_text(sql_statement, 2, list->filename, -1, SQLITE_STATIC);
+        SQL_TEST(SQLITE_OK);
         sql_test = sqlite3_step(sql_statement);
-        if (sql_test == SQLITE_DONE) {
-            printf("Just did this: %s\n", sql_string[i]);
-        } else {
-            fprintf(stderr, "SQL step error\n");
-        }
+        SQL_TEST(SQLITE_DONE);
         sql_test = sqlite3_reset(sql_statement);
-        if (sql_test != SQLITE_OK) {
-            fprintf(stderr, "SQL reset error\n");
-        }
+        SQL_TEST(SQLITE_OK);
     }
 
-    sql_test = sqlite3_finalize(sql_statement);
-    if (sql_test != SQLITE_OK) {
-        fprintf(stderr, "SQL finalize error\n");
+    /* Print output */
+    fprintf(outfile, "# Index of Keywords\n\n");
+
+    sql_test = sqlite3_prepare_v2(db, sql_string[KW_SQL_SELECT_KEYWORDS], -1, &sql_statement, NULL); 
+    SQL_TEST(SQLITE_OK);
+    while ((sql_test = sqlite3_step(sql_statement)) == SQLITE_ROW) {
+        fprintf(outfile, "| %s %s\n", 
+                sqlite3_column_text(sql_statement, 0),
+                sqlite3_column_text(sql_statement, 1));
     }
+    sql_test = sqlite3_reset(sql_statement);
+    SQL_TEST(SQLITE_OK);
     
-    index_file_print(outfile, index);
+    /* finish with SQL */ 
+    sql_test = sqlite3_finalize(sql_statement);
+    SQL_TEST(SQLITE_OK);
 
     /* Clean up */
+cleanup:
     list_delete(index); 
     sqlite3_close(db);
     fclose(outfile);
@@ -279,7 +319,7 @@ int find_keywords(FILE *infile, char *infile_name, FILE *auxfile) {
  * enter them in sorted order into a linked list.
  * RETURN: Linked list in sorted order
  */
-node_ptr create_index(FILE *outfile, FILE *auxfile) {
+node_ptr create_index(FILE *auxfile) {
     char line[MAX_LINE] = "",
          filename[MAX_STR] = "",
          format_filename[MAX_STR] = "", 
@@ -289,7 +329,7 @@ node_ptr create_index(FILE *outfile, FILE *auxfile) {
     node_ptr new_node = NULL, 
              index = NULL;
 
-    assert(outfile != NULL && auxfile != NULL);
+    assert(auxfile != NULL);
     rewind(auxfile);
 
     /* Find filenames and keywords and create an unsorted linked list of nodes
@@ -340,4 +380,17 @@ void index_file_print(FILE *outfile, node_ptr list) {
     }
     return;
 }
+
+int kw_sql_test(int test_value, int sql_desired_return, sqlite3 *db) {
+    int result = 0;
+    if (test_value != sql_desired_return) {
+        fprintf(stderr, "%s\n", sqlite3_errmsg(db));
+        result = KW_SQL_TEST_BAD;
+    } else {
+        result = KW_SQL_TEST_GOOD;
+    }
+    return(result);
+}
+
+
 

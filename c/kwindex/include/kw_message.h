@@ -27,4 +27,7 @@ extern void quit_msg(int);
 /* Exit program with error code and message (e.g., file read error) */
 extern void quit_error_msg(int, char[]);
 
+/* Just print error message but don't quit */
+extern void error_msg(int, char[]);
+
 #endif /* KW_MESSAGE_H */
