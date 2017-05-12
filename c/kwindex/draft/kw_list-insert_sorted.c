@@ -5,6 +5,7 @@ extern node_ptr list_insert_sorted(node_ptr, char*, char*);
 /* Add only select data (filename) from new node to existing node when one field
  * (sort_word) is a duplicate; free the memory for the unused new node  */
 extern node_ptr list_insert_duplicate(node_ptr, node_ptr);
+/* TODO + header declarations for compare_nodes and list_print */
 
 /* module*/
 /* FUNCTION list_insert_sorted
@@ -83,5 +84,41 @@ node_ptr list_insert_duplicate(node_ptr match_node, node_ptr new_node) {
     return(match_node);
 }
 
+
+/* FUNCTION compare_nodes
+ * Determine which of two given nodes should go first in sorted order
+ * Implemented using strcmp on the sort_word of each node
+ * RETURN value of strcmp: 0 if equal, <0 if new_node < next_node
+ */
+int compare_nodes(node_ptr next_node, node_ptr new_node) {
+    int strtest = 0;
+    
+    assert(new_node != NULL && next_node != NULL);
+    setlocale(LC_COLLATE, "");
+    
+    strtest = strcoll(new_node->sort_word, next_node->sort_word);
+    DEBUG_PRINT(("compare_nodes new '%s' vs next '%s': result %d\n", 
+                new_node->sort_word, next_node->sort_word, strtest));
+
+    return(strtest);
+}
+
+
+/* FUNCTION list_print
+ * Print the data from the index linked-list in order, in specified format, to
+ * given output file;
+ * Recursive function
+ * RETURN void
+ * TODO If you want to do a table format, the fprintf format width specifier
+ * (%-20s) does not work with accented characters; to fix that requires major
+ * changes; so let's stick with a simple list
+ */
+void list_print(FILE *outfile, node_ptr list) {
+    if (list != NULL) {
+        fprintf(outfile, "| %s %s\n", list->word, list->filename);
+        list_print(outfile, list->next);
+    }
+    return;
+}
 
 

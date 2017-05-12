@@ -81,7 +81,7 @@
 char *default_outfile_name      = "kwindex.md";
 char *default_db_name           = "kwindex.db";
 
-/* Character delimieters used in find_keywords & create_index functions */
+/* Character delimieters used in find_keywords & create_keyword_list functions */
 const char *keyword_delimiter   = ";",
       *filename_delimiter       = ":",
       *filegroup_delimiter      = "|",
@@ -111,24 +111,22 @@ enum {
 
 /* FUNCTION PROTOTYPES */
 int find_keywords(FILE*, char*, FILE*);
-node_ptr create_index(FILE*);
-void index_file_print(FILE*, node_ptr);
+node_ptr create_keyword_list(FILE*);
+int index_insert(sqlite3*, node_ptr, sqlite3_stmt*);
+int index_file_print(FILE*, sqlite3*, sqlite3_stmt*);
 int kw_sql_test(int, int, sqlite3*);
 
 /* MAIN */
 int main(int argc, char *argv[]) {
-
-    int c = 0,
-        keyword_lines = 0,
-        sql_test = 0;
     FILE *outfile = NULL, 
          *auxfile = NULL,
          *infile = NULL;
+    int c = 0,
+        keyword_lines = 0,
+        sql_test = 0;
     char *outfile_name = default_outfile_name, 
          *infile_name = NULL;
-    node_ptr index = NULL,
-             list = NULL;
-
+    node_ptr index = NULL;
     sqlite3 *db = NULL;
     sqlite3_stmt *sql_statement = NULL;
 
@@ -175,7 +173,8 @@ int main(int argc, char *argv[]) {
         infile = fopen(infile_name, "r");
         if (infile == NULL) {
             quit_error_msg(READ_FILE_OPEN_FAILURE, infile_name);
-        } 
+        }
+        /* Search input file for keywords and write them to auxfile */
         keyword_lines += find_keywords(infile, infile_name, auxfile);
         fclose(infile);
     } 
@@ -184,9 +183,11 @@ int main(int argc, char *argv[]) {
         error_msg(NO_KEYWORDS_FOUND, NULL);
         goto cleanup;
     }
-    index = create_index(auxfile);
+
+    /* Create linked list, unsorted, of keywords and filenames in auxfile */
+    index = create_keyword_list(auxfile);
   
-    /* create db */
+    /* Create sqlite database */
     sql_test = sqlite3_open(default_db_name, &db);
     if (sql_test != 0) {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -203,42 +204,28 @@ int main(int argc, char *argv[]) {
     sql_test = sqlite3_reset(sql_statement);
     SQL_TEST(SQLITE_OK);
 */
-    /* create table */
-    sql_test = sqlite3_prepare_v2(db, sql_string[KW_SQL_CREATE_TABLE], -1, &sql_statement, NULL);
+    /* Create keywords table in db */
+    sql_test = sqlite3_prepare_v2(db, 
+            sql_string[KW_SQL_CREATE_TABLE], -1, &sql_statement, NULL);
     SQL_TEST(SQLITE_OK);
     sql_test = sqlite3_step(sql_statement);
     SQL_TEST(SQLITE_DONE);
     sql_test = sqlite3_reset(sql_statement);
     SQL_TEST(SQLITE_OK);
 
-    /* insert values */
-    for (list = index; list != NULL; list = list->next) {
-        sql_test = sqlite3_prepare_v2(db, sql_string[KW_SQL_INSERT], -1, &sql_statement, NULL);
-        SQL_TEST(SQLITE_OK);
-        sql_test = sqlite3_bind_text(sql_statement, 1, list->word, -1, SQLITE_STATIC);
-        SQL_TEST(SQLITE_OK);
-        sql_test = sqlite3_bind_text(sql_statement, 2, list->filename, -1, SQLITE_STATIC);
-        SQL_TEST(SQLITE_OK);
-        sql_test = sqlite3_step(sql_statement);
-        SQL_TEST(SQLITE_DONE);
-        sql_test = sqlite3_reset(sql_statement);
-        SQL_TEST(SQLITE_OK);
+    /* Insert values from linked list into database */
+    sql_test = index_insert(db, index, sql_statement);
+    if (sql_test == 0) {
+        fprintf(stderr, "No new keywords inserted into database.\n");
     }
 
-    /* Print output */
-    fprintf(outfile, "# Index of Keywords\n\n");
-
-    sql_test = sqlite3_prepare_v2(db, sql_string[KW_SQL_SELECT_KEYWORDS], -1, &sql_statement, NULL); 
-    SQL_TEST(SQLITE_OK);
-    while ((sql_test = sqlite3_step(sql_statement)) == SQLITE_ROW) {
-        fprintf(outfile, "| %s %s\n", 
-                sqlite3_column_text(sql_statement, 0),
-                sqlite3_column_text(sql_statement, 1));
+    /* Print output in sorted order using SQLITE query */
+    sql_test = index_file_print(outfile, db, sql_statement);
+    if (sql_test == 0) {
+        fprintf(stderr, "No new keywords found in database to print.\n");
     }
-    sql_test = sqlite3_reset(sql_statement);
-    SQL_TEST(SQLITE_OK);
     
-    /* finish with SQL */ 
+    /* Finish with SQLITE */ 
     sql_test = sqlite3_finalize(sql_statement);
     SQL_TEST(SQLITE_OK);
 
@@ -248,7 +235,7 @@ cleanup:
     sqlite3_close(db);
     fclose(outfile);
     fclose(auxfile);
-    return (0);
+    return(0);
 }
 
 /************************************
@@ -313,13 +300,13 @@ int find_keywords(FILE *infile, char *infile_name, FILE *auxfile) {
     return(linecount);
 }
 
-/* FUNCTION create_index 
+/* FUNCTION create_keyword_list 
  * Make a sorted index from keywords in the aux file
  * Read the filenames and keywords from the auxiliary file
  * enter them in sorted order into a linked list.
  * RETURN: Linked list in sorted order
  */
-node_ptr create_index(FILE *auxfile) {
+node_ptr create_keyword_list(FILE *auxfile) {
     char line[MAX_LINE] = "",
          filename[MAX_STR] = "",
          format_filename[MAX_STR] = "", 
@@ -366,21 +353,66 @@ node_ptr create_index(FILE *auxfile) {
     return(index);
 }
 
-
-/* FUNCTION index_file_print
- * Print the index file with table format
- * Print header and footer, and call list_print to print the internal contents
- * recursively
- * RETURN void
+/* FUNCTION index_insert 
+ * Insert values from linked list into sqlite database
+ * RETURN number of keywords inserted
  */
-void index_file_print(FILE *outfile, node_ptr list) {
-    if (list != NULL) {
-        fprintf(outfile, "# Index of Keywords\n\n");
-        list_print(outfile, list);
+int index_insert(sqlite3 *db, node_ptr head, sqlite3_stmt *sql_statement) {
+    int sql_test = 0,
+        keywords = 0;
+    node_ptr list = NULL;
+
+    for (list = head; list != NULL; list = list->next) {
+        sql_test = sqlite3_prepare_v2(db, 
+                sql_string[KW_SQL_INSERT], -1, &sql_statement, NULL);
+        SQL_TEST(SQLITE_OK);
+        sql_test = sqlite3_bind_text(sql_statement, 1, list->word, -1, SQLITE_STATIC);
+        SQL_TEST(SQLITE_OK);
+        sql_test = sqlite3_bind_text(sql_statement, 2, list->filename, -1, SQLITE_STATIC);
+        SQL_TEST(SQLITE_OK);
+        sql_test = sqlite3_step(sql_statement);
+        SQL_TEST(SQLITE_DONE);
+        sql_test = sqlite3_reset(sql_statement);
+        SQL_TEST(SQLITE_OK);
+        ++keywords;
     }
-    return;
+
+    return(keywords);
 }
 
+
+
+/* FUNCTION index_file_print
+ * Print the index file with table format using SQLITE query on db
+ * RETURN number of keywords printed
+ */
+int index_file_print(FILE *outfile, sqlite3 *db, sqlite3_stmt *sql_statement) {
+    int sql_test = 0, 
+        keywords = 0;
+
+    fprintf(outfile, "# Index of Keywords\n\n");
+
+    sql_test = sqlite3_prepare_v2(db, 
+            sql_string[KW_SQL_SELECT_KEYWORDS], -1, &sql_statement, NULL); 
+    SQL_TEST(SQLITE_OK);
+
+    for(keywords = 0; 
+            (sql_test = sqlite3_step(sql_statement)) == SQLITE_ROW; 
+            ++keywords) {
+        fprintf(outfile, "| %s %s\n", 
+                sqlite3_column_text(sql_statement, 0),
+                sqlite3_column_text(sql_statement, 1));
+    }
+    sql_test = sqlite3_reset(sql_statement);
+    SQL_TEST(SQLITE_OK);
+   
+    return(keywords);
+}
+
+/* FUNCTION kw_sql_test
+ * Test the return value from a sqlite3 command against a desired return value
+ * RETURN good or bad error code depending on result.
+ */
 int kw_sql_test(int test_value, int sql_desired_return, sqlite3 *db) {
     int result = 0;
     if (test_value != sql_desired_return) {

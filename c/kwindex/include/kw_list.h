@@ -28,27 +28,10 @@ struct node {
 /* Create a new node with given data */
 extern node_ptr list_create_node(char*, char*);
 
-/* Determine which of two nodes should go first in sorted order 
- * Returns 0 if equal, <0 if new_node goes before next_node */
-extern int compare_nodes(node_ptr, node_ptr);
-
 /* Add a node to the end of the list */
 extern node_ptr list_append(node_ptr, node_ptr);
 
-/* Print the whole list in a given format (recursive) */
-extern void list_print(FILE*, node_ptr);
-
 /* Free the memory from the whole list */
 extern void list_delete(node_ptr);
-
-
-
-
-
-
-
-
-
-
 
 #endif /* KW_LIST_H */
