@@ -1,0 +1,12 @@
+"COLLATE NOCASE "
+"|| 'á' like 'a' || 'é' like 'e' || 'í' like 'i' || 'ó' like 'o' || 'ú' like 'u' "
+"|| 'à' like 'a' || 'è' like 'e' || 'ì' like 'i' || 'ò' like 'o' || 'ù' like 'u' "
+"|| 'â' like 'a' || 'ê' like 'e' || 'î' like 'i' || 'ô' like 'o' || 'û' like 'u' "
+"|| 'ä' like 'a' || 'ë' like 'e' || 'ï' like 'i' || 'ö' like 'o' || 'ü' like 'u' "
+"|| 'Á' like 'a' || 'É' like 'e' || 'Í' like 'i' || 'Ó' like 'o' || 'Ú' like 'u' "
+"|| 'À' like 'a' || 'È' like 'e' || 'Ì' like 'i' || 'Ò' like 'o' || 'Ù' like 'u' "
+"|| 'Â' like 'a' || 'Ê' like 'e' || 'Î' like 'i' || 'Ô' like 'o' || 'Û' like 'u' "
+"|| 'Ä' like 'a' || 'Ë' like 'e' || 'Ï' like 'i' || 'Ö' like 'o' || 'Ü' like 'u' "
+"|| 'æ' like 'ae' || 'œ' like 'oe' || 'Æ' like 'AE' || 'Œ' like 'OE'"
+
+

@@ -81,22 +81,59 @@
 char *default_outfile_name      = "kwindex.md";
 char *default_db_name           = "kwindex.db";
 
-/* Character delimieters used in find_keywords & create_keyword_list functions */
+/* Character delimiters used in find_keywords & create_keyword_list functions */
 const char *keyword_delimiter   = ";",
       *filename_delimiter       = ":",
       *filegroup_delimiter      = "|",
       *header_string            = "# Keywords";
 
+/* For constructing COLLATE statements that ignore case and accents */
+const char ascii_chars[] = "aeioun";
+const int unicode_char_sub_max[] = {
+    10, 10, 10, 10, 10, 2
+};
+const char *unicode_char_sub_a[] = {
+        "á", "à", "â", "ä", "ã", "Á", "À", "Â", "Ä", "Ã",
+    },
+    *unicode_char_sub_e[] = {
+        "é", "è", "ê", "ë", "ẽ", "É", "È", "Ê", "Ë", "Ẽ",
+    },
+    *unicode_char_sub_i[] = {
+        "í", "ì", "î", "ï", "ĩ", "Í", "Ì", "Î", "Ï", "Ĩ",
+    },
+    *unicode_char_sub_o[] = {
+        "ó", "ò", "ô", "ö", "õ", "Ó", "Ò", "Ô", "Ö", "Õ",
+    },
+    *unicode_char_sub_u[] = {
+        "ú", "ù", "û", "ü", "ũ", "Ú", "Ù", "Û", "Ü", "Ũ",
+    },
+    *unicode_char_sub_n[] = {
+        "ñ", "Ñ"
+    };
+const char **unicode_char_sub[] = {
+    unicode_char_sub_a,
+    unicode_char_sub_e,
+    unicode_char_sub_i,
+    unicode_char_sub_o,
+    unicode_char_sub_u,
+    unicode_char_sub_n
+};
+
+
+const int unicode_char_sub_index[] = {
+    0, 11, 22, 33, 44, 55, 58
+};
+#define MAX_UNICODE_CHAR_INDEX
+
 const char *sql_string[] = {
-/*         "SELECT icu_load_collation('en_EN', 'english')", */
         "CREATE TABLE IF NOT EXISTS keywords (word, file, PRIMARY KEY (word, file))", 
+
         "INSERT OR IGNORE INTO keywords (word, file) VALUES (?1, ?2)",
-        "SELECT word, GROUP_CONCAT(file, ', ')" 
-            "FROM (SELECT word, file FROM keywords ORDER BY file) GROUP BY word" 
-            /* "COLLATE english" */
+
+        "SELECT word, GROUP_CONCAT(file, ', ') " 
+            "FROM (SELECT word, file FROM keywords ORDER BY file) GROUP BY word "
     };
 enum { 
-/*    KW_SQL_SETUP_COLLATION, */
     KW_SQL_CREATE_TABLE,
     KW_SQL_INSERT,
     KW_SQL_SELECT_KEYWORDS,
@@ -110,6 +147,7 @@ enum {
 #define SQL_TEST(ERRCODE)  { sql_test = kw_sql_test(sql_test, ERRCODE, db); }
 
 /* FUNCTION PROTOTYPES */
+char *kw_sql_create_collate_stmt(char*);
 int find_keywords(FILE*, char*, FILE*);
 node_ptr create_keyword_list(FILE*);
 int index_insert(sqlite3*, node_ptr, sqlite3_stmt*);
@@ -121,10 +159,10 @@ int main(int argc, char *argv[]) {
     FILE *outfile = NULL, 
          *auxfile = NULL,
          *infile = NULL;
-    int c = 0,
-        keyword_lines = 0,
-        sql_test = 0;
-    char *outfile_name = default_outfile_name, 
+    int  c = 0,
+         keyword_lines = 0,
+         sql_test = 0;
+    char *outfile_name = default_outfile_name,
          *infile_name = NULL;
     node_ptr index = NULL;
     sqlite3 *db = NULL;
@@ -195,15 +233,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    /* set up unicode sorting */
-/*
-    sql_test = sqlite3_prepare_v2(db, sql_string[KW_SQL_SETUP_COLLATION], -1, &sql_statement, NULL);
-    SQL_TEST(SQLITE_OK);
-    sql_test = sqlite3_step(sql_statement);
-    SQL_TEST(SQLITE_DONE);
-    sql_test = sqlite3_reset(sql_statement);
-    SQL_TEST(SQLITE_OK);
-*/
     /* Create keywords table in db */
     sql_test = sqlite3_prepare_v2(db, 
             sql_string[KW_SQL_CREATE_TABLE], -1, &sql_statement, NULL);
@@ -380,6 +409,39 @@ int index_insert(sqlite3 *db, node_ptr head, sqlite3_stmt *sql_statement) {
     return(keywords);
 }
 
+/* FUNCTION kw_sql_create_collate_stmt
+ * TODO This does not work, there are proper ways to create sqlite collation
+ * sequences!
+ *
+ * Create a string to specify sqlite collation
+ * "|| 'á' like 'a' || 'à' like 'a'" etc.
+ *
+ * Takes string pointer, allocates new string, and fills it with this statement;
+ * data for statement are taken from table 'unicode_char_sub', where the 0 index
+ * of each string is the character to use for sorting
+ *
+ * RETURN pointer to string with collation statement
+ */ 
+char *kw_sql_create_collate_stmt(char *sort_string) {
+    int i = 0, 
+        j = 0;
+    char next_string[MAX_LINE] = "";
+
+    assert(sort_string != NULL);
+
+    for (i = 0; ascii_chars[i] != '\0'; ++i) {
+        for (j = 0; j < unicode_char_sub_max[i]; ++j) {
+
+            sprintf(next_string, "|| '%s' LIKE '%c' ", 
+                    unicode_char_sub[i][j],
+                    ascii_chars[i]);
+            strcat(sort_string, next_string);
+        }
+    }
+    DEBUG_PRINT(("kw_sql_create_collate_stmt: %s\n", sort_string));
+    return(sort_string);
+}
+
 
 
 /* FUNCTION index_file_print
@@ -389,11 +451,18 @@ int index_insert(sqlite3 *db, node_ptr head, sqlite3_stmt *sql_statement) {
 int index_file_print(FILE *outfile, sqlite3 *db, sqlite3_stmt *sql_statement) {
     int sql_test = 0, 
         keywords = 0;
+    char select_stmt[MAX_LINE] = "",
+         sort_stmt[MAX_LINE] = "";
 
+    /* Create full SELECT statement including COLLATE statement */
+    strcpy(select_stmt, sql_string[KW_SQL_SELECT_KEYWORDS]);
+/*    strcpy(sort_stmt, kw_sql_create_collate_stmt(sort_stmt));
+    strcat(select_stmt, sort_stmt);
+    DEBUG_PRINT(("index_file_print stmt: %s\n", select_stmt));
+*/
     fprintf(outfile, "# Index of Keywords\n\n");
 
-    sql_test = sqlite3_prepare_v2(db, 
-            sql_string[KW_SQL_SELECT_KEYWORDS], -1, &sql_statement, NULL); 
+    sql_test = sqlite3_prepare_v2(db, select_stmt, -1, &sql_statement, NULL); 
     SQL_TEST(SQLITE_OK);
 
     for(keywords = 0; 

@@ -4,11 +4,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -ansi
 
-DEBUG ?= 0 
-ifeq ($(DEBUG), 0)
-    CFLAGS += -g -DDEBUG
-endif
-
 LFLAGS = -lsqlite3 -lpthread -ldl 
 # -DSQLITE_ENABLE_ICU -L/usr/local/lib/ -lSqliteIcu
 
@@ -26,11 +21,17 @@ MAIN = kwindex.cx
 
 .PHONY: depend clean
 
-all: $(MAIN)
+all: executable
+	
+executable: $(MAIN)
 	@echo Compiled $(TARGET)
 
 $(MAIN): $(OBJECTS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJECTS) $(LFLAGS) 
+
+debug: CFLAGS += -g -DDEBUG
+debug: executable
+	@echo Debug mode set
 
 .c.o:
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
