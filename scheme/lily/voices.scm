@@ -3,10 +3,10 @@
 
 (define voices
   (list
-   (voice+lyrics "SI") ; You could also write directly '("SI" . #t)
-   (voice+lyrics "AI")
-   (voice+lyrics "TI")
-   (voice "BI")))
+    (voice+lyrics "SI") ; You could also write directly '("SI" #t . #f)
+    (voice+lyrics "AI")
+    (voice+lyrics "TI")
+    (voice+figures "BI")))
 
 (write-score "score.ly" voices)
 

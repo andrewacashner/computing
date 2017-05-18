@@ -6,3 +6,5 @@ MusicBI = { \clef "bass" f1 }
 LyricsSI = \lyricmode { la }
 LyricsAI = \LyricsSI
 LyricsTI = \LyricsSI
+
+FiguresBI = \figuremode { < 6+ > }
