@@ -8,5 +8,11 @@
     (voice+lyrics "TI")
     (voice+figures "BI")))
 
+(new-voicelist "main")
+(add-voice "Soprano"    "vli")
+(add-voice "Alto"       "vl")
+(add-voice "Bass"       "vi")
+
+
 (write-score "score.ly" voices)
 
