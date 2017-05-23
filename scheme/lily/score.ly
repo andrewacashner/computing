@@ -3,6 +3,8 @@
 \version "2.19"
 \include "incipit-staves.ly"
 \include "music.ly"
+\include "villancico-geometry.ly"
+\include "villancico-font.ly"
 
 \score {
 <<

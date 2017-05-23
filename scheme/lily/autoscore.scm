@@ -1,13 +1,25 @@
 ;; autoscore.scm -- Andrew A. Cashner, 2015/07/18
 ;; Developing functions for autogenerating Lilypond code
 
-;; TODO automate indentation
+;; TODO 
+;; automate indentation?
+;; one command to add voices rather than making list of (add-voice ...)?
+;;  
 ;; Aliases for boolean values for lyrics or function?
-;; Add options for figured bass, incipitstaves, instrumentnames, staffgroup,
-;; choirstaff, etc.			 
+;; Add options for staffgroup, choirstaff, layout
 ;; Read values from input file and/or set this up as part of script chain
+;; Write empty outline of input music.ly and lyrics.ly file with voicenames
 
 ;;*****************************************************************************
+
+;; LIST UTILITIES
+;; From rosettacode.org
+(define (flatten ls) 
+  "Flatten list: ((one two) three (four)) => (one two three four)"
+  (cond ((null? ls) '())
+        ((not (pair? ls)) (list ls))
+        (else (append (flatten (car ls))
+                      (flatten (cdr ls))))))
 
 ;; CREATE VOICES
 ;; Each voice is stored as a name plus a pair of booleans for including lyrics &
@@ -34,23 +46,20 @@
 
 ;; Create parts of Lilypond commands
 (define (lycommand name)
-  "Return string with backlash + command"
-  (string-concatenate
-    (list "\\" name " ")))
+  "Return list of strings with backlash + command" 
+  (list "\\" name " "))
 
 (define (lycommand-combine part1 part2)
-  "Combine two strings to make lycommand string (e.g., 'Music' + 'SI')"
-  (lycommand (string-concatenate (list part1 part2))))
+  "Combine two strings to make lycommand string list (e.g., 'Music' + 'SI')" 
+  (lycommand (list part1 part2)))
 
 (define (enquote text)
-  "Return string enclosed in quotation marks"
-  (string-concatenate
-    (list "\"" text "\"")))
+  "Return list of strings enclosed in quotation marks" 
+  (list "\"" text "\""))
 
 (define (enbrace text)
-  "Return string enclosed in curly braces {}"
-  (string-concatenate
-    (list "{ " text "}")))
+  "Return list of strings enclosed in curly braces {}" 
+  (list "{ " text "}"))
 
 (define start-ly-group "<<\n")
 (define end-ly-group ">>\n")
@@ -60,7 +69,7 @@
 ; (define indent-width 2)
 ; 
 ; (define (indent degree)
-;   "Return string of space characters * given degrees for indentation,
+;   "Return list of strings of space characters * given degrees for indentation,
 ;   based on value of indent-width and indent-char"
 ;   (make-string (* indent-width degree) indent-char))
 
@@ -69,57 +78,46 @@
 ;; Staff (only the staff; the voice, lyrics, figures are defined separately)
 ;; TODO add optional instrumentname, incipitstaff
 (define (new-staff contents)
-  "Return string with new staff command including contents"
-  (string-concatenate
-    (list (lycommand "new") "Staff\n"
-          start-ly-group
-          contents
-          end-ly-group)))
+  "Return list of strings with new staff command including contents" 
+  (list (lycommand "new") "Staff\n" start-ly-group contents end-ly-group))
 
 ;; Incipit staff
 (define (new-incipit voicename longname shortname)
   "Return a string with new incipit command using voicename in definition"
-  "including long and short instrument name strings"
-  (string-concatenate
-    (list
-      (lycommand "IncipitStaff") (enquote longname) " " (enquote shortname) " "
-      (enbrace (lycommand-combine "Incipit" voicename)) "\n")))
+  "including long and short instrument name strings" 
+  (list 
+    (lycommand "IncipitStaff") (enquote longname) " " (enquote shortname) " " 
+    (enbrace (lycommand-combine "Incipit" voicename)) "\n"))
 
 
 ;; Instrument name
 (define (new-instrument-name longname shortname)
   "Return a string with new instrument name command using voicename in definition"
-  "including long and short instrument name strings"
-  (string-concatenate
-    (list 
-      (lycommand "InstrumentName") (enquote longname) " " (enquote shortname) "\n")))
+  "including long and short instrument name strings" 
+  (list (lycommand "InstrumentName") (enquote longname) " " (enquote shortname) "\n"))
 
 ;; Voice
 (define (new-voice name)
-  "Return a string with new voice command using voicename in definition"
-  (string-concatenate
-    (list 
-      (lycommand "new") "Voice = " (enquote name) " " 
-      (enbrace (lycommand-combine "Music" name)) "\n")))
+  "Return a string with new voice command using voicename in definition" 
+  (list 
+    (lycommand "new") "Voice = " (enquote name) " " 
+    (enbrace (lycommand-combine "Music" name)) "\n"))
 
 
 ;; Lyrics
 ;; TODO add optional alignAboveContext
 (define (new-lyrics name)
-  "Return a string with new lyrics command using voicename in definition"
-  (string-concatenate
-    (list 
-      (lycommand "new") "Lyrics "
-      (lycommand "lyricsto") (enquote name)
-      (enbrace (lycommand-combine "Lyrics" name)) "\n")))
+  "Return a string with new lyrics command using voicename in definition" 
+  (list 
+    (lycommand "new") "Lyrics " (lycommand "lyricsto") (enquote name) 
+    (enbrace (lycommand-combine "Lyrics" name)) "\n"))
 
 ;; Figures
 (define (new-figures name)
-  "Return a string with new FiguredBass command using voicename in definition"
-  (string-concatenate
-    (list 
-      (lycommand "new") "FiguredBass "
-      (enbrace (lycommand-combine "Figures" name)) "\n")))
+  "Return a string with new FiguredBass command using voicename in definition" 
+  (list 
+    (lycommand "new") "FiguredBass " 
+    (enbrace (lycommand-combine "Figures" name)) "\n"))
 
 ;;******************************************************************
 ;; USER COMMAND TO CREATE VOICES
@@ -137,46 +135,22 @@
 ;; RETURNS single instance of a 'voice' data structures /* TODO ? */
 ;;*******************************************************************
 
-;; TODO this creates voices but doesn't add them to any list!
-; (define (create-voicelist ls)
-;   (if (null? ls)
-;     ls
-;     (let ([item (car ls)]) 
-;       (let ([codename   (car    item)] 
-;             [longname   (cadr   item)] 
-;             [shortname  (caddr  item)] 
-;             [components (cadddr item)]) 
-;         (append (create-voice codename longname shortname components) 
-;                 (create-voicelist (cdr ls)))))))
-
 (define (add-voice codename longname shortname components) 
-  (let ([namestrings (cons longname shortname)] 
-        [component-ls (string->list components)])
+  (let ([component-ls (string->list components)])
     (let ([component-bools 
             (list
                 (if (member #\l component-ls) #t #f)
                 (if (member #\f component-ls) #t #f) 
-                (if (member #\i component-ls) #t #f))]) 
-      (list codename namestrings component-bools))))
+                (if (member #\i component-ls) #t #f))])
+      (list codename longname shortname component-bools))))
 
-(define (get-codename voice) 
-  (car voice))
-
-(define (get-namestrings voice) 
-  (cadr voice))
-(define (get-longname voice) 
-  (car (get-namestrings voice)))
-(define (get-shortname voice)
-  (cdr (get-namestrings voice)))
-
-(define (get-components voice)
-  (caddr voice))
-(define (get-lyrics-bool voice)
-  (car (get-components voice)))
-(define (get-figures-bool voice)
-  (cadr (get-components voice)))
-(define (get-incipit-bool voice)
-  (caddr (get-components voice)))
+(define (get-codename voice)        (list-ref voice 0))
+(define (get-longname voice)        (list-ref voice 1))
+(define (get-shortname voice)       (list-ref voice 2))
+(define (get-components voice)      (list-ref voice 3))
+(define (get-lyrics-bool voice)     (list-ref (get-components voice) 0))
+(define (get-figures-bool voice)    (list-ref (get-components voice) 1))
+(define (get-incipit-bool voice)    (list-ref (get-components voice) 2))
 
 ;; Create whole staff command and specify contents
 ;; The 'voice' is in the form '(name lyrics-bool . figures-bool) and is created
@@ -186,8 +160,7 @@
   (let 
     ([voicename (get-codename voice)])
      (new-staff 
-       (string-concatenate 
-         [list 
+       (list 
             (if (eq? #t (get-incipit-bool voice)) 
               ; If there is incipit staff, we do not need to add instrument
               ; names again
@@ -200,43 +173,49 @@
               (new-lyrics voicename)
               "") 
 
-           (if (eq? #t (get-figures-bool voice)) 
+            (if (eq? #t (get-figures-bool voice)) 
               (new-figures voicename)
-              "")]))))
+              "")))))
 
 ;;****************************************************
 ;; CREATE WHOLE SCORE
 
 (define autoscore-header-comment
   "%% File automatically generated by autoscore.scm\n")
+
 (define ly-current-version "2.19")
-(define ly-include 
+
+(define default-includes 
   (list 
     "incipit-staves.ly" 
-    "music.ly")) ; TODO make a list that can be modified
+    "music.ly"))
+(define ly-include default-includes)
 
-(define (add-include-names include-ls) 
-  (string-concatenate 
-    (list 
-      (if (null? include-ls) 
-        ""
-        [string-concatenate 
-          (list 
-            (lycommand "include") (enquote (car include-ls)) "\n" 
-            (add-include-names (cdr include-ls)))]))))
+(define (add-include-files ls)
+  "User command to add list of filenames to list of default includes" 
+  (set! ly-include (append default-includes ls)))
+
+(define (create-include-names include-ls) 
+  "Make a list of include commands for all files in ly-include-files list"
+  (if (null? include-ls) 
+    '() 
+    (list
+        (lycommand "include") (enquote (car include-ls)) "\n" 
+        (create-include-names (cdr include-ls)))))
 
 (define (make-ly-score voicelist)
   "Return a string with a complete Lilypond score command for given voices"
-  (string-concatenate
-   (list
-     autoscore-header-comment "\n"
-     (lycommand "version") (enquote ly-current-version) "\n"
-     (add-include-names ly-include) "\n"
-     (lycommand "score") "{\n"
-     start-ly-group
-     (string-concatenate (map-in-order make-ly-voice-staff voicelist)) 
-     end-ly-group
-     "}\n")))
+   (string-concatenate 
+     (flatten 
+       (list
+         autoscore-header-comment "\n" 
+         (lycommand "version") (enquote ly-current-version) "\n" 
+         (create-include-names ly-include) "\n" 
+         (lycommand "score") "{\n" 
+         start-ly-group 
+         (map-in-order make-ly-voice-staff voicelist) 
+         end-ly-group 
+         "}\n"))))
 
 
 ;; OUTPUT
