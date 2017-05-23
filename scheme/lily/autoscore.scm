@@ -137,7 +137,17 @@
 ;; RETURNS single instance of a 'voice' data structures /* TODO ? */
 ;;*******************************************************************
 
-(define voicelist (list '()))
+;; TODO this creates voices but doesn't add them to any list!
+; (define (create-voicelist ls)
+;   (if (null? ls)
+;     ls
+;     (let ([item (car ls)]) 
+;       (let ([codename   (car    item)] 
+;             [longname   (cadr   item)] 
+;             [shortname  (caddr  item)] 
+;             [components (cadddr item)]) 
+;         (append (create-voice codename longname shortname components) 
+;                 (create-voicelist (cdr ls)))))))
 
 (define (add-voice codename longname shortname components) 
   (let ([namestrings (cons longname shortname)] 
