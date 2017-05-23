@@ -15,8 +15,9 @@
     (add-voice "TI" "TENOR I"  "T. I"  "vl")
     (add-voice "BI" "BASSUS I" "B. I"  "vfi")))
 (add-include-files 
-  (list "villancico-geometry.ly"
-        "villancico-font.ly"))
+  (list
+    "villancico-geometry.ly" 
+    "villancico-font.ly"))
 
 (write-score "score.ly" voices)
 
