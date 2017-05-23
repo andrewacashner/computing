@@ -3,34 +3,76 @@
 \version "2.19"
 \include "incipit-staves.ly"
 \include "music.ly"
+\include "header.ly"
 \include "villancico-geometry.ly"
 \include "villancico-font.ly"
 
 \score {
 <<
+
+\new ChoirStaff = "ChI"
+<<
+\ChoirStaffName "CHORUS I"
+
 \new Staff
 <<
 \IncipitStaff "TIPLE I" "Ti. I" { \IncipitSI }
 \new Voice = "SI" { \MusicSI }
 \new Lyrics \lyricsto "SI"{ \LyricsSI }
 >>
+
 \new Staff
 <<
 \IncipitStaff "ALTUS I" "A. I" { \IncipitAI }
 \new Voice = "AI" { \MusicAI }
 \new Lyrics \lyricsto "AI"{ \LyricsAI }
 >>
-\new Staff
-<<
-\InstrumentName "TENOR I" "T. I"
-\new Voice = "TI" { \MusicTI }
-\new Lyrics \lyricsto "TI"{ \LyricsTI }
 >>
+
+
+\new ChoirStaff = "ChII"
+<<
+\ChoirStaffName "CHORUS II"
+
 \new Staff
 <<
-\IncipitStaff "BASSUS I" "B. I" { \IncipitBI }
-\new Voice = "BI" { \MusicBI }
-\new FiguredBass { \FiguresBI }
+\InstrumentName "TIPLE II" "Ti. II"
+\new Voice = "SII" { \MusicSII }
+\new Lyrics \lyricsto "SII"{ \LyricsSII }
+>>
+
+\new Staff
+<<
+\InstrumentName "ALTUS II" "A. II"
+\new Voice = "AII" { \MusicAII }
+\new Lyrics \lyricsto "AII"{ \LyricsAII }
+>>
+
+\new Staff
+<<
+\IncipitStaff "TENOR II" "T. II" { \IncipitTII }
+\new Voice = "TII" { \MusicTII }
+>>
+
+\new Staff
+<<
+\IncipitStaff "BASSUS II" "B. II" { \IncipitBII }
+\new Voice = "BII" { \MusicBII }
+\new FiguredBass { \FiguresBII }
+>>
+>>
+
+
+\new Staff
+<<
+\InstrumentName "THING I" "Th. I"
+\new Voice = "ThingI" { \MusicThingI }
+>>
+
+\new Staff
+<<
+\InstrumentName "THING II" "Th. II"
+\new Voice = "ThingII" { \MusicThingII }
 >>
 >>
 }

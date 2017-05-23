@@ -1,23 +1,42 @@
 ;; Test run of autoscore.scm: Set up voice names and lyric specification
 (load "autoscore.scm")
 
-;; (define voices
-;;   (list
-;;     (voice+lyrics "SI") ; You could also write directly '("SI" #t . #f)
-;;     (voice+lyrics "AI")
-;;     (voice+lyrics "TI")
-;;     (voice+figures "BI")))
- 
-(define voices
-  (list
-    (add-voice "SI" "TIPLE I"  "Ti. I" "vli")
-    (add-voice "AI" "ALTUS I"  "A. I"  "vli")
-    (add-voice "TI" "TENOR I"  "T. I"  "vl")
-    (add-voice "BI" "BASSUS I" "B. I"  "vfi")))
 (add-include-files 
   (list
+    "header.ly"
     "villancico-geometry.ly" 
     "villancico-font.ly"))
 
-(write-score "score.ly" voices)
+(define chI 
+  (list 
+    (add-voice "SI" "TIPLE I"  "Ti. I" "li") 
+    (add-voice "AI" "ALTUS I"  "A. I"  "li")))
+(define chII 
+  (list 
+    (add-voice "SII" "TIPLE II"  "Ti. II" "l") 
+    (add-voice "AII" "ALTUS II"  "A. II"  "l") 
+    (add-voice "TII" "TENOR II"  "T. II"  "i") 
+    (add-voice "BII" "BASSUS II" "B. II"  "fi")))
+(define misc
+  (list
+    (add-voice "ThingI"  "THING I"  "Th. I"  "")
+    (add-voice "ThingII" "THING II" "Th. II" "")))
+
+(define score 
+  (list
+    (add-staff-group "ChoirStaff" "ChI"  "CHORUS I"  chI)
+    (add-staff-group "ChoirStaff" "ChII" "CHORUS II" chII)
+    (add-ungrouped-staves misc)))
+
+;;; OR, DO IT THIS WAY IF YOU DON'T HAVE ANY STAFF GROUPS 
+;; (define voices 
+;;   (list 
+;;     (add-voice "SI" "TIPLE I"  "Ti. I" "li") 
+;;     (add-voice "AI" "ALTUS I"  "A. I"  "li")))
+;; 
+;; (define score
+;;   (list
+;;     (add-ungrouped-staves voices)))
+
+(write-score "score.ly" score)
 
