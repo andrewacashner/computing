@@ -206,10 +206,14 @@
     "music.ly")) ; TODO make a list that can be modified
 
 (define (add-include-names include-ls) 
-  (if (null? include-ls)
-    '()
-    (list ((lycommand "include") (enquote (car include-ls)) "\n"
-          (add-include-names (cdr include-ls))))))
+  (string-concatenate 
+    (list 
+      (if (null? include-ls) 
+        ""
+        [string-concatenate 
+          (list 
+            (lycommand "include") (enquote (car include-ls)) "\n" 
+            (add-include-names (cdr include-ls)))]))))
 
 (define (make-ly-score voicelist)
   "Return a string with a complete Lilypond score command for given voices"
