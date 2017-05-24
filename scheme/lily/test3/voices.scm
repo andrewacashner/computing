@@ -9,5 +9,5 @@
   (list
     (add-ungrouped-staves voices)))
 
-(write-score "score.ly" score)
-(write-input-outline "music.ly" voices)
+(make-score-file score)
+(make-input-files voices)

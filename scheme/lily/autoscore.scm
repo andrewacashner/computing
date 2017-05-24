@@ -50,12 +50,17 @@
     (lycommand "IncipitStaff") (enquote longname) " " (enquote shortname) " " 
     (enbrace (lycommand-combine "Incipit" voicename)) "\n"))
 
-
 ;; Instrument name
 (define (new-instrument-name longname shortname)
   "Return a string with new instrument name command using voicename in definition"
   "including long and short instrument name strings" 
   (list (lycommand "InstrumentName") (enquote longname) " " (enquote shortname) "\n"))
+
+;; Staff group name
+;; NB current version of \ChoirStaffName only takes one arg
+(define (new-staff-group-name type name)
+  (list 
+    (lycommand-combine type "Name") (enquote name) "\n")) 
 
 ;; Voice
 (define (new-voice name)
@@ -63,7 +68,6 @@
   (list 
     (lycommand "new") "Voice = " (enquote name) " " 
     (enbrace (lycommand-combine "Music" name)) "\n"))
-
 
 ;; Lyrics
 ;; TODO add optional alignAboveContext
@@ -79,6 +83,44 @@
   (list 
     (lycommand "new") "FiguredBass " 
     (enbrace (lycommand-combine "Figures" name)) "\n"))
+
+;; Create whole staff command and specify contents using user-defined 'voice'
+;; object with its components specifying whether to include lyrics, figures,
+;; incipit
+(define (make-ly-voice-staff voice)
+  "Create a staff including voice plus other components if requested"
+  (let 
+    ([voicename (get-codename voice)])
+     (new-staff 
+       (list 
+            (if (eq? #t (get-incipit-bool voice)) 
+              ; If there is incipit staff, we do not need to add instrument
+              ; names again
+              (new-incipit voicename (get-longname voice) (get-shortname voice))
+              (new-instrument-name (get-longname voice) (get-shortname voice))) 
+
+            (new-voice voicename) ; Always include Voice
+
+            (if (eq? #t (get-lyrics-bool voice))
+              (new-lyrics voicename)
+              "") 
+
+            (if (eq? #t (get-figures-bool voice)) 
+              (new-figures voicename)
+              "")))))
+
+;; Helper commands used in add-voice command
+(define (get-codename voice)        (list-ref voice 0))
+(define (get-longname voice)        (list-ref voice 1))
+(define (get-shortname voice)       (list-ref voice 2))
+(define (get-components voice)      (list-ref voice 3))
+(define (get-lyrics-bool voice)     (list-ref (get-components voice) 0))
+(define (get-figures-bool voice)    (list-ref (get-components voice) 1))
+(define (get-incipit-bool voice)    (list-ref (get-components voice) 2))
+
+ 
+;;***********************************
+;; USER COMMANDS
 
 ;;******************************************************************
 ;; USER COMMAND TO CREATE VOICES
@@ -105,23 +147,10 @@
                 (if (member #\i component-ls) #t #f))])
       (list codename longname shortname component-bools))))
 
-(define (get-codename voice)        (list-ref voice 0))
-(define (get-longname voice)        (list-ref voice 1))
-(define (get-shortname voice)       (list-ref voice 2))
-(define (get-components voice)      (list-ref voice 3))
-(define (get-lyrics-bool voice)     (list-ref (get-components voice) 0))
-(define (get-figures-bool voice)    (list-ref (get-components voice) 1))
-(define (get-incipit-bool voice)    (list-ref (get-components voice) 2))
-
 (define (add-ungrouped-staves voicelist)
   "Return list for ungrouped staves, processing all the voices"
   "with their components"
   (map-in-order make-ly-voice-staff voicelist))
-
-(define (new-staff-group-name type name)
-  (list 
-    (lycommand-combine type "Name") (enquote name) "\n")) 
-;; NB current version of \ChoirStaffName only takes one arg
 
 (define (add-staff-group grouptype codename groupname voicelist)
   "Return list for whole staff group (e.g., ChoirStaff, StaffGroup)"
@@ -135,31 +164,6 @@
     (add-ungrouped-staves voicelist) ; Process all the voices
     end-ly-group "\n"))
 
-  
-;; Create whole staff command and specify contents
-;; The 'voice' is in the form '(name lyrics-bool . figures-bool) and is created
-;; using the procedures 'voice', 'voice+lyrics', etc.
-(define (make-ly-voice-staff voice)
-  "Create a staff including voice plus other components if requested"
-  (let 
-    ([voicename (get-codename voice)])
-     (new-staff 
-       (list 
-            (if (eq? #t (get-incipit-bool voice)) 
-              ; If there is incipit staff, we do not need to add instrument
-              ; names again
-              (new-incipit voicename (get-longname voice) (get-shortname voice))
-              (new-instrument-name (get-longname voice) (get-shortname voice))) 
-
-            (new-voice voicename) ; Always include Voice
-
-            (if (eq? #t (get-lyrics-bool voice))
-              (new-lyrics voicename)
-              "") 
-
-            (if (eq? #t (get-figures-bool voice)) 
-              (new-figures voicename)
-              "")))))
 
 ;;****************************************************
 ;; CREATE WHOLE SCORE
@@ -171,8 +175,11 @@
 
 (define default-includes 
   (list 
-    "incipit-staves.ly" 
-    "music.ly"))
+    "villancico.ly"
+    "header.ly"
+    "music.ly"
+    "lyrics.ly"))
+
 (define ly-include default-includes)
 
 (define (add-include-files ls)
@@ -200,7 +207,7 @@
      (flatten 
        (list
          autoscore-header-comment 
-         (lycommand "version") (enquote ly-current-version) "\n" 
+         (lycommand "version") (enquote ly-current-version) "\n\n" 
          (create-include-names ly-include) "\n" 
          (lycommand "score") "{\n" 
          start-ly-group 
@@ -211,47 +218,74 @@
 
 ;;******************************************************************************
 ;; CREATE EMPTY OUTLINE OF MUSIC INPUT FILE 
+;;******************************************************************************
 
 (define (make-ly-input-incipit voice)
-  "Write empty incipit command" 
+  "Make list with contents of empty incipit command" 
   (if (eq? #t (get-incipit-bool voice)) 
     (list "Incipit" (get-codename voice) " = {\n\n}\n\n")
     '()))
 
 (define (make-ly-input-music voice)
-  "Write empty music command"
+  "Make list for empty music command"
   (list
     "Music" (get-codename voice) " = {\n\n}\n\n"))
 
 (define (make-ly-input-lyrics voice)
-  "Write empty lyrics command"
+  "Make list for empty lyrics command"
   (if (eq? #t (get-lyrics-bool voice)) 
     (list "Lyrics" (get-codename voice) " = " 
           (lycommand "lyricmode") "{\n\n}\n\n")
   '()))
 
 (define (make-ly-input-figures voice)
-  "Write empty figures command"
+  "Make list for empty figures command"
   (if (eq? #t (get-figures-bool voice)) 
     (list "Figures" (get-codename voice) " = " 
           (lycommand "figuremode") "{\n\n}\n\n")
     '()))
 
-(define (make-ly-input-outline voices)
+(define (header-line key)
+  "Make list with contents of single header key-value line"
+  (list key " = " (enquote "") "\n"))
+
+(define header-keys
+  (list 
+    "title"
+    "composer"
+    "poet"
+    "source"))
+
+; Make list for empty header command
+(define make-ly-input-header 
+  (list
+    autoscore-header-comment
+    (lycommand "header") "{\n"
+    (map-in-order header-line header-keys)
+    "}\n"))
+
+;; Make string out of header list
+(define make-ly-input-outline-header
+  (string-concatenate (flatten (list make-ly-input-header))))
+
+(define (make-ly-input-outline-music voices)
   "Return a string with the outline of a Lilypond input file for given score"
   "e.g., 'MusicSI = { }\n MusicSII = { }'"
   (string-concatenate
     (flatten 
       (list
         autoscore-header-comment 
-        "% INCIPITS\n\n"
         (map-in-order make-ly-input-incipit voices)
-        "% MUSIC\n\n"
         (map-in-order make-ly-input-music   voices)
-        "% LYRICS\n\n"
-        (map-in-order make-ly-input-lyrics  voices)
-        "% FIGURES\n\n"
         (map-in-order make-ly-input-figures voices)))))
+
+(define (make-ly-input-outline-lyrics voices)
+  "Return a string with the outline of a Lilypond LYRICS input file"
+  (string-concatenate
+    (flatten 
+      (list
+        autoscore-header-comment 
+        (map-in-order make-ly-input-lyrics  voices)))))
 
 ;;******************************************************************************
 ;; OUTPUT
@@ -261,28 +295,66 @@
   "Write a given string plus a newline."
   (begin (display str) (newline)))
 
-;; To file
+;; Create or overwrite file
 (define (write-file outfile str)
   "Write string to file, creating or overwriting file as needed"
   (let ((outfileport (open-file outfile "w")))
     (display str outfileport)
     (close-output-port outfileport)))
 
+;; Append to file
 (define (append-file outfile str)
   "Write string to file, appending if file exists"
   (let ((outfileport (open-file outfile "a")))
     (display str outfileport)
     (close-output-port outfileport)))
 
+;;********************************************
+;; USER COMMANDS
 
-;; ONE COMMAND TO WRITE THE SCORE FILE
+;; WRITE THE SCORE FILE
 (define (write-score outfile voices)
   "Append score command to file"
   (write-file outfile (make-ly-score voices)))
 
-;; AND TO WRITE THE INPUT FILE OUTLINE
-(define (write-input-outline outfile voices) 
-  "Write outline of input file only if file does not exist."
+;; WRITE THE INPUT FILE OUTLINES
+(define (write-input-outline-header outfile) 
+  "Write outline of HEADER input file only if file does not exist."
   (if (access? outfile F_OK)
     (displayln (list "Input file" outfile "already exists")) 
-    (write-file outfile (make-ly-input-outline voices))))
+    (write-file outfile make-ly-input-outline-header)))
+
+(define (write-input-outline-music outfile voices) 
+  "Write outline of MUSIC input file only if file does not exist."
+  (if (access? outfile F_OK)
+    (displayln (list "Input file" outfile "already exists")) 
+    (write-file outfile (make-ly-input-outline-music voices))))
+
+(define (write-input-outline-lyrics outfile voices) 
+  "Write outline of LYRICS input file only if file does not exist."
+  (if (access? outfile F_OK)
+    (displayln (list "Input file" outfile "already exists")) 
+    (write-file outfile (make-ly-input-outline-lyrics voices))))
+
+;; Default values
+(define header-file "header.ly")
+(define music-input-file "music.ly")
+(define lyrics-input-file "lyrics.ly")
+(define score-file "score.ly")
+
+;; ONE COMMAND TO WRITE FILES USING DEFAULTS
+(define (make-input-files voices)
+  "Create input outlines and score file using default filenames and"
+  "user-defined data:"
+  "  - 'voices' is a list of 'add-voice' commands"
+  (write-input-outline-header header-file)
+  (write-input-outline-music  music-input-file  voices)
+  (write-input-outline-lyrics lyrics-input-file voices))
+
+(define (make-score-file score)
+  "Create input outlines and score file using default filenames and"
+  "user-defined data:"
+  "  - 'score' is a list of 'add-staff-group' or 'add-ungrouped-staves'"
+  "    commands using predefined list(s) of voices"
+  (write-score score-file score))
+

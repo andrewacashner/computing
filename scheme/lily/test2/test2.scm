@@ -1,9 +1,5 @@
 (load "../autoscore.scm")
 
-(add-include-files
-  (list
-    "villancico.ly"))
-
 (define voices
   (list
     (add-voice "S" "Soprano" "S." "li")
@@ -19,11 +15,10 @@
     (add-staff-group "ChoirStaff" "ChI" "" voices)
     (add-ungrouped-staves acc)))
 
-; Write the score file
-(write-score "autoscore.ly" score)
+(make-score-file score)
 
 (define outline
   (append voices acc))
 
 ; Write the outline of the music input file
-(write-input-outline "music.ly" outline)
+(make-input-files outline)
