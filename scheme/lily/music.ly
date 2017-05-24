@@ -1,5 +1,6 @@
 IncipitSI = { \clef "soprano" a'1 }
 IncipitAI = { \clef "alto" f'1 }
+IncipitSII = { \clef "soprano" f''1 }
 IncipitTII = { \clef "tenor" c'1 }
 IncipitBII = { \clef "bass" f1 }
 

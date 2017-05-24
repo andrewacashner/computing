@@ -4,8 +4,6 @@
 \include "incipit-staves.ly"
 \include "music.ly"
 \include "header.ly"
-\include "villancico-geometry.ly"
-\include "villancico-font.ly"
 
 \score {
 <<
@@ -36,7 +34,7 @@
 
 \new Staff
 <<
-\InstrumentName "TIPLE II" "Ti. II"
+\IncipitStaff "TIPLE II" "Ti. II" { \IncipitSII }
 \new Voice = "SII" { \MusicSII }
 \new Lyrics \lyricsto "SII"{ \LyricsSII }
 >>
@@ -75,4 +73,9 @@
 \new Voice = "ThingII" { \MusicThingII }
 >>
 >>
+
+\layout {
+indent = 2\in
+}
+
 }

@@ -1,12 +1,6 @@
 ;; autoscore.scm -- Andrew A. Cashner, 2015/07/18
 ;; Automatically generating Lilypond code from configuration file in pure Scheme
 
-;; TODO 
-;; one command to add voices rather than making list of (add-voice ...)?
-;; Add options for layout
-;; Integrate into lilypond somehow?
-;; add indentation?
-
 ;;*****************************************************************************
 
 ;; LIST UTILITIES
@@ -40,19 +34,9 @@
 (define start-ly-group "<<\n")
 (define end-ly-group ">>\n")
 
-;;; Indentation
-; (define indent-char #\space)
-; (define indent-width 2)
-; 
-; (define (indent degree)
-;   "Return list of strings of space characters * given degrees for indentation,
-;   based on value of indent-width and indent-char"
-;   (make-string (* indent-width degree) indent-char))
-
 ;;**********************
 
 ;; Staff (only the staff; the voice, lyrics, figures are defined separately)
-;; TODO add optional instrumentname, incipitstaff
 (define (new-staff contents)
   "Return list of strings with new staff command including contents" 
   (list 
@@ -109,7 +93,7 @@
 ;;          - f  FiguredBass
 ;;          - i  IncipitStaff
 ;;        These may be in any order, e.g., "vli", "vif"
-;; RETURNS single instance of a 'voice' data structures /* TODO ? */
+;; RETURNS single instance of a 'voice' data structure (object)
 ;;*******************************************************************
 
 (define (add-voice codename longname shortname components) 
@@ -203,6 +187,13 @@
         (lycommand "include") (enquote (car include-ls)) "\n" 
         (create-include-names (cdr include-ls)))))
 
+(define layout "")
+
+(define (add-layout str)
+  (set! layout 
+    (list 
+      "\n" (lycommand "layout") "{\n" str "\n}\n\n")))
+
 (define (make-ly-score contents)
   "Return a string with a complete Lilypond score command for given voices"
    (string-concatenate 
@@ -215,6 +206,7 @@
          start-ly-group 
          contents
          end-ly-group 
+         layout
          "}\n"))))
 
 ;;******************************************************************************
@@ -252,9 +244,13 @@
     (flatten 
       (list
         autoscore-header-comment 
+        "% INCIPITS\n\n"
         (map-in-order make-ly-input-incipit voices)
+        "% MUSIC\n\n"
         (map-in-order make-ly-input-music   voices)
+        "% LYRICS\n\n"
         (map-in-order make-ly-input-lyrics  voices)
+        "% FIGURES\n\n"
         (map-in-order make-ly-input-figures voices)))))
 
 ;;******************************************************************************
@@ -286,6 +282,7 @@
 
 ;; AND TO WRITE THE INPUT FILE OUTLINE
 (define (write-input-outline outfile voices) 
-  "Write outline of input file"
-  (write-file outfile (make-ly-input-outline voices)))
-;; TODO check if file exists; don't automatically overwrite
+  "Write outline of input file only if file does not exist."
+  (if (access? outfile F_OK)
+    (displayln (list "Input file" outfile "already exists")) 
+    (write-file outfile (make-ly-input-outline voices))))

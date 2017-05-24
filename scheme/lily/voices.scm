@@ -3,9 +3,9 @@
 
 (add-include-files 
   (list
-    "header.ly"
-    "villancico-geometry.ly" 
-    "villancico-font.ly"))
+    "header.ly"))
+
+(add-layout "indent = 2\\in")
 
 (define chI 
   (list 
@@ -13,7 +13,7 @@
     (add-voice "AI" "ALTUS I"  "A. I"  "li")))
 (define chII 
   (list 
-    (add-voice "SII" "TIPLE II"  "Ti. II" "l") 
+    (add-voice "SII" "TIPLE II"  "Ti. II" "li") 
     (add-voice "AII" "ALTUS II"  "A. II"  "l") 
     (add-voice "TII" "TENOR II"  "T. II"  "i") 
     (add-voice "BII" "BASSUS II" "B. II"  "fi")))
@@ -28,15 +28,6 @@
     (add-staff-group "ChoirStaff" "ChII" "CHORUS II" chII)
     (add-ungrouped-staves misc)))
 
-;;; OR, DO IT THIS WAY IF YOU DON'T HAVE ANY STAFF GROUPS 
-;; (define voices 
-;;   (list 
-;;     (add-voice "SI" "TIPLE I"  "Ti. I" "li") 
-;;     (add-voice "AI" "ALTUS I"  "A. I"  "li")))
-;; 
-;; (define score
-;;   (list
-;;     (add-ungrouped-staves voices)))
-
 (write-score "score.ly" score)
+
 
