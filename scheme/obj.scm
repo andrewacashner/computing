@@ -36,11 +36,36 @@
     "1978")) ;; but the above key-value interface seems better
 ;; plus you need the key
 
-(define search-fulltext
-  (lambda (book term) ; term is value (e.g., "The Stand")
-    (if (member term (map cdr book))
-      #t
-      #f)))
+(define lookup-key
+  (lambda (book term) 
+    (if (null? book)
+      #f
+      (let* ([field (car book)] 
+             [key (car field)]
+             [value (cdr field)])
+        (if (string=? term value)
+          key
+          (lookup-key (cdr book) term))))))
+
+(define lookup-value
+  (lambda (book term) 
+    (if (null? book)
+      #f
+      (let* ([field (car book)] 
+             [key (car field)]
+             [value (cdr field)])
+        (if (string=? term key)
+          value
+          (lookup-value (cdr book) term))))))
+
+(define partner
+  (lambda (pair side)
+    "Given pair and either car or cdr,
+    Return the other part of the pair"
+    (cond [(eqv? side cdr) (car pair)]
+          [(eqv? side car) (cdr pair)]
+          [else #f])))
+
 
 (define search-field
   (lambda (book term) ; term is key.value pair (e.g., '("title" . "The Stand"))
