@@ -1,7 +1,8 @@
 ;; Trying something object-oriented, 2017/07/18
 (define newbook
-  (lambda (author title location publisher year)
+  (lambda (citekey author title location publisher year)
     (list 
+      (cons "citekey" citekey)
       (cons "author" author)
       (cons "title" title)
       (cons "location" location)
@@ -12,11 +13,12 @@
   (lambda (book field)
     (cdr (list-ref book field))))
 
-(define author      (lambda (book) (bookfield book 0)))
-(define title       (lambda (book) (bookfield book 1)))
-(define location    (lambda (book) (bookfield book 2)))
-(define publisher   (lambda (book) (bookfield book 3)))
-(define year        (lambda (book) (bookfield book 4)))
+(define citekey     (lambda (book) (bookfield book 0)))
+(define author      (lambda (book) (bookfield book 1)))
+(define title       (lambda (book) (bookfield book 2)))
+(define location    (lambda (book) (bookfield book 3)))
+(define publisher   (lambda (book) (bookfield book 4)))
+(define year        (lambda (book) (bookfield book 5)))
 ;; wishing for something like an enum
 
 ; (define King:Stand
@@ -29,6 +31,7 @@
 
 (define King:Stand
   (newbook 
+    "King:Stand"
     "King, Stephen" 
     "The Stand" 
     "New York" 
@@ -38,6 +41,7 @@
 
 (define Kircher:Musurgia
   (newbook 
+    "Kircher:Musurgia"
     "Kircher, Athanasius"
     "Musurgia universalis"
     "Rome"
@@ -106,6 +110,31 @@
           "")
         ", " yr ".</p>\n"))))
 
+(define book->biblatex
+  (lambda (book)
+    (let ([key (citekey book)]
+          [au  (author book)]
+          [ti  (title book)]
+          [loc (location book)]
+          [pub (publisher book)]
+          [yr  (year book)])
+      (string-append
+        "@Book{" key ",\n"
+        "author={" au "},\n"
+        "title={" ti "},\n"
+        "location={" loc "},\n"
+        "publisher={" pub "},\n"
+        "year={" yr "}\n"
+        "}\n\n"))))
+
+(define strcat-format
+  (lambda (ls format)
+    (apply string-append (map format ls))))
+
 (define library-print
   (lambda (bookls)
-    (apply string-append (map book-print bookls))))
+    (strcat-format bookls book-print)))
+
+(define library->biblatex
+  (lambda (bookls)
+    (strcat-format bookls book->biblatex)))
