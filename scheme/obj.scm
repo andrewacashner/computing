@@ -36,6 +36,19 @@
     "1978")) ;; but the above key-value interface seems better
 ;; plus you need the key
 
+(define Kircher:Musurgia
+  (newbook 
+    "Kircher, Athanasius"
+    "Musurgia universalis"
+    "Rome"
+    ""
+    "1650"))
+
+(define library
+  (list King:Stand
+        Kircher:Musurgia))
+
+
 (define lookup-key
   (lambda (book term) 
     (if (null? book)
@@ -66,9 +79,33 @@
           [(eqv? side car) (cdr pair)]
           [else #f])))
 
-
 (define search-field
   (lambda (book term) ; term is key.value pair (e.g., '("title" . "The Stand"))
     (if (member term book)
       #t
       #f))) ;; but how to do this across a list of multiple books?
+
+(define book-print-fields
+  (lambda (book)
+    (begin
+      (display 
+        (apply string-append (map cdr book)))
+      (newline))))
+
+(define book-print
+  (lambda (book)
+    (let ([au  (author book)]
+          [ti  (title book)]
+          [loc (location book)]
+          [pub (publisher book)]
+          [yr  (year book)])
+      (string-append
+        "<p>" au ". <cite>" ti "</cite>. " loc 
+        (if (> 0 (string-length pub))
+          (string-append ": " pub)
+          "")
+        ", " yr ".</p>\n"))))
+
+(define library-print
+  (lambda (bookls)
+    (apply string-append (map book-print bookls))))
