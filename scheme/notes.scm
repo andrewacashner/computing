@@ -22,6 +22,35 @@
   ; ... )))
   ;; make these separate functions
 
+(define step
+  (lambda (note)
+    (char-upcase (car (string->list note)))))
+
+(define duration
+  (lambda (note)
+    (cadr (string->list note))))
+
+;; TODO deal with double-accidentals
+(define alter
+  (lambda (note)
+    (cond
+      [(string-contains note "es") -1] 
+      [(string-contains note "is") 1]
+      [else #f])))
+
+(define octave
+  (lambda (note)
+    ; make string into list, search list for , or '; count number found
+    (let ([ls (string->list note)])
+      (if (null? ls)
+        0
+        (cond ([eqv? #\' (car note)]
+              ; add to base octave, recurse
+              )
+              ([eqv? #\, (car note)]
+               ; subtract from base octave, recurse
+               ))))))
+
 
 (define note:ly->xml
   (lambda (lynote)
