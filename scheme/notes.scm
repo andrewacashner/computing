@@ -12,23 +12,23 @@
 ;;           <type>quarter</type>
 ;;         </note>
 
-(define parse-ly-note
-  (lambda (note) 
-    (let* ([chars (string->list note)]
-           [len (- 1 (length chars))]
-           [step (char-upcase (car chars))]
-           [duration (list-ref chars len)]
-           [octave (list-ref chars (- 1 len))])
-  ; ... )))
-  ;; make these separate functions
-
+; (define parse-ly-note
+;   (lambda (note) 
+;     (let* ([chars (string->list note)]
+;            [len (- 1 (length chars))]
+;            [step (char-upcase (car chars))]
+;            [duration (list-ref chars len)]
+;            [octave (list-ref chars (- 1 len))])
+;   ; ... )))
+;   ;; make these separate functions
+ 
 (define step
   (lambda (note)
     (char-upcase (car (string->list note)))))
 
 (define duration
   (lambda (note)
-    (cadr (string->list note))))
+    (cadr (string->list note)))) ; NO
 
 ;; TODO deal with double-accidentals
 (define alter
@@ -40,38 +40,39 @@
 
 (define octave
   (lambda (note)
-    ; make string into list, search list for , or '; count number found
     (let ([ls (string->list note)])
-      (if (null? ls)
-        0
-        (cond ([eqv? #\' (car note)]
-              ; add to base octave, recurse
-              )
-              ([eqv? #\, (car note)]
-               ; subtract from base octave, recurse
-               ))))))
+      (letrec 
+        ([oct-calc 
+           (lambda (ls oct) 
+             (if (null? ls) 
+               oct
+               (cond [(eqv? #\' (car ls))
+                      (oct-calc (cdr ls) (+ oct 1))]
+                     [(eqv? #\, (car ls))
+                      (oct-calc (cdr ls) (- oct 1))]
+                     [else (oct-calc (cdr ls) oct)])))])
+        (oct-calc ls 4)))))
 
-
-(define note:ly->xml
-  (lambda (lynote)
-    (let*
-      ([lychars     (string->list lynote)]
-       [lystep      (char-upcase (car lychars))] 
-       [lyoctave    (octave->duration (list-ref lychars 1))] 
-       ; ignoring accidentals for now, assuming there is an octave sign
-       [lyduration  (cadr lychars)]
-       [lytype      (duration->type lyduration)])
-      (xml note
-        (xml pitch
-          (xml step lystep)
-          (xml octave lyoctave))
-          (xml duration lyduration)
-          (xml type lytype)))))
+;(define note:ly->xml
+;  (lambda (lynote)
+;    (let*
+;      ([lychars     (string->list lynote)]
+;       [lystep      (char-upcase (car lychars))] 
+;       [lyoctave    (octave->duration (list-ref lychars 1))] 
+;       ; ignoring accidentals for now, assuming there is an octave sign
+;       [lyduration  (cadr lychars)]
+;       [lytype      (duration->type lyduration)])
+;      (xml note
+;        (xml pitch
+;          (xml step lystep)
+;          (xml octave lyoctave))
+;          (xml duration lyduration)
+;          (xml type lytype)))))
 ;; better to make a list/data structure for xml note?
 
 (define xml
-  (lambda element contents)
-  (string-append 
-    "<" element ">"
-    contents
-    "</" element ">"))
+  (lambda (element contents)
+    (string-append 
+      "<" element ">"
+      contents
+      "</" element ">")))
