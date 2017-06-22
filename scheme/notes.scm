@@ -1,5 +1,5 @@
-;; first tries converting Lilypond notes to MusicXML format
-;; AAC 2017/06/20
+;; notes.scm -- First tries converting Lilypond notes to MusicXML format
+;; Andrew A. Cashner, 2017/06/20-22
 ;;
 ;; (1) just the note part:
 ;;    `{ a'4 }`
@@ -11,6 +11,7 @@
 ;;           <duration>1</duration>
 ;;           <type>quarter</type>
 ;;         </note>
+;; *************************************************************************
 
 (define step
   (lambda (note)
@@ -46,16 +47,20 @@
   (lambda (note)
     "Given Lilypond note command string, return string with number of half
     steps to adjust pitch"
-    (number->string 
+    (let ([alter-amt
       (cond
         [(string-contains note "eses") -2]
         [(string-contains note "es")   -1] 
         [(string-contains note "isis")  2]
         [(string-contains note "is")    1]
-        [else 0]))))
+        [else 0])])
+      (if (= 0 alter-amt)
+        ""
+        (number->string alter-amt)))))
 
 (define octave
   (lambda (note)
+    "Given Lilypond note command string, return string with octave number"
     (let ([octave-increment
             (cond [(string-contains note "'") 
                    (string-count note #\')]
@@ -74,15 +79,24 @@
       (apply string-append contents)
       "</" tag ">")))
 
-; TODO add error checking, check for empty values
+(define xml-tag-nonempty
+  (lambda (tag contents)
+    "Return a single XML tag string only if the contents are not empty" 
+    (if (= 0 (string-length contents))
+      ""
+      (xml-tag tag contents))))
+
 (define ly->xml:note
   (lambda (note beats)
+    "Given a Lilypond note command and the beats per measure, return a string
+    with a complete MusicXML <note> element; omit <alter> if no accidental, omit
+    <type> if there is no string corresponding to the numeric value"
     (xml-tag "note" 
          (xml-tag "pitch"
               (xml-tag "step" (step note)) 
-                (xml-tag "alter" (alter note)) 
-                (xml-tag "octave" (octave note)))
+              (xml-tag-nonempty "alter" (alter note))
+              (xml-tag "octave" (octave note)))
          (xml-tag "duration" (duration note beats))
-         (xml-tag "type" (type note)))))
+         (xml-tag-nonempty "type" (type note))))) 
 
 
