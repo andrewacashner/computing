@@ -16,7 +16,7 @@
   (lambda (note)
     "Given a string with a single Lilypond note command,
     return an uppercase char for the pitch name"
-    (char-upcase (car (string->list note)))))
+    (string (char-upcase (car (string->list note))))))
 
 (define ly-duration
   (lambda (note)
@@ -28,8 +28,8 @@
 (define duration
   (lambda (note beats)
     "Given Lilypond note command and number of beats per measure, 
-    return integer for XML duration value" 
-    (/ beats (ly-duration note))))
+    return string with XML duration value" 
+    (number->string (/ beats (ly-duration note)))))
 
 (define type 
   (lambda (note)
@@ -39,19 +39,20 @@
             [(= dur 4) "quarter"]
             [(= dur 8) "eighth"]
             [(= dur 16) "sixteenth"]
-            [else #f]))))
+            [else ""]))))
 ; TODO surely there's a better way, e.g. table lookup
 
 (define alter
   (lambda (note)
-    "Given Lilypond note command string, return integer with number of half
+    "Given Lilypond note command string, return string with number of half
     steps to adjust pitch"
-    (cond
-      [(string-contains note "eses") -2]
-      [(string-contains note "es")   -1] 
-      [(string-contains note "isis")  2]
-      [(string-contains note "is")    1]
-      [else 0])))
+    (number->string 
+      (cond
+        [(string-contains note "eses") -2]
+        [(string-contains note "es")   -1] 
+        [(string-contains note "isis")  2]
+        [(string-contains note "is")    1]
+        [else 0]))))
 
 (define octave
   (lambda (note)
@@ -61,23 +62,27 @@
                   [(string-contains note ",")
                    (- 0 (string-count note #\,))]
                   [else 0])])
-      (+ 4 octave-increment))))
+      (number->string (+ 4 octave-increment)))))
 
-(define note:ly->xml
-  (lambda (lynote)
-    (xml note 
-         (((xml pitch
-              (xml step (step lynote))
-              (xml octave (octave lynote))
-              (xml alter (alter lynote))) 
-         (xml duration (duration lynote))
-         (xml type (type (duration lynote))))))))
-; TODO abbreviate with lets
-; TODO add type
-
-(define xml
-  (lambda (element contents)
+(define xml-tag
+  (lambda (tag . contents)
+    "Given a string with the name of an XML tag/element, and an optional list of
+    strings with the contents to be put within that tag, return a string with
+    the contents enclosed in XML start and end tags"
     (string-append 
-      "<" element ">"
-      contents
-      "</" element ">")))
+      "<" tag ">"
+      (apply string-append contents)
+      "</" tag ">")))
+
+; TODO add error checking, check for empty values
+(define ly->xml:note
+  (lambda (note beats)
+    (xml-tag "note" 
+         (xml-tag "pitch"
+              (xml-tag "step" (step note)) 
+                (xml-tag "alter" (alter note)) 
+                (xml-tag "octave" (octave note)))
+         (xml-tag "duration" (duration note beats))
+         (xml-tag "type" (type note)))))
+
+
