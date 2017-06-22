@@ -17,37 +17,62 @@
   (lambda (note)
     "Given a string with a single Lilypond note command,
     return an uppercase char for the pitch name"
-    (string (char-upcase (car (string->list note))))))
+    (string (char-upcase (string-ref note 0))))
 
 (define ly-duration
   (lambda (note)
     "Given Lilypond note command, extract the concluding numeric portion of the
     string and convert to integer"
-    (string->number
-              (substring note (string-index note char-set:digit)))))
+    (let ([index (string-index note char-set:digit)])
+      (string->number (substring note index)))))
 
 (define duration
   (lambda (note beats)
     "Given Lilypond note command and number of beats per measure, 
     return string with XML duration value" 
-    (number->string (/ beats (ly-duration note)))))
+    (let ([dur (ly-duration note)])
+      (number->string (/ beats dur)))))
+   ;; TODO how to get breve, longa from duration functions
 
+(define duration-strings
+  (list
+    '("longa" . "longa")
+    '("breve" . "breve")
+    '(1 . "whole")
+    '(2 . "half")
+    '(4 . "quarter")
+    '(8 . "eighth")
+    '(16 . "sixteenth")
+    '(32 . "thirty-second")
+    '(64 . "sixty-fourth")
+    '(128 . "one-hundred-twenty-eighth")))
+
+;; TODO verify duration will be valid, or deal with #f output of assq
 (define type 
   (lambda (note)
+    "Given Lilypond note command string, return string for MusicXML
+    representation of note duration, by looking up Lilypond duration in
+    association list 'duration-strings'"
     (let ([dur (ly-duration note)])
-      (cond [(= dur 1) "whole"]
-            [(= dur 2) "half"]
-            [(= dur 4) "quarter"]
-            [(= dur 8) "eighth"]
-            [(= dur 16) "sixteenth"]
-            [else ""]))))
-; TODO surely there's a better way, e.g. table lookup
+      (cdr (assv dur duration-strings)))))
 
+(define alter-strings
+  (list
+    '("eses" . -2)
+    '("es"   . -1)
+    '("s"    . -1)
+    '("isis" .  2)
+    '("is"   .  1)))
+
+; TODO redo below to use ass. list;
+; make a substring of the portion between the first letter and either the octave
+; or numeric portion (first non-letter); use assv to search alter-strings for
+; this to get the alteration amount
 (define alter
   (lambda (note)
     "Given Lilypond note command string, return string with number of half
     steps to adjust pitch"
-    (let ([alter-amt
+    (let ([alter-amt 
       (cond
         [(string-contains note "eses") -2]
         [(string-contains note "es")   -1] 
