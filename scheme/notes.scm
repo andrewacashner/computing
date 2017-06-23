@@ -11,13 +11,15 @@
 ;;           <duration>1</duration>
 ;;           <type>quarter</type>
 ;;         </note>
+;; Assuming complete, well-formed, correct Lilypond input
+;; e.g., b4 c''4 cis,,16 eses'8
 ;; *************************************************************************
 
 (define step
   (lambda (note)
     "Given a string with a single Lilypond note command,
     return an uppercase char for the pitch name"
-    (string (char-upcase (string-ref note 0))))
+    (string (char-upcase (string-ref note 0)))))
 
 (define ly-duration
   (lambda (note)
@@ -31,21 +33,19 @@
     "Given Lilypond note command and number of beats per measure, 
     return string with XML duration value" 
     (let ([dur (ly-duration note)])
-      (number->string (/ beats dur)))))
-   ;; TODO how to get breve, longa from duration functions
+      (number->string (/ beats dur))))) 
+;; TODO how to get breve, longa from duration functions
 
-(define duration-strings
-  (list
-    '("longa" . "longa")
-    '("breve" . "breve")
-    '(1 . "whole")
-    '(2 . "half")
-    '(4 . "quarter")
-    '(8 . "eighth")
-    '(16 . "sixteenth")
-    '(32 . "thirty-second")
-    '(64 . "sixty-fourth")
-    '(128 . "one-hundred-twenty-eighth")))
+(define duration-words 
+  '((1   . "whole")
+    (2   . "half")
+    (4   . "quarter")
+    (8   . "eighth")
+    (16  . "sixteenth")
+    (32  . "thirty-second")
+    (64  . "sixty-fourth")
+    (128 . "one-hundred-twenty-eighth")))
+;; TODO add longa, breve
 
 ;; TODO verify duration will be valid, or deal with #f output of assq
 (define type 
@@ -54,44 +54,47 @@
     representation of note duration, by looking up Lilypond duration in
     association list 'duration-strings'"
     (let ([dur (ly-duration note)])
-      (cdr (assv dur duration-strings)))))
+      (assq-ref duration-strings dur))))
 
-(define alter-strings
-  (list
-    '("eses" . -2)
-    '("es"   . -1)
-    '("s"    . -1)
-    '("isis" .  2)
-    '("is"   .  1)))
+(define alter-amt 
+  '(("s"    . -1)
+    ("ses"  . -2)
+    ("es"   . -1)
+    ("eses" . -2)
+    ("is"   .  1)
+    ("sis"  .  2)
+    ("isis" .  2)))
 
-; TODO redo below to use ass. list;
-; make a substring of the portion between the first letter and either the octave
-; or numeric portion (first non-letter); use assv to search alter-strings for
-; this to get the alteration amount
+;; TODO deal with #f result of assoc-ref
 (define alter
   (lambda (note)
-    "Given Lilypond note command string, return string with number of half
-    steps to adjust pitch"
-    (let ([alter-amt 
-      (cond
-        [(string-contains note "eses") -2]
-        [(string-contains note "es")   -1] 
-        [(string-contains note "isis")  2]
-        [(string-contains note "is")    1]
-        [else 0])])
-      (if (= 0 alter-amt)
-        ""
-        (number->string alter-amt)))))
+    "Given Lilypond note command string, return string with number of half steps
+    to adjust pitch; use the portion of the command between the first character
+    (= pitch name) and the non-letter chars that follow, the octave signs or
+    duration"
+    (let ([accidental
+            (substring note 1 
+                       (string-skip note char-set:letter))])
+             (if (= 0 (string-length accidental))
+               ""
+               (number->string (assoc-ref alter-amt accidental))))))
 
 (define octave
   (lambda (note)
-    "Given Lilypond note command string, return string with octave number"
-    (let ([octave-increment
-            (cond [(string-contains note "'") 
-                   (string-count note #\')]
-                  [(string-contains note ",")
-                   (- 0 (string-count note #\,))]
-                  [else 0])])
+    "Given Lilypond note command string, return string with octave number;
+    find the portion between the letters and the numbers, the count of symbols
+    is the amount to be added to the base octave 4; or subtract if symbol is comma"
+    (let* ([octave-str
+            (substring note 
+                       (string-skip note char-set:letter)
+                       (string-index note char-set:digit))]
+           [octave-add 
+             (string-length octave-str)]
+           [octave-increment 
+             (if (and (> octave-add 0) 
+                      (equal? #\, (string-ref octave-str 0)))
+               (- 0 octave-add)
+               octave-add)])
       (number->string (+ 4 octave-increment)))))
 
 (define xml-tag
@@ -124,4 +127,11 @@
          (xml-tag "duration" (duration note beats))
          (xml-tag-nonempty "type" (type note))))) 
 
-
+(define ly->xml
+  (lambda (note-ls beats)
+    "Convert a list of Lilypond note strings to single XML string"
+    (apply string-append 
+           (map 
+             (lambda (note) (ly->xml:note note beats)) 
+             note-ls))))
+; TODO start from single Lilypond string of commands rather than list of strings
