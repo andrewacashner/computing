@@ -1,0 +1,9 @@
+* multable.mixal -- Return a table of multiples of a given integer 
+* up to a given maximum
+* Andrew A. Cashner, 2017/07/23
+*
+MAX     EQU     =100=
+N       EQU     =2=
+*
+START   ORIG
+
