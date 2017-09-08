@@ -1,0 +1,59 @@
+\documentclass{article}
+\usepackage[hmargin=0.75in,vmargin=0.5in]{geometry}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\baselineskip}{0pt}
+
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+
+\newcommand{\name}{Name}
+\newcommand{\position}{Title}
+\newcommand{\institution}{Institution}
+\newcommand{\email}{email@example.com}
+
+\newcommand{\namefont}[1]{{\Large\textsc{#1}}}
+\newcommand{\urlfont}[1]{{\small\textsf{#1}}}
+
+\newcommand{\card}{%
+    \begin{minipage}[c][2in][c]{3.5in}
+        \vfil
+        \begin{tabular}{l}
+            \namefont{\name}\\
+            \position\\[1ex]
+            \institution\\
+        \end{tabular}
+        \vfil
+        \hfill\urlfont{\email\ }
+    \end{minipage}%
+}
+
+\newcommand{\printgrid}[3]{% args: rows, columns, contents
+    \newcount\row
+    \newcount\col
+    \row=#1
+    \loop
+        \col=#2
+        {\loop
+            #3%
+            \advance\col by -1
+            \ifnum\col > 0
+        \repeat
+        }
+        \newline%
+    \advance\row by -1
+    \ifnum\row > 0
+    \repeat
+}
+
+
+
+\begin{document}
+
+\printgrid{5}{2}{\card}
+
+\end{document}
+
+
