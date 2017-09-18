@@ -29,13 +29,9 @@
 
 (define check-position
   (lambda (a b)
-    (or (eqv? b 'empty)
-        [and (not (eqv? a 'empty))
-             b 
-             (or 
-               (and (even? a) (odd? b)) 
-               (and (odd? a) (even? b))) 
-             (< a b)])))
+    (and (not (eqv? a 'empty))
+         (or (eqv? b 'empty)
+             (< a b)))))
 
 (define pop-swap
   (lambda (stack-a stack-b)
@@ -62,8 +58,17 @@
       (stack2 'top)))
     (newline)))
 
-(pop-swap stack0 stack1)
-(pop-swap stack0 stack2)
-(pop-swap stack1 stack2)
-(pop-swap stack0 stack1)
 (tower-status stack0 stack1 stack2)
+(pop-swap stack0 stack1) (tower-status stack0 stack1 stack2)
+(pop-swap stack0 stack2) (tower-status stack0 stack1 stack2)
+(pop-swap stack1 stack2) (tower-status stack0 stack1 stack2)
+
+(pop-swap stack0 stack1) (tower-status stack0 stack1 stack2)
+(pop-swap stack2 stack0) (tower-status stack0 stack1 stack2)
+(pop-swap stack2 stack1) (tower-status stack0 stack1 stack2)
+(pop-swap stack0 stack1) (tower-status stack0 stack1 stack2)
+(pop-swap stack0 stack2) (tower-status stack0 stack1 stack2)
+
+
+
+
