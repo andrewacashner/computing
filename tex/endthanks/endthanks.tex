@@ -1,12 +1,36 @@
 \documentclass{article}
 \usepackage[nopar]{lipsum}
+
 \usepackage{endnotes}
-\let\footnote\endnote
-\let\thanks\endnote
+\let\footnote\endnote % convert \footnotes to \endnotes
 
-\author{Abraham Lincoln%
-\thanks{1600 Pennsylvania Ave., Washington, D.C.}}
+% Set up the symbols used in \thanks 
+% Copied directly from LaTeX \@fnsymbol
+\newcommand{\ensymbol}[1]{%
+    \ensuremath{\ifcase#1\or *\or \dagger\or \ddagger\or 
+    \mathsection\or \mathparagraph\or \|\or **\or \dagger\dagger 
+    \or \ddagger\ddagger \else\@ctrerr\fi}%
+}
 
+% Redefine thanks as an endnote using symbols instead of numbers
+\renewcommand{\thanks}[1]{%
+    \renewcommand{\theendnote}{\ensymbol{\value{endnote}}}%
+    \endnote{#1}%
+}
+
+% Redefine \maketitle so that it resets the endnote counter after the
+% \thanks notes
+\let\oldmaketitle\maketitle
+\renewcommand{\maketitle}{%
+    \oldmaketitle
+    \setcounter{endnote}{0}%
+}
+
+\author{%
+    Abraham Lincoln%
+    \thanks{1600 Pennsylvania Ave., Washington, D.C.}%
+    \thanks{Deceased}%
+}
 \title{First Inaugural Address}
 
 \begin{document}
