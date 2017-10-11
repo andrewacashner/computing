@@ -3,6 +3,8 @@
 
 \usepackage{endnotes}
 \let\footnote\endnote % convert \footnotes to \endnotes
+\let\oldmakeenmark\makeenmark
+\renewcommand{\makeenmark}{\hbox{\theenmark.}\,\,}
 
 % Set up the symbols used in \thanks 
 % Copied directly from LaTeX \@fnsymbol
@@ -15,6 +17,7 @@
 % Redefine thanks as an endnote using symbols instead of numbers
 \renewcommand{\thanks}[1]{%
     \renewcommand{\theendnote}{\ensymbol{\value{endnote}}}%
+    \let\makeenmark\oldmakeenmark
     \endnote{#1}%
 }
 
@@ -25,6 +28,7 @@
     \oldmaketitle
     \setcounter{endnote}{0}%
 }
+
 
 \author{%
     Abraham Lincoln%

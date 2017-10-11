@@ -1,0 +1,23 @@
+\@doanenote {\protect $\relax *$}
+macro:->1600
+Pennsylvania
+Ave.,
+Washington,
+D.C.
+\@endanenote 
+\@doanenote {\protect $\relax \dagger $}
+macro:->Deceased
+\@endanenote 
+\@doanenote {1}
+macro:->This
+is
+not
+really
+Latin.
+\@endanenote 
+\@doanenote {2}
+macro:->Nor
+is
+it
+Lincoln.
+\@endanenote 
