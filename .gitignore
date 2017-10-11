@@ -11,6 +11,7 @@ github
 *.cx
 *.ccx
 *.dvi
+*.ent
 *.jpg
 *.jpeg
 *.JPG
