@@ -39,12 +39,10 @@
                (stack 'push! data)
                (inner-fill-stacks 
                  stack-ls
-                 (if (>= i max) 
-                   0
-                   (+ 1 i))
+                 (if (>= i max) 0 (+ 1 i))
                  max
                  (cdr data-ls)))))])
-      (inner-fill-stacks stack-ls 0 2 data-ls))))
+      (inner-fill-stacks stack-ls 0 (- (length stack-ls) 1) data-ls))))
 
 (fill-stacks stacks data)
 
