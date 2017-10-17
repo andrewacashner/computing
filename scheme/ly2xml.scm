@@ -1,4 +1,4 @@
-;; notes.scm -- First tries converting Lilypond notes to MusicXML format
+;; ly2xml.scm -- First tries converting Lilypond notes to MusicXML format
 ;; Andrew A. Cashner, 2017/06/20-22
 ;;
 ;; (1) just the note part:
@@ -36,7 +36,7 @@
       (number->string (/ beats dur))))) 
 ;; TODO how to get breve, longa from duration functions
 
-(define duration-words 
+(define duration-strings
   '((1   . "whole")
     (2   . "half")
     (4   . "quarter")
@@ -105,7 +105,7 @@
     (string-append 
       "<" tag ">"
       (apply string-append contents)
-      "</" tag ">")))
+      "</" tag ">\n")))
 
 (define xml-tag-nonempty
   (lambda (tag contents)
@@ -128,10 +128,19 @@
          (xml-tag-nonempty "type" (type note))))) 
 
 (define ly->xml
-  (lambda (note-ls beats)
-    "Convert a list of Lilypond note strings to single XML string"
-    (apply string-append 
-           (map 
-             (lambda (note) (ly->xml:note note beats)) 
-             note-ls))))
+  (lambda (ly-music beats)
+    "Convert a string containing a Lilypond music expression, convert to a
+    single Music XML string" 
+    (let*
+      ([start (+ 1 (string-index ly-music #\{))]
+       [end (string-index ly-music #\})]
+       [note-str
+         (substring ly-music start end)]
+       [note-ls
+         (string-tokenize note-str)]
+       [xml (apply string-append 
+             (map 
+               (lambda (note) (ly->xml:note note beats)) 
+               note-ls))])
+       (display xml))))
 ; TODO start from single Lilypond string of commands rather than list of strings
