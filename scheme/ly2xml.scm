@@ -83,7 +83,7 @@
   (lambda (note)
     "Given Lilypond note command string, return string with octave number;
     find the portion between the letters and the numbers, the count of symbols
-    is the amount to be added to the base octave 4; or subtract if symbol is comma"
+    is the amount to be added to the base octave 3; or subtract if symbol is comma"
     (let* ([octave-str
             (substring note 
                        (string-skip note char-set:letter)
@@ -95,7 +95,7 @@
                       (equal? #\, (string-ref octave-str 0)))
                (- 0 octave-add)
                octave-add)])
-      (number->string (+ 4 octave-increment)))))
+      (number->string (+ 3 octave-increment)))))
 
 (define xml-tag
   (lambda (tag . contents)
@@ -119,13 +119,18 @@
     "Given a Lilypond note command and the beats per measure, return a string
     with a complete MusicXML <note> element; omit <alter> if no accidental, omit
     <type> if there is no string corresponding to the numeric value"
+    (let ([thestep (step note)]
+          [thealter (alter note)]
+          [theoctave (octave note)]
+          [theduration (duration note beats)]
+          [thetype (type note)])
     (xml-tag "note" 
          (xml-tag "pitch"
-              (xml-tag "step" (step note)) 
-              (xml-tag-nonempty "alter" (alter note))
-              (xml-tag "octave" (octave note)))
-         (xml-tag "duration" (duration note beats))
-         (xml-tag-nonempty "type" (type note))))) 
+              (xml-tag "step" thestep) 
+              (xml-tag-nonempty "alter" thealter)
+              (xml-tag "octave" theoctave)
+         (xml-tag "duration" theduration)
+         (xml-tag-nonempty "type" thetype))))))
 
 (define ly->xml
   (lambda (ly-music beats)
@@ -137,10 +142,47 @@
        [note-str
          (substring ly-music start end)]
        [note-ls
-         (string-tokenize note-str)]
-       [xml (apply string-append 
+         (string-tokenize note-str)])
+       (apply string-append 
              (map 
                (lambda (note) (ly->xml:note note beats)) 
-               note-ls))])
-       (display xml))))
-; TODO start from single Lilypond string of commands rather than list of strings
+               note-ls)))))
+
+(define port->string
+  (lambda (port)
+    "Given an input port, return a string with the contents read from the port"
+    (let readloop 
+      ([result '()] 
+       [chr (read-char port)])
+      (if (eof-object? chr)
+        (list->string result)
+        (readloop 
+          (append result (list chr)) 
+          (read-char port))))))
+
+(define read-infile
+  (lambda (infilename)
+    "Read file contents and return them as a string"
+    (if (access? infilename F_OK) 
+      [call-with-input-file infilename port->string]
+      [begin 
+        (display 
+          (string-append 
+            "Could not open file " infilename "for reading"))
+        (newline)])))
+        
+(define write-file 
+  (lambda (outfilename str)
+    "Write string to file, creating file as needed; 
+    do not overwrite existing file" 
+    (if (access? outfilename F_OK) 
+      [begin
+        (display 
+          (string-append 
+            "File " outfilename " already exists"))
+        (newline)]
+      [let ([outfileport (open-file outfilename "w")]) 
+        (display str outfileport) 
+        (close-output-port outfileport)])))
+
+
