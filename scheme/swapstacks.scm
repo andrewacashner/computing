@@ -1,15 +1,6 @@
 ;; swapstacks.scm -- Andrew Cashner, 2017/10/26
 ;; Swap contents of two stacks; use extra stacks as needed
 
-;; Pop all of stack A (contents a) and push onto empty stack C (now a is
-;; reversed).
-;; Pop all of stack B (contents b) and push onto empty stack D (now b is
-;; reversed).
-;; Pop all of stack C (contents a reversed) and push onto now-empty stack B, now
-;; holds contents a in original order.
-;; Pop all of stack D (contents b reversed) and push onto now-empty stack A, now
-;; holds contents b in original order.
-
 (define make-stack
   (lambda ()
     (let ([ls '()])
@@ -26,12 +17,15 @@
            (if (null? ls)
              "Empty stack" 
              (set! ls (cdr ls)))]
+          [(eq? msg 'index)
+           (list-ref ls (car args))]
+          [(eq? msg 'length)
+           (length ls)]
           [else "Unknown message"])))))
+
 
 (define stackA (make-stack))
 (define stackB (make-stack))
-(define stackC (make-stack))
-(define stackD (make-stack))
 
 (stackA 'push! 0)
 (stackA 'push! 1)
@@ -56,11 +50,27 @@
         (s1 'pop!)
         (dump (s1 'top) s2))))))
 
+(define dump-stack-ref! 
+  (lambda (s1 n s2)
+    "Pop given number of items from stack1 and push onto stack2"
+    (let dump ([n n]
+               [s1-top (s1 'top)] 
+               [s2 s2])
+      (if (and
+            (> 0 n) 
+            (not (null? s1-top)))
+        (begin
+          (s2 'push! s1-top) 
+          (s1 'pop!)
+          (dump (- 1 n) (s1 'top) s2))))))
+
 (define swap-stacks!
-  (lambda (s1 s2 s3 s4)
-    (begin
-      (dump-stack! s1 s3)
-      (dump-stack! s2 s4)
-      (dump-stack! s3 s2)
-      (dump-stack! s4 s1))))
+  (lambda (s1 s2)
+    (let ([s3 (make-stack)]
+          [s2-len (s2 'length)])
+      (begin
+        (dump-stack! s1 s3)
+        (dump-stack! s2 s3)
+        (dump-stack-ref! s3 s2-len s2)
+        (dump-stack! s3 s2)))))
 
