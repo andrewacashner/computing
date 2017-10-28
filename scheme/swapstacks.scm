@@ -35,39 +35,40 @@
         (stack 'push! (car ls))
         (push-list! stack (cdr ls))))))
 
+(define swap!
+  (lambda (s1 s2)
+    "Push top of s1 onto s2, pop s1"
+    (let ([top (s1 'top)])
+      (if (not (null? top))
+        (begin
+          (s2 'push! top)
+          (s1 'pop!))))))
+
 (define dump-stack! 
   (lambda (s1 s2)
     "Pop all of stack1 and push onto stack2"
-    (let dump ([s1-top (s1 'top)] 
-               [s2 s2])
-      (if (not (null? s1-top))
+    (if (not (s1 'empty?))
       (begin
-        (s2 'push! s1-top) 
-        (s1 'pop!)
-        (dump (s1 'top) s2))))))
+        (swap! s1 s2)
+        (dump-stack! s1 s2)))))
 
-(define dump-stack-ref! 
-  (lambda (s1 i s2)
-    "Pop given number of items from stack1 and push onto stack2"
-    (let dump ([n i]
-               [s1-top (s1 'top)] 
-               [s2 s2])
-      (if (and
-            (> n 0) 
-            (not (null? s1-top)))
-        (begin
-          (s2 'push! s1-top) 
-          (s1 'pop!)
-          (dump (- n 1) (s1 'top) s2))))))
+(define iter
+  (lambda (n . args)
+    "Repeat something n times"
+    (if (> n 0)
+      (begin
+        args
+        (iter (- n 1) args)))))
 
-(define s3 (make-stack))
+(define s3 (make-stack)) ; replace with let in fn
+
 (define swap-stacks!
   (lambda (s1 s2)
     (let ([s2-len (s2 'length)])
       (begin
         (dump-stack! s1 s3)
         (dump-stack! s2 s3)
-        (dump-stack-ref! s3 s2-len s1)
+        (iter s2-len (swap! s3 s1))
         (dump-stack! s3 s2)))))
 
 (define stackA (make-stack))
