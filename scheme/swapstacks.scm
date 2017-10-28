@@ -27,13 +27,12 @@
              (newline))]
           [else "Unknown message"])))))
 
-
-(define push-list!
+(define list->stack!
   (lambda (stack ls)
     (if (not (null? ls))
       (begin
         (stack 'push! (car ls))
-        (push-list! stack (cdr ls))))))
+        (list->stack! stack (cdr ls))))))
 
 (define swap!
   (lambda (s1 s2)
@@ -52,37 +51,56 @@
         (swap! s1 s2)
         (dump-stack! s1 s2)))))
 
-(define iter
-  (lambda (n . args)
-    "Repeat something n times"
-    (if (> n 0)
-      (begin
-        args
-        (iter (- n 1) args)))))
-
-(define s3 (make-stack)) ; replace with let in fn
-
 (define swap-stacks!
   (lambda (s1 s2)
-    (let ([s2-len (s2 'length)])
+    (let ([s2-len (s2 'length)]
+          [s3 (make-stack)]
+          [s4 (make-stack)])
       (begin
         (dump-stack! s1 s3)
-        (dump-stack! s2 s3)
-        (iter s2-len (swap! s3 s1))
+        (dump-stack! s2 s4)
+        (dump-stack! s4 s1)
         (dump-stack! s3 s2)))))
+
+
+(define stack->list!
+  (lambda (stack)
+    (if (stack 'empty?) 
+      '()
+      (let ([top (stack 'top)])
+        (begin
+        (stack 'pop!)
+        (cons top (stack->list! stack)))))))
+
+;; version using a list instead of a third stack
+(define ls-swap-stacks!
+  (lambda (s1 s2)
+    (let* ([ls1 (reverse (stack->list! s1))]
+           [ls2 (reverse (stack->list! s2))])
+      (begin 
+        (list->stack! s1 ls2) 
+        (list->stack! s2 ls1)))))
+
+;; this doesn't work
+(define set-swap-stacks!
+  (lambda (s1 s2)
+    (let ([s3 (make-stack)])
+      (begin 
+        (set! s3 s1) 
+        (set! s1 s2) 
+        (set! s2 s3)))))
 
 (define stackA (make-stack))
 (define stackB (make-stack))
-(define numbers '(0 1 2 3 4))
-(define letters '(a b c d e))
-(push-list! stackA numbers)
-(push-list! stackB letters)
 
-(display "Initial state:") (newline)
-(display "A:") (stackA 'print) (newline)
-(display "B:") (stackB 'print) (newline)
-;
-; (swap-stacks! stackA stackB)
-; (display "Final state:") (newline)
-; (display "A:") (stackA 'print) (newline)
-; (display "B:") (stackB 'print) (newline)
+(list->stack! stackA '(0 1 2 3 4))
+(list->stack! stackB '(a b c d e))
+
+(stackA 'print)
+(stackB 'print)
+
+(swap-stacks! stackA stackB) 
+
+(stackA 'print)
+(stackB 'print)
+
