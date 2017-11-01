@@ -1,15 +1,6 @@
 ;; swapstacks.scm -- Andrew Cashner, 2017/10/26
 ;; Swap contents of two stacks; use extra stacks as needed
 
-;; Pop all of stack A (contents a) and push onto empty stack C (now a is
-;; reversed).
-;; Pop all of stack B (contents b) and push onto empty stack D (now b is
-;; reversed).
-;; Pop all of stack C (contents a reversed) and push onto now-empty stack B, now
-;; holds contents a in original order.
-;; Pop all of stack D (contents b reversed) and push onto now-empty stack A, now
-;; holds contents b in original order.
-
 (define make-stack
   (lambda ()
     (let ([ls '()])
@@ -26,41 +17,90 @@
            (if (null? ls)
              "Empty stack" 
              (set! ls (cdr ls)))]
+          [(eq? msg 'index)
+           (list-ref ls (car args))]
+          [(eq? msg 'length)
+           (length ls)]
+          [(eq? msg 'print)
+           (begin 
+             (display ls)
+             (newline))]
           [else "Unknown message"])))))
 
-(define stackA (make-stack))
-(define stackB (make-stack))
-(define stackC (make-stack))
-(define stackD (make-stack))
+(define list->stack!
+  (lambda (stack ls)
+    (if (not (null? ls))
+      (begin
+        (stack 'push! (car ls))
+        (list->stack! stack (cdr ls))))))
 
-(stackA 'push! 0)
-(stackA 'push! 1)
-(stackA 'push! 2)
-(stackA 'push! 3)
-(stackA 'push! 4)
-
-(stackB 'push! 'a)
-(stackB 'push! 'b)
-(stackB 'push! 'c)
-(stackB 'push! 'd)
-(stackB 'push! 'e)
+(define swap!
+  (lambda (s1 s2)
+    "Push top of s1 onto s2, pop s1"
+    (let ([top (s1 'top)])
+      (if (not (null? top))
+        (begin
+          (s2 'push! top)
+          (s1 'pop!))))))
 
 (define dump-stack! 
   (lambda (s1 s2)
     "Pop all of stack1 and push onto stack2"
-    (let dump ([s1-top (s1 'top)] 
-               [s2 s2])
-      (if (not (null? s1-top))
+    (if (not (s1 'empty?))
       (begin
-        (s2 'push! s1-top) 
-        (s1 'pop!)
-        (dump (s1 'top) s2))))))
+        (swap! s1 s2)
+        (dump-stack! s1 s2)))))
 
 (define swap-stacks!
-  (lambda (s1 s2 s3 s4)
-    (begin
-      (dump-stack! s1 s3)
-      (dump-stack! s2 s4)
-      (dump-stack! s3 s2)
-      (dump-stack! s4 s1))))
+  (lambda (s1 s2)
+    (let ([s2-len (s2 'length)]
+          [s3 (make-stack)]
+          [s4 (make-stack)])
+      (begin
+        (dump-stack! s1 s3)
+        (dump-stack! s2 s4)
+        (dump-stack! s4 s1)
+        (dump-stack! s3 s2)))))
+
+
+(define stack->list!
+  (lambda (stack)
+    (if (stack 'empty?) 
+      '()
+      (let ([top (stack 'top)])
+        (begin
+        (stack 'pop!)
+        (cons top (stack->list! stack)))))))
+
+;; version using a list instead of a third stack
+(define ls-swap-stacks!
+  (lambda (s1 s2)
+    (let* ([ls1 (reverse (stack->list! s1))]
+           [ls2 (reverse (stack->list! s2))])
+      (begin 
+        (list->stack! s1 ls2) 
+        (list->stack! s2 ls1)))))
+
+;; this doesn't work
+(define set-swap-stacks!
+  (lambda (s1 s2)
+    (let ([s3 (make-stack)])
+      (begin 
+        (set! s3 s1) 
+        (set! s1 s2) 
+        (set! s2 s3)))))
+
+(define stackA (make-stack))
+(define stackB (make-stack))
+
+(list->stack! stackA '(0 1 2 3 4))
+(list->stack! stackB '(a b c d e))
+
+(stackA 'print)
+(stackB 'print)
+
+(swap-stacks! stackA stackB) 
+
+(stackA 'print)
+(stackB 'print)
 
