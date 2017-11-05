@@ -17,6 +17,8 @@
            (if (null? ls)
              'empty
              (set! ls (cdr ls)))]
+          [(eqv? msg 'print)
+           (begin (display ls) (newline))]
           [else "unknown command"])))))
 
 (define stack-init
