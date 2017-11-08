@@ -17,18 +17,28 @@ int main(void) {
 }
 
 int first_missing(int array[], int size) {
-    int i;
-    int *result = malloc(size*sizeof(int));
-    memset(result, false, size);
-
-    for (i = 0; i < size; ++i) {
-        if (array[i] > 0) {
-            /* Mark result array indexes that match positive integers */
-            result[array[i]] = true;
+    int i, t, n;
+    int *result = NULL;
+   
+    /* Find maximum value in array and create result array of that size */
+    for (i = t = 0; i < size; ++i) {
+        if (array[i] > t) {
+            t = array[i];
         }
     }
-    for (i = 1; i < size; ++i) {
-        /* Find first false result index */
+    result = malloc(t*sizeof(int));
+    memset(result, false, t);
+
+    /* Mark result array indexes that match positive integers */
+    for (i = 0; i < size; ++i) {
+        if (array[i] > 0) {
+            n = array[i];
+            result[n] = true;
+        }
+    }
+    
+    /* Find first false result index */
+    for (i = 1; i < t; ++i) {
         if (result[i] == false) {
             break;
         }
