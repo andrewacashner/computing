@@ -2,19 +2,19 @@
 
 This is sample text.
 This is sample text.
-This is sample text `(ref 'figure "gorilla")`.
+This is sample text `(ref 'figure 'gorilla)`.
 
-`(float 'figure "gorilla")`
+`(insert float 'figure 'gorilla)`
 
-Just as in `(ref 'figure "gorilla")`, `(ref 'music "Bach")
+Just as in `(ref 'figure 'gorilla)`, `(ref 'music 'Bach)`
 shows x y and z.
 This is sample text.
 This is sample text.
 
-`(float 'music "Bach")`
+`(insert float 'music 'Bach)`
 
 This is sample text.
 This is sample text.
 
-`(float 'figure "chimp")`
+`(insert float 'figure 'chimp)`
 
