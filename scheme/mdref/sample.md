@@ -16,4 +16,5 @@ This is sample text.
 This is sample text.
 This is sample text.
 
+`(float 'figure "chimp")`
 
