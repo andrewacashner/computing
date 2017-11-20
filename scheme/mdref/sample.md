@@ -2,7 +2,7 @@
 
 This is sample text.
 This is sample text.
-This is sample text `(ref float 'figure 'gorilla)`.
+This is sample text (`(ref float 'figure 'gorilla)`).
 
 `(insert float 'figure 'gorilla)`
 

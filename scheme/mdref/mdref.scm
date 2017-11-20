@@ -45,10 +45,10 @@ exec guile -e main -s "$0" "$@"
       (begin 
         (assoc-set! ls type (cons label label-ls))
         (string-append 
-          "<insert float: "
+          "[insert float: "
           label-str " "
           (number->string index)
-          ">")))))
+          "]")))))
 ; side effect: sets ls values
  
 (define process-file
@@ -77,8 +77,6 @@ exec guile -e main -s "$0" "$@"
 (define match-ref    
   (make-regexp "`(\\(ref [^\\)`]*\\))`"))
 
-
-;;***************************
 (define float
   '((figure "Figure")
     (table  "Table")
@@ -89,10 +87,10 @@ exec guile -e main -s "$0" "$@"
   (lambda (args)
     (let* ([infilename (cadr args)]
            [infile (open-file-input-port infilename)]
-           [tmpfile (mkstemp! (string-copy "/tmp/mdref-XXXXXX"))])
+           [tmp-out (open-string-output-port)])
       (begin 
-        (process-file infile tmpfile match-insert float) 
-        (close-port infile) 
-        (process-file tmpfile (current-output-port) match-ref float)))))
-
-; TODO figure out why this doesn't write to stdout
+        (process-file infile tmp-out match-insert float) 
+        (process-file 
+          (open-string-input-port (get-output-string tmp-out)) 
+          (current-output-port) match-ref float) 
+        (close-port infile)))))
