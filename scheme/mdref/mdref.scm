@@ -2,7 +2,7 @@
 ;; Read file and find sexps (insert float ...), set! float accordingly, replace
 ;; with nos
 ;; Read again and find sexps (ref float ...), evaluate and replace text
-
+ 
 (define member-index
   (lambda (obj ls)
     (let ([tail (member obj ls)])
@@ -26,16 +26,25 @@
       (if (or (eqv? 'not-found label-str)
               (eqv? 'not-found label-num))
         "**??**"
-        (string-append label-str " " 
-                       (number->string label-num))))))
+        (string-append 
+          label-str " " 
+          (number->string label-num))))))
 
 ;; ls is alist where the values are lists ending with text for label strings,
 ;; add label to front of the list that matches the key
 ;; TODO insert string with float number
 (define insert
   (lambda (ls type label)
-    (assoc-set! ls type (cons label (assoc-ref ls type)))))
-
+    (let* ([label-ls (assoc-ref ls type)]
+           [label-str (car (last-pair label-ls))]
+           [index (length label-ls)])
+    (begin 
+      (assoc-set! ls type (cons label label-ls))
+      (string-append 
+        "<insert float: "
+        label-str " "
+        (number->string index)
+        ">")))))
 
 (define float
   '((figure "Figure")
