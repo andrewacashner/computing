@@ -1,8 +1,12 @@
-;; TODO
-;; Read file and find sexps (insert float ...), set! float accordingly, replace
-;; with nos
-;; Read again and find sexps (ref float ...), evaluate and replace text
- 
+#!/usr/bin/env sh
+exec guile -e main -s "$0" "$@"
+!#
+
+(use-modules
+  (rnrs io ports)
+  (ice-9 regex)
+  (ice-9 eval-string))
+
 (define member-index
   (lambda (obj ls)
     (let ([tail (member obj ls)])
@@ -38,25 +42,57 @@
     (let* ([label-ls (assoc-ref ls type)]
            [label-str (car (last-pair label-ls))]
            [index (length label-ls)])
-    (begin 
-      (assoc-set! ls type (cons label label-ls))
-      (string-append 
-        "<insert float: "
-        label-str " "
-        (number->string index)
-        ">")))))
+      (begin 
+        (assoc-set! ls type (cons label label-ls))
+        (string-append 
+          "<insert float: "
+          label-str " "
+          (number->string index)
+          ">")))))
+; side effect: sets ls values
+ 
+(define process-file
+  (lambda (infile outfile pattern data) ; data = float obj
+    (let loop ([line (get-line infile)])
+      (if (not (eof-object? line))
+        (let ([output-str (process-line line pattern)])
+          (begin
+            (display output-str outfile)
+            (loop (get-line infile))))))))
+; side effect: display
 
+(define process-line
+  (lambda (line pattern)
+    (let ([str (regexp-exec pattern line)])
+      (if (eqv? #f str)
+        (string-append line "\n")
+        (string-append
+          (match:prefix str)
+          (eval-string (match:substring str 1))
+          (match:suffix str)
+          "\n")))))
+
+(define match-insert 
+  (make-regexp "`(\\(insert [^\\)`]*\\))`"))
+(define match-ref    
+  (make-regexp "`(\\(ref [^\\)`]*\\))`"))
+
+
+;;***************************
 (define float
   '((figure "Figure")
     (table  "Table")
     (music  "Music example")
     (poem   "Poem example")))
-  
-;;***************************
 
-(insert float 'music 'Gabrieli)
-(insert float 'music 'Mozart)
-(ref float 'music 'Mozart)
+(define main
+  (lambda (args)
+    (let* ([infilename (cadr args)]
+           [infile (open-file-input-port infilename)]
+           [tmpfile (mkstemp! (string-copy "/tmp/mdref-XXXXXX"))])
+      (begin 
+        (process-file infile tmpfile match-insert float) 
+        (close-port infile) 
+        (process-file tmpfile (current-output-port) match-ref float)))))
 
-
-
+; TODO figure out why this doesn't write to stdout
