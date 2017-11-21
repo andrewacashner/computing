@@ -36,7 +36,6 @@ exec guile -e main -s "$0" "$@"
 
 ;; ls is alist where the values are lists ending with text for label strings,
 ;; add label to front of the list that matches the key
-;; TODO insert string with float number
 (define insert
   (lambda (ls type label)
     (let* ([label-ls (assoc-ref ls type)]
@@ -49,7 +48,6 @@ exec guile -e main -s "$0" "$@"
           label-str " "
           (number->string index)
           "]")))))
-; side effect: sets ls values
  
 (define process-file
   (lambda (infile outfile pattern data) ; data = float obj
@@ -59,7 +57,6 @@ exec guile -e main -s "$0" "$@"
           (begin
             (display output-str outfile)
             (loop (get-line infile))))))))
-; side effect: display
 
 (define process-line
   (lambda (line pattern)
@@ -68,14 +65,15 @@ exec guile -e main -s "$0" "$@"
         (string-append line "\n")
         (string-append
           (match:prefix str)
-          (eval-string (match:substring str 1))
+          (eval-string (match:substring str))
           (match:suffix str)
           "\n")))))
 
 (define match-insert 
-  (make-regexp "`(\\(insert [^\\)`]*\\))`"))
+  (make-regexp "\\(insert [^\\)`]*\\)"))
+
 (define match-ref    
-  (make-regexp "`(\\(ref [^\\)`]*\\))`"))
+  (make-regexp "\\(ref [^\\)`]*\\)"))
 
 (define float
   '((figure "Figure")
