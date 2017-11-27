@@ -1,0 +1,31 @@
+\documentclass{article}
+
+\usepackage[notes]{biblatex-chicago}
+\addbibresource{sample.bib}
+
+\title{Melville}
+\author{John Q. Student}
+
+\begin{document}
+\maketitle
+
+I read Melville's \emph{Moby Dick}.\Autocite{Melville:MobyDick}
+It uses a lot of symbolism.\Autocite{Smith:Symbolism}
+A scholar talks about a specific symbol in one part.%
+\Autocite[143--144]{Smith:Symbolism}
+% With the comment character at the end of the sentence I can put the citation
+% on the next line.
+
+Here are two more specific references.%
+\Autocites
+[150]{Smith:Symbolism}
+[74]{Gunderson:MelvilleWomen}
+% That's just an example of tidily formatted source code.
+Britten wrote a whole opera about it.%
+\Autocite[s. v. \emph{Britten, Benjamin}]{GroveMusic}
+% Instead of a page number I used the Latin abbreviation *sub verbum*
+% to indicate which article to look up.
+
+\printbibliography[title={Bibliography}]
+
+\end{document}
