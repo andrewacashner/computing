@@ -5,6 +5,8 @@ exec guile -e main -s "$0" "$@"
 (use-modules
   (ice-9 format))
 
+(define scale '(ut re mi fa sol la))
+
 (define gamut
   '((C sol fa ut)
     (D la sol re)
@@ -14,6 +16,11 @@ exec guile -e main -s "$0" "$@"
     (A mi re la)
     (B-mol fa #f #f)
     (B-dur #f mi #f)))
+
+(define member-index
+  (lambda (key ls)
+    (let ([tail (member key (reverse ls))])
+      (and tail (length (cdr tail))))))
 
 (define pitch
   (lambda (letter)
