@@ -27,8 +27,17 @@ exec guile -e main -s "$0" "$@"
     (let* ([names   (assoc-ref gamut letter)]
            [mol     (list-ref names 0)]
            [dur     (list-ref names 1)]
-           [nat     (list-ref names 2)])
-      (format #f "~a (~a, ~a, ~a)" letter mol dur nat))))
+           [nat     (list-ref names 2)]
+           [i-mol   (member-index mol scale)]
+           [i-dur   (member-index dur scale)]
+           [i-nat   (member-index nat scale)]
+           [first-i (max i-mol i-dur i-nat)]
+           [first-n (cond
+                      [(= first-i i-mol) mol]
+                      [(= first-i i-dur) dur]
+                      [(= first-i i-nat) nat])])
+      (format #f "~a (~a)" letter first-n))))
+      ;(format #f "~a (~a, ~a, ~a)" letter mol dur nat))))
 ;; this isn't the right order for every pitch 
 ;; account for #f
 ;; check for errors
