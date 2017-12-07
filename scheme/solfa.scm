@@ -1,7 +1,3 @@
-#!/usr/bin/env sh 
-exec guile -e main -s "$0" "$@"
-!#
-
 (use-modules
   (ice-9 format))
 
@@ -46,20 +42,12 @@ exec guile -e main -s "$0" "$@"
                (symbol->string letter))])
       (format #f "~a (~a)" letter-output solfa-output))))
 
-(define solfa-hexachord
-  (lambda (letter hexachord)
-    (let ([index 
-            (cond 
-              [(if (eq? hexachord 'nat) 0)]
-              [(if (eq? hexachord 'dur) 1)]
-              [(if (eq? hexachord 'mol) 2)])]) ; doesn't work
-      (list-ref (assoc-ref gamut letter) index))))
+(define solfa-hex
+  (lambda (letter hex)
+    (let ([index (cond 
+                   [(eq? hex 'nat) 0]
+                   [(eq? hex 'dur) 1]
+                   [(eq? hex 'mol) 2])]
+          [solfa-ls (assoc-ref gamut letter)])
+      (list-ref solfa-ls index))))
 
-(define main
-  (lambda (args)
-    (let* ([input (cadr args)]
-           [key (string->symbol input)]
-           [name (pitch key)])
-    (begin
-      (display name)
-    (newline)))))
