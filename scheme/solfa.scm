@@ -22,25 +22,38 @@ exec guile -e main -s "$0" "$@"
     (let ([tail (member key (reverse ls))])
       (and tail (length (cdr tail))))))
 
+(define solfa->degree
+  (lambda (solfa)
+    (member-index solfa scale)))
+
+(define degree->solfa
+  (lambda (degree)
+    (list-ref scale degree)))
+
 (define pitch
   (lambda (letter)
-    (let* ([names   (assoc-ref gamut letter)]
-           [mol     (list-ref names 0)]
-           [dur     (list-ref names 1)]
-           [nat     (list-ref names 2)]
-           [i-mol   (member-index mol scale)]
-           [i-dur   (member-index dur scale)]
-           [i-nat   (member-index nat scale)]
-           [first-i (max i-mol i-dur i-nat)]
-           [first-n (cond
-                      [(= first-i i-mol) mol]
-                      [(= first-i i-dur) dur]
-                      [(= first-i i-nat) nat])])
-      (format #f "~a (~a)" letter first-n))))
-      ;(format #f "~a (~a, ~a, ~a)" letter mol dur nat))))
-;; this isn't the right order for every pitch 
-;; account for #f
-;; check for errors
+    (let* ([hexachords   (assoc-ref gamut letter)]
+           [hex-true     (filter identity hexachords)]
+           [name-degrees (map solfa->degree hex-true)]
+           [sort-degrees (sort name-degrees >)]
+           [solfa-ls     (map degree->solfa sort-degrees)]
+           [solfa-ls-str (map symbol->string solfa-ls)]
+           [solfa-output (string-join solfa-ls-str ", ")]
+           [letter-output 
+             (if (or (eq? letter 'B-dur) 
+                     (eq? letter 'B-mol))
+               "B"
+               (symbol->string letter))])
+      (format #f "~a (~a)" letter-output solfa-output))))
+
+(define solfa-hexachord
+  (lambda (letter hexachord)
+    (let ([index 
+            (cond 
+              [(if (eq? hexachord 'nat) 0)]
+              [(if (eq? hexachord 'dur) 1)]
+              [(if (eq? hexachord 'mol) 2)])]) ; doesn't work
+      (list-ref (assoc-ref gamut letter) index))))
 
 (define main
   (lambda (args)
