@@ -1,0 +1,11 @@
+* Put a number in memory and print it
+TTY     EQU     19
+BUF     EQU     1500
+START   ORIG    1000
+        IOC     0(TTY)
+        ENTA    50
+        CHAR
+        STX     BUF
+        OUT     BUF(TTY)
+        HLT 
+        END     START
