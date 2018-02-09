@@ -1,0 +1,16 @@
+Augustine:Opera1555
+Augustine:SermonesPL
+Bernard:Nativitate
+Boethius:Musica
+Bongo:NumerorumMysteria
+Catholic:Breviarium1631
+Catholic:Catechismus1614
+Kircher:Musurgia
+Lapide:Apocalypse1627
+Lapide:Gospels19C
+Leo:SermonesPL
+Ricciardo:CommentariaSymbolica
+Sande:DeMissioneLegatorum
+Veracruce:Phisica
+
+
