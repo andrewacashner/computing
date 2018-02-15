@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/css" href="tei-poem.css"?>
+<TEI xmlns="http:/www.tei-c.org/ns/1.0">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title>Si los sentidos queja forman del Pan Divino</title>
+                <author>Attr. Vicente Sánchez</author>
+                <respStmt>
+                    <resp>editor</resp>
+                    <name>Andrew A. Cashner</name>
+                </respStmt>
+                <publicationStmt>
+                    <p>Draft manuscript not for distribution</p>
+                </publicationStmt>
+                <sourceDesc>
+                    <bibl>
+                        <author>Vicente Sánchez</author>
+                        <title>Lyra Poética</title>
+                        <pubPlace>Zaragoza</pubPlace>
+                        <date>1688</date>
+                        <citedRange unit="page" from="171" to="172"/>
+                    </bibl>
+                </sourceDesc>
+            </titleStmt>
+        </fileDesc>
+    </teiHeader>
+    <text>
+        <body>
+            <head>
+                <title>Si los sentidos queja forman del Pan Divino</title>
+            </head>
+
+            <lg type="poem">
+                <lg type="estribillo">
+                    <head>
+                        <title>Estribillo</title>
+                    </head>
+                    <lg type="stanza">
+                        <l>Si los sentidos queja</l>
+                        <l>forman del Pan Divino,</l>
+                        <l>porque los que ellos sienten</l>
+                        <l>no es de Fe consentido,</l>
+                        <l>hoy todos con la Fe sean oídos.</l>
+                        <l>No se den por sentidos los sentidos.</l>
+                    </lg>
+                </lg>
+
+                <lg type="coplas">
+                    <head>
+                        <title>Coplas</title>
+                    </head>
+                    <lg type="stanza" n="1">
+                        <l>Si en ellos va el no ver bien</l>
+                        <l>los ojos de que se admiran,</l>
+                        <l>pues mal verán lo que miran</l>
+                        <l>si no miran lo que ven,</l>
+                        <l>si su ceguedad es quien</l>
+                        <l>los tiene impedidos,</l>
+                        <l><emph>No se den por sentidos los sentidos.</emph></l>
+                    </lg>
+                    <lg type="stanza" n="2">
+                        <l>Entre velos transparentes,</l>
+                        <l>no se ve Dios Encarnado,</l>
+                        <l>que el color se la ha mudado,</l>
+                        <l>y lo hazen sus accidentes,</l>
+                        <l>si en nubes rayos lucientes</l>
+                        <l>están escondidos,</l>
+                        <l><emph>No se den por sentidos los sentidos.</emph></l>
+                    </lg>
+                </lg>
+            </lg>
+        </body>
+    </text>
+</TEI>
+
+<!--
+</div>
+<div class="translation">
+
+<div class="poemhead"></div>
+<lg>
+    <l>If the senses make </l> 
+    <l>a complaint about the Divine Bread,</l>
+    <l>because what they sense</l>
+    <l>is not by faith consented,</l>
+    <l>today let them all with faith be heard.</l>
+    <l>Let the senses not resent it.</l>
+</lg>
+
+<div class="poemhead"></div>
+<lg>
+    <l>1. If in them the eyes that admire</l>
+    <l>cannot see well,</l>
+    <l>since they shall see poorly what they see</l>
+    <l>if they do not look at what they see,</l>
+    <l>if their blindness is what</l>
+    <l>keeps them impaired,</l>
+    <l><emph>Let the senses not resent it.</emph></l>
+</lg>
+<lg>
+    <l>2. Within transparent veils,</l>
+    <l>God Incarnate is not seen,</l>
+    <l>for the color has been changed,</l>
+    <l>and its accidents are doing it.</l>
+    <l>If in the clouds flashing rays</l>
+    <l>are hidden,</l>
+    <l><emph>Let the senses not resent it.</emph></l>
+</lg>
+
+</div>
+</div>
+
+</body>
+</text>
+</TEI>
+-->

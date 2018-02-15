@@ -1,0 +1,24 @@
+teiHeader {
+    display: none;
+}
+text {
+    font-family: "Libertinus Serif", serif;
+    font-size: 12pt;
+}
+body head {
+    font-size: 200%;
+    font-weight: bold;
+    padding-bottom: 1em;
+}
+l {
+    display: block;
+}
+lg head {
+    font-weight: normal;
+    font-size: 125%;
+    font-variant: small-caps;
+    padding-top: 1em;
+    padding-bottom: 0.5em;
+    display: block;
+}
+

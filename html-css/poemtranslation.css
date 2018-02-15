@@ -1,0 +1,19 @@
+body {
+    font-family: "Libertinus Serif", serif;
+    font-size: 12pt;
+}
+div.poem { 
+    column-count: 2; 
+}
+div.poem { 
+    display: inline-block;
+}
+div.translation { 
+    display: inline-block;
+    break-before: always;
+}
+div.poemhead {
+    font-variant: small-caps;
+    padding-top: 1em;
+    height: 1em;
+}
