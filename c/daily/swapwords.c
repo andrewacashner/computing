@@ -109,6 +109,7 @@ int read_yaml(FILE *file, dict_entry kv_pairs[]) {
                     kv_pairs[i].value[j] = '\0';
                     mode = BODY;
                     ++i;
+                    j = 0;
                     continue;
                 } else if (c == ' ' || c == '\t') {
                     continue;
