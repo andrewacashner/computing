@@ -51,6 +51,14 @@
           (new-values db table value-str)
           (alist->db-values (cdr ls) db table))))))
 
+(define ls->db-values
+  (lambda (ls db table)
+    (if (null? ls)
+        0
+        (begin
+          (new-values db table (car ls))
+          (ls->db-values (cdr ls) db table)))))
+
 (define new-data
   (lambda (ls)
     (let ([keys (car ls)])
@@ -97,19 +105,6 @@
 ;     (display-query db "SELECT * FROM vcpoems")
 ;     (dbi-close db)))
 
-
-(define csv->ls
-  (lambda (infile)
-    (let* ([infile (open-input-file infile)])
-      (let loop ([line (read-line infile)] [ls '()])
-        (if (eof-object? line)
-            (begin
-              (close-port infile)
-              (reverse ls))
-            (loop
-              (read-line infile) 
-              (cons (line->values line) ls)))))))
-
 (define line->values
   (lambda (str)
     (let ([str (open-input-string str)])
@@ -118,14 +113,28 @@
           (reverse ls)
           (loop (read-delimited "," str) (cons value ls)))))))
 
+
+(define file->lines
+  (lambda (infile)
+    (let loop ([line (read-line infile)] [ls '()])
+      (if (eof-object? line)
+          (reverse ls)
+          (loop
+            (read-line infile)
+            (cons line ls))))))
+
 (define csv->db
-  (lambda (infile dbname)
+  (lambda (infile dbname table)
+    "Create new database and insert csv rows as values into table"
     (let* ([db (new-db dbname)]
-           [table "vcpoems"]
-           [table-spec "year integer, city, institution, feast, signature"]
-           [data (new-data (csv->ls infile))])
+           [csv-lines (call-with-input-file infile file->lines)]
+           [table-spec (car csv-lines)]
+           [data (cdr csv-lines)])
       (begin
         (new-table db table table-spec)
-        (alist->db-values data db table)
-        (display-query db "SELECT * FROM vcpoems")
+        (ls->db-values data db table)
         (dbi-close db)))))
+
+;; FYI This basically duplicates the functionality of sqlite3:
+;; sqlite> .mode csv
+;; sqlite> .import file table
