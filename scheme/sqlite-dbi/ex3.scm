@@ -1,6 +1,8 @@
 ;; guile-dbi test 2018/04/13
 
 (use-modules 
+  (shell filenames)
+  (ice-9 rdelim)
   (ice-9 format)
   (dbi dbi))
 
@@ -95,15 +97,35 @@
 ;     (display-query db "SELECT * FROM vcpoems")
 ;     (dbi-close db)))
 
-; Using data in list of lists with alist keys as first list
-(let* ([db (new-db "ex3.db")]
-       [table "vcpoems"]
-       [table-spec "year integer, city, institution, feast, signature"]
-       [data (new-data ShortData)])
-  (begin
-    (new-table db table table-spec)
-    (alist->db-values data db table)
-    (display-query db "SELECT * FROM vcpoems")
-    (dbi-close db)))
 
+(define csv->ls
+  (lambda (infile)
+    (let* ([infile (open-input-file infile)])
+      (let loop ([line (read-line infile)] [ls '()])
+        (if (eof-object? line)
+            (begin
+              (close-port infile)
+              (reverse ls))
+            (loop
+              (read-line infile) 
+              (cons (line->values line) ls)))))))
 
+(define line->values
+  (lambda (str)
+    (let ([str (open-input-string str)])
+    (let loop ([value (read-delimited "," str)] [ls '()])
+      (if (eof-object? value)
+          (reverse ls)
+          (loop (read-delimited "," str) (cons value ls)))))))
+
+(define csv->db
+  (lambda (infile dbname)
+    (let* ([db (new-db dbname)]
+           [table "vcpoems"]
+           [table-spec "year integer, city, institution, feast, signature"]
+           [data (new-data (csv->ls infile))])
+      (begin
+        (new-table db table table-spec)
+        (alist->db-values data db table)
+        (display-query db "SELECT * FROM vcpoems")
+        (dbi-close db)))))
