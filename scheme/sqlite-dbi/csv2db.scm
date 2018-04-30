@@ -138,3 +138,4 @@
 ;; FYI This basically duplicates the functionality of sqlite3:
 ;; sqlite> .mode csv
 ;; sqlite> .import file table
+;; Except that sqlite3 cannot handle quoted CSV fields!
