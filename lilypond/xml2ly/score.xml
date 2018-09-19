@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lirio xmlns:xi="http://www.w3.org/2001/XInclude">
+  <version n="2.19"/>
+  <score>
+    <staffGroup type="pianoStaff" id="pno">
+      <staff id="S">
+        <voice id="Soprano">
+          <xi:include href="music.xml" xpointer="Soprano"/>
+        </voice>
+      </staff>
+      <staff id="A">
+        <voice id="Alto">
+          <xi:include href="music.xml" xpointer="Alto"/>
+        </voice>
+      </staff>
+      <staff id="B">
+        <voice id="Bass">
+          <xi:include href="music.xml" xpointer="Bass"/>
+        </voice>
+      </staff>
+    </staffGroup>
+  </score>
+</lirio>
+
