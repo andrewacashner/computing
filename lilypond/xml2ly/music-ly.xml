@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lirio>
+  <music xml:id="Soprano">
+    <clef key="g" pos="2"/>
+    <meter a="4" b="4"/>
+    c''4 d''4 e''4 d''4
+    c''1
+    <bar type="final"/>
+  </music>
+
+  <music xml:id="Alto">
+    <clef key="c" pos="3"/>
+    <meter a="4" b="4"/>
+    g'4 g'4 g'4 g'4
+    g'1
+  </music>
+
+  <music xml:id="Bass">
+    <clef key="f" pos="4"/>
+    <meter a="4" b="4"/>
+    c'4 g4 c'4 g4
+    c1
+    <bar type="final"/>
+  </music>
+</lirio>
+

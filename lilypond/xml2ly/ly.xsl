@@ -92,13 +92,13 @@
 
   <xsl:template match="meter">
     <xsl:text>\time </xsl:text>
-    <xsl:value-of select="@a"/>
+    <xsl:value-of select="@sum"/>
     <xsl:text>/</xsl:text>
-    <xsl:value-of select="@b"/>
+    <xsl:value-of select="@base"/>
     <xsl:text>&#xA;</xsl:text>
   </xsl:template>
 
-  <xsl:template match="bar">
+  <xsl:template match="barline">
     <xsl:text>\bar "</xsl:text>
     <xsl:choose>
       <xsl:when test="@type='final'">
@@ -108,12 +108,14 @@
         <xsl:text>||</xsl:text>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:message terminate="yes">Unrecognized bar value
+        <xsl:message terminate="yes">Unrecognized barline value
           <xsl:value-of select="@type"/>
         </xsl:message>
       </xsl:otherwise>
     </xsl:choose>
     <xsl:text>"&#xA;</xsl:text>
   </xsl:template>
+
+  
 </xsl:stylesheet>
     

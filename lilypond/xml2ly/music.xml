@@ -1,26 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lirio>
-  <music xml:id="Soprano">
+  <music xml:id="marks">
+    <meter sum="4" base="4"/>
+    <bar n="2">
+      <barline type="final"/>
+    </bar>
+  </music>
+
+  <music xml:id="soprano">
     <clef key="g" pos="2"/>
-    <meter a="4" b="4"/>
-    c''4 d''4 e''4 d''4
-    c''1
-    <bar type="final"/>
+    <meter sum="4" base="4"/>
+    <bar n="1">
+      <mn p="c" o="5" d="1"/>
+      <mn p="d" o="5" d="1"/>
+      <mn p="e" o="5" d="1"/>
+      <mn p="d" o="5" d="1"/>
+    </bar>
+    <bar n="2">
+      <mn p="c" o="1" d="4"/>
+    </bar>
   </music>
 
-  <music xml:id="Alto">
+  <music xml:id="alto">
     <clef key="c" pos="3"/>
-    <meter a="4" b="4"/>
-    g'4 g'4 g'4 g'4
-    g'1
+    <meter sum="4" base="4"/>
+    <bar n="1">
+      <mn p="g" o="4" d="1"/>
+      <mn p="g" o="4" d="1"/>
+      <mn p="g" o="4" d="1"/>
+      <mn p="g" o="4" d="1"/>
+    </bar>
+    <bar n="2">
+      <mn p="g" o="4" d="4"/>
+    </bar>
   </music>
 
-  <music xml:id="Bass">
+  <music xml:id="bass">
     <clef key="f" pos="4"/>
-    <meter a="4" b="4"/>
-    c'4 g4 c'4 g4
-    c1
-    <bar type="final"/>
+    <meter sum="4" base="4"/>
+    <bar n="1">
+      <mn p="c" o="3" d="1"/>
+      <mn p="g" o="2" d="1"/>
+      <mn p="c" o="3" d="1"/>
+      <mn p="g" o="2" d="1"/>
+    </bar>
+    <bar n="2">
+      <mn p="c" o="2" d="4"/>
+    </bar>
   </music>
 </lirio>
 

@@ -4,18 +4,21 @@
   <score>
     <staffGroup type="pianoStaff" id="pno">
       <staff id="S">
+        <voice id="marks">
+          <xi:include href="music.xml" xpointer="marks"/>
+        </voice>
         <voice id="Soprano">
-          <xi:include href="music.xml" xpointer="Soprano"/>
+          <xi:include href="music.xml" xpointer="soprano"/>
         </voice>
       </staff>
       <staff id="A">
         <voice id="Alto">
-          <xi:include href="music.xml" xpointer="Alto"/>
+          <xi:include href="music.xml" xpointer="alto"/>
         </voice>
       </staff>
       <staff id="B">
         <voice id="Bass">
-          <xi:include href="music.xml" xpointer="Bass"/>
+          <xi:include href="music.xml" xpointer="bass"/>
         </voice>
       </staff>
     </staffGroup>
