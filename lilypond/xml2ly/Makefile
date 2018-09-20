@@ -13,7 +13,7 @@ build/%.pdf : %.ly | $(dirs)
 	lilypond -o $(basename $@) $<
 
 %.ly : xi-%.xml $(xsl) 
-	saxon -s:$<i -xsl:$(xsl) -o:$@
+	saxon -s:$< -xsl:$(xsl) -o:$@
 
 xi-%.xml : %.xml
 	xmllint --xinclude $< --output $@

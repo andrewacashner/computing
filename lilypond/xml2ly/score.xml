@@ -1,27 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lirio xmlns:xi="http://www.w3.org/2001/XInclude">
   <version n="2.19"/>
-  <score>
-    <staffGroup type="pianoStaff" id="pno">
-      <staff id="S">
+  <header>
+    <title>Perfect Authentic Cadence</title>
+    <subtitle>From XML to Lilypond</subtitle>
+    <composer>Andrew A. Cashner</composer>
+    <copyright>Copyright © 2018 Andrew A. Cashner</copyright>
+  </header>
+  <score id="open">
+    <staffGroup type="ChoirStaff" id="chorus">
+      <staff id="S" name="SOPRANO">
         <voice id="marks">
           <xi:include href="music.xml" xpointer="marks"/>
         </voice>
-        <voice id="Soprano">
-          <xi:include href="music.xml" xpointer="soprano"/>
+        <voice id="soprano">
+          <music>
+            <clef key="g" pos="2"/>
+            <xi:include href="music.xml" xpointer="soprano"/>
+          </music>
         </voice>
       </staff>
-      <staff id="A">
-        <voice id="Alto">
+      <staff id="A" name="ALTO">
+        <voice id="alto">
+          <music>
+            <clef key="c" pos="3"/>
+            <xi:include href="music.xml" xpointer="alto"/>
+          </music>
+        </voice>
+      </staff>
+      <staff id="T" name="TENOR">
+        <voice id="tenor">
+          <music>
+            <clef key="c" pos="4"/>
+            <xi:include href="music.xml" xpointer="tenor"/>
+          </music>
+        </voice>
+      </staff>
+      <staff id="B" name="BASS">
+        <voice id="bass">
+          <music>
+            <clef key="f" pos="4"/>
+            <xi:include href="music.xml" xpointer="bass"/>
+          </music>
+        </voice>
+      </staff>
+    </staffGroup>
+  </score>
+
+  <score id="grandstaff">
+    <staffGroup type="PianoStaff" id="pno">
+      <staff id="RH">
+        <voice id="marks">
+          <xi:include href="music.xml" xpointer="marks"/>
+        </voice>
+        <voice id="soprano" pos="1">
+          <clef key="g" pos="2"/>
+          <xi:include href="music.xml" xpointer="soprano"/>
+        </voice>
+        <voice id="alto" pos="2">
+          <clef key="g" pos="2"/>
           <xi:include href="music.xml" xpointer="alto"/>
         </voice>
       </staff>
-      <staff id="B">
-        <voice id="Bass">
+      <staff id="LH">
+        <voice id="tenor" pos="1">
+          <clef key="f" pos="4"/>
+          <xi:include href="music.xml" xpointer="tenor"/>
+        </voice>
+        <voice id="bass" pos="2">
+          <clef key="f" pos="4"/>
           <xi:include href="music.xml" xpointer="bass"/>
         </voice>
       </staff>
     </staffGroup>
   </score>
+
 </lirio>
 
