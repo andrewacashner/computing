@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lirio xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <version n="2.19"/>
+
+  <header>
+    <title>Venid querubines alados</title>
+    <subtitle>De nuestra Señora. A 4.</subtitle>
+    <composer>Juan Hidalgo</composer>
+    <editor>Edited by Andrew A. Cashner</editor>
+    <poet>Anonymous</poet>
+    <source>D-Mbs: Mus. 2897</source>
+    <copyright>Copyright © 2018 Andrew A. Cashner</copyright>
+  </header>
+
+  <score>
+    <staffgroup id="coro" type="ChoirStaff">
+      <staff id="S1">
+        <name>
+          <full><add>Tiple 1</add></full>
+          <short>Ti. 1</short>
+        </name>
+        <voice id="S1">
+          <music>
+            <clef p="g" pos="2"/>
+            <meter symbol="C3"/>
+            <key name="mollis"/>
+            <xi:include href="music.xml" xpointer="S1"/>
+          </music>
+        </voice>
+      </staff>
+
+      <staff id="S2">
+        <name>
+          <full><add>Tiple 2</add></full>
+          <short>Ti. 2</short>
+        </name>
+        <voice id="S2">
+          <music>
+            <clef p="g" pos="2"/>
+            <meter symbol="C3"/>
+            <key name="mollis"/>
+            <xi:include href="music.xml" xpointer="S2"/>
+          </music>
+        </voice>
+      </staff>
+
+      <staff id="S3">
+        <name>
+          <full><add>Tiple 3</add></full>
+          <short>Ti. 3</short>
+        </name>
+        <voice id="S3">
+          <music>
+            <clef p="g" pos="2"/>
+            <meter symbol="C3"/>
+            <key name="mollis"/>
+            <xi:include href="music.xml" xpointer="S3"/>
+          </music>
+        </voice>
+      </staff>
+
+      <staff id="T">
+        <name>
+          <full>Tenore</full>
+          <short>T.</short>
+        </name>
+        <voice id="T">
+          <music>
+            <clef p="g" pos="2" trans="-8"/>
+            <meter symbol="C3"/>
+            <key name="mollis"/>
+            <xi:include href="music.xml" xpointer="T"/>
+          </music>
+        </voice>
+      </staff>
+    </staffgroup>
+
+    <staffgroup id="Ac" type="ChoirStaff">
+      <staff id="Ac">
+        <name>
+          <full>
+            <list>
+              <line>Acompañamiento</line>
+              <line>Arpa</line>
+            </list>
+          </full>
+          <short>Ac.</short>
+        </name>
+        <voice id="Ac">
+          <music>
+            <clef p="f" pos="4"/>
+            <meter symbol="C3"/>
+            <key name="mollis"/>
+            <xi:include href="music.xml" xpointer="Ac"/>
+          </music>
+        </voice>
+      </staff>
+    </staffgroup>
+  </score>
+
+</lirio>

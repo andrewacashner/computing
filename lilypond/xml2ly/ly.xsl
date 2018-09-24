@@ -10,6 +10,7 @@
   <xsl:strip-space elements="*"/>
 
   <xsl:template match="/">
+    <xsl:text>\include "villancico.ly"&#xA;</xsl:text>
     <xsl:apply-templates />
   </xsl:template>
 
@@ -27,20 +28,18 @@
 
   <xsl:template match="header">
     <xsl:text>\header {&#xA;</xsl:text>
-    <xsl:text>title = "</xsl:text>
-    <xsl:apply-templates select="title"/>
-    <xsl:text>"&#xA;</xsl:text>
-    <xsl:text>subtitle = "</xsl:text>
-    <xsl:apply-templates select="subtitle"/>
-    <xsl:text>"&#xA;</xsl:text>
-    <xsl:text>composer = "</xsl:text>
-    <xsl:apply-templates select="composer"/>
-    <xsl:text>"&#xA;</xsl:text>
-    <xsl:text>copyright = "</xsl:text>
-    <xsl:apply-templates select="copyright"/>
-    <xsl:text>"&#xA;</xsl:text>
+    <xsl:for-each select="*">
+      <xsl:value-of select="local-name()"/>
+      <xsl:text> = "</xsl:text>
+      <xsl:apply-templates/>
+      <xsl:text>"&#xA;</xsl:text>
+    </xsl:for-each>
     <xsl:text>tagline = ##f&#xA;</xsl:text>
-    <xsl:text>&#xA;}&#xA;</xsl:text>
+    <xsl:text>}&#xA;</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="header/composer/text()">
+    <xsl:value-of select="upper-case(.)"/>
   </xsl:template>
 
   <xsl:template match="score">
@@ -49,7 +48,7 @@
     <xsl:text>&gt;&gt;&#xA;}&#xA;</xsl:text>
   </xsl:template>
 
-  <xsl:template match="staffGroup">
+  <xsl:template match="staffgroup">
     <xsl:text>\new </xsl:text>
     <xsl:value-of select="@type"/>
     <xsl:text> = "</xsl:text>
@@ -62,16 +61,76 @@
   <xsl:template match="staff">
     <xsl:text>\new Staff = "</xsl:text>
     <xsl:value-of select="@id"/>
-    <xsl:text>" </xsl:text>
-    <xsl:if test="@name">
-      <xsl:text>\with { instrumentName = "</xsl:text>
-      <xsl:value-of select="@name"/>
-      <xsl:text>" }&#xA;</xsl:text>
-    </xsl:if>
-    <xsl:text>&lt;&lt;&#xA;</xsl:text>
-    <xsl:apply-templates />
+    <xsl:text>"&#xA;</xsl:text>
+    <xsl:apply-templates select="name"/>
+    <xsl:text>&#xA;&lt;&lt;&#xA;</xsl:text>
+    <xsl:apply-templates select="voice"/>
     <xsl:text>&gt;&gt;&#xA;</xsl:text>
   </xsl:template>
+
+  <xsl:template match="staff/name">
+    <xsl:text>\with {&#xA;</xsl:text>
+    <xsl:apply-templates/>
+    <xsl:text>}&#xA;</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="name/full">
+    <xsl:text>instrumentName = </xsl:text>
+    <xsl:choose>
+      <xsl:when test="list">
+        <xsl:apply-templates/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>"</xsl:text>
+        <xsl:apply-templates/>
+        <xsl:text>"&#xA;</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <xsl:template match="@*|node()">
+    <xsl:copy>
+      <xsl:apply-templates select="@*|node()"/>
+    </xsl:copy>
+  </xsl:template>
+
+  <xsl:template match="name/full//text()">
+    <xsl:value-of select="upper-case(.)"/>
+  </xsl:template>
+
+  <xsl:template match="add">
+    <xsl:text>[</xsl:text>
+    <xsl:apply-templates/>
+    <xsl:text>]</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="name/short">
+    <xsl:text>shortInstrumentName = </xsl:text>
+    <xsl:choose>
+      <xsl:when test="list">
+        <xsl:apply-templates/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>"</xsl:text>
+        <xsl:apply-templates/>
+        <xsl:text>"&#xA;</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <xsl:template match="full/list | short/list">
+    <xsl:text>\markup {&#xA;\column {&#xA;</xsl:text>
+    <xsl:apply-templates/>
+    <xsl:text>}&#xA;}&#xA;</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="line">
+    <xsl:text>\line { </xsl:text>
+    <xsl:apply-templates/>
+    <xsl:text> }&#xA;</xsl:text>
+  </xsl:template>
+
+  <!-- TODO replace attributes in <voice> with subelements, avoid tests -->
 
   <xsl:template match="voice">
     <xsl:text>\new Voice = "</xsl:text>
@@ -111,10 +170,17 @@
   <xsl:template match="clef">
     <xsl:text>\clef "</xsl:text>
     <xsl:choose>
-      <xsl:when test="(@key='g') and (@pos='2')">
-        <xsl:text>treble</xsl:text>
+      <xsl:when test="(@p='g') and (@pos='2')">
+        <xsl:choose>
+          <xsl:when test="@trans='-8'">
+            <xsl:text>treble_8</xsl:text>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:text>treble</xsl:text>
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:when>
-      <xsl:when test="@key='c'">
+      <xsl:when test="@p='c'">
         <xsl:choose>
           <xsl:when test="@pos='1'">
             <xsl:text>soprano</xsl:text>
@@ -130,7 +196,7 @@
           </xsl:when>
         </xsl:choose>
       </xsl:when>
-      <xsl:when test="(@key='f') and (@pos='4')">
+      <xsl:when test="(@p='f') and (@pos='4')">
         <xsl:text>bass</xsl:text>
       </xsl:when>
       <xsl:otherwise>
@@ -143,10 +209,34 @@
   </xsl:template>
 
   <xsl:template match="meter">
-    <xsl:text>\time </xsl:text>
-    <xsl:value-of select="@sum"/>
-    <xsl:text>/</xsl:text>
-    <xsl:value-of select="@base"/>
+    <xsl:choose>
+      <xsl:when test="@symbol">
+        <xsl:if test="@symbol='C3'">
+          <xsl:text>\MeterTriple</xsl:text>
+        </xsl:if>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>\time </xsl:text>
+        <xsl:value-of select="@sum"/>
+        <xsl:text>/</xsl:text>
+        <xsl:value-of select="@base"/>
+      </xsl:otherwise>
+    </xsl:choose>
+    <xsl:text>&#xA;</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="key">
+    <xsl:choose>
+      <xsl:when test="@name='mollis'">
+        <xsl:text>\CantusMollis</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>\key </xsl:text>
+        <xsl:value-of select="@p"/>
+        <xsl:text>\</xsl:text>
+        <xsl:value-of select="@mode"/>
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:text>&#xA;</xsl:text>
   </xsl:template>
 
@@ -178,7 +268,14 @@
   </xsl:template>
 
   <xsl:template match="mn">
-    <xsl:value-of select="@p"/>
+    <xsl:value-of select="@p"/> <!-- pitch -->
+
+    <xsl:choose> <!-- accidental -->
+      <xsl:when test="@acc='-'">es</xsl:when>
+      <xsl:when test="@acc='='">!</xsl:when>
+      <xsl:when test="@acc='+'">is</xsl:when>
+    </xsl:choose>
+
     <xsl:choose> <!-- octave -->
       <xsl:when test="@o=0">,,,</xsl:when>
       <xsl:when test="@o=1">,,</xsl:when>
@@ -194,11 +291,29 @@
         </xsl:message>
       </xsl:otherwise>
     </xsl:choose>
-    <xsl:value-of select="@d"/>
+
+    <xsl:value-of select="@d"/> <!-- duration -->
+
     <xsl:text> </xsl:text>
   </xsl:template>
 
-  <xsl:template match="rest[@type='bar']">
+  <xsl:template match="r">
+    <xsl:choose>
+      <xsl:when test="@type='full'">
+        <xsl:text>R</xsl:text>
+        <xsl:value-of select="@d"/>
+        <xsl:text>*</xsl:text>
+        <xsl:value-of select="@n"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>r</xsl:text>
+        <xsl:value-of select="@d"/>
+      </xsl:otherwise>
+    </xsl:choose>
+    <xsl:text> </xsl:text>
+  </xsl:template>
+
+  <xsl:template match="s">
     <xsl:text>| s</xsl:text>
     <xsl:value-of select="@d"/>
     <xsl:text>*</xsl:text>

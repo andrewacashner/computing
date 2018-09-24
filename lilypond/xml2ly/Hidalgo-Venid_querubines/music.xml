@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lirio>
+  <music xml:id="S1">
+    <bar n="1">
+      <r d="2"/>
+      <r d="2"/>
+      <mn p="b" acc="-" o="4" d="2"/>
+    </bar>
+    <bar n="2">
+      <mn p="d" o="5" d="2"/>
+      <mn p="d" o="5" d="2."/>
+      <mn p="d" o="5" d="4"/>
+    </bar>
+    <bar n="3">
+      <mn p="f" o="5" d="2."/>
+      <mn p="g" o="5" d="4"/>
+      <mn p="f" o="5" d="2"/>
+    </bar>
+    <bar n="4">
+      <mn p="e" acc="-" o="5" d="2"/>
+      <mn p="d" o="5" d="2"/>
+      <mn p="c" o="5" d="2"/>
+    </bar>
+    <bar n="5">
+      <mn p="c" o="5" d="1"/>
+      <mn p="c" o="5" d="2"/>
+    </bar>
+  </music>
+
+  <music xml:id="S2">
+    <r type="full" d="1." n="5"/>
+  </music>
+
+  <music xml:id="S3">
+    <r type="full" d="1." n="5"/>
+  </music>
+
+  <music xml:id="T">
+    <r type="full" d="1." n="5"/>
+  </music>
+
+  <music xml:id="Ac">
+    <bar n="1">
+      <r d="2"/>
+      <r d="2"/>
+      <mn p="b" acc="-" o="3" d="2"/>
+    </bar>
+    <bar n="2">
+      <mn p="b" acc="-" o="3" d="2"/>
+      <mn p="a" o="3" d="2"/>
+      <mn p="g" o="3" d="2"/>
+    </bar>
+    <bar n="3">
+      <mn p="f" o="3" d="2."/>
+      <mn p="e" acc="-" o="3" d="4"/>
+      <mn p="d" o="3" d="2"/>
+    </bar>
+    <bar n="4">
+      <mn p="e" acc="-" o="3" d="2"/>
+      <mn p="b" acc="-" o="2" d="2"/>
+      <mn p="b" acc="-" o="2" d="2"/>
+    </bar>
+    <bar n="5">
+      <mn p="f" o="3" d="1"/>
+      <mn p="f" o="3" d="2"/>
+    </bar>
+  </music>
+</lirio>
