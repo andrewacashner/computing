@@ -1,14 +1,19 @@
+#!/usr/bin/env sh
+exec guile -e main -s "$0" "$@"
+!#
+
 ; bibsort.scm
 ; Andrew A. Cashner, 2018/09/26
 
-; maybe use string-split?
-; TODO: newlines not being preserved in output
-
 (use-modules 
-  (srfi srfi-1))
+  (srfi srfi-1)
+  (rnrs io ports))
+
+(setlocale LC_ALL "")
 
 (define sublist-test
   (lambda (ls start end)
+    "Test input for sublist function"
     (and
       (list? ls)
       (not (eq? #f (memq start ls)))
@@ -18,49 +23,63 @@
 
 (define sublist
   (lambda (ls start end . mode)
-    (if (sublist-test ls start end)
+    "bibsort function: sublist ls start end . mode
+    INPUT: list LS, starting character, ending character, optional mode
+             Mode can be 'trim-before, 'trim-after, or 'trim-both
+    RETURN: New list containing contents of LS that start with START
+             and end with END: include or exclude START or END based on mode"
+
+    (if (not (sublist-test ls start end))
+        #f
         (let* ([mode (if (null? mode) #f (car mode))]
                [from-start (memq start ls)]
                [after-start (cdr from-start)]
-               [tmp1 (if (or (eq? mode 'trim-before) 
-                             (eq? mode 'trim-both))
-                         after-start
+               [head (if (or (eq? mode 'trim-before) 
+                             (eq? mode 'trim-both)) 
+                         after-start 
                          from-start)]
-               [measure-ls (if (eq? start end)
-                               (memq end after-start)
-                               (memq end from-start))]
-               [head-length (if (eq? #f measure-ls)
-                                (length tmp1)
-                                (+ 1 (- (length tmp1) (length measure-ls))))]
-               [through-end (list-head tmp1 head-length)]
-               [to-end (delete (last through-end) through-end)]
-               [tmp2 (if (or (eq? mode 'trim-after) 
-                             (eq? mode 'trim-both))
-                         to-end
-                         through-end)])
-          tmp2)
-        #f)))
+               [tail (memq end after-start)]) 
+          ; don't scan first character when looking for end character in
+          ; case both are the same
+          (if (eq? #f tail) ; end-char not found, e.g., EOF
+              head
+              (let* ([drop-length (if (or (eq? mode 'trim-after) 
+                                          (eq? mode 'trim-both)) 
+                                      (+ 1 (length tail))
+                                      (length tail))]
+                     [trim-delimiter (drop-right head drop-length)]
+                     [trim-newline (if (eq? (last trim-delimiter) #\newline)
+                                       (drop-right trim-delimiter 1)
+                                       trim-delimiter)])
+                trim-newline))))))
 
 (define bibkey
   (lambda (ls)
+    "Return the key from a single bibtex entry"
     (sublist ls #\{ #\, 'trim-both)))
 
 (define bibentry
   (lambda (ls)
+    "Return a single, entire bibtex entry from a larger string"
     (sublist ls #\@ #\@ 'trim-after)))
 
 (define bibpair
   (lambda (ls)
+    "Return a pair where CAR is the biblatex key for a single entry
+    and the CDR is the whole entry"
     (let ([entry (bibentry ls)])
       (if entry
           (let ([key (bibkey entry)])
             (if key 
                 (cons key entry) 
+
                 #f))
           #f))))
 
 (define bib->ls
   (lambda (s)
+    "Given an input string, create an association list of the bibtex entries
+    within it in format ((key1 . entry1) (key2 . entry2) ...)"
     (let loop ([chars (string->list s)] [ls '()])
       (if (null? chars)
           (reverse ls)
@@ -74,37 +93,38 @@
 
 (define alist-key-strcmp?
   (lambda (ls1 ls2)
+    "Compare two keys in association list, given keys as lists of chars and
+    comparing them as strings"
     (let ([key1 (list->string (car ls1))]
           [key2 (list->string (car ls2))])
     (string-ci<? key1 key2))))
 
 (define sort-keys
   (lambda (s)
+    "Sort association list of bibkeys and bibentries by keys"
     (let ([pairs (bib->ls s)])
     (sort-list pairs alist-key-strcmp?))))
 
-(define bibsort
+(define sort-bib
   (lambda (s)
+    "Given an association list of bibtex keys and entries,
+    sort them and return a string with the sorted list"
     (let loop ([ls (sort-keys s)] [strings '()])
       (if (null? ls)
-          (string-join (map list->string (reverse strings)))
+          (let ([final-strings (map list->string (reverse strings))])
+            (string-join final-strings "\n\n" 'suffix))
           (loop (cdr ls) (cons (cdar ls) strings))))))
 
-(define bib1 "\
-@Book{Cashner:HearingFaith,
- author={Cashner, Andrew A.},
- title={Hearing Faith},
- year=2020
-}
-")
-
-(define bib2 "\
-@Article{Cashner:Cards,
-  author={Cashner, Andrew A.},
-  title={Playing Cards at the Eucharistic Table},
-  year=2014
-}
-")
-
-(define bib (string-append bib1 bib2))
+(define main
+  (lambda (args)
+    "Read a bibtex file, sort it, and write the results to file or standard output"
+    (if (and args (< (length args) 2))
+        (format #t "USAGE: bibsort <infile> [<outfile>]\n")
+        (let* ([infile (open-file-input-port (list-ref args 1))] 
+               [outfile (if (= 2 (length args)) 
+                            (current-output-port)
+                            (open-file-output-port (list-ref args 2)))]
+               [bib (get-string-all infile)]
+               [bib-sorted (sort-bib bib)])
+          (display bib-sorted outfile)))))
 
