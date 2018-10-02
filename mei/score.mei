@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+JUAN HIDALGO
+VENID QUERUBINES ALADOS
+D-Mbs: Mss. Mus. 2897
+
+Edited by Andrew A. Cashner
+
+2018/09/24    Hand transcription
+2018/10/01    In lilypond
+-->
+
+<mei xmlns="http://www.music-encoding.org/ns/mei">
+  <meiHead>
+    <altId>
+    </altId>
+
+    <fileDesc>
+      <titleStmt>
+        <title type="main">Venid, querubines alados</title>
+        <title type="subtitle">De nuestra Señora. A 4.</title>
+        <composer>Juan Hidalgo (1614–1685)</composer>
+        <lyricist>Anonymous</lyricist>
+      </titleStmt>
+      <editionStmt>
+        <respStmt>
+          Edited by Andrew A. Cashner
+        </respStmt>
+      </editionStmt>
+      <pubStmt>
+        <unpub/>
+      </pubStmt>
+      <sourceDesc>
+        <identifier>D-Mbs: Mss. Mus. 2897</identifier>
+      </sourceDesc>
+    </fileDesc>
+
+    <encodingDesc>
+      <editorialDecl>
+        <normalization>
+          <p>Original note values and pitch level have been preserved, but barlines
+            have been added for each metrical unit, necessitating ties and adjustments
+            to accidental notation according to modern practice.</p>
+          <p>Orthography of sung texts has been modernized and standardized.</p>
+        </normalization>
+      </editorialDecl>
+    </encodingDesc>
+
+    <workDesc>
+      <work>
+        <incip>Venid querubines alados/ Escuchad, atended</incip>
+        <key>Cantus mollis</key>
+        <meter>Z</meter>
+        <langUsage>
+          <language xml:id="es-ES">Castilian Spanish</language>
+        </langUsage>
+        <perfMedium>
+          Four voices with continuo: 
+          Tiple 1, Tiple 2, Tiple 3, Tenore, Acompañamiento/Arpa
+        </perfMedium>
+        <contents>Estribillo and coplas</contents>
+        <classification>villancico, music for Marian devotion</classification>
+      </work>
+    </workDesc>
+
+    <revisionDesc>
+      <change isodate="2018-10-01" resp="#AAC">
+        <changeDesc>
+          <p>First attempt at MEI</p>
+        </changeDesc>
+      </change>
+    </revisionDesc>
+  </meiHead>
+
+  <music>
+    <staffDef xml:id="SI" n="1" clef.shape="C" clef.line="1"/>
+    <body>
+      <mdiv>
+        <score>
+          <scoreDef 
+            key.pname="b" key.accid="f" key.mode="major"
+            meter.num="3" meter.numbase="2"/>
+          <section>
+          <measure n="1">
+            <staff def="#SI">
+              <layer>
+                <rest dur="2"/>
+                <rest dur="2"/>
+                <note dur="2" pname="b" accid="f"/>
+              </layer>
+            </staff>
+          </measure>
+        </section>
+      </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>
+<!--        <note dur="minima" pname="d"/>
+              <note dur="minima" dots="1" pname="d"/>
+              <note dur="semiminima" pname="e"/> 
+
+              <note dur="minima" dots="1" pname="f"/>
+              <note dur="semiminima" pname="g"/>
+              <note dur="minima" pname="f"/>
+
+              <note dur="minima" pname="e" accid="f"/>
+              <note dur="minima" pname="d"/>
+              <note dur="minima" pname="d"/>
+
+              <note dur="semibrevis" num="1" numbase="1" pname="c"/>
+              <note dur="minima" num="1" numbase="2" pname="c"/>
+              -->
+  
+
+

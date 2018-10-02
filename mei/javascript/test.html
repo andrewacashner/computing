@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Verovio Hello world!</title>
+    <script src="file:///opt/local/verovio/emscripten/build/verovio-toolkit.js"
+            type="text/javascript" ></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"
+            type="text/javascript" ></script>
+  </head>
+  <body>
+    <div id="svg_output"></div>
+      <script type="text/javascript">
+
+        var vrvToolkit = new verovio.toolkit();
+
+$.ajax({
+  url: "score.mei"
+  , dataType: "text"
+  , success: function(data) {
+    var svg = vrvToolkit.renderData(data, {});
+    $("#svg_output").html(svg);
+  }
+});
+      </script>
+  </body>
+</html>
+            
+

@@ -1,100 +1,164 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lirio xmlns:xi="http://www.w3.org/2001/XInclude">
 
-  <version n="2.19"/>
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title type="main">Venid, querubines alados</title>
+        <title type="subtitle">De nuestra Señora. A 4.</title>
+        <composer>Juan Hidalgo (1614–1685)</composer>
+        <lyricist>Anonymous</lyricist>
+        <editor>Andrew A. Cashner</editor>
+      </titleStmt>
+     
+      <editionStmt>
+        <respStmt>
+          Edited by Andrew A. Cashner
+        </respStmt>
+      </editionStmt>
+   
+      <pubStmt>
+        <unpub/>
+        <availability><p>Copyright © 2018 Andrew A. Cashner</p></availability>
+        <date isodate="2018"/>
+      </pubStmt>
+     
+      <sourceDesc>
+        <identifier>
+          <archive>
+            <siglum>D-Mbs</siglum>
+            <idno>Mss. Mus. 2897</idno>
+          </archive>
+        </identifier>
+      </sourceDesc>
+    </fileDesc>
 
-  <header>
-    <title>Venid querubines alados</title>
-    <subtitle>De nuestra Señora. A 4.</subtitle>
-    <composer>Juan Hidalgo</composer>
-    <editor>Edited by Andrew A. Cashner</editor>
-    <poet>Anonymous</poet>
-    <source>D-Mbs: Mus. 2897</source>
-    <copyright>Copyright © 2018 Andrew A. Cashner</copyright>
-  </header>
+    <encodingDesc>
+      <application type="render" label="lilypond" version="2.19"/>
+      <application type="transform" subtype="xslt" label="lirio"/>
+    </encodingDesc>
+    
+    <revisionDesc>
+      <change isodate="2018-10-01" resp="#AAC">
+        <changeDesc>
+          <p>First attempt in custom MEI</p>
+        </changeDesc>
+      </change>
+    </revisionDesc>
+  </meiHead>
 
   <score>
     <staffgroup id="coro" type="ChoirStaff">
-      <staff id="S1">
-        <name>
-          <full><add>Tiple 1</add></full>
-          <short>Ti. 1</short>
-        </name>
-        <voice id="S1">
-          <music>
-            <clef p="g" pos="2"/>
-            <meter symbol="C3"/>
-            <key name="mollis"/>
-            <xi:include href="music.xml" xpointer="S1"/>
-          </music>
-        </voice>
+      <staff n="1" id="S1">
+        <staffDef>
+          <label><add>Tiple 1</add></label>
+          <labelAbbr>Ti. 1</labelAbbr>
+          <clef shape="G" line="2"/>
+          <meter count="3" unit="2" sym="C3"/>
+          <key sig="1f"/>
+
+          <incipit>
+            <clef type="incipit" shape="C" line="1"/>
+            <meter type="incipit" sym="Z"/>
+            <key sig="1f"/>
+            <music>bes'2</music>
+          </incipit>
+        </staffDef>
+
+        <layer id="S1">
+          <xi:include href="music.xml" xpointer="S1"/>
+        </layer>
       </staff>
 
-      <staff id="S2">
-        <name>
-          <full><add>Tiple 2</add></full>
-          <short>Ti. 2</short>
-        </name>
-        <voice id="S2">
-          <music>
-            <clef p="g" pos="2"/>
-            <meter symbol="C3"/>
-            <key name="mollis"/>
-            <xi:include href="music.xml" xpointer="S2"/>
-          </music>
-        </voice>
+      <staff n="2" id="S2">
+        <staffDef>
+          <label><add>Tiple 2</add></label>
+          <labelAbbr>Ti. 2</labelAbbr>
+          <clef shape="G" line="2"/>
+          <meter count="3" unit="2" sym="C3"/>
+          <key sig="1f"/>
+
+          <incipit>
+            <clef type="incipit" shape="C" line="1"/>
+            <meter type="incipit" sym="Z"/>
+            <key sig="1f"/>
+            <music>bes'2</music>
+          </incipit>
+        </staffDef>
+
+        <layer id="S2">
+          <xi:include href="music.xml" xpointer="S2"/>
+        </layer>
       </staff>
 
-      <staff id="S3">
-        <name>
-          <full><add>Tiple 3</add></full>
-          <short>Ti. 3</short>
-        </name>
-        <voice id="S3">
-          <music>
-            <clef p="g" pos="2"/>
-            <meter symbol="C3"/>
-            <key name="mollis"/>
-            <xi:include href="music.xml" xpointer="S3"/>
-          </music>
-        </voice>
+      <staff n="3" id="S3">
+        <staffDef>
+          <label><add>Tiple 3</add></label>
+          <labelAbbr>Ti. 3</labelAbbr>
+          <clef shape="G" line="2"/>
+          <meter count="3" unit="2" sym="C3"/>
+          <key sig="1f"/>
+
+          <incipit>
+            <clef type="incipit" shape="C" line="1"/>
+            <meter type="incipit" sym="Z"/>
+            <key sig="1f"/>
+            <music>d'2</music>
+          </incipit>
+        </staffDef>
+
+        <layer id="S3">
+          <xi:include href="music.xml" xpointer="S3"/>
+        </layer>
       </staff>
 
-      <staff id="T">
-        <name>
-          <full>Tenore</full>
-          <short>T.</short>
-        </name>
-        <voice id="T">
-          <music>
-            <clef p="g" pos="2" trans="-8"/>
-            <meter symbol="C3"/>
-            <key name="mollis"/>
-            <xi:include href="music.xml" xpointer="T"/>
-          </music>
-        </voice>
+      <staff n="4" id="T">
+        <staffDef>
+          <label>Tenore</label>
+          <labelAbbr>T.</labelAbbr>
+          <clef shape="G" line="2" dis="8" dis.place="below"/>
+          <meter count="3" unit="2" sym="C3"/>
+          <key sig="1f"/>
+
+          <incipit>
+            <clef type="incipit" shape="C" line="4"/>
+            <meter type="incipit" sym="Z"/>
+            <key sig="1f"/>
+            <music>bes2</music>
+          </incipit>
+        </staffDef>
+
+        <layer id="T">
+          <xi:include href="music.xml" xpointer="T"/>
+        </layer>
       </staff>
     </staffgroup>
 
-    <staffgroup id="Ac" type="ChoirStaff">
+    <staffgroup id="Ac" type="ChoirStaff" subtype="continuo">
       <staff id="Ac">
-        <name>
-          <full>
+        <staffDef>
+          <label>
             <list>
-              <line>Acompañamiento</line>
-              <line>Arpa</line>
+              <line n="1">Acompañamiento</line>
+              <line n="2">Arpa</line>
             </list>
-          </full>
-          <short>Ac.</short>
-        </name>
-        <voice id="Ac">
-          <music>
-            <clef p="f" pos="4"/>
-            <meter symbol="C3"/>
-            <key name="mollis"/>
-            <xi:include href="music.xml" xpointer="Ac"/>
-          </music>
-        </voice>
+          </label>
+          <labelAbbr>Ac.</labelAbbr>
+          <clef shape="F" line="4"/>
+          <meter count="3" unit="2" sym="C3"/>
+          <key sig="1f"/>
+
+          <incipit>
+            <clef type="incipit" shape="F" line="4"/>
+            <meter type="incipit" sym="Z"/>
+            <key sig="1f"/>
+            <music>bes2</music>
+          </incipit>
+        </staffDef>
+ 
+        <layer id="Ac">
+          <xi:include href="music.xml" xpointer="Ac"/>
+        </layer>
       </staff>
     </staffgroup>
   </score>
