@@ -25,17 +25,17 @@
      
       <sourceDesc>
         <identifier>
-          <archive>
-            <siglum>D-Mbs</siglum>
-            <idno>Mss. Mus. 2897</idno>
-          </archive>
+          <repository>D-Mbs</repository>
+          <idno>Mss. Mus. 2897</idno>
         </identifier>
       </sourceDesc>
     </fileDesc>
 
     <encodingDesc>
-      <application type="render" label="lilypond" version="2.19"/>
-      <application type="transform" subtype="xslt" label="lirio"/>
+      <appInfo>
+        <application type="render" label="lilypond" version="2.19"/>
+        <application type="transform" subtype="xslt" label="lirio"/>
+      </appInfo>
     </encodingDesc>
     
     <revisionDesc>
@@ -47,120 +47,29 @@
     </revisionDesc>
   </meiHead>
 
-  <score>
-    <staffgroup id="coro" type="ChoirStaff">
-      <staff n="1" id="S1">
-        <staffDef>
-          <label><add>Tiple 1</add></label>
-          <labelAbbr>Ti. 1</labelAbbr>
-          <clef shape="G" line="2"/>
-          <meter count="3" unit="2" sym="C3"/>
-          <key sig="1f"/>
+  <music>
+    <body>
+      <mdiv n="1" type="estribillo">
+        <score>
+          <scoreDef meter.count="3" meter.unit="2" meter.sym="C3" key.sig="1f">
+            <staffGrp type="ChoirStaff" id="chorus">
+              <staffDef id="S1" clef.shape="G" clef.line="2">
+                <label>Tiple 1</label>
+                <labelAbbr>Ti. I</labelAbbr>
+                <lyStaff id="SI">
+                  <xi:include href="music.xml" xpointer="SI"/>
+                </lyStaff>
+              </staffDef>
+            </staffGrp>
+          </scoreDef>
 
-          <incipit>
-            <clef type="incipit" shape="C" line="1"/>
-            <meter type="incipit" sym="Z"/>
-            <key sig="1f"/>
-            <music>bes'2</music>
-          </incipit>
-        </staffDef>
+          <make-measures start="1" end="2">
+            <make-staff href="music.xml" id="S1"/>
+          </make-measures>
 
-        <layer id="S1">
-          <xi:include href="music.xml" xpointer="S1"/>
-        </layer>
-      </staff>
-
-      <staff n="2" id="S2">
-        <staffDef>
-          <label><add>Tiple 2</add></label>
-          <labelAbbr>Ti. 2</labelAbbr>
-          <clef shape="G" line="2"/>
-          <meter count="3" unit="2" sym="C3"/>
-          <key sig="1f"/>
-
-          <incipit>
-            <clef type="incipit" shape="C" line="1"/>
-            <meter type="incipit" sym="Z"/>
-            <key sig="1f"/>
-            <music>bes'2</music>
-          </incipit>
-        </staffDef>
-
-        <layer id="S2">
-          <xi:include href="music.xml" xpointer="S2"/>
-        </layer>
-      </staff>
-
-      <staff n="3" id="S3">
-        <staffDef>
-          <label><add>Tiple 3</add></label>
-          <labelAbbr>Ti. 3</labelAbbr>
-          <clef shape="G" line="2"/>
-          <meter count="3" unit="2" sym="C3"/>
-          <key sig="1f"/>
-
-          <incipit>
-            <clef type="incipit" shape="C" line="1"/>
-            <meter type="incipit" sym="Z"/>
-            <key sig="1f"/>
-            <music>d'2</music>
-          </incipit>
-        </staffDef>
-
-        <layer id="S3">
-          <xi:include href="music.xml" xpointer="S3"/>
-        </layer>
-      </staff>
-
-      <staff n="4" id="T">
-        <staffDef>
-          <label>Tenore</label>
-          <labelAbbr>T.</labelAbbr>
-          <clef shape="G" line="2" dis="8" dis.place="below"/>
-          <meter count="3" unit="2" sym="C3"/>
-          <key sig="1f"/>
-
-          <incipit>
-            <clef type="incipit" shape="C" line="4"/>
-            <meter type="incipit" sym="Z"/>
-            <key sig="1f"/>
-            <music>bes2</music>
-          </incipit>
-        </staffDef>
-
-        <layer id="T">
-          <xi:include href="music.xml" xpointer="T"/>
-        </layer>
-      </staff>
-    </staffgroup>
-
-    <staffgroup id="Ac" type="ChoirStaff" subtype="continuo">
-      <staff id="Ac">
-        <staffDef>
-          <label>
-            <list>
-              <line n="1">Acompañamiento</line>
-              <line n="2">Arpa</line>
-            </list>
-          </label>
-          <labelAbbr>Ac.</labelAbbr>
-          <clef shape="F" line="4"/>
-          <meter count="3" unit="2" sym="C3"/>
-          <key sig="1f"/>
-
-          <incipit>
-            <clef type="incipit" shape="F" line="4"/>
-            <meter type="incipit" sym="Z"/>
-            <key sig="1f"/>
-            <music>bes2</music>
-          </incipit>
-        </staffDef>
- 
-        <layer id="Ac">
-          <xi:include href="music.xml" xpointer="Ac"/>
-        </layer>
-      </staff>
-    </staffgroup>
-  </score>
+        </score>
+      </mdiv>
+    </body>
+  </music>
 
 </lirio>
