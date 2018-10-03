@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei xmlns:xi="http://www.w3.org/2001/XInclude">
+  <meiHead>
+    <fileDesc>
+      <titleStmt>
+        <title type="main">Venid, querubines alados</title>
+        <title type="subtitle">De nuestra Señora. A 4.</title>
+        <composer>Juan Hidalgo (1614–1685)</composer>
+        <lyricist>Anonymous</lyricist>
+        <editor>Andrew A. Cashner</editor>
+      </titleStmt>
+      <editionStmt>
+        <respStmt>
+          Edited by Andrew A. Cashner
+        </respStmt>
+      </editionStmt>
+      <pubStmt>
+        <unpub/>
+        <availability>
+          <p>Copyright © 2018 Andrew A. Cashner</p>
+        </availability>
+        <date isodate="2018"/>
+      </pubStmt>
+      <sourceDesc>
+        <identifier>
+          <repository>D-Mbs</repository>
+          <idno>Mss. Mus. 2897</idno>
+        </identifier>
+      </sourceDesc>
+    </fileDesc>
+    <encodingDesc>
+      <appInfo>
+        <application type="render" label="lilypond" version="2.19"/>
+        <application type="transform" subtype="xslt" label="lirio"/>
+      </appInfo>
+    </encodingDesc>
+    <revisionDesc>
+      <change isodate="2018-10-01" resp="#AAC">
+        <changeDesc>
+          <p>First attempt in custom MEI</p>
+        </changeDesc>
+      </change>
+    </revisionDesc>
+  </meiHead>
+  <music>
+    <body>
+      <mdiv n="1" type="estribillo">
+        <score>
+          <scoreDef meter.count="3" meter.unit="2" key.sig="1f">
+            <staffGrp type="ChoirStaff" id="chorus">
+              <staffDef id="S1" lines="5" clef.shape="G" clef.line="2" labelAbbr="Ti. I">
+                <label>Tiple 1</label>
+              </staffDef>
+            </staffGrp>
+          </scoreDef>
+          <section>
+            <measure n="1">
+              <staff def="#S1">
+
+                <layer xml:id="S1-1">
+                  <rest dur="2"/>
+                  <rest dur="2"/>
+                  <note pname="b" accid="f" oct="4" dur="2"/>
+                </layer>
+
+              </staff>
+            </measure>
+            <section>
+              <measure n="2">
+                <staff def="#S1">
+
+                  <layer xml:id="S1-2">
+                    <note pname="d" oct="5" dur="2"/>
+                    <note pname="d" oct="5" dur="2" dots="1"/>
+                    <note pname="d" oct="5" dur="4"/>
+                  </layer>
+
+                </staff>
+              </measure>
+              <section/>
+            </section>
+          </section>
+        </score>
+      </mdiv>
+    </body>
+  </music>
+</mei>

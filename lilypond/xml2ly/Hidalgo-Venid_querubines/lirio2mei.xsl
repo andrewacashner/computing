@@ -31,7 +31,7 @@
   <xsl:template match="@meter.sym"/>
 
   <xsl:template match="staffDef">
-    <staffDef id="{@id}" clef.shape="{@clef.shape}" clef.line="{@clef.line}"
+    <staffDef id="{@id}" lines="5" clef.shape="{@clef.shape}" clef.line="{@clef.line}"
       labelAbbr="{labelAbbr}">
       <xsl:apply-templates/>
     </staffDef>
@@ -42,6 +42,7 @@
   <xsl:template match="make-measures" name="make-measures">
     <xsl:param name="start" select="@start"/>
     <xsl:param name="end" select="@end"/>
+    <section>
     <xsl:choose>
       <xsl:when test="$start > $end">
       </xsl:when>
@@ -59,6 +60,7 @@
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
+  </section>
   </xsl:template>
 
 
