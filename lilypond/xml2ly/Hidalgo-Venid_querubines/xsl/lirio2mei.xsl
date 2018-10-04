@@ -31,7 +31,9 @@
   <xsl:template match="@meter.sym"/>
 
   <xsl:template match="staffDef">
-    <staffDef id="{@id}" lines="5" clef.shape="{@clef.shape}" clef.line="{@clef.line}"
+    <staffDef n="{@n}" id="{@id}" 
+      lines="5" 
+      clef.shape="{@clef.shape}" clef.line="{@clef.line}"
       labelAbbr="{labelAbbr}">
       <xsl:apply-templates/>
     </staffDef>
@@ -49,7 +51,7 @@
       <xsl:otherwise>
         <measure n="{$start}">
         <xsl:for-each select="make-staff">
-          <staff def="#{@id}">
+          <staff n="{@n}" def="#{@id}">
             <xi:include href="{@href}" xpointer="{@id}-{$start}"/>
           </staff>
         </xsl:for-each>

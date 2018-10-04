@@ -56,19 +56,19 @@
     <xsl:text>" }&#xA;</xsl:text>
   </xsl:template>
 
-  <xsl:template match="meiHead/fileDesc/titleStmt/composer">
+  <xsl:template match="meiHead/fileDesc/titleStmt/respStmt/composer">
     <xsl:text>composer = \markup { "</xsl:text>
     <xsl:apply-templates/>
     <xsl:text>" }&#xA;</xsl:text>
   </xsl:template>
 
-  <xsl:template match="meiHead/fileDesc/titleStmt/lyricist">
+  <xsl:template match="meiHead/fileDesc/titleStmt/respStmt/lyricist">
     <xsl:text>poet = \markup { "</xsl:text>
     <xsl:apply-templates/>
     <xsl:text>" }&#xA;</xsl:text>
   </xsl:template>
 
-  <xsl:template match="meiHead/fileDesc/titleStmt/editor">
+  <xsl:template match="meiHead/fileDesc/titleStmt/respStmt/editor">
     <xsl:text>editor = \markup { "Edited by </xsl:text>
     <xsl:apply-templates/>
     <xsl:text>" }&#xA;</xsl:text>
@@ -165,10 +165,10 @@
   <xsl:template match="note">
     <xsl:value-of select="@pname"/>
     <xsl:choose>
-      <xsl:when test="@accid='f'">
+      <xsl:when test="(@accid='f') or (@accid.ges='f')">
         <xsl:text>es</xsl:text>
       </xsl:when>
-      <xsl:when test="@accid='s'">
+      <xsl:when test="(@accid='s') or (@accid.ges='s')">
         <xsl:text>is</xsl:text>
       </xsl:when>
       <xsl:otherwise>

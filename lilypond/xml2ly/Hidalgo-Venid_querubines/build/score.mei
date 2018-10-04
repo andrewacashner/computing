@@ -5,9 +5,11 @@
       <titleStmt>
         <title type="main">Venid, querubines alados</title>
         <title type="subtitle">De nuestra Señora. A 4.</title>
-        <composer>Juan Hidalgo (1614–1685)</composer>
-        <lyricist>Anonymous</lyricist>
-        <editor>Andrew A. Cashner</editor>
+        <respStmt>
+          <composer>Juan Hidalgo (1614–1685)</composer>
+          <lyricist>Anonymous</lyricist>
+          <editor>Andrew A. Cashner</editor>
+        </respStmt>
       </titleStmt>
       <editionStmt>
         <respStmt>
@@ -48,28 +50,28 @@
         <score>
           <scoreDef meter.count="3" meter.unit="2" key.sig="1f">
             <staffGrp type="ChoirStaff" id="chorus">
-              <staffDef id="S1" lines="5" clef.shape="G" clef.line="2" labelAbbr="Ti. I">
+              <staffDef n="1" id="S1" lines="5" clef.shape="G" clef.line="2" labelAbbr="Ti. I">
                 <label>Tiple 1</label>
               </staffDef>
             </staffGrp>
           </scoreDef>
           <section>
             <measure n="1">
-              <staff def="#S1">
+              <staff n="1" def="#S1">
 
-                <layer xml:id="S1-1">
+                <layer xml:id="S1-1" xml:base="include/music.xml">
                   <rest dur="2"/>
                   <rest dur="2"/>
-                  <note pname="b" accid="f" oct="4" dur="2"/>
+                  <note pname="b" accid.ges="f" oct="4" dur="2"/>
                 </layer>
 
               </staff>
             </measure>
             <section>
               <measure n="2">
-                <staff def="#S1">
+                <staff n="1" def="#S1">
 
-                  <layer xml:id="S1-2">
+                  <layer xml:id="S1-2" xml:base="include/music.xml">
                     <note pname="d" oct="5" dur="2"/>
                     <note pname="d" oct="5" dur="2" dots="1"/>
                     <note pname="d" oct="5" dur="4"/>

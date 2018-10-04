@@ -6,9 +6,11 @@
       <titleStmt>
         <title type="main">Venid, querubines alados</title>
         <title type="subtitle">De nuestra Señora. A 4.</title>
-        <composer>Juan Hidalgo (1614–1685)</composer>
-        <lyricist>Anonymous</lyricist>
-        <editor>Andrew A. Cashner</editor>
+        <respStmt>
+          <composer>Juan Hidalgo (1614–1685)</composer>
+          <lyricist>Anonymous</lyricist>
+          <editor>Andrew A. Cashner</editor>
+        </respStmt>
       </titleStmt>
      
       <editionStmt>
@@ -53,18 +55,18 @@
         <score>
           <scoreDef meter.count="3" meter.unit="2" meter.sym="C3" key.sig="1f">
             <staffGrp type="ChoirStaff" id="chorus">
-              <staffDef id="S1" clef.shape="G" clef.line="2">
+              <staffDef n="1" id="S1" clef.shape="G" clef.line="2">
                 <label>Tiple 1</label>
                 <labelAbbr>Ti. I</labelAbbr>
                 <lyStaff id="SI">
-                  <xi:include href="music.xml" xpointer="SI"/>
+                  <xi:include href="include/music.xml" xpointer="SI"/>
                 </lyStaff>
               </staffDef>
             </staffGrp>
           </scoreDef>
 
           <make-measures start="1" end="2">
-            <make-staff href="music.xml" id="S1"/>
+            <make-staff href="include/music.xml" n="1" id="S1"/>
           </make-measures>
 
         </score>

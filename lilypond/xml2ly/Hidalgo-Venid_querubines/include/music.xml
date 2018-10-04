@@ -4,7 +4,7 @@
     <layer xml:id="S1-1">
       <rest dur="2"/>
       <rest dur="2"/>
-      <note pname="b" accid="f" oct="4" dur="2"/>
+      <note pname="b" accid.ges="f" oct="4" dur="2"/>
     </layer>
     <layer xml:id="S1-2">
       <note pname="d" oct="5" dur="2"/>
