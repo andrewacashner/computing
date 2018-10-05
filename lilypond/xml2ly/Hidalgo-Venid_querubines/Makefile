@@ -39,10 +39,14 @@ $(dirs) :
 	-mkdir -p $(dirs)
 
 # Lirio XML to MEI to SVG
-%-noxi.mei : %.xml $(to_mei)
+
+%-tmp1.mei : %.xml 
+	xmllint --xinclude $< --output $@
+
+%-tmp2.mei : %-tmp1.mei $(to_mei)
 	saxon -s:$< -xsl:$(to_mei) -o:$@
 
-%.mei : %-noxi.mei
+%.mei : %-tmp2.mei
 	xmllint --xinclude --format $< --output $@
 
 # Use marker as target since Verovio generates one SVG file per page with
@@ -74,7 +78,7 @@ view-pdf : pdf
 	evince $(pdf_out) $(quiet)
 
 view-svg : svg
-	google-chrome $(wildcard build/*.svg) $(quiet)
+	google-chrome $(PWD)/$(svg_dir)/*.svg $(quiet)
 
 clean : 
 	-rm -rf $(dirs)

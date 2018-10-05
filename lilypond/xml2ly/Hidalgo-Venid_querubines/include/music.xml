@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<lirio>
-  <lyVoice xml:id="SI">
-    <layer xml:id="S1-1">
+<lirioMusic>
+  <lirioVoice n="1" xml:id="SI">
+    <layer n="1" xml:id="S1-1">
       <rest dur="2"/>
       <rest dur="2"/>
       <note pname="b" accid.ges="f" oct="4" dur="2"/>
     </layer>
-    <layer xml:id="S1-2">
+    <layer n="2" xml:id="S1-2">
       <note pname="d" oct="5" dur="2"/>
       <note pname="d" oct="5" dur="2" dots="1"/>
       <note pname="d" oct="5" dur="4"/>
     </layer>
-  </lyVoice>
-</lirio>
+  </lirioVoice>
+</lirioMusic>
 

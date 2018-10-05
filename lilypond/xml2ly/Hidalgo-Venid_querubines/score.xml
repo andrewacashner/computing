@@ -26,11 +26,14 @@
       </pubStmt>
      
       <sourceDesc>
-        <identifier>
-          <repository>D-Mbs</repository>
-          <idno>Mss. Mus. 2897</idno>
-        </identifier>
+        <source label="ms">
+          <identifier>
+            <repository>D-Mbs</repository>
+            <idno>Mss. Mus. 2897</idno>
+          </identifier>
+        </source>
       </sourceDesc>
+
     </fileDesc>
 
     <encodingDesc>
@@ -54,21 +57,15 @@
       <mdiv n="1" type="estribillo">
         <score>
           <scoreDef meter.count="3" meter.unit="2" meter.sym="C3" key.sig="1f">
-            <staffGrp type="ChoirStaff" id="chorus">
+            <staffGrp id="chorus">
               <staffDef n="1" id="S1" clef.shape="G" clef.line="2">
                 <label>Tiple 1</label>
                 <labelAbbr>Ti. I</labelAbbr>
-                <lyStaff id="SI">
-                  <xi:include href="include/music.xml" xpointer="SI"/>
-                </lyStaff>
+                <layerDef n="1" id="SI"/>
               </staffDef>
             </staffGrp>
           </scoreDef>
-
-          <make-measures start="1" end="2">
-            <make-staff href="include/music.xml" n="1" id="S1"/>
-          </make-measures>
-
+          <xi:include href="include/music.xml"/>
         </score>
       </mdiv>
     </body>

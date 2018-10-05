@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet
+<!-- lirio2mei -->
+<xsl:stylesheet 
   version="2.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:xi="http://www.w3.org/2001/XInclude">
@@ -9,6 +10,8 @@
     indent="yes"/>
 
   <xsl:strip-space elements="*"/>
+
+
 
   <xsl:template match="@* | node()">
     <xsl:copy>
@@ -21,12 +24,20 @@
   </xsl:template>
 
   <xsl:template match="lirio">
+    <xsl:comment> Generated automatically from lirio XML </xsl:comment>
     <mei>
       <xsl:apply-templates/>
     </mei>
   </xsl:template>
 
-  <xsl:template match="lyStaff | lyVoice" />
+  <xsl:template match="score">
+    <score>
+      <xsl:apply-templates select="scoreDef"/>
+      <section>
+        <xsl:apply-templates select="lirioMusic/lirioVoice/layer"/>
+      </section>
+    </score>
+  </xsl:template>
 
   <xsl:template match="@meter.sym"/>
 
@@ -35,36 +46,25 @@
       lines="5" 
       clef.shape="{@clef.shape}" clef.line="{@clef.line}"
       labelAbbr="{labelAbbr}">
-      <xsl:apply-templates/>
     </staffDef>
   </xsl:template>
 
   <xsl:template match="staffDef/labelAbbr" />
 
-  <xsl:template match="make-measures" name="make-measures">
-    <xsl:param name="start" select="@start"/>
-    <xsl:param name="end" select="@end"/>
-    <section>
-    <xsl:choose>
-      <xsl:when test="$start > $end">
-      </xsl:when>
-      <xsl:otherwise>
-        <measure n="{$start}">
-        <xsl:for-each select="make-staff">
-          <staff n="{@n}" def="#{@id}">
-            <xi:include href="{@href}" xpointer="{@id}-{$start}"/>
-          </staff>
-        </xsl:for-each>
-      </measure>
-        <xsl:call-template name="make-measures">
-          <xsl:with-param name="start" select="$start + 1"/>
-          <xsl:with-param name="end" select="$end"/>
-        </xsl:call-template>
-      </xsl:otherwise>
-    </xsl:choose>
-  </section>
-  </xsl:template>
+  
+  <xsl:template match="lyVoice" />
 
+  <xsl:template match="//score/lirioMusic/lirioVoice/layer">
+    <xsl:param name="href" select="//score/lirioMusic/@xml:base"/>
+    <xsl:param name="measurenum" select="@n"/>
+    <measure n="{$measurenum}">
+      <xsl:for-each select="//score/scoreDef/staffGrp/staffDef"> 
+        <staff n="{@n}" def="#{@id}">
+          <xi:include href="{$href}" xpointer="{@id}-{$measurenum}"/>
+        </staff>
+      </xsl:for-each>
+    </measure>
+  </xsl:template>
 
 </xsl:stylesheet>
 
