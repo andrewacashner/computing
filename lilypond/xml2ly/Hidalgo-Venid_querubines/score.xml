@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<lirio xmlns:xi="http://www.w3.org/2001/XInclude">
+<mei xmlns:xi="http://www.w3.org/2001/XInclude">
 
   <meiHead>
     <fileDesc>
@@ -29,7 +29,7 @@
         <source label="ms">
           <identifier>
             <repository>D-Mbs</repository>
-            <idno>Mss. Mus. 2897</idno>
+            <idno>Mus. mss. 2897</idno>
           </identifier>
         </source>
       </sourceDesc>
@@ -57,12 +57,14 @@
       <mdiv n="1" type="estribillo">
         <score>
           <scoreDef meter.count="3" meter.unit="2" meter.sym="C3" key.sig="1f">
-            <staffGrp id="chorus">
-              <staffDef n="1" id="S1" clef.shape="G" clef.line="2">
+            <staffGrp label="ChoirStaff" xml:id="chorus">
+              <staffDef n="1" xml:id="S1" 
+                lines="5"
+                clef.shape="G" clef.line="2"
+                labelAbbr="Ti. 1">
                 <label>Tiple 1</label>
-                <labelAbbr>Ti. I</labelAbbr>
-                <layerDef n="1" id="SI"/>
               </staffDef>
+            <layerDef n="1" xml:id="SI"/>
             </staffGrp>
           </scoreDef>
           <xi:include href="include/music.xml"/>
@@ -71,4 +73,4 @@
     </body>
   </music>
 
-</lirio>
+</mei>

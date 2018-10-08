@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<lirioMusic>
-  <lirioVoice n="1" xml:id="SI">
+<mei>
+  <layer n="1" def="#SI">
     <layer n="1" xml:id="S1-1">
       <rest dur="2"/>
       <rest dur="2"/>
@@ -11,6 +11,6 @@
       <note pname="d" oct="5" dur="2" dots="1"/>
       <note pname="d" oct="5" dur="4"/>
     </layer>
-  </lirioVoice>
-</lirioMusic>
+  </layer>
+</mei>
 

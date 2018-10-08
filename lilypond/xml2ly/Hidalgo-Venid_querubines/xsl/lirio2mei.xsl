@@ -34,33 +34,22 @@
     <score>
       <xsl:apply-templates select="scoreDef"/>
       <section>
-        <xsl:apply-templates select="lirioMusic/lirioVoice/layer"/>
+        <xsl:apply-templates select="//score/mei/layer/layer"/>
       </section>
     </score>
   </xsl:template>
 
+  <xsl:template match="layerDef" />
+
   <xsl:template match="@meter.sym"/>
 
-  <xsl:template match="staffDef">
-    <staffDef n="{@n}" id="{@id}" 
-      lines="5" 
-      clef.shape="{@clef.shape}" clef.line="{@clef.line}"
-      labelAbbr="{labelAbbr}">
-    </staffDef>
-  </xsl:template>
-
-  <xsl:template match="staffDef/labelAbbr" />
-
-  
-  <xsl:template match="lyVoice" />
-
-  <xsl:template match="//score/lirioMusic/lirioVoice/layer">
-    <xsl:param name="href" select="//score/lirioMusic/@xml:base"/>
+  <xsl:template match="//score/mei/layer/layer">
+    <xsl:param name="href" select="//score/mei/@xml:base"/>
     <xsl:param name="measurenum" select="@n"/>
     <measure n="{$measurenum}">
       <xsl:for-each select="//score/scoreDef/staffGrp/staffDef"> 
-        <staff n="{@n}" def="#{@id}">
-          <xi:include href="{$href}" xpointer="{@id}-{$measurenum}"/>
+        <staff n="{@n}" def="#{@xml:id}">
+          <xi:include href="{$href}" xpointer="{@xml:id}-{$measurenum}"/>
         </staff>
       </xsl:for-each>
     </measure>

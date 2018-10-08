@@ -36,7 +36,7 @@
   </xsl:template>
   
   <xsl:template match="meiHead/encodingDesc/appInfo/application[@label='lirio']">
-    <xsl:text>% Created from XML original by lirio&#xA;</xsl:text>
+    <xsl:text>% Created automatically from lirio XML&#xA;</xsl:text>
   </xsl:template>
   
   <xsl:template match="meiHead/fileDesc">
@@ -81,7 +81,7 @@
     <xsl:text>" }&#xA;</xsl:text>
   </xsl:template>
  
-  <xsl:template match="meiHead/fileDesc/sourceDesc/identifier">
+  <xsl:template match="meiHead/fileDesc/sourceDesc/source/identifier">
     <xsl:text>source = \markup { \concat { "Source: " \italic "</xsl:text>
     <xsl:apply-templates select="repository"/>
     <xsl:text>" ": </xsl:text>
@@ -101,35 +101,35 @@
 
   <xsl:template match="score">
     <xsl:text>\score {&#xA;&lt;&lt;&#xA;</xsl:text>
-    <xsl:apply-templates select="scoreDef/staffGrp"/>
+    <xsl:apply-templates select="scoreDef"/>
     <xsl:text>&#xA;&gt;&gt;&#xA;}&#xA;</xsl:text>
   </xsl:template>
 
 
   <xsl:template match="staffGrp">
     <xsl:text>\new </xsl:text>
-    <xsl:value-of select="@type"/>
+    <xsl:value-of select="@label"/>
     <xsl:text> = "</xsl:text>
-    <xsl:value-of select="@id"/>
+    <xsl:value-of select="@xml:id"/>
     <xsl:text>"&#xA;&lt;&lt;&#xA;</xsl:text>
-    <xsl:apply-templates select="staffDef/lyStaff"/>
+    <xsl:apply-templates select="staffDef"/>
+    <xsl:apply-templates select="layerDef"/>
+    <xsl:text>&gt;&gt;&#xA;</xsl:text>
     <xsl:text>&gt;&gt;&#xA;</xsl:text>
   </xsl:template>
 
-  <xsl:template match="lyStaff">
+  <xsl:template match="staffDef">
     <xsl:text>\new Staff = "</xsl:text>
-    <xsl:value-of select="@id"/>
+    <xsl:value-of select="@xml:id"/>
     <xsl:text>"&#xA;&lt;&lt;&#xA;</xsl:text>
     <xsl:text>\InstrumentName "</xsl:text>
-    <xsl:apply-templates select="../label"/>
+    <xsl:apply-templates select="label"/>
     <xsl:text>" "</xsl:text>
-    <xsl:apply-templates select="../labelAbbr"/>
+    <xsl:value-of select="@labelAbbr"/>
     <xsl:text>"&#xA;</xsl:text>
-    <xsl:apply-templates/>
-    <xsl:text>&gt;&gt;&#xA;</xsl:text>
   </xsl:template>
 
-  <xsl:template match="lyVoice">
+  <xsl:template match="layerDef">
     <xsl:text>\new Voice = "</xsl:text>
     <xsl:value-of select="@xml:id"/>
     <xsl:text>" {&#xA;</xsl:text>
@@ -142,16 +142,18 @@
     <xsl:if test="ancestor::scoreDef[@key.sig='1f']">
       <xsl:text>\CantusMollis&#xA;</xsl:text>
     </xsl:if>
-    <xsl:apply-templates/>
+    <xsl:apply-templates select="//score/mei/layer[@n=current()/@n]"/>
     <xsl:text>}&#xA;</xsl:text>
   </xsl:template>
 
-  <xsl:template match="layer">
-    <xsl:text>% </xsl:text>
-    <xsl:value-of select="@xml:id"/>
-    <xsl:text>&#xA;| </xsl:text>
-    <xsl:apply-templates/>
-    <xsl:text>&#xA;</xsl:text>
+  <xsl:template match="//score/mei/layer">
+    <xsl:for-each select="layer">
+      <xsl:text>% </xsl:text>
+      <xsl:value-of select="@xml:id"/>
+      <xsl:text>&#xA;| </xsl:text>
+      <xsl:apply-templates/>
+      <xsl:text>&#xA;</xsl:text>
+    </xsl:for-each>
   </xsl:template>
 
   <xsl:template match="rest">
@@ -205,8 +207,6 @@
     <xsl:text> </xsl:text>
   </xsl:template>
 
-
-  <xsl:template match="make-measures" />
 
   <!--
   <xsl:template match="score">
