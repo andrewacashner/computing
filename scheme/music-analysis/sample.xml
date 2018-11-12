@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mei>
+  <music>
+    <measure n="1">
+      <staff n="1">
+        <note pname="a" dur="4"/>
+      </staff>
+      <staff n="2">
+        <note pname="d" dur="4"/>
+      </staff>
+    </measure>
+  </music>
+</mei>
