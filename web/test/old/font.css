@@ -1,0 +1,95 @@
+/* Open-source Linux Libertine fonts used according to the SIL Open Font License, Version 1.1 */
+
+/* LINUX BIOLINUM */
+
+@font-face {
+  font-family: MyBiolinum;
+  src:
+    url('fonts/LinBiolinum_R.ttf') format('truetype'),
+    url('fonts/LinBiolinum_R.woff') format('woff'),
+    url('fonts/LinBiolinum_R.svg#LinBiolinumO') format('svg');
+  font-style: normal;
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: MyBiolinum;
+  src:
+  	url('fonts/LinBiolinum_RIah.ttf') format('truetype'),
+	  url('fonts/LinBiolinum_RI.woff') format('woff'),
+    url('fonts/LinBiolinum_RI.svg#LinBiolinumOI') format('svg');
+  font-style: italic;
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: MyBiolinum;
+  src:
+    url('fonts/LinBiolinum_RBah.ttf') format('truetype'),
+    url('fonts/LinBiolinum_RB.woff') format('woff'),
+    url('fonts/LinBiolinum_RB.svg#LinBiolinumOR') format('svg'); font-style: normal;
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: MyBiolinum;
+  src:
+  	url('fonts/LinBiolinum_RBIah.ttf') format('truetype'),
+    url('fonts/LinBiolinum_RBI.woff') format('woff'),
+    url('fonts/LinBiolinum_RBI.svg#LinBiolinumORI') format('svg');
+  font-style: italic;
+  font-weight: bold;
+}
+
+/* LINUX LIBERTINE DISPLAY */
+
+@font-face {
+	font-family: MyLibertineDisplay;
+	src:
+		url('fonts/LinLibertine_DRah.ttf') format('truetype'),
+		url('fonts/LinLibertine_DR.woff') format('woff'),
+		url('fonts/LinLibertine_DR.svg#LinLibertineDisplayO') format('svg');
+	font-style: normal;
+	font-weight: normal;
+}
+
+/* LINUX LIBERTINE */
+
+@font-face {
+	font-family: MyLibertine;
+	src:
+		url('fonts/LinLibertine_Rah.ttf') format('truetype'),
+		url('fonts/LinLibertine_R.woff') format('woff'),
+		url('fonts/LinLibertine_R.svg#LinLibertineO') format('svg');
+	font-style: normal;
+	font-weight: normal;
+}
+@font-face {
+	font-family: MyLibertine;
+	src:
+		url('fonts/LinLibertine_RIah.ttf') format('truetype'),
+		url('fonts/LinLibertine_RI.woff') format('woff'),
+		url('fonts/LinLibertine_RI.svg#LinLibertineOI') format('svg');
+	font-style: italic;
+	font-weight: normal;
+}
+@font-face {
+	font-family: MyLibertine;
+	src:
+		url('fonts/LinLibertine_RBah.ttf') format('truetype'),
+		url('fonts/LinLibertine_RB.woff') format('woff'),
+		url('fonts/LinLibertine_RB.svg#LinLibertineOB') format('svg');
+	font-style: normal;
+	font-weight: bold;
+}
+@font-face {
+	font-family: MyLibertine;
+	src:
+		url('fonts/LinLibertine_RBIah.ttf') format('truetype'),
+		url('fonts/LinLibertine_RBI.woff') format('woff'),
+		url('fonts/LinLibertine_RBI.svg#LinLibertineOBI') format('svg');
+	font-style: italic;
+	font-weight: bold;
+}
+
+

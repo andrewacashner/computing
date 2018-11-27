@@ -1,0 +1,60 @@
+/* style sheet for quilismawebsite */
+
+body {
+	padding-left: 0em;
+	margin-left: 10%; margin-right: 10%;
+	font-family: charterregular, Georgia, serif; 
+			color: #F2F2F2 ;
+			background: #494949 ;
+	}
+em 		{font-family: charteritalic, Georgia, serif;
+		font-style:normal;
+}
+strong 	{font-family: charterbold, Georgia, serif;
+		font-weight: normal;
+}
+strong em {font-family: charterbold_italic, Georgia, serif;
+		font-style: normal; font-weight: normal;
+}
+
+#banner {
+	background: #000000;
+	position: relative;
+	margin-left: -10%;
+	margin-right: -10%;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1%;
+	background-size: 100%;
+	overflow: hidden;
+	text-align: center;
+	}
+
+#menutop {
+	position: absolute;
+	margin-left: 50%;
+/*	top: 1em;
+	left: 2em;
+	width: 8em;
+*/
+	}
+
+#menubottom {
+	position: fixed;
+	top: 35%;
+	left: 2em;
+	width: 8em;
+	}
+
+p.dateline {
+	text-align: right;
+	}
+
+h1 {margin-left: -10%; font-size: 200%; color: #0093F5;}
+h2 {margin-left: -10%; margin-top: 1em; margin-bottom: 1em; font-size: 150%; color: #000000}
+h3 {margin-top: 2em; font-size: 125%; color: #0093F5}
+h4 {margin-left: -10%; font-size: 125%; color: #000000;}
+h5,h6 {font-size: 100%}
+
+a:link,a:visited    {color: #7DBDFE;} /* all links */

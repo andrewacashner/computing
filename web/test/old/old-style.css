@@ -1,0 +1,133 @@
+/* CSS by Andrew A. Cashner, 2014
+ * Licensed under a Creative Commons Attribution Share-Alike License.
+ *
+ * Style provides a left panel spanning entire height, 
+ * suitable for a background image;
+ * a right panel with a header at top and main body at 
+ * bottom, with footer space at bottom.
+ */
+
+/* LAYOUT */
+
+body {
+	margin: 0;
+	overflow: auto;
+	background-color: #333333; /* dark gray */
+}
+#left_panel {
+	position: fixed; 
+	top: 0;
+	left: 0;
+	right: 75%;
+	height: 100%; 
+	background-color: white;
+}
+#left_panel img {
+	position: relative;
+	float: right;
+	height: 100%;
+	width: auto;
+}
+#right_panel {
+	position: absolute;
+	display: block;
+	top: 0;
+	left: 25%;
+	right: 0;
+	min-height: 600px;
+	min-width: 750px;   
+	overflow: auto;
+	background-color: #333333;
+}
+header {
+	display: block;
+	position: relative;
+	height: 160px;
+	padding-left: 3em;
+	padding-right: 3em;
+	overflow: hidden;
+	background-color: black; 
+}
+header h1 {
+	position: relative;
+	float: left;
+}
+header h2 {
+	position: relative;
+	float: right;
+	text-align: right;
+}
+header nav {
+	clear: left;
+	display: table;
+}
+header nav ul {
+	display: table-row;
+}
+header nav li {
+	display: table-cell;
+	padding-right: 1em;
+}
+#main {
+	display: block;
+	position: relative;
+	margin-top: 3em;
+	margin-left: 15%;
+	margin-right: 15%;
+}
+
+/* TYPOGRAPHY */
+body {
+	font-family: MyLibertine, "Linux Libertine O", Georgia, serif;
+	font-size: 18px;
+	color: white; 
+}
+h1 { 
+	font-family: MyLibertineDisplay, "Linux Libertine Display", "Linux Libertine", "Goudy Old Style", "Garamond", serif; 
+	font-weight: normal;
+}
+header h1 {
+	font-size: 2.5em;
+}
+header h2 {
+	font-family: MyLibertine, "Linux Libertine", "Goudy Old Style", "Garamond", serif; 
+	font-weight: normal;
+	font-style: italic;
+	font-size: 1.8em;
+}
+header nav {
+	font-family: MyBiolinum, "Linux Biolinum O", Optima, sans-serif;
+	font-size: 1.4em;
+}
+header nav a {
+	color: #1589FF;
+	text-decoration: none;
+}
+header nav a:hover{
+	text-decoration: underline;
+}
+main h2 {
+	padding-top: 1em;
+	font-family: MyBiolinum, "Linux Biolinum O", Optima, sans-serif;
+	color: #1589FF;
+	font-size: 1.5em;
+}
+main h3 {
+	padding-top:1em;
+}
+a {
+	color: #CCCCCC;
+}
+a:hover {
+	color: #1589FF;
+}
+address {
+	font-style: normal;
+}
+footer {
+	font-size: .8em;
+	margin-top: 4em;
+	margin-bottom: 2em;
+	text-align: center;
+}
+

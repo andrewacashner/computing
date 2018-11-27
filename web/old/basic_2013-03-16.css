@@ -1,0 +1,39 @@
+@media screen {
+
+body {
+  margin-left: 20%; 
+  margin-right: 20%;
+
+  font-family: MyCharter, Georgia, serif; 
+  font-size: 18px;
+  color: #210B00 ;
+  background: #FFFFF5 ; 
+}
+
+h1.title{font-size: 150%; color: #210B00}
+h1{font-size: 130%; margin-top: 1em; color: #BA190F}
+h2{font-size: 115%; margin-top: 2em}
+h3,h4,h5,h6{font-size: 100%;}
+h3{color: #BA190F;}
+a:link,a:visited,a:hover{color: #722600;}
+
+}
+
+/****************************************/
+
+@media print{
+
+@page{
+  margin: 1in;
+}
+
+body{
+  font-family: MyCharter, Georgia, serif; 
+  font-size: 11pt;
+}
+h1,h2,h3,h4,h5,h6{ font-size: 100%; }
+h1,h2{margin-top: 2em;}
+h6{page-break-before: always;} /* Use h6 exclusively for page breaks */
+a:link,a:visited,a:hover{color: gray;}
+
+}

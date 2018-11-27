@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="style.css">
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header>
+    <h1 class="title">Blog</h1>
+    <p class="author">Andrew A. Cashner</p>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="http://www.andrewcashner.com/index.html">About</a></li>
+        </ul>
+    </nav>
+    <hr />
+</header>
+<main>
+<nav id="TOC">
+<ul>
+<li><a href="#display-image-slides-without-powerpoint-or-beamer">Display image slides without PowerPoint or Beamer</a></li>
+<li><a href="#how-to-do-this-automatically">How to Do This Automatically</a></li>
+<li><a href="#how-to-make-a-blog">How to Make a Blog</a></li>
+<li><a href="#how-to-make-a-post">How to Make a Post</a></li>
+</ul>
+</nav>
+<hr />
+<p><em>2018-02-04</em></p>
+<h1 id="display-image-slides-without-powerpoint-or-beamer">Display image slides without PowerPoint or Beamer</h1>
+<p>If you are teaching or giving a presentation, sometimes you just need to show some pictures. You don't need the overhead of PowerPoint, or Beamer if you use LaTeX. All you need is your Unix-like file system (Linux or Mac) and a web browser like <code>chromium</code>.</p>
+<h2 id="find-the-images-and-store-them">Find the images and store them</h2>
+<p>For a class on music in the Victorian era in the UK and US, I wanted to compare the medieval Gothic architecture of Cambridge University with the neo-Gothic architecture of the University of Chicago, which was built starting in the 1890s.</p>
+<h3 id="do-an-image-search">Do an image search</h3>
+<p>Find the pictures with a Google Image search. You can do this on the command line:</p>
+<pre><code>~$ chromium-browser http://google.com/images?q=Cambridge+University &amp;</code></pre>
+<h4 id="automate-the-image-search">Automate the image search</h4>
+<p>Or you can write a shell script to do this. I called mine <code>img-search</code>. Create this file in your favorite editor (e.g., <code>vim img-search</code>).</p>
+<pre><code>#!/bin/sh
+chromium-browser http://www.google.com/images?q=&quot;$1&quot; &amp;</code></pre>
+<p>Now allow this to be run as an executable and put it where your system can find it:</p>
+<pre><code>~$ chmod +x img-search
+~$ mv img-search ~/bin/</code></pre>
+<p>So now you can do this:</p>
+<pre><code>~$ img-search &quot;University of Chicago&quot; </code></pre>
+<h3 id="save-the-files-in-your-pictures-folder">Save the files in your Pictures folder</h3>
+<p>You can use Google's tools to limit the photos to large size and, if you prefer, to those licensed for reuse. Click on the image, click &quot;View Image,&quot; then right click and select &quot;Save image as...&quot;</p>
+<p>Save the image to your Pictures folder (mine is in <code>~/Pictures</code>) and give it a reasonable file name that will enable you to find it later. Follow the normal rules for searchable, sustainable file names: no spaces, no funky characters (e.g., accents, Unicode). I use hyphens (dashes) to separate the main parts and underscores for the secondary parts. For example, <code>Cambridge_University-Kings_College-exterior.jpg</code> and <code>University_of_Chicago-aerial.jpg</code>.</p>
+<h2 id="make-a-list-of-the-picture-file-names-and-display-them">Make a list of the picture file names and display them</h2>
+<p>Now you can use your web browser to display the images stored locally on your computer. You can display local files if, instead of starting the URL with <code>http://</code>, you use <code>file://</code> instead; then you need one more slash to indicate the root directory. In fact, you can even open the whole directory in the browser and search through the file names: <code>chromium-browser file:///home/andrew/Pictures</code>.</p>
+<p>But if you can make a list of the names, then you can have the shell open a new tab for each file, all in one go. This script reads text from standard input (i.e., typing at the command line), makes file names from each line it reads, checks to see if the file exists, and if it does, it opens it in the browser. It uses variables to make it easier to change the picture directory and browser program. Save this as <code>slides</code>, make it executable (<code>chmod + x</code>), and put it in <code>~/bin/</code>.</p>
+<pre><code>#!/bin/sh
+
+# Display pictures in the browser in separate tabs.
+# Reads a list of filenames from standard input, searching in $pic_dir.
+# Checks if file exists before trying to display it.
+
+pic_dir=&quot;$HOME/Pictures&quot;
+browser=chromium-browser
+
+while IFS= read -r pic_name; do
+    pic_file=&quot;$pic_dir/$pic_name&quot;
+    if [ ! -f &quot;$pic_file&quot; ]; then
+        echo &quot;File $pic_file does not exist.&quot;
+    else
+        echo &quot;Displaying $pic_file&quot;
+        &quot;$browser&quot; &quot;$pic_file&quot; &amp;
+    fi
+done</code></pre>
+<h3 id="list-the-filenames">List the filenames</h3>
+<p>There are multiple ways to feed this script a list of filenames. You could just type up the list in a text file (say, <code>pics.txt</code>), one line per filename, and then feed this file into the script like this:</p>
+<pre><code>~$ slides &lt; pics.txt</code></pre>
+<p>But you could also use the shell to search the picture directory for the files you want. Just use <code>ls</code> to list the directory contents and pipe the output to <code>grep</code> to search the list, and redirect the results to a file. Here I search first for Cambridge and write the results to <code>victorians.txt</code> (using <code>&gt;</code>), then do another search for Chicago and append the results (using <code>&gt;&gt;</code>):</p>
+<pre><code>~$ ls ~/Pictures | grep Cambridge &gt; victorians.txt
+~$ ls ~/Pictures | grep Chicago &gt;&gt; victorians.txt</code></pre>
+<p>You can search for multiple title keywords using extended regular expressions in <code>grep</code> with the OR operator <code>|</code> like this:</p>
+<pre><code>~$ ls ~/Pictures | grep -E &#39;Cambridge|Chicago&#39; &gt; victorians.txt</code></pre>
+<p>Then give this to <code>slides</code>:</p>
+<pre><code>~$ slides &lt; victorians.txt</code></pre>
+<h3 id="all-in-one">All in one</h3>
+<p>Since <code>slides</code> takes standard input, you can bypass the text file altogether and do this in one command:</p>
+<pre><code>~$ ls ~/Pictures | grep -E &#39;Cambridge|Chicago&#39; | slides</code></pre>
+<p>You could even put <em>that</em> in a script if you wanted!</p>
+<pre><code>#!/bin/sh
+ls &quot;$HOME/Pictures&quot; | grep -E &quot;$1&quot; | slides</code></pre>
+<p>Then all you need to enter is this:</p>
+<pre><code>~$ find-slides &#39;Cambridge|Chicago&#39;</code></pre>
+<h2 id="advantages">Advantages</h2>
+<p>These scripts can enable you to put together a simple picture presentation in just a few minutes. You can display a set of pictures on the fly with <code>find-slides</code>, or you can keep the list of picture filenames in a text file (to use with <code>slides</code>) and reuse them future presentations.</p>
+<p>So instead of a multi-megabyte PowerPoint file or big PDF, you have a text file of only a few <em>bytes</em> (plus, of course the images in a separate folder). Like all text files, this is easy to keep in a version-controlled repository using <code>git</code>, which can be backed up online via GitHub or Bitbucket.</p>
+<hr />
+<p><em>2018-01-03</em></p>
+<h1 id="how-to-do-this-automatically">How to Do This Automatically</h1>
+<p>Use your computer in clever but simple ways.</p>
+<hr />
+<p><em>2018-01-01</em></p>
+<h1 id="how-to-make-a-blog">How to Make a Blog</h1>
+<p>This is how to make a blog.</p>
+<hr />
+<p><em>2018-01-01</em></p>
+<h1 id="how-to-make-a-post">How to Make a Post</h1>
+<p>This is how to make a post.</p>
+</main>
+<footer>
+    <hr />
+    <p>Copyright © 2018 Andrew A. Cashner. 
+    Licensed under <a href="http://www.example.com">this</a> license.</p>
+</footer>
+</body>
+</html>

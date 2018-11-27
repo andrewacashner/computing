@@ -1,0 +1,32 @@
+html { 
+    max-width: 1920px;
+    min-width: 320px;
+    margin: auto;
+}
+body {
+    margin: auto;
+    max-width: 45em;
+    font-family: serif;
+    font-size: 100%;
+}
+h1,h2,h3,h4,h5,h6 {
+    font-family: sans-serif;
+}
+header nav {
+    display: table;
+}
+header nav ul { 
+    display: table-row;
+}
+header nav li {
+    display: table-cell;
+    padding-right: 1em;
+}
+code {
+    font-family: monospace;
+    font-size: 90%;
+}
+main {
+    line-height: 1.25;
+}
+
