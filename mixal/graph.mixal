@@ -1,0 +1,70 @@
+* graph.mixal
+* Andrew A. Cashner, 2019/01/29
+* Draw the graph of a function in a bitmap
+*
+TTY     EQU     19
+MAX     EQU     5
+Y       EQU     2000
+COORD   EQU     Y+MAX
+WD      EQU     10
+BITS    EQU     5
+OUTPUT  EQU     COORD+MAX
+BMP     EQU     OUTPUT+WD*WD
+ZERO    EQU     BMP-WD
+FMAX    EQU     45
+FINT    EQU     9
+TMP     EQU     1900
+YD      EQU     TMP
+FLXB    EQU     TMP+1
+MODXB   EQU     TMP+2
+START   IOC     TTY(0)
+        ORIG    1000
+* Calculate, store y values: y = f(x) = 2X
+        ENT1    MAX
+YVALS   ENTA    0,1
+        MUL     =2=
+        STX     Y,1
+        DEC1    1
+        J1P     YVALS
+* Calculate, store coordinates (address + field for bitmap)
+* A(x,y) = origin - yd + floor(x/b)
+* F(x,y) = 9(x mod b + 1)
+        SRAX    10
+        ENT1    MAX     
+COORDS  LDA     Y,1
+        MUL     =WD=
+        STX     YD
+        ENTX    0,1
+        DIV     =BITS=
+        STA     FLXB
+        STX     MODXB
+        ENTA    =ZERO=
+        SUB     YD
+        ADD     FLXB
+        STA     COORD,1(1:2)
+        ENTA    MODXB
+        INCA    1
+        MUL     =9=
+        STX     COORD,1(4:4)
+        STA     COORD,1
+        DEC1    1
+        J1P     COORDS
+* Write bitmap using coordinates
+        SRAX    10
+        ENTA    1
+        CHAR
+        ENT1    MAX
+VALS    LDA     COORD,1
+        STA     *+1(1:4)
+        STX     OUTPUT
+        HLT
+        DEC1    1
+        J1P     VALS
+* Print bitmap (DOESN'T WORK)
+PRINT   ENT1    MAX
+LOOP    OUT     OUTPUT,1(TTY)
+        DEC1    1
+        J1P     LOOP
+        HLT
+        END     START
+

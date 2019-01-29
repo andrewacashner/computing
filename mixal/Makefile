@@ -1,0 +1,3 @@
+%.mix	: %.mixal
+	mixasm $<
+
