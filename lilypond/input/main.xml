@@ -1,0 +1,32 @@
+<document>
+  <header>
+    <title>Symphony no. 5 in C minor</title>
+    <composer>Ludwig van Beethoven</composer>
+    <editor>Andrew A. Cashner</editor>
+  </header>
+  <xi:include href="music.xml"/>
+  <score>
+    <staffGroup>
+      <staff name="Flute">&musicFlute</staff>
+      <staff name="Clarinet">&musicClarinet</staff>
+    </staffGroup>
+    <staffGroup>
+      <staff name="Trumpet">&musicTrumpet</staff>
+      <staff name="Horn">&musicHorn</staff>
+    </staffGroup>
+  </score>
+</document>
+
+<music>
+  <voice id="musicFlute">
+    <ly>
+        \clef treble
+        \time 2/4
+        \key c\minor
+        | r8 g'8 g'8 g'8 
+        | es'2\fermata
+    </ly>
+  </voice>
+</music>
+
+
