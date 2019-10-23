@@ -4,7 +4,11 @@
 -- First program in Haskell
 -- Do arithmetic with pitches: e.g., g4 + P5 = d5, eb3 - M3 = c3, g4 - c4 = P5
 
-module Musarithmetic where
+module Musarithmetic (
+    Interval(..), 
+    Pitch(..), 
+    pitchInc
+) where
 
 -- PITCH
 -- Pitch contains 0-indexed number of a diatonic pitch class (c = 0)
@@ -14,13 +18,13 @@ data Pitch = Pitch {
     pnum :: Int,
     oct :: Int,
     accid :: Int 
-} deriving (Show)
+} 
 
-pitchStr :: Pitch -> String
-pitchStr (Pitch pnum oct accid) = pname : accidName ++ show oct 
-    where
-        pname = "cdefgab" !! pnum
-        accidName = ["bb", "b", "", "#", "x"] !! (accid + 2)
+instance Show Pitch where
+    show (Pitch pnum oct accid) = pname : accidName ++ show oct 
+        where
+            pname = "cdefgab" !! pnum
+            accidName = ["bb", "b", "", "#", "x"] !! (accid + 2)
 
 -- CONVERSION
 -- convert between Pitch and absolute pitch number in a given base
@@ -65,7 +69,10 @@ pc2pitch pnum accid =
 data Interval = Interval {
     quality :: String,
     degree :: Int
-} deriving (Show)
+} 
+
+instance Show Interval where
+   show (Interval quality degree) = quality ++ show degree
 
 -- Is the interval in the list of perfect intervals?
 intervalPerfect :: Interval -> Bool
@@ -127,42 +134,5 @@ pitch8va p = pitchIncDia p 7
 
 pitch8vb :: Pitch -> Pitch
 pitch8vb p = pitchIncDia p (-7)
-
-per1 = Interval "P" 0 
-aug1 = Interval "a" 0 
-min2 = Interval "m" 1 
-maj2 = Interval "M" 1 
-min3 = Interval "m" 2 
-maj3 = Interval "M" 2 
-per4 = Interval "P" 3 
-dim5 = Interval "d" 4 
-per5 = Interval "P" 4 
-min6 = Interval "m" 5 
-maj6 = Interval "M" 5 
-min7 = Interval "m" 6 
-maj7 = Interval "M" 6 
-
-c4      = Pitch 0 4 0
-cis4    = Pitch 0 4 1
-d4      = Pitch 1 4 0
-es4     = Pitch 2 4 (-1)
-e4      = Pitch 2 4 0
-f4      = Pitch 3 4 0
-fis4    = Pitch 3 4 1
-fisis4  = Pitch 3 4 2
-gb4     = Pitch 4 4 (-1)
-g4      = Pitch 4 4 0
-
-main = do
-    putStrLn ("c4 + min3 = " ++ pitchStr(pitchInc c4 min3))
-    putStrLn ("c4 + maj3 = " ++ pitchStr(pitchInc c4 maj3))
-    putStrLn ("c4 + per5 = " ++ pitchStr(pitchInc c4 per5))
-    putStrLn ("es4 + min3 = " ++ pitchStr(pitchInc es4 min3))
-    putStrLn ("es4 + maj3 = " ++ pitchStr(pitchInc es4 maj3))
-    putStrLn ("es4 + per5 = " ++ pitchStr(pitchInc es4 per5))
-    putStrLn ("fis4 + min3 = " ++ pitchStr(pitchInc fis4 min3))
-    putStrLn ("fis4 + maj3 = " ++ pitchStr(pitchInc fis4 maj3))
-    putStrLn ("fis4 + per5 = " ++ pitchStr(pitchInc fis4 per5))
-    return()
 
 
