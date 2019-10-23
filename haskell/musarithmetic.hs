@@ -119,7 +119,7 @@ pitchInc p i =
         oct = oct newPitchDia, 
         accid = pitchDiffChrom newPitchDia newPitchChrom
     } where
-        newPitchDia = pitchIncDia p (degree i)
+        newPitchDia = pitchIncDia p (degree i - 1)
         newPitchChrom = pc2pitchChrom (pitch2pcChrom p + (intervalChrom i))
 
 
