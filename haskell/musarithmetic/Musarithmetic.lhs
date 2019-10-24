@@ -11,8 +11,6 @@
 
 \begin{document}
 \maketitle
-\tableofcontents
-\clearpage
 
 \section{History}
 
