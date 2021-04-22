@@ -1,8 +1,8 @@
 * Print a series of integers according to a rule
 * Andrew Cashner, 2021/04/22
 *
-LENGTH  EQU     10          number of iterations, length of series
-MAX     EQU     LENGTH*2    buffer length is double length of series
+LENGTH  EQU     32          number of iterations, length of series
+MAX     EQU     LENGTH*2    use two words to store each number
 *
 TTY     EQU     19
 TTYBUF  EQU     14          length of TTY output, 14 words
@@ -25,6 +25,7 @@ SAVE    STA     CURRENT
 *                             f(n) = 2n
 FN      LDA     CURRENT     
         MUL     =2=
+        JOV     PRINT       stop when buffer overflows
         SLAX    5
         JMP     SAVE
 *

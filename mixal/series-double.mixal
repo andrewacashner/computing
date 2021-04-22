@@ -1,0 +1,46 @@
+* Print a series of integers according to a rule
+* Andrew Cashner, 2021/04/22
+*
+LENGTH  EQU     32           number of iterations, length of series
+MAX     EQU     LENGTH*4    we need four words for each number
+*
+TTY     EQU     19
+TTYBUF  EQU     14          length of TTY output, 14 words
+*
+CURRA   EQU     2000        current rA value
+CURRX   EQU     2001        current rX value
+MSG     EQU     2002
+*
+START   ORIG    1000
+        ENN1    MAX         rI1, iteration counter
+        ENN2    MAX         rI2, iteration counter for buffer sections
+        ENTX    1           rAX, current integer
+*
+SAVE    STA     CURRA
+        STX     CURRX
+        ENN3    2           rI3, counter for conversion loop
+*                           convert rA to char in rAX, store
+CONV    CHAR                
+        STA     MSG+MAX,1
+        STX     MSG+MAX+1,1
+        INC1    2           store rA and rX consecutively in four-word blocks
+        INC3    1
+        J1Z     PRINT
+*
+        J3NN    FN          next do the same for previous rX value
+        LDA     CURRX
+        JMP     CONV
+*
+*                           series-generating function with last value of rX as input
+*                             f(n) = 2n
+FN      LDA     CURRX
+        MUL     =2=
+        JMP     SAVE
+*
+PRINT   OUT     MSG+MAX,2(TTY)
+        INC2    TTYBUF 
+        J2N     PRINT
+        HLT
+        END     START
+
+
