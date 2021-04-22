@@ -1,0 +1,37 @@
+* Print a series of integers according to a rule
+* Andrew Cashner, 2021/04/22
+*
+LENGTH  EQU     10          number of iterations, length of series
+MAX     EQU     LENGTH*2    buffer length is double length of series
+*
+TTY     EQU     19
+TTYBUF  EQU     14          length of TTY output, 14 words
+*
+CURRENT EQU     2000
+MSG     EQU     2001
+*
+START   ORIG    1000
+        ENN1    MAX         rI1, iteration counter
+        ENN2    MAX         rI2, iteration counter for buffer sections
+        ENTA    1           rA, current integer
+*
+SAVE    STA     CURRENT
+        CHAR
+        STA     MSG+MAX,1
+        STX     MSG+MAX+1,1
+        INC1    2           store rA and rX consecutively in two-word blocks
+        J1Z     PRINT
+*                           series-generating function with last value of rA as input
+*                             f(n) = 2n
+FN      LDA     CURRENT     
+        MUL     =2=
+        SLAX    5
+        JMP     SAVE
+*
+PRINT   OUT     MSG+MAX,2(TTY)
+        INC2    TTYBUF 
+        J2N     PRINT
+        HLT
+        END     START
+
+

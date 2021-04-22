@@ -1,0 +1,41 @@
+\documentclass{article}
+
+% Create a new token list and define a command that adds its argument to the
+% token list and also prints the argument
+\newtoks\studylist
+\newcommand{\studythis}[1]{%
+    \global\studylist=\expandafter{\the\studylist#1}%
+    #1%
+}
+
+% Create an environment that stores the contents in the same token list (and
+% also prints the contents), using the above command
+\usepackage{environ}
+\NewEnviron{studythese}{%
+    \global\let\body=\BODY
+    \studythis{\body}%
+}
+
+% At the end, print out the full list
+\AtEndDocument{%
+    \section*{Study Guide}
+    \the\studylist{}
+}
+
+\begin{document}
+\section{Days}
+\studythis{There are seven days in the week.} Some people start numbering at Sunday;
+others, at Monday. These are the day names in English:
+\begin{studythese}
+\begin{enumerate}
+    \item Sunday
+    \item Monday
+    \item Tuesday
+    \item Wednesday
+    \item Thursday
+    \item Friday
+    \item Saturday
+\end{enumerate}
+\end{studythese}
+
+\end{document}
