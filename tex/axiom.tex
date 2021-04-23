@@ -1,0 +1,43 @@
+\documentclass{article}
+
+\usepackage{amsthm}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+
+\usepackage{tabularx}
+\usepackage{xparse}
+\newcounter{axiomNum}
+\NewDocumentCommand{\axiomMark}{}{}
+
+\NewDocumentEnvironment{axiomata}{ o }
+{%
+    \par\vspace{1ex}%
+    \IfValueTF{#1} {\RenewDocumentCommand{\axiomMark}{}{#1}} {}%
+    \setcounter{axiomNum}{0}%
+    \noindent\tabularx{\textwidth}{l X r}
+}
+{%
+    \endtabularx
+}
+
+\NewDocumentCommand{\axiom}{ m m }{%
+    \stepcounter{axiomNum}
+    \axiomMark\theaxiomNum. & #1 & #2\tabularnewline
+}
+
+
+
+\begin{document}
+\begin{definition}
+    A \emph{poset} is a set in which a binary relation $x \le y $ is
+    defined, which
+    satisfies for all $x, y, z $ the following conditions:
+
+    \begin{axiomata}[P]
+        \axiom{For all $x$, $x \le x$.} {(Reflexivity)}
+        \axiom{If $x \le y$ and $y \le x$, then $x = y$.} {(Antisymmetry)}
+        \axiom{If $x \le y$ and $y \le z$, then $x \le z$.} {(Transitivity)}
+    \end{axiomata}
+
+\end{definition}
+\end{document}
