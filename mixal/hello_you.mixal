@@ -1,0 +1,24 @@
+* hello, you
+* insert user name into greeting
+* 2021/04/23
+*
+TTY     EQU     19
+PROMPT  EQU     2000        address for welcome text
+BUF     EQU     2010        address to store user input
+MSG     EQU     2100        address to store greeting
+        ORIG    1000
+START   OUT     PROMPT(TTY)
+        IN      BUF(TTY)    read from TTY (stdin)
+        ENT1    MSG+2       
+        MOVE    BUF(14)     append input text to greeting
+        OUT     MSG(TTY)    print combined text
+        HLT
+        ORIG    PROMPT      welcome text
+        ALF     "WHAT "
+        ALF     "IS YO"
+        ALF     "UR NA"
+        ALF     "ME   "
+        ORIG    MSG         greeting
+        ALF     "HELLO"
+        ALF     ",    "
+        END     START

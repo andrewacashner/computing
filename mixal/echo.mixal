@@ -1,0 +1,11 @@
+* TTY echo
+* from https://www.gnu.org/software/mdk/manual/html_node/Devices.html 
+* 2021/04/23
+*
+TTY     EQU     19
+BUF     EQU     500         input buffer
+        ORIG    1000
+START   IN      BUF(TTY)    read a block (70 chars)
+        OUT     BUF(TTY)    write the read chars
+        HLT
+        END     START
