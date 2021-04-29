@@ -1,0 +1,27 @@
+\documentclass{article}
+\usepackage{xstring}
+\usepackage{fontspec}
+\newfontfamily{\arabicfont}[Script=Arabic,Extension=.ttf,Scale=1.2]{Amiri-Regular}
+\begin{document}
+
+\arabicfont
+The glyph of name uni0606 is \the\XeTeXglyphindex "uni0606"
+
+The glyph of character uni0606 is \the\XeTeXcharglyph"0606
+
+If they are the same, assign this to hyphenchar
+
+%\expandafter\def\csname indexuni0606\endcsname{\the\XeTeXglyphindex "uni0606"}
+%\expandafter\def\csname glyphuni0606\endcsname{\the\XeTeXcharglyph"0606}
+
+\def\Index{\the\XeTeXglyphindex "uni0606"}
+\def\Char{\the\XeTeXcharglyph"0606}
+
+%\expandafter\ifx\expandafter\csname indexuni0606\endcsname\csname glyphuni0606\endcsname
+%same
+%\else
+%not same
+%\fi
+
+\IfEq{\Index}{\Char}{true}{false}
+\end{document}
