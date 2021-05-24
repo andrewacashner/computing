@@ -4,19 +4,18 @@ import os, sys
 import pygame as pg
 from pygame.compat import geterror
 
-# Color constants
+# Constants
+## Colors
 WHITE = (250, 250, 250)
 GRAY  = (10, 10, 10)
 RED   = (250, 10, 10)
 
-# Check system setup
-if not pg.font: 
-    print("Warning, fonts disabled")
-if not pg.mixer: 
-    print("Warning, sound disabled")
-
+## File paths
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 data_dir = os.path.join(main_dir, "data")
+
+## How many times can you punch the chimp?
+MAX_HITS = 7
 
 # Load media
 def load_image(name, colorkey=None):
@@ -135,7 +134,7 @@ class Chimp(pg.sprite.Sprite):
 
 class Banner(pg.Surface):
     """Big banner of text centered on the window."""
-    def __init__(self, message, color):
+    def __init__(self, screen, message, color):
         pg.Surface.__init__(self, screen.get_size())
         self.convert()
         self.fill(WHITE)
@@ -147,33 +146,57 @@ class Banner(pg.Surface):
             textpos = text.get_rect(centerx = center)
             self.blit(text, textpos)
 
+def make_window(caption, x, y):
+    """Basic small window with caption, hide mouse"""
+    screen = pg.display.set_mode((x, y))
+    pg.display.set_caption(caption)
+    pg.mouse.set_visible(0)
+    return screen
 
+def check_setup():
+    """Check for working fonts and sound. Return relevant error message if
+    either doesn't work, or False if all is good"""
+    msg = False
+    if not pg.font: 
+        msg = "Warning, fonts disabled"
+    if not pg.mixer: 
+        msg = "Warning, sound disabled"
+    return msg
 
-# Initialize everything
-pg.init()
-
-screen = pg.display.set_mode((468, 60))
-pg.display.set_caption("Monkey Fever")
-pg.mouse.set_visible(0)
-
-# Create the background
-background = Banner("Pummel the Chimp, and Win $$$", GRAY)
-screen.blit(background, (0, 0))
-pg.display.flip()
-
-# Prepare game object
-whiff_sound = load_sound("whiff.wav")
-punch_sound = load_sound("punch.wav")
-chimp = Chimp()
-fist = Fist()
-allsprites = pg.sprite.RenderPlain((fist, chimp))
-clock = pg.time.Clock()
-
-# Main loop
 def main():
+    # Initialize everything
+    pg.init()
+    
+    try:
+        setup = check_setup()
+    except setup:
+        print(setup)
+        return
 
+    # Setup the window
+    screen      = make_window("Monkey Fever", 468, 60)
+
+    # Create the backgrounds
+    background  = Banner(screen, "Pummel the Chimp, and Win $$$", GRAY)
+    endscreen   = Banner(screen, "$$$ YOU BEAT THE CHIMP!!! $$$", RED)
+
+    # Prepare game objects
+    whiff_sound = load_sound("whiff.wav")
+    punch_sound = load_sound("punch.wav")
+
+    chimp       = Chimp()
+    fist        = Fist()
+    allsprites  = pg.sprite.RenderPlain((fist, chimp))
+
+    clock       = pg.time.Clock()
+
+    # Put background and sprites on screen
+    screen.blit(background, (0, 0))
+    pg.display.flip()
+
+    # Main loop
     going = True
-    while going and chimp.hits < 7:
+    while going and chimp.hits < MAX_HITS:
         clock.tick(60) # no faster than 60 fps
 
         ## Handle all input events
@@ -200,11 +223,11 @@ def main():
         pg.display.flip()
     
     # Game over
-
-    endscreen = Banner("$$$ YOU BEAT THE CHIMP!!! $$$", RED)
-    screen.blit(endscreen, (0, 0))
-    pg.display.flip()
-    pg.time.wait(3000)
+    ## Celebrate victory if achieved
+    if chimp.hits >= MAX_HITS:
+        screen.blit(endscreen, (0, 0))
+        pg.display.flip()
+        pg.time.wait(3000)
 
     pg.quit()
 
