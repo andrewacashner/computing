@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>First Example with Verovio</title>
+    <meta charset="utf-8"/>
+  </head>
+  <body>
+    <main>
+      <section>
+        <head>
+          Displaying MEI Music with Verovio
+        </head>
+
+        <div class="panel-body">
+          <div id="app" class="panel" style="border: 1px solid light gray;
+                               min-height: 800px;"></div>
+        </div>
+
+        <script type="module">
+          import 'https://www.verovio.org/javascript/app/verovio-app.js';
+
+          // Create the app - here with an empty option object
+          const app = new Verovio.App(document.getElementById("app"), {});
+
+          // MIDI -- doesn't work
+ //         function play_midi() {
+ //           if (isPlaying == false) {
+ //             var base64midi = vrvToolkit.renderToMIDI();
+ //             var song = 'data:audio/midi;base64,' + base64midi;
+ //             $("#player").show();
+ //             $("#player").midiPlayer.play(song);
+ //             isPlaying = true;
+ //           }
+ //         }
+
+          // Load a file (MEI or MusicXML)
+          fetch("https://www.verovio.org/examples/musicxml/Bach_Invention_No_1_BVW.772.xml")
+            .then(function(response) {
+              return response.text();
+            })
+            .then(function(text) {
+              app.loadData(text);
+//              play_midi("https://upload.wikimedia.org/wikipedia/commons/5/55/MIDI_sample.mid");
+            });
+
+          
+        </script>
+
+      </section>
+    </main>
+  </body>
+</html>
+

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Verovio Tutorial</title>
+    <meta charset="utf-8"/>
+    <script
+      src="http://www.verovio.org/javascript/latest/verovio-toolkit-wasm.js"
+      defer>
+    </script>
+    <script>
+      document.addEventListener("DOMContentLoaded", (event) => {
+        Module.onRuntimeInitialized = async _ => {
+          let tk = new verovio.toolkit();
+          console.log("Verovio has loaded!");
+
+          tk.setOptions({
+            scale: 30,
+            landscape: true,
+            adjustPageWidth: true
+          });
+
+          fetch("https://www.verovio.org/examples/downloads/Schubert_Lindenbaum.mei")
+            .then( (response) => response.text() )
+            .then( (meiXML) => {
+              let svg = tk.renderData(meiXML, {});
+              document.getElementById("notation").innerHTML = svg;
+            });
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Hello Verovio!</h1>
+    <div id="notation"></div>
+  </body>
+</html>
