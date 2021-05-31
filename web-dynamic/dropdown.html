@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dropdown Menu</title>
+    <meta charset="utf-8"/>
+  </head>
+  <body>
+    <form id="music" action="http://localhost:8000/composer.php" method="post">
+      <ul>
+        <li>
+          <label for="composer">Choose your favorite composer:</label>
+
+          <select name="composer" id="composer" form="music">
+            <option value="none">(No composer selected)</option>
+            <option value="padilla">Juan Gutiérrez de Padilla</option>
+            <option value="mozart">Wolfgang Amadeus Mozart</option>
+            <option value="schubert">Franz Peter Schubert</option>
+            <option value="messiaen">Olivier Messiaen</option>
+          </select>
+        </li>
+        <li class="button">
+          <button type="submit">Submit your choice</button>
+        </li>
+      </ul>
+    </form>
+  </body>
+</html>
+
