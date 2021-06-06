@@ -24,6 +24,8 @@ while 1:
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             if event.key in [pygame.K_ESCAPE, pygame.K_q]:
+                pygame.display.quit()
+                pygame.quit()
                 sys.exit()
             if event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
                 speed = bounce_horizontal(speed)

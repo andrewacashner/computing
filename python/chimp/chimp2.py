@@ -229,7 +229,9 @@ def main():
         pg.display.flip()
         pg.time.wait(3000)
 
+    pg.display.quit()
     pg.quit()
+    sys.exit()
 
 # this calls the main function when this script is executed
 if __name__ == "__main__":
