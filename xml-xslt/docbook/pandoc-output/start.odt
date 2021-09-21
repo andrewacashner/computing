@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE article>
+<article
+  xmlns="http://docbook.org/ns/docbook" version="5.0"
+  xmlns:xlink="http://www.w3.org/1999/xlink" >
+  <info>
+    <title>My Article</title>
+    <authorgroup>
+      <author>
+        <firstname>Andrew</firstname>
+        <surname>Cashner</surname>
+      </author>
+    </authorgroup>
+  </info>
+  <section xml:id="abstract">
+    <title>Abstract</title>
+    <para>
+      This is an article with sections, including different kinds of
+      floats and whatnot with cross references and bibliography.
+    </para>
+  </section>
+  <section xml:id="introduction">
+    <title>Introduction</title>
+    <para>
+      This is the introduction. It will not remind you of the preface to
+      <emphasis>Moby-Dick</emphasis>. Or perhaps it will. <quote>Call me
+      a document</quote> (Kircher 1650, 1). It’s up to you.<footnote>
+        <para>
+          Follow the hermeneutic circle all the way to the end.
+        </para>
+      </footnote>
+    </para>
+    <para>
+      What you’ll see when you look at
+      <link linkend="fig:squares">figure X</link> is a lot of squares.
+      They’re all nested inside each other and get infinitely smaller. I
+      made it in LaTeX using a loop. You’ll find it is different from
+      what I will show you in <link linkend="sec:next">section X</link>.
+    </para>
+    <figure>
+      <title>Figure X. Infinite squares</title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="img/squares.jpg" id="fig:squares" />
+        </imageobject>
+        <textobject><phrase>Figure X. Infinite
+        squares</phrase></textobject>
+      </mediaobject>
+    </figure>
+  </section>
+  <section xml:id="sec:next">
+    <title>Next part</title>
+    <para>
+      What’s different about these squares from the next thing I’ll talk
+      about is that next thing isn’t squares at all. It’s notated music
+      (<link linkend="ex:crotchets">example </link>). It shows
+      <emphasis>crotchets</emphasis>, which is the British term for
+      quarter notes, I think. Anyway, Benjamin Britten in
+      <emphasis>Billy Budd</emphasis> would like you to make sure they
+      keep <quote>gently flowing.</quote> They don’t have anything to do
+      with <emphasis>crocheting</emphasis>, which is a handicraft not
+      frequently featured in British opera.<footnote>
+        <para>
+          But why not?
+        </para>
+      </footnote>
+    </para>
+    <figure>
+      <title><quote>Gently flowing crotchets</quote></title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="img/crotchets.png" id="ex:crotchets" />
+        </imageobject>
+        <textobject><phrase><quote>Gently flowing
+        crotchets</quote></phrase></textobject>
+      </mediaobject>
+    </figure>
+  </section>
+  <section xml:id="references">
+    <title>References</title>
+    <anchor id="refs" />
+    <para id="ref-Kircher:Musurgia">
+      Kircher, Athanasius. 1650. <emphasis>Musurgia universalis, sive
+      Ars magna consoni et dissoni in X. libros digesta</emphasis>.
+      Rome.
+    </para>
+  </section>
+</article>

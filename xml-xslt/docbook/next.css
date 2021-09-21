@@ -1,0 +1,20 @@
+body { 
+  counter-reset: figure example;
+}
+figure.figure {
+  counter-increment: figure;
+}
+figure.example {
+  counter-increment: example;
+}
+figure.figure:before { 
+  content: 'Figure ' counter(figure) '. '; 
+}
+figure.example:before { 
+  content: 'Example ' counter(example) '. '; 
+}
+/* This doesn't work */
+a.figref:after {
+  content: ' ' counter(figure);
+}
+
