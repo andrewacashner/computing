@@ -1,0 +1,45 @@
+\documentclass[letterpaper, 12pt]{article} 
+\usepackage[T1]{fontenc}
+
+% Because seems like you want a sans-serif typeface
+\renewcommand*{\familydefault}{\sfdefault}
+
+% Please note that the last option is necessary for conversion to work in
+% Spanish
+\usepackage[spanish,es-sloppy]{babel}
+
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{url}
+
+\title{Artículo}
+\author{Bowie\thanks{\href{mailto:1@1.com}{1@1.com}}}
+
+\begin{document}
+\maketitle
+
+% I can't get the contents lists to work in Spanish with make4ht
+%\tableofcontents
+%\listoffigures
+
+\section{El amplificador operacional ideal}
+
+\subsection{El amplificador operacional}
+
+Algunas palabras.\footnote{Una nota.}
+
+Más palabras.
+
+Y más.
+
+\subsubsection{Notación}
+
+Añado algo más (vease figura \ref{fig:pasted1}).
+
+\begin{figure}
+    \label{fig:pasted1}
+%    \includegraphics{pasted1} % I don't have the image to include
+    \caption{Descripción de la imágen}
+\end{figure}
+
+\end{document}
