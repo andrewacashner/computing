@@ -1,0 +1,46 @@
+object Form1: TForm1
+  Left = 768
+  Height = 1041
+  Top = 18
+  Width = 380
+  Caption = 'Form1'
+  ClientHeight = 1041
+  ClientWidth = 380
+  OnCreate = FormCreate
+  LCLVersion = '2.0.12.0'
+  object GroupBox1: TGroupBox
+    Left = 136
+    Height = 217
+    Top = 172
+    Width = 223
+    Caption = 'GroupBox1'
+    ClientHeight = 198
+    ClientWidth = 219
+    Color = clSkyBlue
+    ParentColor = False
+    TabOrder = 0
+    object Button1: TButton
+      Left = 40
+      Height = 68
+      Top = 50
+      Width = 138
+      Caption = 'Click for greeting'
+      OnClick = Button1Click
+      TabOrder = 0
+    end
+    object StaticText1: TStaticText
+      Left = 25
+      Height = 45
+      Top = 137
+      Width = 171
+      Alignment = taCenter
+      Caption = 'Hello, world!'
+      Font.Color = clRed
+      Font.Height = 24
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 1
+      Visible = False
+    end
+  end
+end
