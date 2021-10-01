@@ -1,0 +1,44 @@
+\documentclass{article}
+\pagestyle{empty}
+\NewDocumentCommand{\cn}{ m }{\textsc{#1.}}
+
+\makeatletter
+% Define blank dummy text in private command
+\NewDocumentCommand{\@thisantilabe}{}{}
+
+% Create a command to store dummy text, and print the text
+\NewDocumentCommand{\antilabethis}{ m }{%
+    \RenewDocumentCommand{\@thisantilabe}{}{#1}%
+    #1%
+}
+
+% Insert horizontal space, using either stored dummy text, or the optional
+% argument if provided
+\NewDocumentCommand{\antilabe}{ o }{%
+    \IfValueTF{#1}
+        {\hphantom{#1}}
+        {\hphantom{\@thisantilabe}}%
+}
+\makeatother
+
+\begin{document}
+\begin{verse}
+    \cn{Sat} But who would not lie down here in the meadow \\
+    \& long daydream on the blossom-stained glade’s \\
+    \antilabethis{Wide \& warm \& welcoming breast?} % mark the text 
+
+    \cn{Fur} \antilabe{} Please let’s go \\
+    Into the Deep White Wood as the light fades \\
+    For this bright pocked \& dappled field abrades \\
+    The eye! \& no one wants more songs about\dots{}
+
+    \antilabethis{\cn{Knuth} expanding macros---} \\
+    \antilabe{} but still no one wants \\
+    to set the type by hand \\
+
+    \cn{Lamport}
+    \antilabe[to set the type by hand] so we keep using \\
+    software built in nineteen eighty-two.
+\end{verse}
+
+\end{document}
