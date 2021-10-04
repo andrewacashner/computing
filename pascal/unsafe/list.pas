@@ -6,37 +6,30 @@
 
 program PitchList;
 
-uses Sysutils, Generics.Collections;;
+uses Sysutils;
 
 { CLASS: Pitch }
 type 
-  TPitchClassLabel = (PCc, PCd, PCe, PCf, PCg, PCa, PCb);
-  TAccidentalLabel = (Fl = -1, Na, Sh);
+  TPitchClassLabel = (pkC, pkD, pkE, pkF, pkG, pkA, pkB);
+  TAccidentalLabel = (akFl, akNa, akSh);
 
   TPitch = class
   private
     var
       FPitchClassName: TPitchClassLabel;
       FAccidental: TAccidentalLabel;
-      FOctave: integer;
-    function PitchClassNameString: string;
-    function AccidentalString: string;
-    function PitchNumChromatic: integer;
+      FOctave: Integer;
+    function PitchClassNameString: String;
+    function AccidentalString: String;
+    function PitchNumChromatic: Integer;
   public
-    constructor Create(PCname: TPitchClassLabel; Oct: integer;
+    constructor Create(PCname: TPitchClassLabel; Oct: Integer;
                         Accid: TAccidentalLabel);
-    function StandardPitch: integer; 
-    function ToString: string; override;
+    function StandardPitch: Integer; 
+    function ToString: String; override;
   end;
 
-  { linked list }
-  TNodePtr = ^TNode;
-  TNode = Record
-    Pitch: TPitch;
-    NodePtr: TNodePtr;
-  end;
-
-constructor TPitch.Create(PCname: TPitchClassLabel; Oct: integer;
+constructor TPitch.Create(PCname: TPitchClassLabel; Oct: Integer;
                           Accid: TAccidentalLabel);
 begin
   FPitchClassName := PCname;
@@ -44,74 +37,109 @@ begin
   FAccidental := Accid;
 end;
 
-function TPitch.PitchNumChromatic: integer;
+function TPitch.PitchNumChromatic: Integer;
 var 
-  ChromaticPitch: array of integer = (0, 2, 4, 5, 7, 8, 11);
+  ChromaticPitch: Array of Integer = (0, 2, 4, 5, 7, 8, 11);
 begin
   result := ChromaticPitch[Ord(FPitchClassName)];
 end;
 
-function TPitch.PitchClassNameString : string;
+function TPitch.PitchClassNameString : String;
 var
-  PitchNames: array of string = ('c', 'd', 'e', 'f', 'g', 'a', 'b');
+  PitchNames: Array of String = ('c', 'd', 'e', 'f', 'g', 'a', 'b');
 begin
   result := PitchNames[ord(FPitchClassName)];
 end; 
 
-function TPitch.AccidentalString : string;
+function TPitch.AccidentalString : String;
 var
-  AccidentalNames: array of string = ('b', '', '#');
+  AccidentalNames: Array of String = ('b', '', '#');
 begin
   result := AccidentalNames[ord(FAccidental)];
 end;
 
-function TPitch.StandardPitch: integer; 
+function TPitch.StandardPitch: Integer; 
+var 
+  AccidentalAdjust: Integer;
 begin 
-  result := FOctave * 12 + PitchNumChromatic + ord(FAccidental); 
+  AccidentalAdjust := ord(Faccidental) - 1; // so Fl is -1 and Sh is +1
+  result := FOctave * 12 + PitchNumChromatic + AccidentalAdjust;
 end;
 
-function TPitch.ToString: string; 
+function TPitch.ToString: String; 
 begin
   result :=  PitchClassNameString + AccidentalString + IntToStr(FOctave);
 end;
 
 { LINKED LIST }
-function Last(List: TNodePtr): TNodePtr;
-begin
-  if List^.NodePtr <> nil then
-  begin
-    List := Last(List^.NodePtr);
+type
+  TPNode = ^TNode;
+
+  TNode = class
+  private
+    var
+      FPitch: TPitch;
+      FPNodePrev: TPNode;
+      FPNodeNext: TPNode;
+  public
+    constructor Create(Pitch: TPitch; PNodePrev, PNodeNext: TPNode);
   end;
-  result := List;
+
+constructor TNode.Create(Pitch: TPitch; PNodePrev, PNodeNext: TPNode);
+begin
+  FPitch := Pitch;
+  FPNodePrev := PNodePrev;
+  FPNodeNext := PNodeNext;
 end;
 
-function AddNode(Head: TNodePtr; Pitch: TPitch): TNodePtr;
+function Last(List: TPNode): TPNode;
+begin
+  try
+    if List^.FPNodeNext <> nil then
+    begin
+      WriteLn('Last: going to next node');
+      List := Last(List^.FPNodeNext);
+    end;
+  finally
+    result := List;
+  end;
+end;
+
+function AddNode(Head: TPNode; Pitch: TPitch): TPNode;
 var
-  ThisNodePtr, NewNodePtr: TNodePtr;
+  NewNode: TNode;
+  PThisNode: TPNode;
 begin
-  new(NewNodePtr);
-  NewNodePtr^.Pitch := Pitch;
-  NewNodePtr^.NodePtr := nil;
+  NewNode := nil;
+  PThisNode := nil;
 
-  if Head = nil then
-  begin
-    Head  := NewNodePtr;
-  end
-  else
-  begin
-    ThisNodePtr := Last(Head);
-    ThisNodePtr^.NodePtr := NewNodePtr;
+  try
+    NewNode.Create(Pitch, nil, nil);
+
+    if Head = nil then
+    begin
+      Head := @NewNode;
+      WriteLn('Started new list with pitch ' + Pitch.ToString);
+    end
+    else
+    begin
+      PThisNode := Last(Head);
+      NewNode.FPNodePrev := PThisNode;
+      PThisNode^.FPNodeNext := @NewNode;
+      WriteLn('Added pitch to end of list');
+    end;
+  finally
+    result := Head;
   end;
-
-  result := Head;
 end;
 
-procedure PrintList(Head: TNodePtr);
+procedure PrintList(Head: TPNode);
 begin
   if Head <> nil then
   begin
-    write(Head^.Pitch.ToString + ' ');
-    PrintList(Head^.NodePtr);
+    WriteLn('Trying to print list...');
+    write(Head^.FPitch.ToString + ' ');
+    PrintList(Head^.FPNodeNext);
   end
   else
   begin
@@ -119,46 +147,42 @@ begin
   end;
 end;
 
-procedure FreeList(Head: TNodePtr);
+procedure FreeList(Head: TPNode);
+var
+  ThisNode: TPNode;
 begin
-  if Head <> nil then
+  ThisNode := Last(Head);
+  while ThisNode^.FPNodePrev <> nil do
   begin
-    while Head^.NodePtr <> nil do
-    begin
-      FreeList(Head^.NodePtr);
-      dispose(Head);
-    end;
+    ThisNode := ThisNode^.FPNodePrev;
+    FreeAndNil(ThisNode^.FPNodeNext^.FPitch);
+    FreeAndNil(ThisNode^.FPNodeNext^);
   end;
-end;
-
-{ Methods for Pitches }
-function ChromaticInterval(Pitch1, Pitch2: TPitch): Integer;
-begin
-  result := Pitch1.StandardPitch - Pitch2.StandardPitch
-end;
-
-function IsTritone(Pitch1, Pitch2: TPitch): Boolean;
-begin
-  result := ChromaticInterval(Pitch1, Pitch2) = 6;
+  FreeAndNil(ThisNode^.FPitch);
+  FreeAndNil(ThisNode);
 end;
 
 { MAIN }
 var
-  List: TNodePtr = nil;
-  Pitch1, Pitch2: TPitch;
+  PList: TPNode; 
 begin
-  Pitch1 := TPitch.Create(PCc, 4, Sh);
-  Pitch2 := TPitch.Create(PCg, 3, Na);
- 
-  List := AddNode(List, Pitch1);
-  List := AddNode(List, Pitch2);
-  List := AddNode(List, Pitch1);
-  List := AddNode(List, Pitch1);
-  List := AddNode(List, Pitch2);
-  List := AddNode(List, Pitch1);
+  PList := nil;
 
-  PrintList(List);
-  FreeList(List);
+  try
+    PList := AddNode(PList, TPitch.Create(pkC, 4, akSh));
+    {
+    PList := AddNode(PList, TPitch.Create(pkG, 3, akFl));
+    PList := AddNode(PList, TPitch.Create(pkC, 4, akSh));
+    PList := AddNode(PList, TPitch.Create(pkC, 4, akSh));
+    PList := AddNode(PList, TPitch.Create(pkG, 3, akFl));
+    PList := AddNode(PList, TPitch.Create(pkC, 4, akSh));
+    }
+
+    PrintList(PList);
+
+  finally
+    FreeList(PList);
+  end;
 end.
 
 
