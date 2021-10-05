@@ -79,87 +79,82 @@ type
   private
     var
       FPitch: TPitch;
-      FPNodePrev: TPNode;
       FPNodeNext: TPNode;
   public
-    constructor Create(Pitch: TPitch; PNodePrev, PNodeNext: TPNode);
+    constructor Create(Pitch: TPitch; PNode: TPNode);
   end;
 
-constructor TNode.Create(Pitch: TPitch; PNodePrev, PNodeNext: TPNode);
+constructor TNode.Create(Pitch: TPitch; PNode: TPNode);
 begin
   FPitch := Pitch;
-  FPNodePrev := PNodePrev;
-  FPNodeNext := PNodeNext;
+  FPNodeNext := PNode;
+  WriteLn('Creating new node with pitch ' + FPitch.ToString);
 end;
 
 function Last(List: TPNode): TPNode;
 begin
-  try
-    if List^.FPNodeNext <> nil then
-    begin
-      WriteLn('Last: going to next node');
-      List := Last(List^.FPNodeNext);
-    end;
-  finally
+  if List^.FPNodeNext = nil then
+  begin
     result := List;
+  end
+  else
+  begin
+    WriteLn('Last: going to next node');
+    result := Last(List^.FPNodeNext);
   end;
 end;
 
 function AddNode(Head: TPNode; Pitch: TPitch): TPNode;
+{ create a new node and add it to the beginning of a given list }
 var
   NewNode: TNode;
-  PThisNode: TPNode;
+  PNewNode: TPNode;
 begin
   NewNode := nil;
-  PThisNode := nil;
+  PNewNode := nil;
 
   try
-    NewNode.Create(Pitch, nil, nil);
-
-    if Head = nil then
-    begin
-      Head := @NewNode;
-      WriteLn('Started new list with pitch ' + Pitch.ToString);
-    end
-    else
-    begin
-      PThisNode := Last(Head);
-      NewNode.FPNodePrev := PThisNode;
-      PThisNode^.FPNodeNext := @NewNode;
-      WriteLn('Added pitch to end of list');
-    end;
+    NewNode := TNode.Create(Pitch, Head);
+    WriteLn('Added new node with pitch ' + NewNode.FPitch.ToString);
+    PNewNode := @NewNode;
   finally
-    result := Head;
+    result := PNewNode;
   end;
 end;
 
 procedure PrintList(Head: TPNode);
 begin
-  if Head <> nil then
-  begin
-    WriteLn('Trying to print list...');
-    write(Head^.FPitch.ToString + ' ');
-    PrintList(Head^.FPNodeNext);
+  if Head = nil then
+  begin 
+    writeln();
   end
   else
   begin
-    writeLn();
+    WriteLn('Trying to print list...');
+    Write(Head^.FPitch.ToString + ' ');
+    PrintList(Head^.FPNodeNext);
   end;
 end;
 
 procedure FreeList(Head: TPNode);
 var
-  ThisNode: TPNode;
+  PNextNode: TPNode;
 begin
-  ThisNode := Last(Head);
-  while ThisNode^.FPNodePrev <> nil do
+  if Head = nil then
   begin
-    ThisNode := ThisNode^.FPNodePrev;
-    FreeAndNil(ThisNode^.FPNodeNext^.FPitch);
-    FreeAndNil(ThisNode^.FPNodeNext^);
+    WriteLn('FreeList: reached end of list');
+    WriteLn('FreeList: Freeing node...');
+    FreeAndNil(Head);
+    exit;
+  end
+  else
+  begin
+    WriteLn('FreeList: Freeing head.FPitch ...');
+    FreeAndNil(Head^.FPitch);
+    WriteLn('FreeList: Freeing next node...');
+    PNextNode := Head^.FPNodeNext;
+    FreeList(PNextNode);
   end;
-  FreeAndNil(ThisNode^.FPitch);
-  FreeAndNil(ThisNode);
 end;
 
 { MAIN }
@@ -176,9 +171,8 @@ begin
     PList := AddNode(PList, TPitch.Create(pkC, 4, akSh));
     PList := AddNode(PList, TPitch.Create(pkG, 3, akFl));
     PList := AddNode(PList, TPitch.Create(pkC, 4, akSh));
-    }
-
     PrintList(PList);
+    }
 
   finally
     FreeList(PList);
