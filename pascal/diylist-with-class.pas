@@ -3,14 +3,14 @@
 
 {******************************** 
   Linked list with custom class
-  AAC, 2021/10/05
+  AAC, 2021/10/06
 *********************************}
 
 program PitchList;
 
 uses Sysutils;
 
-{ CLASS: Pitch }
+{ CLASS: Name }
 type 
   TName = class
   private
@@ -24,6 +24,7 @@ type
 
 constructor TName.Create(First, Last: String);
 begin
+  inherited Create();
   FFirstName := First;
   FLastName := Last;
 end;
@@ -59,40 +60,36 @@ end;
   otherwise add it to the end; return the head of the list }
 function AddNode(Head: TPNode; FirstName, LastName: String): TPNode;
 var
-  NewNode: TNode;
+  NewNode: TPNode;
   ThisNode: TPNode = nil;
 begin
-  NewNode.FName := TName.Create(FirstName, LastName);
-  NewNode.FPNext := nil;
+  new(NewNode);
+  NewNode^.FName := TName.Create(FirstName, LastName);
+  NewNode^.FPNext := nil;
 
   if Head = nil then
   begin
-    Head := @NewNode;
+    Head := NewNode;
   end
   else
   begin
     ThisNode := Last(Head);
-    ThisNode^.FPNext := @NewNode;
+    ThisNode^.FPNext := NewNode;
   end;
   result := Head;
 end;
 
 procedure FreeList(Head: TPNode);
-var
-  PNextNode: TPNode = nil;
 begin
   if Head <> nil then
   begin
-    PNextNode := Head^.FPNext;
-    FreeAndNil(Head^);
+    FreeList(Head^.FPNext);
     FreeAndNil(Head^.FName);
-    FreeList(PNextNode);
+    dispose(Head);
   end;
 end;
-{
+
 function ListToString(Head: TPNode; Msg: String): String;
-var
-  PNextNode: TPNode = nil;
 begin
   if Head = nil then
   begin 
@@ -100,31 +97,36 @@ begin
   end
   else
   begin
-    PNextNode := Head^.FPNext;
-    Msg := Msg + Head^.FName.ToString + ' ' + ListToString(PNextNode, Msg);
+    Msg := Msg + Head^.FName.ToString;
+
+    if Head^.FPNext <> nil then
+    begin
+      Msg := Msg + ', ';
+    end
+    else
+    begin
+      Msg := Msg + ' ';
+    end;
+    
+    result := ListToString(Head^.FPNext, Msg);
   end;
 end;
-}
+
 { MAIN }
 var
-  { Names: String = ''; }
   PList: TPNode = nil;
 begin
   try
     PList := AddNode(PList, 'Harry', 'Potter');
-    {
     PList := AddNode(PList, 'Hermione', 'Granger');
     PList := AddNode(PList, 'Ron', 'Weasley');
-    PList := AddNode(PList, TName.Create('Draco', 'Malfoy'));
-    PList := AddNode(PList, TName.Create('Seamus', 'Finnegan'));
-    PList := AddNode(PList, TName.Create('Neville', 'Longbottom'));
-    PList := AddNode(PList, TName.Create('Luna', 'Lovegood'));
-    }
-    {
-    Names := ListToString(PList, Names);
-    }
-  
+    PList := AddNode(PList, 'Draco', 'Malfoy');
+    PList := AddNode(PList, 'Seamus', 'Finnegan');
+    PList := AddNode(PList, 'Neville', 'Longbottom');
+    PList := AddNode(PList, 'Luna', 'Lovegood');
+    
   finally
+    WriteLn(ListToString(Plist, ''));
     FreeList(PList);
   end;
 end.
