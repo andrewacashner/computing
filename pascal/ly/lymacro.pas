@@ -19,22 +19,26 @@
 {$mode objfpc}{$H+}{$J-}
 program lymacro(input, output);
 
-uses SysUtils, Classes, Generics.Collections, Strings;
+uses SysUtils, Classes, Generics.Collections;
 
-function ExtractMacro(S: String): TMacroKeyValue;
+type
+  TMacroDict     = specialize TDictionary<String, String>;
+  TMacroKeyValue = TMacroDict.TDictionaryPair;
+
+{ Find a macro in the form `key = value\n` and return a pair with the key and
+  value }
+function ExtractMacro(Source: String): TMacroKeyValue;
 const
-  Delim: String := '='
+  Delim: String = '=';
 var
   KeyLabel, Value: String;
   EndKeyLabel, StartValueText: Integer;
   Macro: TMacroKeyValue;
+  Index: Integer;
 begin
-  Value := StrRScan(S, Delim));
-  KeyLabel := LeftStr(S,LastDelimiter(Delim, S) - 1);
-  if Value <> nil then
-    Value := Trim(Value);
-  if KeyLabel <> nil then
-    KeyLabel := Trim(KeyLabel);
+  Index    := LastDelimiter(Delim, Source);
+  KeyLabel := Trim(LeftStr(Source, Index - 1));
+  Value    := Trim(RightStr(Source, Length(Source) - Index));
 
   try
     Macro := TMacroKeyValue.Create(KeyLabel, Value);
@@ -43,26 +47,41 @@ begin
   end;
 end;
 
-type
-  TMacroKey      = specialize TKey<String>;
-  TMacroValue    = specialize TValue<String>;
-  TMacroKeyValue = specialize TPair<TMacroKey, TMacroValue>;
-  TMacroDict     = specialize TDictionary<TMacroKeyValue>;
+function MacroExists(Pair: TMacroKeyValue): Boolean;
+begin
+  result := not ((Pair.Key = '') or (Pair.Value = ''))
+end;
 
 { MAIN }
 var
-  Macros: TMacroDict;
-  InputText: String = 'MusicSoprano = { c''4 d''4 es''4 }';
-  V: String;
+  Macros:     TMacroDict;
+  MacroPair:  TMacroKeyValue;
+  InputText: Array of String = 
+    ( 'MusicSoprano = { c''4 d''4 es''4 }'
+    , 'This is not a macro'
+    , 'LyricsSoprano = \lyricmode { ly -- ric text }'
+    );
+  ThisString: String;
+
 begin
   Macros := TMacroDict.Create();
   try
-    Macros.Add('MusicSoprano', '{ c''4 d''4 es''4 }');
-    Macros.Add('LyricsSoprano', '\lyricmode { ly -- ric text }');
-    Macros.TryGetValue('MusicSoprano', V);
+    for ThisString in InputText do
+    begin
+      MacroPair := ExtractMacro(ThisString);
+      if MacroExists(MacroPair) then
+      begin
+        Macros.Add(MacroPair);
+      end;
+    end;
+
+    for MacroPair in Macros do
+    begin
+      WriteLn('key: ' + MacroPair.Key + ', value: ' + MacroPair.Value);
+    end;
+
   finally
-    WriteLn(V);
-    FreeAndNil(macros);
+    FreeAndNil(Macros);
   end;
 end.
 
