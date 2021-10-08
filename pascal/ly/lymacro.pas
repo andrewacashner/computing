@@ -112,7 +112,7 @@ var
   MacroPair:  TMacroKeyValue;
   ThisString: String;
   OutputText: TStringList;
-
+  Index:      Integer;
 
 begin
   Macros := TMacroDict.Create();
@@ -122,19 +122,21 @@ begin
     begin
       MacroPair := ExtractMacro(ThisString);
       if MacroExists(MacroPair) and ThisString.StartsWith(MacroPair.Key) then
-          Macros.AddOrSetValue(MacroPair.Key, MacroPair.Value);
+          Macros.AddOrSetValue(MacroPair.Key, MacroPair.Value)
+      else
+        OutputText.Add(ThisString); { only add lines that aren't macro definitions }
     end;
 
     for MacroPair in Macros do
     begin
       WriteLn('key: ' + MacroPair.Key + ', value: ' + MacroPair.Value);
     end;
+    WriteLn();
 
-    for ThisString in InputText do
+    for Index := 0 to OutputText.Count - 1 do 
     begin
-      OutputText.Add(FindReplaceMacro(ThisString, Macros));
+      OutputText[Index] := FindReplaceMacro(OutputText[Index], Macros);
     end;
-
 
   finally
     WriteLn(OutputText.Text);
