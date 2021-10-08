@@ -32,21 +32,30 @@ begin
 end;
 
 { Find a macro in the form `key = value\n` and return a pair with the key and
-  value }
+  value. A macro definition label must start at the beginning of the line and
+  be a single string of alphabetic characters.  }
 function ExtractMacro(Source: String): TMacroKeyValue;
 const
   Delim: String = '=';
 var
+  KeyValueStrings: TStringArray;
   KeyLabel, Value: String;
   Macro: TMacroKeyValue;
-  Index: Integer;
 begin
-  Index    := LastDelimiter(Delim, Source);
-  KeyLabel := Trim(LeftStr(Source, Index - 1));
-  Value    := Trim(TakeAfterDelimiter(Source, Delim));
-
+  KeyValueStrings := Source.Split(Delim);
   try
-    Macro := TMacroKeyValue.Create(KeyLabel, Value);
+    if length(KeyValueStrings) = 2 then
+    begin
+      KeyLabel := Trim(KeyValueStrings[0]);
+      Value    := Trim(KeyValueStrings[1]);
+      { If the key still has a space in it, it is not a valid key }
+      if KeyLabel.Contains(' ') then
+        Macro := TMacroKeyValue.Create('', '')
+      else
+        Macro := TMacroKeyValue.Create(KeyLabel, Value);
+    end
+    else
+      Macro := TMacroKeyValue.Create('', '');
   finally 
     result := Macro;
   end;
@@ -54,52 +63,66 @@ end;
 
 function MacroExists(Pair: TMacroKeyValue): Boolean;
 begin
-  result := not ((Pair.Key = '') or (Pair.Value = ''))
+  result := not (Pair.Key.IsEmpty or Pair.Value.IsEmpty)
 end;
 
 { Find a command starting with backslash like `\Music`, look up the key in
 dictionary and if found, replace it with the corresponding value; if nothing
 is found, just leave the text alone. }
-function FindCallCommand(Source: String; Dict: TMacroDict): String;
+function FindReplaceMacro(Source: String; Dict: TMacroDict): String;
 var
-  Delim: String = '\';
+  AfterSlash: String;
   Command, Expansion: String;
+  StartIndex, EndIndex: Integer;
 begin
-  Command := Trim(TakeAfterDelimiter(Source, Delim));
-  if Dict.TryGetValue(Command, Expansion) then
-  begin
-    result := StringReplace(Source, '\' + Command, Expansion, [rfReplaceAll]);
-  end
+  if not Source.Contains('\') then
+    result := Source
   else
   begin
-    result := Source;
+    while Source.Contains('\') do
+    begin
+      StartIndex := Source.IndexOf('\');
+      AfterSlash := Source.Substring(StartIndex + 1);
+      EndIndex   := AfterSlash.IndexOf(' ');
+      Command    := AfterSlash.Substring(0, EndIndex);
+
+      if Dict.TryGetValue(Command, Expansion) then
+        result := Source.Replace('\' + Command, Expansion)
+      else
+        result := Source;
+
+      Source := AfterSlash;
+    end;
   end;
 end;
 
 { MAIN }
-var
-  Macros:     TMacroDict;
-  MacroPair:  TMacroKeyValue;
+const
   InputText: Array of String = 
     ( 'MusicSoprano = { c''4 d''4 es''4 }'
     , 'This is not a macro'
     , 'LyricsSoprano = \lyricmode { ly -- ric text }'
     , '\new Voice = "S" { \MusicSoprano }'
     , '\new Lyrics \lyricsto "S" { \LyricsSoprano }'
+    , '{ \MusicSoprano }'
     );
+
+var
+  Macros:     TMacroDict;
+  MacroPair:  TMacroKeyValue;
   ThisString: String;
+  OutputText: TStringList;
 
 
 begin
   Macros := TMacroDict.Create();
+  OutputText := TStringList.Create();
   try
     for ThisString in InputText do
     begin
       MacroPair := ExtractMacro(ThisString);
-      if MacroExists(MacroPair) then
-      begin
-        Macros.Add(MacroPair);
-      end;
+      if MacroExists(MacroPair) and ThisString.StartsWith(MacroPair.Key) then
+          Macros.AddOrSetValue(MacroPair.Key, MacroPair.Value);
     end;
 
     for MacroPair in Macros do
@@ -109,12 +132,14 @@ begin
 
     for ThisString in InputText do
     begin
-      WriteLn(FindCallCommand(ThisString, Macros));
+      OutputText.Add(FindReplaceMacro(ThisString, Macros));
     end;
 
 
   finally
+    WriteLn(OutputText.Text);
     FreeAndNil(Macros);
+    FreeAndNil(OutputText);
   end;
 end.
 
