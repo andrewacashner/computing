@@ -25,12 +25,6 @@ type
   TMacroDict     = specialize TDictionary<String, String>;
   TMacroKeyValue = TMacroDict.TDictionaryPair;
 
-{ Return the portion of a string that follows a delimiter string }
-function TakeAfterDelimiter(S: String; Delim: String): String;
-begin
-  result := RightStr(S, (Length(S) - LastDelimiter(Delim, S)));
-end;
-
 { Find a macro in the form `key = value\n` and return a pair with the key and
   value. A macro definition label must start at the beginning of the line and
   be a single string of alphabetic characters.  }
@@ -69,31 +63,13 @@ end;
 { Find a command starting with backslash like `\Music`, look up the key in
 dictionary and if found, replace it with the corresponding value; if nothing
 is found, just leave the text alone. }
-function FindReplaceMacro(Source: String; Dict: TMacroDict): String;
+function FindReplaceMacros(Source: String; Dict: TMacroDict): String;
 var
-  AfterSlash: String;
-  Command, Expansion: String;
-  StartIndex, EndIndex: Integer;
+  Macro: TMacroKeyValue;
 begin
-  if not Source.Contains('\') then
-    result := Source
-  else
-  begin
-    while Source.Contains('\') do
-    begin
-      StartIndex := Source.IndexOf('\');
-      AfterSlash := Source.Substring(StartIndex + 1);
-      EndIndex   := AfterSlash.IndexOf(' ');
-      Command    := AfterSlash.Substring(0, EndIndex);
-
-      if Dict.TryGetValue(Command, Expansion) then
-        result := Source.Replace('\' + Command, Expansion)
-      else
-        result := Source;
-
-      Source := AfterSlash;
-    end;
-  end;
+  for Macro in Dict do
+    Source := Source.Replace('\' + Macro.Key, Macro.Value, [rfReplaceAll]);
+  result := Source;
 end;
 
 { MAIN }
@@ -112,8 +88,6 @@ var
   MacroPair:  TMacroKeyValue;
   ThisString: String;
   OutputText: TStringList;
-  Index:      Integer;
-
 begin
   Macros := TMacroDict.Create();
   OutputText := TStringList.Create();
@@ -127,16 +101,7 @@ begin
         OutputText.Add(ThisString); { only add lines that aren't macro definitions }
     end;
 
-    for MacroPair in Macros do
-    begin
-      WriteLn('key: ' + MacroPair.Key + ', value: ' + MacroPair.Value);
-    end;
-    WriteLn();
-
-    for Index := 0 to OutputText.Count - 1 do 
-    begin
-      OutputText[Index] := FindReplaceMacro(OutputText[Index], Macros);
-    end;
+    OutputText.Text := FindReplaceMacros(OutputText.Text, Macros);
 
   finally
     WriteLn(OutputText.Text);
