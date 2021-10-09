@@ -91,10 +91,10 @@ begin
   try
     if Source.Contains(Delim) then
     begin
-      KeyLabel := Trim(Source.Substring(0, Source.IndexOf(Delim) - 1));
+      KeyLabel := Source.Substring(0, Source.IndexOf(Delim) - 1);
       if KeyLabel = ExtractWord(1, Source, StdWordDelims) then
       begin
-        Value := Trim(Source.Substring(Source.IndexOf(Delim) + 1));
+        Value := Source.Substring(Source.IndexOf(Delim) + 1);
         // WriteLn('Trying to find value expression in string: ' + Value);
         Value := FindExpression(Value);
         // WriteLn('found macro, key: ' + KeyLabel + ', value: ' + Value);
@@ -118,13 +118,27 @@ end;
 
 { Find a command starting with backslash like `\Music`, look up the key in
 dictionary and if found, replace it with the corresponding value; if nothing
-is found, just leave the text alone. }
+is found, just leave the text alone. 
+Expand any macros in the stored values before expanding them in the source
+text. } 
 function FindReplaceMacros(Source: String; Dict: TMacroDict): String;
 var
   Macro: TMacroKeyValue;
+
+function Replace(S: String; Dict: TMacroDict): String;
 begin
   for Macro in Dict do
-    Source := Source.Replace('\' + Macro.Key, Macro.Value, [rfReplaceAll]);
+    S := S.Replace('\' + Macro.Key, Macro.Value, [rfReplaceAll]);
+  result := S;
+end;
+
+begin
+  for Macro in Dict do
+  begin
+    { first expand any macros stored in the dictionary values }
+    Dict.AddOrSetValue(Macro.Key, Replace(Macro.Value, Dict));
+    Source := Replace(Source, Dict);
+  end;
   result := Source;
 end;
 
@@ -145,6 +159,11 @@ const
     , '    \new Voice = "B1" { \voiceOne \MusicBass }'
     , '    \new Voice = "B2" { \voiceTwo \MusicAc }'
     , '  >>'
+    , ''
+    , ' \LevelThree ' // this would not even be possible in Lilypond
+    , 'LevelOne = { \MusicSoprano }'
+    , 'LevelTwo = { \LevelOne }'
+    , 'LevelThree = { \LevelTwo }'
     );
 
 var
@@ -182,10 +201,7 @@ begin
         TestStr := TestStr.Substring(Index + 1)
     end;
 
-    { Automate multiple passes, detect when all macros are substituted }
-    OutputStr := InputStr;
-    OutputStr := FindReplaceMacros(OutputStr, Macros);
-    OutputStr := FindReplaceMacros(OutputStr, Macros);
+    OutputStr := FindReplaceMacros(InputStr, Macros);
 
     { how to trim out macro definitions?
       one issue here is the macro names (\Bass and \BassII are not treated as separate names)
