@@ -35,25 +35,30 @@ var
   KeyValueStrings: TStringArray;
   KeyLabel, Value: String;
   Macro: TMacroKeyValue;
+  Found: Boolean;
 begin
-  KeyValueStrings := Source.Split(Delim);
+  Found := False;
   try
-    if length(KeyValueStrings) = 2 then
+    if Source.Contains(Delim) then
     begin
-      KeyLabel := Trim(KeyValueStrings[0]);
-      Value    := Trim(KeyValueStrings[1]);
-      { If the key still has a space in it, it is not a valid key }
-      if KeyLabel.Contains(' ') then
-        Macro := TMacroKeyValue.Create('', '')
-      else
-        Macro := TMacroKeyValue.Create(KeyLabel, Value);
-    end
+      KeyValueStrings := Source.Split(Delim);
+      if length(KeyValueStrings) = 2 then
+      begin
+        KeyLabel := Trim(KeyValueStrings[0]);
+        Value    := Trim(KeyValueStrings[1]);
+        if Source.StartsWith(KeyLabel) and not KeyLabel.Contains(' ') then
+          Found := True;
+      end;
+    end;
+    if found then
+      Macro := TMacroKeyValue.Create(KeyLabel, Value)
     else
       Macro := TMacroKeyValue.Create('', '');
-  finally 
+  finally
     result := Macro;
   end;
 end;
+
 
 function MacroExists(Pair: TMacroKeyValue): Boolean;
 begin
@@ -89,7 +94,7 @@ var
   ThisString: String;
   OutputText: TStringList;
 begin
-  Macros := TMacroDict.Create();
+  Macros     := TMacroDict.Create();
   OutputText := TStringList.Create();
   try
     for ThisString in InputText do
