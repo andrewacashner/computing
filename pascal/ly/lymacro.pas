@@ -17,103 +17,123 @@
 }
 
 {$mode objfpc}{$H+}{$J-}
-program lymacro(input, output);
+program lymacro(input, output, stderr);
 
 uses SysUtils, StrUtils, Classes, Generics.Collections;
+
+procedure DebugLn(Msg: String);
+begin
+  {$ifdef DEBUG}
+  WriteLn(stderr, '> ' + Msg);
+  {$endif}
+end;
 
 type
   TMacroDict     = specialize TDictionary<String, String>;
   TMacroKeyValue = TMacroDict.TDictionaryPair;
+  
+  TMacroOutline = class 
+  private
+    FKeyStart, FKeyEnd, FValueStart, FValueEnd: Integer;
+    FValid: Boolean;
+  public
+    function KeyLength: Integer;
+    function ValueLength: Integer;
+    function MacroLength: Integer;
+    procedure Clear;
+  end;
 
-function MatchBraces(Source: String): String;
-var 
-  Found: Boolean = False;
-  Test: String;
-  StartIndex: Integer = 0;
-  EndIndex:   Integer = 0;
-  BraceLevel: Integer = 0;
+function TMacroOutline.KeyLength: Integer;
 begin
-  Test := Source.Substring(StartIndex);
-  // WriteLn('Testing substring ' + Test);
-  while Test.Contains('{') do
-  begin 
-    if Test.IndexOf('{') < Test.IndexOf('}') then
-    begin
-      // WriteLn('Found a { before a }');
-      StartIndex := Test.IndexOf('{') + 1;
-      // WriteLn('Next { is before index ' + IntToStr(StartIndex));
-      Inc(BraceLevel);
-      Test := Test.Substring(StartIndex);
-      Found := False;
-    end;
-    while Test.Contains('}') and (BraceLevel > 0) do
-    begin
-      // WriteLn('found }, bracelevel = ' + IntToStr(BraceLevel));
-      EndIndex := Test.IndexOf('}');
-      Dec(BraceLevel);
-      Test := Test.Substring(StartIndex, EndIndex);
-      Found := True;
-    end;
-  end;
-  if Found and (BraceLevel = 0) then
-  begin
-    // WriteLn('found an expression and bracelevel = 0');
-    result := Source.Substring(StartIndex, EndIndex);
-  end
-  else
-  begin
-    result := '';
-  end;
+  result := FKeyEnd - FKeyStart;
 end;
 
-function FindExpression(Source: String): String;
+function TMacroOutline.ValueLength: Integer;
 begin
-  if Source.StartsWith('\lyricmode') then
-  begin
-    // WriteLn('Found \lyricmode');
-    result := MatchBraces(Source.Substring(Source.IndexOf('{') - 1));
-  end
-  else
-    result := MatchBraces(Source);
+  result := FValueEnd - FValueStart;
 end;
 
-{ Find a macro in the form `key = value\n` and return a pair with the key and
-  value. A macro definition label must start at the beginning of the line and
-  be a single string of alphabetic characters.  }
-function ExtractMacro(Source: String): TMacroKeyValue;
-const
-  Delim: String = '=';
+function TMacroOutline.MacroLength: Integer;
+begin
+  result := FValueEnd - FKeyStart;
+end;
+
+procedure TMacroOutline.Clear;
+begin
+  FKeyStart := 0;
+  FKeyEnd := 0;
+  FValueStart := 0;
+  FValueEnd := 0;
+  FValid := False;
+end;
+
+{ Find a macro definition and return a structure with the four indices for the
+start and end of the key and of the value; if none found, return the object
+with `FValid` marked False. }
+function MarkMacro(Outline: TMacroOutline; Source:String): TMacroOutline;
 var
-  KeyLabel, Value: String;
-  Macro: TMacroKeyValue;
-  Found: Boolean;
+  Key: String;
+  SplitPoint, I, StartI, EndI: Integer;
+  BraceLevel: Integer = 0;
+  Found: Boolean = False;
 begin
-  try
-    if Source.Contains(Delim) then
+  Outline.Clear;
+  if Source.Contains('=') then
+  begin
+    SplitPoint := Source.IndexOf('=');
+    Key := Source.Substring(0, SplitPoint - 1);
+
+    { The key must be the first word in the line }
+    if Key = ExtractWord(1, Source, StdWordDelims) then
     begin
-      KeyLabel := Source.Substring(0, Source.IndexOf(Delim) - 1);
-      if KeyLabel = ExtractWord(1, Source, StdWordDelims) then
+      Outline.FKeyStart := 0;
+      Outline.FKeyEnd := SplitPoint - 1;
+
+      { Find expression in matched curly braces }
+      for I := SplitPoint + 1 to Length(Source) do
       begin
-        Value := Source.Substring(Source.IndexOf(Delim) + 1);
-        // WriteLn('Trying to find value expression in string: ' + Value);
-        Value := FindExpression(Value);
-        // WriteLn('found macro, key: ' + KeyLabel + ', value: ' + Value);
-        Found := True;
+        case Source[I] of
+          '{': 
+            begin
+              DebugLn('Found { at index ' + IntToStr(I));
+              if BraceLevel = 0 then
+              begin
+                StartI := I + 1;
+              end;
+              Inc(BraceLevel);
+              DebugLn('Going to bracelevel ' + IntToStr(BraceLevel));
+              Found := False;
+            end;
+          '}': 
+            begin
+              DebugLn('Found } at index ' + IntToStr(I));
+              EndI := I - 1;
+              Dec(BraceLevel);
+              DebugLn('Going to bracelevel ' + IntToStr(BraceLevel));
+              Found := True;
+              if BraceLevel = 0 then
+              begin
+                DebugLn('Found an expression, ending the search');
+                break;
+              end;
+            end;
+        end;
+      end;
+      if Found and (BraceLevel = 0) then
+      begin
+        Outline.FValueStart := StartI;
+        Outline.FValueEnd   := EndI;
+        Outline.FValid      := True;
+        DebugLn('found value: start ' + IntToStr(Outline.FValueStart) 
+                  + ', end: ' + IntToStr(Outline.FValueEnd));
+      end
+      else
+      begin
+        Outline.FValid := False;
       end;
     end;
-   
-    if Found then
-      Macro := TMacroKeyValue.Create(KeyLabel, Value)
-    else
-      Macro := TMacroKeyValue.Create('', '');
-  finally
-    result := Macro;
   end;
-end;
-
-function MacroExists(Pair: TMacroKeyValue): Boolean;
-begin
-  result := not (Pair.Key.IsEmpty or Pair.Value.IsEmpty)
+  result := Outline;
 end;
 
 { Find a command starting with backslash like `\Music`, look up the key in
@@ -142,84 +162,102 @@ begin
   result := Source;
 end;
 
-{ MAIN }
-const
-  InputText: Array of String = 
-    ( 'MusicSoprano = { c''4 d''4 es''4 }'
-    , 'This is not a macro'
-    , 'LyricsSoprano = \lyricmode { ly -- ric text }'
-    , '\new Voice = "S" { \MusicSoprano }'
-    , '\new Lyrics \lyricsto "S" { \LyricsSoprano }'
-    , 'MusicBass = { c8 d8 e8 f8 g2 g,2'
-    , '  c4 e4 f4 g4 c1 }'
-    , ''
-    , 'MusicAc = { c1 c1 \MusicBass }'
-    , '\new Staff = "Basses"'
-    , '  <<'
-    , '    \new Voice = "B1" { \voiceOne \MusicBass }'
-    , '    \new Voice = "B2" { \voiceTwo \MusicAc }'
-    , '  >>'
-    , ''
-    , ' \LevelThree ' // this would not even be possible in Lilypond
-    , 'LevelOne = { \MusicSoprano }'
-    , 'LevelTwo = { \LevelOne }'
-    , 'LevelThree = { \LevelTwo }'
-    );
-
+{ Remove the first instance of a substring from a string }
+function CensorString(Source: String; Block: String): String;
 var
-  Macros:     TMacroDict;
-  MacroPair:  TMacroKeyValue;
-  InputStr, ThisStr, TestStr: String;
-  OutputStr: String;
-  Index: Integer;
-  ReplaceStart, ReplaceEnd: Integer;
+  CutFrom, CutTo: Integer;
 begin
+  CutFrom := Source.IndexOf(Block);
+
+  if CutFrom = -1 then
+    result := Source { no substring found }
+  else
+  begin
+    CutTo := CutFrom + Length(Block) + 1;
+    result := Source.Substring(0, CutFrom) + Source.Substring(CutTo);
+  end;
+end;
+
+{ MAIN }
+var
+  InputText: TStringList;
+  Macros: TMacroDict;
+  Outline: TMacroOutline;
+  FileName, ThisStr, OutputStr, CutStr, Key, Value: String;
+  NewStart: Integer;
+begin
+  InputText := TStringList.Create();
+  Outline := TMacroOutline.Create();
   Macros := TMacroDict.Create();
+
   try
-    InputStr := '';
-    for ThisStr in InputText do
-      InputStr := InputStr + ThisStr + LineEnding;
-
-    TestStr := InputStr;
-    // WriteLn('Looking for macro definitions in input text: ' + TestStr);
-    while not TestStr.IsEmpty do
+    { Process input file }
+    if ParamCount <> 1 then
     begin
-      MacroPair := ExtractMacro(TestStr);
-      if MacroExists(MacroPair) then
+      WriteLn('Usage: lymacro INFILE.ly');
+      exit;
+    end
+    else
+    begin
+      FileName := ParamStr(1);
+      DebugLn('Loading input file ' + FileName);
+    end;
+
+    InputText.LoadFromFile(FileName);
+
+    { Look for macro definitions; store them in macro dictionary and delete
+    them from the output text. If none found in this line, go to the next.  }
+    OutputStr := InputText.Text;
+    ThisStr := OutputStr;
+    while not ThisStr.IsEmpty do
+    begin
+      Outline := MarkMacro(Outline, ThisStr);
+      if Outline.FValid then
       begin
-        // WriteLn('Found and confirmed macro');
-        Macros.AddOrSetValue(MacroPair.Key, MacroPair.Value);
-        TestStr := TestStr.Substring(TestStr.IndexOf(MacroPair.Value));
-      end;
+        Key   := Trim(ThisStr.Substring(Outline.FKeyStart, Outline.KeyLength));
 
-      Index := TestStr.IndexOf(LineEnding);
-      // WriteLn('Looking for next newline delimiter in string: ' + TestStr);
-      // WriteLn('Next delimiter is at index ' + IntToStr(Index));
-      if Index = -1 then
-        break
+        { The value can either be in the form `{ music }` or `\lyricmode {
+        lyrics }`. We look for `\lyricmode` first, then we must find a
+        matching brace group. }
+        Value := TrimLeft(ThisStr.Substring(ThisStr.IndexOf('=') + 1));
+        DebugLn('Looking for \lyricmode in: ' + Value);
+        if Value.StartsWith('\lyricmode') then
+        begin
+          DebugLn('Found \lyricmode');
+          Value := '\lyricmode ';
+        end
+        else
+        begin
+          Value := '';
+        end;
+        Value := Value + Trim(ThisStr.Substring(Outline.FValueStart, Outline.ValueLength));
+
+        Macros.AddOrSetValue(Key, Value);
+        DebugLn('added macro key: ' + Key + ', value: ' + Value);
+
+        { Keep looking after end of macro-definition expression. }
+        NewStart := Outline.FValueEnd + 1;
+
+        { Cut out the macro definition from the output text. }
+        CutStr := ThisStr.Substring(Outline.FKeyStart, Outline.MacroLength);
+        OutputStr := CensorString(OutputStr, CutStr);
+      end
       else
-        TestStr := TestStr.Substring(Index + 1)
+      begin
+        { If no macro found on this line, try the next. }
+        DebugLn('did not find a macro');
+        NewStart := ThisStr.IndexOf(LineEnding) + 1;
+      end;
+      ThisStr := ThisStr.Substring(NewStart);
     end;
-
-    OutputStr := FindReplaceMacros(InputStr, Macros);
-
-    { how to trim out macro definitions?
-      one issue here is the macro names (\Bass and \BassII are not treated as separate names)
-
-    for MacroPair in Macros do
-    begin
-      ThisStr := OutputStr.Substring(OutputStr.IndexOf(MacroPair.Key));
-      ThisStr := OutputStr.Substring(OutputStr.IndexOf(MacroPair.Value));
-      ReplaceStart := OutputStr.IndexOf(MacroPair.Key);
-      ReplaceEnd := OutputStr.IndexOf(MacroPair.Value) + length(MacroPair.Value) + 1;
-      OutputStr := OutputStr.Substring(0, ReplaceStart) + 
-                    OutputStr.Substring(ReplaceEnd);
-    end;
-    }
+   
+    OutputStr := FindReplaceMacros(OutputStr, Macros);
+    WriteLn(OutputStr);
 
   finally
-    WriteLn(OutputStr);
     FreeAndNil(Macros);
+    FreeAndNil(Outline);
+    FreeAndNil(InputText);
   end;
 end.
 
