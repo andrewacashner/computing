@@ -14,7 +14,7 @@ MusicAc = { c1 c1 \MusicBass }
   >>
 
 LevelOne = { \MusicSoprano }
-LevelTwo = { \LevelOne }
-LevelThree = { \LevelTwo }
-{ \LevelThree }
+LevelTwo = \LevelOne
+LevelThree = \LevelTwo
+\LevelThree
 

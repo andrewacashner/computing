@@ -69,70 +69,188 @@ end;
 
 { Find a macro definition and return a structure with the four indices for the
 start and end of the key and of the value; if none found, return the object
-with `FValid` marked False. }
+with `FValid` marked False. 
+
+- The KEY must be a single alphabetic word, starting at the beginning fo the line.
+- The DELIMITER is '=', optionally surrounded by whitespace.
+- The VALUE can be any of the following:
+    - A music expression enclosed in curly braces: `key = { music }`
+    - A macro command with no arguments: `key = \macro`
+    - A macro command with arguments: `key = \lyricmode { lyrics }` 
+
+NB we are not accepting `MarkupMacro = \markup "string"` as a valid definition, only `MarkupMacro = \markup { "string" }`.
+}
 function MarkMacro(Outline: TMacroOutline; Source:String): TMacroOutline;
+type
+  TReadMode = (rkNormal, rkCommand, rkBraceArgument);
 var
-  Key: String;
-  SplitPoint, I, StartI, EndI: Integer;
-  BraceLevel: Integer = 0;
-  Found: Boolean = False;
+  C: String;
+  Key, Value, TestStr: String;
+
+  SplitPoint, I, CommandStart, CommandEnd, 
+  ArgumentStart, ArgumentEnd, BraceLevel: Integer;
+
+  CommandFound, ArgumentFound: Boolean;
+  ReadMode: TReadMode;
+
 begin
   Outline.Clear;
   if Source.Contains('=') then
   begin
     SplitPoint := Source.IndexOf('=');
-    Key := Source.Substring(0, SplitPoint - 1);
 
     { The key must be the first word in the line }
+    Key := Source.Substring(0, SplitPoint - 1);
+    DebugLn('testing possible key: ' + Key);
+
     if Key = ExtractWord(1, Source, StdWordDelims) then
     begin
       Outline.FKeyStart := 0;
-      Outline.FKeyEnd := SplitPoint - 1;
+      Outline.FKeyEnd := SplitPoint;
+      DebugLn('found key: start ' + IntToStr(Outline.FKeyStart) 
+      + ', end: ' + IntToStr(Outline.FKeyEnd));
 
       { Find expression in matched curly braces }
-      for I := SplitPoint + 1 to Length(Source) do
+
+      ReadMode := rkNormal;
+      BraceLevel := 0;
+      CommandFound := False;
+      ArgumentFound := False;
+
+      TestStr := Source.Substring(SplitPoint + 2);
+      while not TestStr.IsEmpty do
       begin
-        case Source[I] of
-          '{': 
+        for C in TestStr do
+        begin
+          DebugLn('test source char: ' + C);
+          case C of
+          '%': 
+          begin
+            { START TODO this doesn't work }
+            { skip to end of line after comment char }
+            I := TestStr.IndexOf(LineEnding) + 1;
+            TestStr := TestStr.Substring(I);
+          end;
+
+          '\':
+          begin
+            if ReadMode = rkNormal then
             begin
-              DebugLn('Found { at index ' + IntToStr(I));
-              if BraceLevel = 0 then
+              CommandStart := Source.IndexOf(C);
+              DebugLn('Found \ at index ' + IntToStr(CommandStart));
+              ReadMode := rkCommand;
+              Value := ExtractWord(1, Source.Substring(CommandStart), StdWordDelims);
+              DebugLn('Found command \' + Value);
+              CommandEnd := CommandStart + Length(Value) + 1;
+              CommandFound := True;
+
+              { search for argument immediately after command (with optional
+              whitespace between) }
+              I := CommandEnd + 1;
+              DebugLn('checking for arg in substring: ' + Source.Substring(I));
+              if TrimLeft(Source.Substring(I)).StartsWith('{') then
               begin
-                StartI := I + 1;
-              end;
-              Inc(BraceLevel);
-              DebugLn('Going to bracelevel ' + IntToStr(BraceLevel));
-              Found := False;
-            end;
-          '}': 
-            begin
-              DebugLn('Found } at index ' + IntToStr(I));
-              EndI := I - 1;
-              Dec(BraceLevel);
-              DebugLn('Going to bracelevel ' + IntToStr(BraceLevel));
-              Found := True;
-              if BraceLevel = 0 then
+                DebugLn('looking for argument after command');
+                TestStr := Source.Substring(I);
+              end
+              else
               begin
-                DebugLn('Found an expression, ending the search');
+                ArgumentFound := False;
+                TestStr := ''; { end the loop }
+                DebugLn('no argument found after command; ending the search');
                 break;
               end;
+            end; { if ReadMode }
+          end;
+
+          '{': 
+          begin
+            I := Source.IndexOf(C);
+            DebugLn('Found { at index ' + IntToStr(I));
+            if (ReadMode = rkNormal) and (BraceLevel = 0) then
+            begin
+              ArgumentStart := I - 1; { include opening bracket in value string }
             end;
+            Inc(BraceLevel);
+            DebugLn('Going to bracelevel ' + IntToStr(BraceLevel));
+            ReadMode := rkBraceArgument;
+            TestStr := TestStr.Substring(I + 1);
+            continue;
+          end;
+
+          '}': 
+          begin
+            if ReadMode = rkBraceArgument then
+            begin
+              I := Source.IndexOf(C);
+              DebugLn('Found } at index ' + IntToStr(I));
+              ArgumentEnd := I + 1; { include close bracket }
+            end;
+            Dec(BraceLevel);
+            DebugLn('Going to bracelevel ' + IntToStr(BraceLevel));
+            if BraceLevel = 0 then
+            begin
+              ArgumentFound := True;
+              DebugLn('Found an expression, ending the search');
+              break;
+            end
+            else
+            begin
+              TestStr := TestStr.Substring(I + 1);
+              continue
+            end;
+          end; 
+
+          else
+          begin
+            TestStr := TestStr.Substring(I + 1);
+          end;
+          end; { case }
+        end; { for }
+      end; { while }
+
+      if CommandFound then
+      begin { `\command { argument }` }
+        if ArgumentFound then
+        begin
+          Outline.FValueStart := CommandStart;
+          Outline.FValueEnd   := ArgumentEnd;
+          Outline.FValid      := True;
+        end
+        else { `\command` }
+        begin
+          Outline.FValueStart := CommandStart;
+          Outline.FValueEnd   := CommandEnd;
+          Outline.FValid      := True;
+        end
+      end
+      else { `{ argument }` }
+      begin
+        if ArgumentFound then
+        begin
+          Outline.FValueStart := ArgumentStart;
+          Outline.FValueEnd   := ArgumentEnd;
+          Outline.FValid      := True;
         end;
       end;
-      if Found and (BraceLevel = 0) then
+       
+      {$ifdef DEBUG}
+      if CommandFound or ArgumentFound then
       begin
-        Outline.FValueStart := StartI;
-        Outline.FValueEnd   := EndI;
-        Outline.FValid      := True;
         DebugLn('found value: start ' + IntToStr(Outline.FValueStart) 
-                  + ', end: ' + IntToStr(Outline.FValueEnd));
-      end
-      else
-      begin
-        Outline.FValid := False;
+        + ', end: ' + IntToStr(Outline.FValueEnd));
       end;
+      {$endif}
     end;
   end;
+
+  {$ifdef DEBUG}
+  if Outline.FValid = False then
+  begin 
+    DebugLn('no macro definition found');
+  end;
+  {$endif}
+
   result := Outline;
 end;
 
@@ -178,6 +296,20 @@ begin
   end;
 end;
 
+function RemoveComments(InputLines: TStringList): TStringList;
+var
+  I: Integer;
+begin
+  for I := InputLines.Count - 1 downTo 0 do
+  begin
+    if InputLines[I].StartsWith('%') then
+    begin
+      InputLines.Delete(I);
+    end;
+  end;
+  result := InputLines;
+end;
+
 { MAIN }
 var
   InputText: TStringList;
@@ -185,6 +317,9 @@ var
   Outline: TMacroOutline;
   FileName, ThisStr, OutputStr, CutStr, Key, Value: String;
   NewStart: Integer;
+  {$ifdef DEBUG}
+  MacroPair: TMacroKeyValue;
+  {$endif}
 begin
   InputText := TStringList.Create();
   Outline := TMacroOutline.Create();
@@ -205,6 +340,8 @@ begin
 
     InputText.LoadFromFile(FileName);
 
+    InputText := RemoveComments(InputText);
+
     { Look for macro definitions; store them in macro dictionary and delete
     them from the output text. If none found in this line, go to the next.  }
     OutputStr := InputText.Text;
@@ -215,25 +352,10 @@ begin
       if Outline.FValid then
       begin
         Key   := Trim(ThisStr.Substring(Outline.FKeyStart, Outline.KeyLength));
-
-        { The value can either be in the form `{ music }` or `\lyricmode {
-        lyrics }`. We look for `\lyricmode` first, then we must find a
-        matching brace group. }
-        Value := TrimLeft(ThisStr.Substring(ThisStr.IndexOf('=') + 1));
-        DebugLn('Looking for \lyricmode in: ' + Value);
-        if Value.StartsWith('\lyricmode') then
-        begin
-          DebugLn('Found \lyricmode');
-          Value := '\lyricmode ';
-        end
-        else
-        begin
-          Value := '';
-        end;
-        Value := Value + Trim(ThisStr.Substring(Outline.FValueStart, Outline.ValueLength));
+        Value := Trim(ThisStr.Substring(Outline.FValueStart, Outline.ValueLength));
 
         Macros.AddOrSetValue(Key, Value);
-        DebugLn('added macro key: ' + Key + ', value: ' + Value);
+        DebugLn('SUCCESS: added macro key: ' + Key + ', value: ' + Value);
 
         { Keep looking after end of macro-definition expression. }
         NewStart := Outline.FValueEnd + 1;
@@ -245,12 +367,17 @@ begin
       else
       begin
         { If no macro found on this line, try the next. }
-        DebugLn('did not find a macro');
+        DebugLn('did not find a macro on this line');
         NewStart := ThisStr.IndexOf(LineEnding) + 1;
       end;
       ThisStr := ThisStr.Substring(NewStart);
     end;
-   
+
+    {$ifdef DEBUG}
+    for MacroPair in Macros do
+      WriteLn('MACRO: key = ' + MacroPair.Key + ', value = ' + MacroPair.Value);
+    {$endif}
+
     OutputStr := FindReplaceMacros(OutputStr, Macros);
     WriteLn(OutputStr);
 

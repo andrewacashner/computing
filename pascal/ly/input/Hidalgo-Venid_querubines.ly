@@ -7,7 +7,7 @@
 % 2019-09-18    Begun in Lilypond
 % }}}1
 
-\version "2.19"
+\version "2.23"
 \include "villancico.ly"
 
 % {{{1 header
@@ -708,62 +708,10 @@ LyricsCoplasII = \lyricmode {
   mi voz ha __ de ser. __
 }
 
-LyricsCoplasIII = \lyricmode {
-  \StanzaIII
-  Las lá -- gri -- mas de la no -- che
-  en -- ju -- ga su~ar -- dor su -- til,
-  dan -- do al as -- pid que llo -- rar,
-  y~a las flo -- res, que re -- ír,
-  dan -- do al as -- pid que llo -- rar,
-  y~a las flo -- res, que re -- ír.
-}
+% Omit stanzas 3-6
+LyricsCoplasOdd = \LyricsCoplasI
 
-LyricsCoplasIV = \lyricmode {
-  \StanzaIV
-  El cur -- so de los a -- rro -- yos 
-  que de -- tu -- vo po -- mo -- vil
-  as -- pi -- ra di -- suel -- to~en per -- las 
-  a~o -- cé -- a -- nos de za -- fir,
-  as -- pi -- ra di -- suel -- to~en per -- las 
-  a~o -- cé -- a -- nos de za -- fir.
-}
-
-LyricsCoplasV = \lyricmode {
-  \StanzaV 
-  Las a -- ves que so -- bre~el vien -- to
-  te -- jen plu -- ma -- do pen -- sil
-  pa -- ra~ha -- cer la sal -- va al sol 
-  ca -- da pi -- co~es un cla -- rín,
-  pa -- ra~ha -- cer la sal -- va al sol 
-  ca -- da pi -- co~es un cla -- rín.
-}
-
-LyricsCoplasVI = \lyricmode {
-  \StanzaVI
-  Ya des -- te -- rra -- da la cul -- pa
-  hu -- ye~a su~ob -- scu -- ro con -- fín
-  y muer -- ta la no -- che 
-  ha -- ce el sol al dí -- a vi -- vir,
-  y muer -- ta la no -- che 
-  ha -- ce el sol al dí -- a vi -- vir.
-}
-
-% {{{3 odd/even combined
-LyricsCoplasOdd = \lyricmode {
-  <<
-    \LyricsCoplasI
-    \NextLyricsLine "LineIISI" "LineISI" "SI" { \LyricsCoplasIII }
-    \NextLyricsLine "LineIIISI" "LineIISI" "SI" { \LyricsCoplasV }
-  >>
-}
-
-LyricsCoplasEven = \lyricmode {
-  <<
-    \LyricsCoplasII
-    \NextLyricsLine "LineIISII" "LineISII" "SII" { \LyricsCoplasIV }
-    \NextLyricsLine "LineIIISII" "LineIISII" "SII" { \LyricsCoplasVI }
-  >>
-}
+LyricsCoplasEven = \LyricsCoplasII
 % }}}3
 % }}}2
 
