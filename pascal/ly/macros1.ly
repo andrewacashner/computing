@@ -4,8 +4,9 @@ MarkupII = \markup { "World" }
 % {{{1 even if there are braces
 MusicSoprano = { c'4 d'4 e'2 }
 % }}}1
+\new Staff = "Melody" { \MusicSoprano }
 LyricsSoprano = \lyricmode { ly -- ric text^\MarkupII }
-MusicAlto = \MusicSoprano
+MusicAlto = \MusicSoprano % { what about braces that start midline? }
 LyricsAlto = \LyricsSoprano
 <<
 \MusicAlto

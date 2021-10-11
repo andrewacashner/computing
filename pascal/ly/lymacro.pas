@@ -85,9 +85,10 @@ type
   TReadMode = (rkNormal, rkCommand, rkBraceArgument);
 var
   C: String;
+  CIndex: Integer;
   Key, Value, TestStr: String;
 
-  SplitPoint, I, CommandStart, CommandEnd, 
+  SplitPoint, CommandStart, CommandEnd, 
   ArgumentStart, ArgumentEnd, BraceLevel: Integer;
 
   CommandFound, ArgumentFound: Boolean;
@@ -101,7 +102,7 @@ begin
 
     { The key must be the first word in the line }
     Key := Source.Substring(0, SplitPoint - 1);
-    DebugLn('testing possible key: ' + Key);
+    DebugLn('testing possible key: ' + Key.Substring(0, 20));
 
     if Key = ExtractWord(1, Source, StdWordDelims) then
     begin
@@ -111,32 +112,26 @@ begin
       + ', end: ' + IntToStr(Outline.FKeyEnd));
 
       { Find expression in matched curly braces }
-
       ReadMode := rkNormal;
       BraceLevel := 0;
       CommandFound := False;
       ArgumentFound := False;
 
-      TestStr := Source.Substring(SplitPoint + 2);
+      CIndex := SplitPoint + 2;
+      TestStr := Source.Substring(CIndex);
       while not TestStr.IsEmpty do
       begin
+        { TODO I don't think you need TestStr at all if you are using indices
+        }
         for C in TestStr do
         begin
           DebugLn('test source char: ' + C);
           case C of
-          '%': 
-          begin
-            { START TODO this doesn't work }
-            { skip to end of line after comment char }
-            I := TestStr.IndexOf(LineEnding) + 1;
-            TestStr := TestStr.Substring(I);
-          end;
-
           '\':
           begin
             if ReadMode = rkNormal then
             begin
-              CommandStart := Source.IndexOf(C);
+              CommandStart := CIndex;
               DebugLn('Found \ at index ' + IntToStr(CommandStart));
               ReadMode := rkCommand;
               Value := ExtractWord(1, Source.Substring(CommandStart), StdWordDelims);
@@ -146,12 +141,14 @@ begin
 
               { search for argument immediately after command (with optional
               whitespace between) }
-              I := CommandEnd + 1;
-              DebugLn('checking for arg in substring: ' + Source.Substring(I));
-              if TrimLeft(Source.Substring(I)).StartsWith('{') then
+              CIndex := CommandEnd + 1;
+              DebugLn('checking for arg in substring starting: ' 
+                + Source.Substring(CIndex, 20));
+              if Source.Substring(CIndex).TrimLeft.StartsWith('{') then
               begin
                 DebugLn('looking for argument after command');
-                TestStr := Source.Substring(I);
+                TestStr := Source.Substring(CIndex);
+                continue;
               end
               else
               begin
@@ -165,45 +162,47 @@ begin
 
           '{': 
           begin
-            I := Source.IndexOf(C);
-            DebugLn('Found { at index ' + IntToStr(I));
+            DebugLn('Found { at index ' + IntToStr(CIndex));
             if (ReadMode = rkNormal) and (BraceLevel = 0) then
             begin
-              ArgumentStart := I - 1; { include opening bracket in value string }
+              ArgumentStart := CIndex - 1; { include opening bracket in value string }
             end;
             Inc(BraceLevel);
             DebugLn('Going to bracelevel ' + IntToStr(BraceLevel));
             ReadMode := rkBraceArgument;
-            TestStr := TestStr.Substring(I + 1);
-            continue;
+
+            Inc(CIndex);
+            TestStr := Source.Substring(CIndex);
           end;
 
           '}': 
           begin
             if ReadMode = rkBraceArgument then
             begin
-              I := Source.IndexOf(C);
-              DebugLn('Found } at index ' + IntToStr(I));
-              ArgumentEnd := I + 1; { include close bracket }
-            end;
-            Dec(BraceLevel);
-            DebugLn('Going to bracelevel ' + IntToStr(BraceLevel));
-            if BraceLevel = 0 then
-            begin
-              ArgumentFound := True;
-              DebugLn('Found an expression, ending the search');
-              break;
-            end
-            else
-            begin
-              TestStr := TestStr.Substring(I + 1);
-              continue
+              DebugLn('Found } at index ' + IntToStr(CIndex));
+              Dec(BraceLevel);
+              DebugLn('Going to bracelevel ' + IntToStr(BraceLevel));
+              if BraceLevel = 0 then
+              begin
+                ArgumentEnd := CIndex + 1; { include close bracket }
+                ArgumentFound := True;
+                DebugLn('Found an expression, ending the search');
+                TestStr := '';
+                break;
+              end
+              else
+              begin
+                Inc(CIndex);
+                TestStr := Source.Substring(CIndex);
+                continue;
+              end;
             end;
           end; 
 
           else
           begin
-            TestStr := TestStr.Substring(I + 1);
+            Inc(CIndex);
+            TestStr := Source.Substring(CIndex);
           end;
           end; { case }
         end; { for }
@@ -266,6 +265,7 @@ var
 function Replace(S: String; Dict: TMacroDict): String;
 begin
   for Macro in Dict do
+    S := S.Replace('\' + Macro.Key + ' ', Macro.Value + ' ', [rfReplaceAll]);
     S := S.Replace('\' + Macro.Key, Macro.Value, [rfReplaceAll]);
   result := S;
 end;
@@ -296,6 +296,27 @@ begin
   end;
 end;
 
+function StringDropBefore(InputStr: String; Delim: String): String;
+var
+  BreakPoint: Integer;
+begin
+  if InputStr.Contains(Delim) then
+  begin
+    BreakPoint := InputStr.IndexOf(Delim);
+    InputStr := InputStr.Substring(BreakPoint, Length(InputStr) - BreakPoint);
+  end;
+  result := InputStr;
+end;
+
+function StringDropAfter(InputStr: String; Delim: String): String;
+begin
+  if InputStr.Contains(Delim) then
+    InputStr := InputStr.Substring(0, InputStr.IndexOf(Delim));
+  result := InputStr;
+end;
+
+
+
 function RemoveComments(InputLines: TStringList): TStringList;
 var
   I: Integer;
@@ -303,25 +324,48 @@ begin
   for I := InputLines.Count - 1 downTo 0 do
   begin
     if InputLines[I].StartsWith('%') then
-    begin
-      InputLines.Delete(I);
-    end;
+      InputLines.Delete(I)
+    else
+      InputLines[I] := StringDropAfter(InputLines[I], '%');
   end;
   result := InputLines;
 end;
 
+function RemoveBlankLines(InputLines: TStringList): TStringList;
+var
+  I: Integer;
+begin
+  for I := InputLines.Count - 1 downTo 0 do
+  begin
+    if InputLines[I].Trim.IsEmpty then
+      InputLines.Delete(I);
+  end;
+  result := InputLines;
+end;
+
+{ Split a string at newlines to make a `TStringList` }
+function Lines(InputStr: String; OutputList: TStringList): TStringList;
+begin
+  OutputList.Clear;
+  OutputList.Delimiter := LineEnding;
+  OutputList.StrictDelimiter := True;
+  OutputList.DelimitedText := InputStr;
+  result := OutputList;
+end;
+
 { MAIN }
 var
-  InputText: TStringList;
+  InputText, OutputText: TStringList;
   Macros: TMacroDict;
   Outline: TMacroOutline;
-  FileName, ThisStr, OutputStr, CutStr, Key, Value: String;
+  FileName, ThisStr, BufferStr, CutStr, Key, Value: String;
   NewStart: Integer;
   {$ifdef DEBUG}
   MacroPair: TMacroKeyValue;
   {$endif}
 begin
   InputText := TStringList.Create();
+  OutputText := TStringList.Create();
   Outline := TMacroOutline.Create();
   Macros := TMacroDict.Create();
 
@@ -344,46 +388,49 @@ begin
 
     { Look for macro definitions; store them in macro dictionary and delete
     them from the output text. If none found in this line, go to the next.  }
-    OutputStr := InputText.Text;
-    ThisStr := OutputStr;
+    BufferStr := InputText.Text;
+    ThisStr := BufferStr;
     while not ThisStr.IsEmpty do
     begin
       Outline := MarkMacro(Outline, ThisStr);
       if Outline.FValid then
       begin
-        Key   := Trim(ThisStr.Substring(Outline.FKeyStart, Outline.KeyLength));
-        Value := Trim(ThisStr.Substring(Outline.FValueStart, Outline.ValueLength));
+        Key   := ThisStr.Substring(Outline.FKeyStart, Outline.KeyLength);
+        Value := ThisStr.Substring(Outline.FValueStart, Outline.ValueLength);
 
         Macros.AddOrSetValue(Key, Value);
         DebugLn('SUCCESS: added macro key: ' + Key + ', value: ' + Value);
 
-        { Keep looking after end of macro-definition expression. }
-        NewStart := Outline.FValueEnd + 1;
-
         { Cut out the macro definition from the output text. }
         CutStr := ThisStr.Substring(Outline.FKeyStart, Outline.MacroLength);
-        OutputStr := CensorString(OutputStr, CutStr);
+        BufferStr := CensorString(BufferStr, CutStr);
+
+        { Move ahead to end of macro definition. }
+        NewStart := Outline.FValueEnd;
+        ThisStr := ThisStr.Substring(NewStart);
       end
       else
       begin
         { If no macro found on this line, try the next. }
         DebugLn('did not find a macro on this line');
         NewStart := ThisStr.IndexOf(LineEnding) + 1;
+        ThisStr := ThisStr.Substring(NewStart);
       end;
-      ThisStr := ThisStr.Substring(NewStart);
     end;
 
     {$ifdef DEBUG}
     for MacroPair in Macros do
-      WriteLn('MACRO: key = ' + MacroPair.Key + ', value = ' + MacroPair.Value);
+      DebugLn('MACRO: key = ' + MacroPair.Key + ', value = ' + MacroPair.Value);
     {$endif}
 
-    OutputStr := FindReplaceMacros(OutputStr, Macros);
-    WriteLn(OutputStr);
+    BufferStr := FindReplaceMacros(BufferStr, Macros);
+    OutputText := RemoveBlankLines(Lines(BufferStr, OutputText));
+    WriteLn(OutputText.Text);
 
   finally
     FreeAndNil(Macros);
     FreeAndNil(Outline);
+    FreeAndNil(OutputText);
     FreeAndNil(InputText);
   end;
 end.

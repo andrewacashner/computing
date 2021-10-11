@@ -496,12 +496,14 @@ MusicCoplasAc = {
   | bes4 a4 bes8.[ a16 g8. f16]
   | es4 f4 bes,4 c4 % CN MS: E\na
   | f,2 f2
-  | es4 d4 << { c4 } \figures { <_->4 } >> c'4
+%  | es4 d4 << { c4 } \figures { <_->4 } >> c'4
+  | es4 d4 c4 c'4
   | a4 bes4 es4 f4
   | bes,8 d8 d8 e8 f2
 
   % m. 90
-  | es4 d4 << { c2 } \figures { <_->2 } >>
+%  | es4 d4 << { c2 } \figures { <_->2 } >>
+  | es4 d4 c2 
   | a,4 bes,4 es4 f4
   | bes,1
   \MiddleBar
