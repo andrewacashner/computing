@@ -85,10 +85,9 @@ type
   TReadMode = (rkNormal, rkCommand, rkBraceArgument);
 var
   C: String;
-  CIndex: Integer;
   Key, Value, TestStr: String;
 
-  SplitPoint, CommandStart, CommandEnd, 
+  SplitPoint, I, CommandStart, CommandEnd, 
   ArgumentStart, ArgumentEnd, BraceLevel: Integer;
 
   CommandFound, ArgumentFound: Boolean;
@@ -112,17 +111,15 @@ begin
       + ', end: ' + IntToStr(Outline.FKeyEnd));
 
       { Find expression in matched curly braces }
+
       ReadMode := rkNormal;
       BraceLevel := 0;
       CommandFound := False;
       ArgumentFound := False;
 
-      CIndex := SplitPoint + 2;
-      TestStr := Source.Substring(CIndex);
+      TestStr := Source.Substring(SplitPoint + 2);
       while not TestStr.IsEmpty do
       begin
-        { TODO I don't think you need TestStr at all if you are using indices
-        }
         for C in TestStr do
         begin
           DebugLn('test source char: ' + C);
@@ -131,7 +128,7 @@ begin
           begin
             if ReadMode = rkNormal then
             begin
-              CommandStart := CIndex;
+              CommandStart := Source.IndexOf(C);
               DebugLn('Found \ at index ' + IntToStr(CommandStart));
               ReadMode := rkCommand;
               Value := ExtractWord(1, Source.Substring(CommandStart), StdWordDelims);
@@ -141,14 +138,12 @@ begin
 
               { search for argument immediately after command (with optional
               whitespace between) }
-              CIndex := CommandEnd + 1;
-              DebugLn('checking for arg in substring starting: ' 
-                + Source.Substring(CIndex, 20));
-              if Source.Substring(CIndex).TrimLeft.StartsWith('{') then
+              I := CommandEnd + 1;
+              DebugLn('checking for arg in substring starting: ' + Source.Substring(I, 20));
+              if Source.Substring(I).TrimLeft.StartsWith('{') then
               begin
                 DebugLn('looking for argument after command');
-                TestStr := Source.Substring(CIndex);
-                continue;
+                TestStr := Source.Substring(I);
               end
               else
               begin
@@ -162,38 +157,37 @@ begin
 
           '{': 
           begin
-            DebugLn('Found { at index ' + IntToStr(CIndex));
+            I := Source.IndexOf(C);
+            DebugLn('Found { at index ' + IntToStr(I));
             if (ReadMode = rkNormal) and (BraceLevel = 0) then
             begin
-              ArgumentStart := CIndex - 1; { include opening bracket in value string }
+              ArgumentStart := I - 1; { include opening bracket in value string }
             end;
             Inc(BraceLevel);
             DebugLn('Going to bracelevel ' + IntToStr(BraceLevel));
             ReadMode := rkBraceArgument;
-
-            Inc(CIndex);
-            TestStr := Source.Substring(CIndex);
+            TestStr := TestStr.Substring(I + 1);
+            continue;
           end;
 
           '}': 
           begin
+            I := Source.IndexOf(C); { TODO this is not getting the current char! }
             if ReadMode = rkBraceArgument then
             begin
-              DebugLn('Found } at index ' + IntToStr(CIndex));
+              DebugLn('Found } at index ' + IntToStr(I));
               Dec(BraceLevel);
               DebugLn('Going to bracelevel ' + IntToStr(BraceLevel));
               if BraceLevel = 0 then
               begin
-                ArgumentEnd := CIndex + 1; { include close bracket }
+                ArgumentEnd := I + 1; { include close bracket }
                 ArgumentFound := True;
                 DebugLn('Found an expression, ending the search');
-                TestStr := '';
                 break;
               end
               else
               begin
-                Inc(CIndex);
-                TestStr := Source.Substring(CIndex);
+                TestStr := TestStr.Substring(I + 1);
                 continue;
               end;
             end;
@@ -201,8 +195,7 @@ begin
 
           else
           begin
-            Inc(CIndex);
-            TestStr := Source.Substring(CIndex);
+            TestStr := TestStr.Substring(I + 1);
           end;
           end; { case }
         end; { for }
@@ -413,9 +406,12 @@ begin
       begin
         { If no macro found on this line, try the next. }
         DebugLn('did not find a macro on this line');
-        NewStart := ThisStr.IndexOf(LineEnding) + 1;
-        ThisStr := ThisStr.Substring(NewStart);
       end;
+      
+      { Either way, if macro found or not, the next one can only start on a
+      new line, so skip to the next line. }
+      NewStart := ThisStr.IndexOf(LineEnding) + 1;
+      ThisStr := ThisStr.Substring(NewStart);
     end;
 
     {$ifdef DEBUG}
