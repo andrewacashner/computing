@@ -770,6 +770,26 @@ LyricsT = \LyricsQuartet
 % }}}2
 % }}}1
 
+% {{{1 figures
+FiguresCoplasAc = \figuremode {
+  \SectionBreak
+  \MeterDuple
+  | R1*4
+  | s2 <_->4 s4
+  | R1*2
+  | s2 <_->2
+  | R1*2
+  \MeterTriple
+  | R1.*23
+}
+FiguresAc = \figuremode {
+  \MeterTriple
+  | R1.*82
+  \FiguresCoplasAc
+  \FiguresCoplasAc
+}
+
+
 % {{{1 score
 \score {
   <<
@@ -810,6 +830,7 @@ LyricsT = \LyricsQuartet
         "Ac."
         { \IncipitAc }
         \new Voice = "Ac" { \MusicAc }
+        \new FiguredBass { \FiguresAc }
       >>
     >>
   >>

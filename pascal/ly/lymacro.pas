@@ -1,14 +1,19 @@
-{ 
-  `lymacro`
+{ `lymacro`
 
-  Andrew Cashner, 2021/10/07
+  Andrew Cashner, 2021/10/07--12
  
-  A basic macro-substitution program targeting Lilypond code.  
-  Lilypond allows users to define macros like this:
+  A basic macro-substitution program targeting Lilypond code.
+}
+
+{ NOTE: To avoid the appearance of nested comments and therefore bad
+    highlighting and compiler warnings, we are writing `< arg >` instead of
+    the TeX-style curly braces that Lilypond actually uses (`{ arg }`). }
+
+{  Lilypond allows users to define macros like this:
   
   ~~~~
-  MusicSoprano = { c''4 d''4 ees''4 }
-  LyricsSoprano = \lyricmode { ly -- ric text }
+  MusicSoprano = < c'4 d'4 ees'4 >
+  LyricsSoprano = \lyricmode < ly -- ric text >
   ~~~~
   
   Then they can call them like `\MusicSoprano` or `\LyricsSoprano`.
@@ -21,6 +26,9 @@ program lymacro(input, output, stderr);
 
 uses SysUtils, StrUtils, Classes, Generics.Collections;
 
+{ `DebugLn`
+
+  Write notes to standard error if compiled with `-dDEBUG` }
 procedure DebugLn(Msg: String);
 begin
   {$ifdef DEBUG}
@@ -28,20 +36,112 @@ begin
   {$endif}
 end;
 
+{ `ReplaceString`
+
+  Replace the first instance of one substring with another }
+function ReplaceString(Source, Cut, Add: String): String;
+var
+  CutFrom, CutTo: Integer;
+begin
+  CutFrom := Source.IndexOf(Cut);
+
+  if CutFrom = -1 then
+    result := Source { no substring found }
+  else
+  begin
+    CutTo := CutFrom + Length(Cut) + 1;
+    result := Source.Substring(0, CutFrom) + Add + Source.Substring(CutTo);
+  end;
+end;
+
+function StringDropBefore(InputStr: String; Delim: String): String;
+var
+  BreakPoint: Integer;
+begin
+  if InputStr.Contains(Delim) then
+  begin
+    BreakPoint := InputStr.IndexOf(Delim);
+    InputStr := InputStr.Substring(BreakPoint, Length(InputStr) - BreakPoint);
+  end;
+  result := InputStr;
+end;
+
+function StringDropAfter(InputStr: String; Delim: String): String;
+begin
+  if InputStr.Contains(Delim) then
+    InputStr := InputStr.Substring(0, InputStr.IndexOf(Delim));
+  result := InputStr;
+end;
+
+function RemoveComments(InputLines: TStringList): TStringList;
+var
+  I: Integer;
+begin
+  for I := InputLines.Count - 1 downTo 0 do
+  begin
+    if InputLines[I].StartsWith('%') then
+      InputLines.Delete(I)
+    else
+      InputLines[I] := StringDropAfter(InputLines[I], '%');
+  end;
+  result := InputLines;
+end;
+
+function RemoveBlankLines(InputLines: TStringList): TStringList;
+var
+  I: Integer;
+begin
+  for I := InputLines.Count - 1 downTo 0 do
+  begin
+    if InputLines[I].Trim.IsEmpty then
+      InputLines.Delete(I);
+  end;
+  result := InputLines;
+end;
+
+{ `Lines`
+
+  Split a string at newlines to make a `TStringList` }
+function Lines(InputStr: String; OutputList: TStringList): TStringList;
+begin
+  OutputList.Clear;
+  OutputList.Delimiter := LineEnding;
+  OutputList.StrictDelimiter := True;
+  OutputList.DelimitedText := InputStr;
+  result := OutputList;
+end;
+
+
+{ Dictionary }
 type
   TMacroDict     = specialize TDictionary<String, String>;
   TMacroKeyValue = TMacroDict.TDictionaryPair;
-  
+
+{ `TMacroOutline`
+
+  Stores string indices that mark the positions of keys and values, and a
+  flag to indicate if they are valid. }
+type
   TMacroOutline = class 
   private
     FKeyStart, FKeyEnd, FValueStart, FValueEnd: Integer;
     FValid: Boolean;
   public
+    procedure Clear;
     function KeyLength: Integer;
     function ValueLength: Integer;
     function MacroLength: Integer;
-    procedure Clear;
   end;
+
+{ `TMacroOutline` class functions }
+procedure TMacroOutline.Clear;
+begin
+  FKeyStart := 0;
+  FKeyEnd := 0;
+  FValueStart := 0;
+  FValueEnd := 0;
+  FValid := False;
+end;
 
 function TMacroOutline.KeyLength: Integer;
 begin
@@ -58,67 +158,74 @@ begin
   result := FValueEnd - FKeyStart;
 end;
 
-procedure TMacroOutline.Clear;
+{ `MarkKey`
+
+  Mark the start and end location of the first key in a string, with syntax
+  `key = ...`. The key must be the first word in the line. Return an updated
+  `TMacroOutline`; if no key found, mark the outline invalid. }
+function MarkKey(Source: String; Outline: TMacroOutline): TMacroOutline;
+var
+  SplitPoint: Integer;
+  Key: String;
 begin
-  FKeyStart := 0;
-  FKeyEnd := 0;
-  FValueStart := 0;
-  FValueEnd := 0;
-  FValid := False;
+  SplitPoint := Source.IndexOf('=');
+  Key := Source.Substring(0, SplitPoint - 1);
+  DebugLn('testing possible key: ' + Key.Substring(0, 20));
+
+  if Key = ExtractWord(1, Source, StdWordDelims) then
+  begin
+    Outline.FKeyStart := 0;
+    Outline.FKeyEnd := SplitPoint;
+    Outline.FValid := True;
+    DebugLn('found key: start ' + IntToStr(Outline.FKeyStart) 
+    + ', end: ' + IntToStr(Outline.FKeyEnd));
+  end
+  else
+  begin
+    Outline.FValid := False;
+  end;
+  result := Outline;
 end;
 
-{ Find a macro definition and return a structure with the four indices for the
-start and end of the key and of the value; if none found, return the object
-with `FValid` marked False. 
+{ `MarkMacro`
 
-- The KEY must be a single alphabetic word, starting at the beginning fo the line.
-- The DELIMITER is '=', optionally surrounded by whitespace.
-- The VALUE can be any of the following:
-    - A music expression enclosed in curly braces: `key = { music }`
-    - A macro command with no arguments: `key = \macro`
-    - A macro command with arguments: `key = \lyricmode { lyrics }` 
+  Find a macro definition and return a structure with the four indices for the
+  start and end of the key and of the value; if none found, return the object
+  with `FValid` marked `False`. 
 
-NB we are not accepting `MarkupMacro = \markup "string"` as a valid definition, only `MarkupMacro = \markup { "string" }`.
-}
+  - The KEY must be a single alphabetic word, starting at the beginning fo the
+    line.  
+  - The DELIMITER is `'='`, optionally surrounded by whitespace.
+  - The VALUE can be any of the following:
+      - A music expression enclosed in curly braces: `key = < music >`
+      - A macro command with no arguments: `key = \macro`
+      - A macro command with arguments: `key = \lyricmode < lyrics >` 
+
+  NOTE we are not accepting `MarkupMacro = \markup "string"` as a valid
+  definition, only `MarkupMacro = \markup < "string" >`.  }
 function MarkMacro(Outline: TMacroOutline; Source:String): TMacroOutline;
 type
   TReadMode = (rkNormal, rkCommand, rkBraceArgument);
 var
-  C: String;
-  Key, Value: String;
-
-  SplitPoint, CommandStart, CommandEnd, 
-  ArgumentStart, ArgumentEnd, BraceLevel: Integer;
-
+  C, Value: String;
+  SIndex, CommandStart, CommandEnd, ArgumentStart, ArgumentEnd,
+  BraceLevel: Integer;
   CommandFound, ArgumentFound: Boolean;
   ReadMode: TReadMode;
-
-  SIndex: Integer;
 begin
   Outline.Clear;
   if Source.Contains('=') then
   begin
-    SplitPoint := Source.IndexOf('=');
-
-    { The key must be the first word in the line }
-    Key := Source.Substring(0, SplitPoint - 1);
-    DebugLn('testing possible key: ' + Key.Substring(0, 20));
-
-    if Key = ExtractWord(1, Source, StdWordDelims) then
+    Outline := MarkKey(Source, Outline);
+    if Outline.FValid then
     begin
-      Outline.FKeyStart := 0;
-      Outline.FKeyEnd := SplitPoint;
-      DebugLn('found key: start ' + IntToStr(Outline.FKeyStart) 
-      + ', end: ' + IntToStr(Outline.FKeyEnd));
-
       { Find expression in matched curly braces }
-
       ReadMode := rkNormal;
       BraceLevel := 0;
       CommandFound := False;
       ArgumentFound := False;
 
-      SIndex := SplitPoint + 2;
+      SIndex := Outline.FKeyEnd + 2;
       while SIndex < Length(Source) do
       begin
         C := Source[SIndex];
@@ -186,7 +293,7 @@ begin
       end; { for }
 
       if CommandFound then
-      begin { `\command { argument }` }
+      begin { `\command < argument >` }
         if ArgumentFound then
         begin
           Outline.FValueStart := CommandStart;
@@ -200,7 +307,7 @@ begin
           Outline.FValid      := True;
         end
       end
-      else { `{ argument }` }
+      else { `< argument >` }
       begin
         if ArgumentFound then
         begin
@@ -230,117 +337,83 @@ begin
   result := Outline;
 end;
 
-{ Find a command starting with backslash like `\Music`, look up the key in
-dictionary and if found, replace it with the corresponding value; if nothing
-is found, just leave the text alone. 
-Expand any macros in the stored values before expanding them in the source
-text. } 
+{ `FindReplaceMacros`
+
+  Find a command starting with backslash like `\Music`, look up the key in
+  dictionary and if found, replace it with the corresponding value; if nothing
+  is found, just leave the text alone.  Expand any macros in the stored values
+  before expanding them in the source text. } 
 function FindReplaceMacros(Source: String; Dict: TMacroDict): String;
 var
-  Macro: TMacroKeyValue;
-
-function Replace(S: String; Dict: TMacroDict): String;
+  BufferStr, Command, AfterCommand, OutputStr: String;
+  ThisValue: String;
 begin
-  for Macro in Dict do
-    S := S.Replace(Macro.Key, Macro.Value, [rfReplaceAll]);
-  { TODO need to sort keys, otherwise if you define `\LyricsI` and \LyricsII`
-  then `\LyricsI` will be expanded inside the string `\LyricsII` }
-  result := S;
-end;
-
-begin
-  for Macro in Dict do
+  OutputStr := Source;
+  BufferStr := OutputStr;
+  while BufferStr.Contains('\') do
   begin
-    { TODO ? first expand any macros stored in the dictionary values }
-    // Dict.AddOrSetValue(Macro.Key, Replace(Macro.Value, Dict));
-    Source := Replace(Source, Dict);
+    BufferStr := StringDropBefore(BufferStr, '\');
+    Command := ExtractWord(1, BufferStr, [' ', LineEnding]);
+
+    { Continue searching after this command }
+    BufferStr := BufferStr.Substring(Length(Command));
+
+    { Replace command and add back the space or newline that followed it }
+    AfterCommand := BufferStr.Substring(0, 1);
+    if Dict.TryGetValue(Command, ThisValue) then
+    begin
+      OutputStr := ReplaceString(OutputStr, Command, ThisValue + AfterCommand);
+    end;
   end;
-  result := Source;
+  result := OutputStr;
 end;
 
-{ Remove the first instance of a substring from a string }
-function CensorString(Source: String; Block: String): String;
+{ `ExpandDictMacros`
+  
+  Expand all the nested macros stored within macro dictionary values. }
+function ExpandDictMacros(Dict: TMacroDict): TMacroDict;
 var
-  CutFrom, CutTo: Integer;
+  MacroPairI, MacroPairJ, MacroPairEdit: TMacroKeyValue;
 begin
-  CutFrom := Source.IndexOf(Block);
-
-  if CutFrom = -1 then
-    result := Source { no substring found }
-  else
+  for MacroPairI in Dict do
   begin
-    CutTo := CutFrom + Length(Block) + 1;
-    result := Source.Substring(0, CutFrom) + Source.Substring(CutTo);
+    MacroPairEdit := MacroPairI;
+    for MacroPairJ in Dict do
+    begin
+      MacroPairEdit.Value := FindReplaceMacros(MacroPairEdit.Value, Dict);
+      Dict.AddOrSetValue(MacroPairI.Key, MacroPairEdit.Value);
+    end;
   end;
+  result := Dict;
 end;
 
-function StringDropBefore(InputStr: String; Delim: String): String;
+{ `ExtractMacro` 
+
+  Find a macro in a string from its outline (indices of key and value) and add
+  it to a dictionary; return the updated dictionary. }
+function ExtractMacro(Source: String; Outline: TMacroOutline; Dict:
+  TMacroDict): TMacroDict;
 var
-  BreakPoint: Integer;
+  Key, Value: String;
 begin
-  if InputStr.Contains(Delim) then
+  if Outline.FValid then
   begin
-    BreakPoint := InputStr.IndexOf(Delim);
-    InputStr := InputStr.Substring(BreakPoint, Length(InputStr) - BreakPoint);
+    Key   := '\' + Source.Substring(Outline.FKeyStart, Outline.KeyLength).Trim;
+    Value := Source.Substring(Outline.FValueStart, Outline.ValueLength).Trim;
+    Dict.AddOrSetValue(Key, Value);
+    DebugLn('SUCCESS: added macro key: ' + Key + ', value: ' + Value);
   end;
-  result := InputStr;
+  result := Dict;
 end;
 
-function StringDropAfter(InputStr: String; Delim: String): String;
-begin
-  if InputStr.Contains(Delim) then
-    InputStr := InputStr.Substring(0, InputStr.IndexOf(Delim));
-  result := InputStr;
-end;
-
-
-
-function RemoveComments(InputLines: TStringList): TStringList;
-var
-  I: Integer;
-begin
-  for I := InputLines.Count - 1 downTo 0 do
-  begin
-    if InputLines[I].StartsWith('%') then
-      InputLines.Delete(I)
-    else
-      InputLines[I] := StringDropAfter(InputLines[I], '%');
-  end;
-  result := InputLines;
-end;
-
-function RemoveBlankLines(InputLines: TStringList): TStringList;
-var
-  I: Integer;
-begin
-  for I := InputLines.Count - 1 downTo 0 do
-  begin
-    if InputLines[I].Trim.IsEmpty then
-      InputLines.Delete(I);
-  end;
-  result := InputLines;
-end;
-
-{ Split a string at newlines to make a `TStringList` }
-function Lines(InputStr: String; OutputList: TStringList): TStringList;
-begin
-  OutputList.Clear;
-  OutputList.Delimiter := LineEnding;
-  OutputList.StrictDelimiter := True;
-  OutputList.DelimitedText := InputStr;
-  result := OutputList;
-end;
 
 { MAIN }
 var
   InputText, OutputText: TStringList;
   Macros: TMacroDict;
   Outline: TMacroOutline;
-  FileName, ThisStr, BufferStr, CutStr, Key, Value: String;
+  FileName, ThisStr, BufferStr, CutStr: String;
   NewStart: Integer;
-  {$ifdef DEBUG}
-  MacroPair: TMacroKeyValue;
-  {$endif}
 begin
   InputText := TStringList.Create();
   OutputText := TStringList.Create();
@@ -361,10 +434,9 @@ begin
     end;
 
     InputText.LoadFromFile(FileName);
-
     InputText := RemoveComments(InputText);
 
-    { Look for macro definitions; store them in macro dictionary and delete
+    { Find and store macro definitions in the dictionary and delete 
     them from the output text. If none found in this line, go to the next.  }
     BufferStr := InputText.Text;
     ThisStr := BufferStr;
@@ -373,23 +445,15 @@ begin
       Outline := MarkMacro(Outline, ThisStr);
       if Outline.FValid then
       begin
-        Key   := '\' + ThisStr.Substring(Outline.FKeyStart, Outline.KeyLength).Trim;
-        Value := ThisStr.Substring(Outline.FValueStart, Outline.ValueLength).Trim;
-
-        Macros.AddOrSetValue(Key, Value);
-        DebugLn('SUCCESS: added macro key: ' + Key + ', value: ' + Value);
-
-        { Cut out the macro definition from the output text. }
+        Macros := ExtractMacro(ThisStr, Outline, Macros);
         CutStr := ThisStr.Substring(Outline.FKeyStart, Outline.MacroLength);
-        BufferStr := CensorString(BufferStr, CutStr);
+        BufferStr := ReplaceStr(BufferStr, CutStr, '');
 
-        { Move ahead to end of macro definition. }
         NewStart := Outline.FValueEnd;
         ThisStr := ThisStr.Substring(NewStart);
       end
       else
       begin
-        { If no macro found on this line, try the next. }
         DebugLn('did not find a macro on this line');
         NewStart := ThisStr.IndexOf(LineEnding) + 1;
         ThisStr := ThisStr.Substring(NewStart);
@@ -401,7 +465,9 @@ begin
       DebugLn('MACRO: key = ' + MacroPair.Key + ', value = ' + MacroPair.Value);
     {$endif}
 
+    Macros := ExpandDictMacros(Macros);
     BufferStr := FindReplaceMacros(BufferStr, Macros);
+
     OutputText := RemoveBlankLines(Lines(BufferStr, OutputText));
     WriteLn(OutputText.Text);
 
