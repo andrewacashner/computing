@@ -85,14 +85,15 @@ type
   TReadMode = (rkNormal, rkCommand, rkBraceArgument);
 var
   C: String;
-  Key, Value, TestStr: String;
+  Key, Value: String;
 
-  SplitPoint, I, CommandStart, CommandEnd, 
+  SplitPoint, CommandStart, CommandEnd, 
   ArgumentStart, ArgumentEnd, BraceLevel: Integer;
 
   CommandFound, ArgumentFound: Boolean;
   ReadMode: TReadMode;
 
+  SIndex: Integer;
 begin
   Outline.Clear;
   if Source.Contains('=') then
@@ -117,18 +118,17 @@ begin
       CommandFound := False;
       ArgumentFound := False;
 
-      TestStr := Source.Substring(SplitPoint + 2);
-      while not TestStr.IsEmpty do
+      SIndex := SplitPoint + 2;
+      while SIndex < Length(Source) do
       begin
-        for C in TestStr do
-        begin
-          DebugLn('test source char: ' + C);
-          case C of
+        C := Source[SIndex];
+        DebugLn('test source char: ' + C);
+        case C of
           '\':
           begin
             if ReadMode = rkNormal then
             begin
-              CommandStart := Source.IndexOf(C);
+              CommandStart := SIndex - 1;
               DebugLn('Found \ at index ' + IntToStr(CommandStart));
               ReadMode := rkCommand;
               Value := ExtractWord(1, Source.Substring(CommandStart), StdWordDelims);
@@ -138,17 +138,15 @@ begin
 
               { search for argument immediately after command (with optional
               whitespace between) }
-              I := CommandEnd + 1;
-              DebugLn('checking for arg in substring starting: ' + Source.Substring(I, 20));
-              if Source.Substring(I).TrimLeft.StartsWith('{') then
+              SIndex := CommandEnd + 1;
+              DebugLn('checking for arg in substring starting: ' + Source.Substring(SIndex, 20));
+              if Source.Substring(SIndex).TrimLeft.StartsWith('{') then
               begin
                 DebugLn('looking for argument after command');
-                TestStr := Source.Substring(I);
               end
               else
               begin
                 ArgumentFound := False;
-                TestStr := ''; { end the loop }
                 DebugLn('no argument found after command; ending the search');
                 break;
               end;
@@ -157,49 +155,35 @@ begin
 
           '{': 
           begin
-            I := Source.IndexOf(C);
-            DebugLn('Found { at index ' + IntToStr(I));
+            DebugLn('Found { at index ' + IntToStr(SIndex));
             if (ReadMode = rkNormal) and (BraceLevel = 0) then
             begin
-              ArgumentStart := I - 1; { include opening bracket in value string }
+              ArgumentStart := SIndex - 1; { include opening bracket in value string }
             end;
             Inc(BraceLevel);
             DebugLn('Going to bracelevel ' + IntToStr(BraceLevel));
             ReadMode := rkBraceArgument;
-            TestStr := TestStr.Substring(I + 1);
-            continue;
           end;
 
           '}': 
           begin
-            I := Source.IndexOf(C); { TODO this is not getting the current char! }
             if ReadMode = rkBraceArgument then
             begin
-              DebugLn('Found } at index ' + IntToStr(I));
+              DebugLn('Found } at index ' + IntToStr(SIndex));
               Dec(BraceLevel);
               DebugLn('Going to bracelevel ' + IntToStr(BraceLevel));
               if BraceLevel = 0 then
               begin
-                ArgumentEnd := I + 1; { include close bracket }
+                ArgumentEnd := SIndex; { include close bracket }
                 ArgumentFound := True;
                 DebugLn('Found an expression, ending the search');
                 break;
-              end
-              else
-              begin
-                TestStr := TestStr.Substring(I + 1);
-                continue;
               end;
             end;
           end; 
-
-          else
-          begin
-            TestStr := TestStr.Substring(I + 1);
-          end;
-          end; { case }
-        end; { for }
-      end; { while }
+        end; { case }
+        Inc(SIndex);
+      end; { for }
 
       if CommandFound then
       begin { `\command { argument }` }
@@ -258,16 +242,17 @@ var
 function Replace(S: String; Dict: TMacroDict): String;
 begin
   for Macro in Dict do
-    S := S.Replace('\' + Macro.Key + ' ', Macro.Value + ' ', [rfReplaceAll]);
-    S := S.Replace('\' + Macro.Key, Macro.Value, [rfReplaceAll]);
+    S := S.Replace(Macro.Key, Macro.Value, [rfReplaceAll]);
+  { TODO need to sort keys, otherwise if you define `\LyricsI` and \LyricsII`
+  then `\LyricsI` will be expanded inside the string `\LyricsII` }
   result := S;
 end;
 
 begin
   for Macro in Dict do
   begin
-    { first expand any macros stored in the dictionary values }
-    Dict.AddOrSetValue(Macro.Key, Replace(Macro.Value, Dict));
+    { TODO ? first expand any macros stored in the dictionary values }
+    // Dict.AddOrSetValue(Macro.Key, Replace(Macro.Value, Dict));
     Source := Replace(Source, Dict);
   end;
   result := Source;
@@ -388,8 +373,8 @@ begin
       Outline := MarkMacro(Outline, ThisStr);
       if Outline.FValid then
       begin
-        Key   := ThisStr.Substring(Outline.FKeyStart, Outline.KeyLength);
-        Value := ThisStr.Substring(Outline.FValueStart, Outline.ValueLength);
+        Key   := '\' + ThisStr.Substring(Outline.FKeyStart, Outline.KeyLength).Trim;
+        Value := ThisStr.Substring(Outline.FValueStart, Outline.ValueLength).Trim;
 
         Macros.AddOrSetValue(Key, Value);
         DebugLn('SUCCESS: added macro key: ' + Key + ', value: ' + Value);
@@ -406,12 +391,9 @@ begin
       begin
         { If no macro found on this line, try the next. }
         DebugLn('did not find a macro on this line');
+        NewStart := ThisStr.IndexOf(LineEnding) + 1;
+        ThisStr := ThisStr.Substring(NewStart);
       end;
-      
-      { Either way, if macro found or not, the next one can only start on a
-      new line, so skip to the next line. }
-      NewStart := ThisStr.IndexOf(LineEnding) + 1;
-      ThisStr := ThisStr.Substring(NewStart);
     end;
 
     {$ifdef DEBUG}
