@@ -17,6 +17,8 @@
   composer  = "JUAN HIDALGO"
   dates     = "(1614–1685)"
   poet      = "Anonymous"
+  editor    = "Andrew A. Cashner"
+  copyright = "Copyright © 2021 Andrew A. Cashner"
   source    = \markup { \italic "D-Mbs:" "Mus. mss. 2897" }
 }
 % }}}1

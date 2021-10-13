@@ -1,0 +1,22 @@
+\documentclass[12pt]{article}
+
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+
+\usepackage{sectsty}
+\sectionfont{\large} 
+
+\NewDocumentCommand{\subsubsubsection}{ m }{%
+    \paragraph{#1}\mbox{}
+}
+
+\usepackage{lipsum} % for dummy text
+
+\begin{document}
+\section{Introduction}
+\lipsum[1]
+\section{Conclusion}
+\lipsum[2]
+\subsubsubsection{Sub-sub-subsection}
+\lipsum[3]
+\end{document}

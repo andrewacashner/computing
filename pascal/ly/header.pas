@@ -3,11 +3,30 @@
   Andrew Cashner, 2021/10/13
 
   Translate a Lilypond header expression to MEI-XML.
+
+  The header must be marked with a `\header` command with the argument in
+  curly braces.  Within the braces there must be a set of fields in the format
+  `key = "Value"`. The value must be a single string within quotation marks.
+  
+  They may also take the form `key = \markup < "Value" >` where `<>` are curly
+  braces.  The `\markup` command *must* be followed by a single argument in
+  curly braces.  If there is a string like `\markup \italic "Name"`, the
+  string will be ignored. 
+
+  Within a markup argument, only the quoted strings will be extracted: 
+  `\markup < \column < \line "one" \line \italic "two" > >` will be saved as
+  `one two`.
+
+  Most of the fields translate obviously, for example `title = "Music"`
+  becomes `meiHead/fileDesc/titleStmt/title[@type=main]/Music`.
 }
 {$mode objfpc}{$H+}{$J-}
 program header(input, output, stderr);
 
-uses SysUtils, Classes;
+uses SysUtils, Classes, StrUtils;
+
+type
+  TRangeMode = (rkInclusive, rkExclusive);
 
 { CLASS: `TIndexPair`
 
@@ -21,7 +40,10 @@ type
       FValid: Boolean;
   public
     function Clear: TIndexPair;
+    function IsValid: Boolean;
     function Span: Integer;
+    function SnipString(Source: String; ModeFlag: TRangeMode): String;
+    function FindRange(Source, StartDelim, EndDelim: String): TIndexPair;
   end;
 
 { `TIndexPair` class methods }
@@ -33,12 +55,35 @@ begin
   result := Self;
 end;
 
+function TIndexPair.IsValid: Boolean;
+begin
+  result := FValid;
+end;
+
 function TIndexPair.Span: Integer;
 begin
   if FValid then
     result := FEnd - FStart
   else
     result := -1;
+end;
+
+function TIndexPair.SnipString(Source: String; ModeFlag: TRangeMode): String;
+begin
+  case ModeFlag of
+    rkInclusive: result := Source.Substring(FStart, Span);
+    rkExclusive: result := Source.Substring(FStart + 1, Span - 2);
+  end;
+end;
+
+function TIndexPair.FindRange(Source, StartDelim, EndDelim: String): TIndexPair;
+begin
+  Self.Clear;
+  FStart := Source.IndexOf(StartDelim);
+  FEnd := Source.Substring(FStart + 1).IndexOf(EndDelim);
+  FValid := not ((FStart = -1) or (FEnd = -1));
+  FEnd := FStart + FEnd;
+  result := Self;
 end;
 
 { `MatchBraces`
@@ -100,6 +145,30 @@ begin
   result := Source.Substring(Source.IndexOf(Cut) + Length(Cut));
 end;
 
+{ `ListToStringFromIndex`
+  
+  Return a string consisting of the text of a stringlist starting at a given
+  index.
+}
+function StringListFromIndex(List: TStringList; Index: Integer): String;
+begin
+    result := List.Text.Substring(List.Text.IndexOf(List[Index]));
+end;
+
+{ `Lines`
+
+  Split a string at newlines to make a `TStringList` }
+function Lines(InputStr: String; OutputList: TStringList): TStringList;
+begin
+  OutputList.Clear;
+  OutputList.Delimiter := LineEnding;
+  OutputList.StrictDelimiter := True;
+  OutputList.DelimitedText := InputStr;
+  result := OutputList;
+end;
+
+
+
 { CLASS: `THeader`
 
   Stores all the fields required in the Lilypond source file and can write
@@ -113,19 +182,114 @@ type
     var
       FTitle, FSubtitle, FComposer, FDates, 
       FPoet, FEditor, FCopyright, FSource: String;
-  { XXX could subtitle be optional? }
   public
+    function FromLily(LyHeader: TStringList): THeader; 
     function ToMEI(MEI: TStringList): TStringList;
   end;
 
-{ TODO make this a class function of THeader (e.g., THeader.PopulateFromString) }
-{ `ParseHeader`
+{ `THeader.FromLily`
 
   Read a Lilypond header and extract specific values.
 }
-function ParseHeader(LyHeaderStr: String; HeaderValues: THeader): THeader; 
+function THeader.FromLily(LyHeader: TStringList): THeader; 
+var 
+  ThisString, Key, Value, Markup: String;
+  Outline: TIndexPair;
+  LineIndex: Integer;
+  Found: Boolean;
+
+function IsASingleQuotedString(Source: String): Boolean;
 begin
-  result := HeaderValues; { XXX temp }
+  result := (Source.CountChar('"') = 2)
+            and Source.StartsWith('"') 
+            and Source.EndsWith('"');
+end;
+
+function ExtractQuotedStrings(Source: String): String;
+var
+  MarkupStrings: TStringList;
+begin
+  MarkupStrings := TStringList.Create;
+  try
+    while Source.CountChar('"') > 1 do
+    begin
+      Outline := Outline.FindRange(Source, '"', '"');
+      if Outline.IsValid then
+      begin
+        Markup := Outline.SnipString(Source, rkExclusive);
+        MarkupStrings.Add(Markup);
+        Source := Source.Substring(Outline.FEnd + 2);
+      end
+      else
+        break;
+    end;
+    MarkupStrings.StrictDelimiter := True;
+    MarkupStrings.Delimiter := ' ';
+    Source := DelChars(MarkupStrings.DelimitedText, '"');
+
+  finally
+    FreeAndNil(MarkupStrings);
+    result := Source;
+  end;
+end;
+
+
+begin
+  Outline := TIndexPair.Create;
+
+  try
+    LineIndex := 0;
+    for ThisString in LyHeader do
+    begin
+      Found := False;
+      if ThisString.Contains('=') then
+      begin
+        LyHeader.GetNameValue(LineIndex, Key, Value);
+        Key := Key.Trim;
+        Value := Value.Trim;
+       
+        if IsASingleQuotedString(Value) then 
+        begin
+          Value := Value.DeQuotedString('"');
+          Found := True;
+        end
+        else
+        begin
+          if Value.StartsWith('\markup') then
+          begin
+            Value := StringListFromIndex(LyHeader, LineIndex);
+            Value := StringDropBefore(Value, '\markup');
+            
+            if not Value.TrimLeft.StartsWith('{') then
+              Value := ''
+            else
+            begin
+              Outline := MatchBraces(Value, Outline);
+              Value := Outline.SnipString(Value, rkExclusive);
+              Value := ExtractQuotedStrings(Value);
+              Found := True;
+            end; { braces }
+          end; { \markup }
+        end;
+      end; { if contains '=' }
+
+      if Found then
+        case Key of
+          'title':     FTitle := Value;
+          'subtitle':  FSubtitle := Value;
+          'composer':  FComposer := Value;
+          'dates':     FDates := Value;
+          'poet':      FPoet := Value;
+          'editor':    FEditor := Value;
+          'copyright': FCopyright := Value;
+          'source':    FSource := Value;
+        end;
+      Inc(LineIndex);
+    end;
+  finally
+    FreeAndNil(Outline);
+    result := Self;
+  end;
 end;
 
 
@@ -142,19 +306,36 @@ begin
   MEI.Add('  <fileDesc>');
   MEI.Add('    <titleStmt>');
   MEI.Add('      <title type="main">' + FTitle + '</title>');
-  MEI.Add('      <title type="subtitle">' + FSubtitle + '</subtitle>');
+
+  if not FSubtitle.IsEmpty then
+    MEI.Add('      <title type="subtitle">' + FSubtitle + '</subtitle>');
+
   MEI.Add('      <respStmt>');
   MEI.Add('        <composer>' + FComposer + ' ' + FDates + '</composer>');
-  MEI.Add('        <lyricist>' + FPoet + '</lyricist>');
-  MEI.Add('        <editor>' + FEditor + '</editor>');
+
+  if not FPoet.IsEmpty then
+    MEI.Add('        <lyricist>' + FPoet + '</lyricist>');
+
+  if not FEditor.IsEmpty then
+    MEI.Add('        <editor>' + FEditor + '</editor>');
+
   MEI.Add('      </respStmt>');
   MEI.Add('    </titleStmt>');
-  MEI.Add('    <editionStmt>');
-  MEI.Add('      <respStmt><p>Edited by ' + FEditor + '</p></respStmt>');
-  MEI.Add('    </editionStmt>');
-  MEI.Add('    <pubStmt>');
-  MEI.Add('      <availability><p>' + FCopyright + '</p></availability>');
-  MEI.Add('    </pubStmt>');
+  
+  if not FEditor.IsEmpty then
+  begin
+    MEI.Add('    <editionStmt>');
+    MEI.Add('      <respStmt><p>Edited by ' + FEditor + '</p></respStmt>');
+    MEI.Add('    </editionStmt>');
+  end;
+
+  if not FCopyright.IsEmpty then
+  begin
+    MEI.Add('    <pubStmt>');
+    MEI.Add('      <availability><p>' + FCopyright + '</p></availability>');
+    MEI.Add('    </pubStmt>');
+  end;
+
   MEI.Add('  </fileDesc>');
   MEI.Add('  <encodingDesc>');
   MEI.Add('    <appInfo>');
@@ -168,15 +349,17 @@ begin
 end;
 
 
+
 { MAIN }
 var
-  InputText, OutputText: TStringList;
+  InputText, LyHeader, OutputText: TStringList;
   SearchStr, LyHeaderStr: String;
   Outline: TIndexPair;
   HeaderValues: THeader;
 begin
   { setup }
   InputText := TStringList.Create;
+  LyHeader := TStringList.Create;
   OutputText := TStringList.Create;
   Outline := TIndexPair.Create;
   HeaderValues := THeader.Create;
@@ -195,11 +378,12 @@ begin
     begin
       SearchStr := StringDropBefore(InputText.Text, '\header');
       Outline := MatchBraces(SearchStr, Outline);
-      LyHeaderStr := SearchStr.Substring(Outline.FStart, Outline.Span);
+      LyHeaderStr := Outline.SnipString(SearchStr, rkExclusive);
     end;
 
     { find subfields and store }
-    HeaderValues := ParseHeader(LyHeaderStr, HeaderValues);
+    LyHeader := Lines(LyHeaderStr, LyHeader);
+    HeaderValues := HeaderValues.FromLily(LyHeader);
     
     { make output }
     OutputText := HeaderValues.ToMei(OutputText); 
@@ -209,6 +393,7 @@ begin
     FreeAndNil(HeaderValues);
     FreeAndNil(Outline);
     FreeAndNil(OutputText);
+    FreeAndNil(LyHeader);
     FreeAndNil(InputText);
   end;
 end.
