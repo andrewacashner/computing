@@ -328,6 +328,7 @@ end;
   return `('\markup', '< arg >').
   The delimiters are included in the string.
 }
+  { TODO just use a string input, you don't need lines. }
 function ExtractCommandArg(Source: TStringList; ControlChar, ArgStartDelim,
   ArgEndDelim: Char; CommandArg: TCommandArg): TCommandArg;
 var
