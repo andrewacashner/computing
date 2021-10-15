@@ -302,6 +302,50 @@ begin
   end;
 end;
 
+type
+  TCommandArg = class
+  private
+    FCommand, FArg: String;
+    FValid: Boolean;
+  public
+    procedure Clear;
+  end;
+
+procedure TCommandArg.Clear;
+begin
+  FCommand := '';
+  FArg := '';
+  FValid := False;
+end;
+
+{ `ExtractCommandArg`
+
+  In a stringlist, find the first instance of command that starts with a given
+  control character (e.g., backslash). If it is followed by an argument
+  delimited by given strings (e.g., curly braces), return an object with both
+  the command and the argument. If not return the object marked invalid.
+  For instance, find the command `\markup < arg >` and 
+  return `('\markup', '< arg >').
+  The delimiters are included in the string.
+}
+function ExtractCommandArg(Source: TStringList; ControlChar, ArgStartDelim,
+  ArgEndDelim: Char; CommandArg: TCommandArg): TCommandArg;
+var
+  Command, Arg, TestStr: String;
+  ListIndex, StrIndex: Integer;
+begin
+  CommandArg.Clear;
+  ListIndex := Source.IndexOf(ControlChar);
+  TestStr := Source[ListIndex];
+  StrIndex := TestStr.IndexOf(ControlChar);
+  Command := ExtractWord(1, TestStr.Substring(StrIndex), [' ', ArgStartDelim]);
+  CommandArg.FCommand := ControlChar + Command;
+  { find arg - match braces function but with given delimiters }
+
+  result := CommandArg;
+end;
+
+
 { CLASS: `THeader`
 
   Stores all the fields required in the Lilypond source file and can write
@@ -497,10 +541,12 @@ end;
 var
   InputText, OutputText: TStringList;
   HeaderValues: THeader;
+  CommandArg: TCommandArg;
 begin
   InputText     := TStringList.Create;
   OutputText    := TStringList.Create;
   HeaderValues  := THeader.Create;
+  CommandArg    := TCommandArg.Create;
   
   try
     if ParamCount <> 1 then
@@ -531,7 +577,11 @@ begin
     { output }
     WriteLn(OutputText.Text);
 
+    CommandArg := ExtractCommandArg(InputText, '\', '{', '}', CommandArg);
+    WriteLn('Found command : ' + CommandArg.FCommand);
+
   finally
+    FreeAndNil(CommandArg);
     FreeAndNil(HeaderValues);
     FreeAndNil(OutputText);
     FreeAndNil(InputText);
