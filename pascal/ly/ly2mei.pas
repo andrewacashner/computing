@@ -213,40 +213,41 @@ begin
   end;
 end;
 
-{ `MatchBraces`
 
-  In a string, mark the start and end indices of a single expression delimited
-  by balanced curly braces, which may including other such expressions. 
+{ `BalancedDelimiterSubstring`
+
+  In a string, mark the start and end indices of a single expression between
+  given delimiter characters, ignoring any nested groups with the same
+  delimiters in between. The delimiters must not be identical, otherwise it is
+  impossible to determine nesting.
 }
-function FindMatchedBraces(Source: String; Outline: TIndexPair): TIndexPair;
-type
-  TReadMode = (rkNormal, rkBrace);
+function BalancedDelimiterSubstring(Source: String; StartDelim, EndDelim:
+  Char; Outline: TIndexPair): TIndexPair; 
 var
   BraceLevel, SIndex: Integer;
-  Current: String;
-  ReadMode: TReadMode;
+  ThisChar: Char;
 begin
+  assert(StartDelim <> EndDelim);
+  
   Outline.Clear;
   BraceLevel := 0;
   SIndex := 0;
-  ReadMode := rkNormal;
 
-  for Current in Source do
+  for ThisChar in Source do
   begin
-    case Current of
-      '{':
+    if ThisChar = StartDelim then
+    begin
+      if BraceLevel = 0 then
       begin
-        if ReadMode = rkNormal then
-        begin
-          Outline.FStart := SIndex;
-          ReadMode := rkBrace;
-        end;
-        Inc(BraceLevel);
+        Outline.FStart := SIndex;
       end;
-
-      '}':
+      Inc(BraceLevel);
+    end
+    else
+    begin 
+      if ThisChar = EndDelim then
       begin
-        if ReadMode = rkBrace then
+        if BraceLevel > 0 then
         begin
           Dec(BraceLevel);
           if BraceLevel = 0 then
@@ -257,10 +258,17 @@ begin
           end;
         end;
       end;
-    end; { case }
+    end;
+
     Inc(SIndex);
   end; { for }
+
   result := Outline;
+end;
+
+function FindMatchedBraces(Source: String; Outline: TIndexPair): TIndexPair;
+begin
+  result := BalancedDelimiterSubstring(Source, '{', '}', Outline);
 end;
 
 { ## Parsing the header }
@@ -309,6 +317,7 @@ type
     FValid: Boolean;
   public
     procedure Clear;
+    function IsValid: Boolean;
   end;
 
 procedure TCommandArg.Clear;
@@ -318,9 +327,14 @@ begin
   FValid := False;
 end;
 
+function TCommandArg.IsValid: Boolean;
+begin
+  result := FValid;
+end;
+
 { `ExtractCommandArg`
 
-  In a stringlist, find the first instance of command that starts with a given
+  In a string, find the first instance of command that starts with a given
   control character (e.g., backslash). If it is followed by an argument
   delimited by given strings (e.g., curly braces), return an object with both
   the command and the argument. If not return the object marked invalid.
@@ -328,22 +342,62 @@ end;
   return `('\markup', '< arg >').
   The delimiters are included in the string.
 }
-  { TODO just use a string input, you don't need lines. }
-function ExtractCommandArg(Source: TStringList; ControlChar, ArgStartDelim,
+function ExtractCommandArg(Source: String; ControlChar, ArgStartDelim,
   ArgEndDelim: Char; CommandArg: TCommandArg): TCommandArg;
 var
-  Command, Arg, TestStr: String;
-  ListIndex, StrIndex: Integer;
+  TestStr, Command: String;
+  Outline: TIndexPair;
 begin
-  CommandArg.Clear;
-  ListIndex := Source.IndexOf(ControlChar);
-  TestStr := Source[ListIndex];
-  StrIndex := TestStr.IndexOf(ControlChar);
-  Command := ExtractWord(1, TestStr.Substring(StrIndex), [' ', ArgStartDelim]);
-  CommandArg.FCommand := ControlChar + Command;
-  { find arg - match braces function but with given delimiters }
+  Outline := TIndexPair.Create;
+  try
+    CommandArg.Clear;
+    { find command }
+    TestStr := Source.Substring(Source.IndexOf(ControlChar));
+    TestStr := StringDropBefore(Source, ControlChar);
+    Command := ExtractWord(1, TestStr, [' ', ArgStartDelim]);
+    if not Command.IsEmpty then
+    begin
+      CommandArg.FCommand := ControlChar + Command;
 
-  result := CommandArg;
+      { find arg within delimiters }
+      TestStr := StringDropBefore(TestStr, CommandArg.FCommand);
+      Outline := BalancedDelimiterSubstring(TestStr, ArgStartDelim,
+                  ArgEndDelim, Outline); 
+
+      if Outline.IsValid then
+        CommandArg.FArg := ExtractStringRange(TestStr, Outline, rkInclusive);
+
+      CommandArg.FValid := Outline.IsValid;
+    end;
+  finally
+    FreeAndNil(Outline);
+    result := CommandArg;
+  end;
+end;
+
+{ `LyArg`
+
+  Find the first occurence of a given Lilypond command in a string and return
+  its brace-delimited argument. Return an empty string if not found.
+}
+function LyArg(Source, Command: String): String;
+var
+  CommandArg: TCommandArg;
+  Arg: String;
+begin
+  CommandArg := TCommandArg.Create;
+  try
+    if Source.Contains(Command) then
+    begin
+      Source := Source.Substring(Source.IndexOf(Command));
+      CommandArg := ExtractCommandArg(Source, '\', '{', '}', CommandArg);
+      if CommandArg.IsValid and (CommandArg.FCommand = Command) then
+        Arg := CommandArg.FArg;
+    end;
+  finally
+    FreeAndNil(CommandArg);
+    result := Arg;
+  end;
 end;
 
 
@@ -381,7 +435,7 @@ end;
 }
 function THeader.FromLily(LyHeader: TStringList): THeader; 
 var 
-  ThisString, Key, Value: String;
+  ThisString, Key, Value, MarkupStr: String;
   Outline: TIndexPair;
   LineIndex: Integer;
   FoundThis, FoundAny: Boolean;
@@ -406,41 +460,30 @@ begin
         end
         else
         begin
-          if Value.StartsWith('\markup') then
-          begin
-            Value := ListToStringFromIndex(LyHeader, LineIndex);
-            Value := StringDropBefore(Value, '\markup');
-            
-            if not Value.TrimLeft.StartsWith('{') then
-              Value := ''
-            else
-            begin
-              Outline := FindMatchedBraces(Value, Outline);
-              Value := ExtractStringRange(Value, Outline, rkExclusive);
-              Value := ExtractQuotedStrings(Value);
-              FoundThis := True;
-            end; { braces }
-          end; { \markup }
-        end;
+          MarkupStr := LyArg(Value, '\markup');
+          Value := ExtractQuotedStrings(MarkupStr);
+          FoundThis := True;
+        end; 
       end; { if contains '=' }
 
       if FoundThis then
       begin
         case Key of
-          'title':     FTitle := Value;
-          'subtitle':  FSubtitle := Value;
-          'composer':  FComposer := Value;
-          'dates':     FDates := Value;
-          'poet':      FPoet := Value;
-          'editor':    FEditor := Value;
-          'copyright': FCopyright := Value;
-          'source':    FSource := Value;
-        end;
-        FoundAny := True;
+        'title':     FTitle := Value;
+        'subtitle':  FSubtitle := Value;
+        'composer':  FComposer := Value;
+        'dates':     FDates := Value;
+        'poet':      FPoet := Value;
+        'editor':    FEditor := Value;
+        'copyright': FCopyright := Value;
+        'source':    FSource := Value;
       end;
-      Inc(LineIndex);
+      FoundAny := True;
     end;
-    Self.FValid := FoundAny;
+    Inc(LineIndex);
+  end;
+
+  Self.FValid := FoundAny;
   finally
     FreeAndNil(Outline);
     result := Self;
@@ -497,7 +540,10 @@ begin
   MEI.Add('      <application><name>' + FProgramName + '</name></application>');
   MEI.Add('    </appInfo>');
   MEI.Add('  </encodingDesc>');
-  MEI.Add('  <sourceDesc><source>' + FSource + '</source></sourceDesc>');
+  
+  if not FSource.IsEmpty then
+    MEI.Add('  <sourceDesc><source>' + FSource + '</source></sourceDesc>');
+
   MEI.Add('</meiHead>'); 
 
   result := MEI;
@@ -511,23 +557,18 @@ end;
 function ParseHeader(InputText: TStringList; HeaderValues: THeader): THeader;
 var
   LyHeader: TStringList;
-  SearchStr, LyHeaderStr: String;
+  SearchStr: String;
   Outline: TIndexPair;
 begin
   LyHeader := TStringList.Create;
   Outline := TIndexPair.Create;
   HeaderValues.FValid := False;
   try
-    if InputText.Text.Contains('\header') then
+    SearchStr := LyArg(InputText.Text, '\header');
+    if not SearchStr.IsEmpty then
     begin
-      SearchStr := StringDropBefore(InputText.Text, '\header');
-      Outline := FindMatchedBraces(SearchStr, Outline);
-      if Outline.IsValid then
-      begin
-        LyHeaderStr := ExtractStringRange(SearchStr, Outline, rkExclusive);
-        LyHeader := Lines(LyHeaderStr, LyHeader);
-        HeaderValues := HeaderValues.FromLily(LyHeader);
-      end;
+      LyHeader := Lines(SearchStr, LyHeader);
+      HeaderValues := HeaderValues.FromLily(LyHeader);
     end;
   finally
     FreeAndNil(Outline);
@@ -577,9 +618,6 @@ begin
 
     { output }
     WriteLn(OutputText.Text);
-
-    CommandArg := ExtractCommandArg(InputText, '\', '{', '}', CommandArg);
-    WriteLn('Found command : ' + CommandArg.FCommand);
 
   finally
     FreeAndNil(CommandArg);
