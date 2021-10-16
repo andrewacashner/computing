@@ -271,6 +271,65 @@ begin
   result := BalancedDelimiterSubstring(Source, '{', '}', Outline);
 end;
 
+{ ## Parsing macro definitions and commands }
+
+{ CLASS: Macro dictionary }
+type
+  TMacroDict     = specialize TDictionary<String, String>;
+  TMacroKeyValue = TMacroDict.TDictionaryPair;
+
+{ `TMacroDict.ExpandDictMacros`
+
+  Expand all the nested macros stored within macro dictionary values. 
+}
+function TMacroDict.ExpandDictMacros: TMacroDict;
+var
+  MacroPairI, MacroPairJ, MacroPairEdit: TMacroKeyValue;
+begin
+  for MacroPairI in Self do
+  begin
+    MacroPairEdit := MacroPairI;
+    for MacroPairJ in Self do
+    begin
+      MacroPairEdit.Value := FindReplaceMacros(MacroPairEdit.Value, Dict);
+      AddOrSetValue(MacroPairI.Key, MacroPairEdit.Value);
+    end;
+  end;
+  result := Self;
+end;
+
+
+{ find macro definitions, store keys and values (lyArg); also store list
+of indices?; Dict.ExpandDictMacros: expand macros in dictionary values }
+function TMacroDict.ExtractMacros(InputText: TStringList): TMacroDict;
+{ TODO }
+
+{ cut macro definition text from source (based on text or on list of
+indices? }
+function CutMacroDefs(InputText: TStringList; Dict: TMacroDict): TStringList;
+{ TODO}
+
+{ expand macros in source text} 
+function FindReplaceMacros(InputText: TStringList; Dict: TMacroDict): TStringList;
+
+{ process all macros in source text }
+function ExpandMacros(InputText: TStringList): TStringList;
+var
+  Macros: TMacroDict;
+begin
+  Macros := TMacroDict.Create;
+  try
+    Macros := Macros.ExtractMacros(InputText);
+    InputText := CutMacroDefs(InputText, Macros);
+    InputText := FindReplaceMacros(InputText, Macros);
+    InputText := RemoveBlankLines(InputText);
+  finally
+    FreeAndNil(Macros);
+    result := InputText;
+  end;
+end;
+
+
 { ## Parsing the header }
 
 { `ExtractQuotedStrings`
@@ -602,7 +661,7 @@ begin
     InputText := RemoveComments(InputText);
 
     { process macros }
-    InputText := RemoveBlankLines(InputText);
+    InputText := ExpandMacros(InputText);
 
     { process header }
     HeaderValues := ParseHeader(InputText, HeaderValues);
