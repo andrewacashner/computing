@@ -15,7 +15,7 @@
 
 program ly2mei(input, output, stderr);
 
-uses SysUtils, Classes, StrUtils;
+uses SysUtils, Classes, StrUtils, Generics.Collections;
 
 { # Utilities }
 
@@ -58,6 +58,25 @@ begin
             and Source.StartsWith('"') 
             and Source.EndsWith('"');
 end;
+
+{ `ReplaceString`
+
+  Replace the first instance of one substring with another }
+function ReplaceString(Source, Cut, Add: String): String;
+var
+  CutFrom, CutTo: Integer;
+begin
+  CutFrom := Source.IndexOf(Cut);
+
+  if CutFrom = -1 then
+    result := Source { no substring found }
+  else
+  begin
+    CutTo := CutFrom + Length(Cut) + 1;
+    result := Source.Substring(0, CutFrom) + Add + Source.Substring(CutTo);
+  end;
+end;
+
 
 { # `TStringList` methods }
 
@@ -273,16 +292,300 @@ end;
 
 { ## Parsing macro definitions and commands }
 
+{ CLASS: `TCommandArg` for a command and its argument }
+type
+  TCommandArg = class
+  private
+    FCommand, FArg: String;
+    FValid: Boolean;
+  public
+    procedure Clear;
+    function IsValid: Boolean;
+    function ToString: String; override;
+    function ExtractFromString(Source: String; ControlChar, ArgStartDelim,
+      ArgEndDelim: Char): TCommandArg;
+  end;
+
+procedure TCommandArg.Clear;
+begin
+  FCommand := '';
+  FArg := '';
+  FValid := False;
+end;
+
+function TCommandArg.IsValid: Boolean;
+begin
+  result := FValid;
+end;
+
+function TCommandArg.ToString: String;
+begin
+  if FValid then
+    result := FCommand + ' ' + FArg
+  else
+    result := '';
+end;
+
+{ `TCommandArg.ExtractFromString`
+
+  In a string, find the first instance of command that starts with a given
+  control character (e.g., backslash). If it is followed by an argument
+  delimited by given strings (e.g., curly braces), return an object with both
+  the command and the argument. If not return the object marked invalid.
+  For instance, find the command `\markup < arg >` and 
+  return `('\markup', '< arg >').
+  The delimiters are included in the string.
+}
+function TCommandArg.ExtractFromString(Source: String; ControlChar, ArgStartDelim,
+  ArgEndDelim: Char): TCommandArg;
+var
+  TestStr, Command: String;
+  Outline: TIndexPair;
+begin
+  Outline := TIndexPair.Create;
+  try
+    Self.Clear;
+    { find command }
+    TestStr := Source.Substring(Source.IndexOf(ControlChar));
+    TestStr := StringDropBefore(Source, ControlChar);
+    Command := ExtractWord(1, TestStr, [' ', ArgStartDelim]);
+    if not Command.IsEmpty then
+    begin
+      FCommand := ControlChar + Command;
+
+      { find arg within delimiters }
+      TestStr := StringDropBefore(TestStr, FCommand);
+      Outline := BalancedDelimiterSubstring(TestStr, ArgStartDelim,
+                  ArgEndDelim, Outline); 
+
+      if Outline.IsValid then
+        FArg := ExtractStringRange(TestStr, Outline, rkInclusive);
+
+      FValid := Outline.IsValid;
+    end;
+  finally
+    FreeAndNil(Outline);
+    result := Self;
+  end;
+end;
+
+{ `LyArg`
+
+  Find the first occurence of a given Lilypond command in a string and return
+  its brace-delimited argument. Return an empty string if not found.
+}
+function LyArg(Source, Command: String): String;
+var
+  CommandArg: TCommandArg;
+  Arg: String;
+begin
+  CommandArg := TCommandArg.Create;
+  try
+    if Source.Contains(Command) then
+    begin
+      Source := Source.Substring(Source.IndexOf(Command));
+      CommandArg := CommandArg.ExtractFromString(Source, '\', '{', '}');
+      if CommandArg.IsValid and (CommandArg.FCommand = Command) then
+        Arg := CommandArg.FArg;
+    end;
+  finally
+    FreeAndNil(CommandArg);
+    result := Arg;
+  end;
+end;
+
+
+
 { CLASS: Macro dictionary }
 type
-  TMacroDict     = specialize TDictionary<String, String>;
+  TMacroDict = class(specialize TDictionary<String, String>)
+    function ToString: String; override;
+    function ExtractMacros(InputText: TStringList): TMacroDict;
+    function ExpandMacrosInValues: TMacroDict;
+  end;
+
   TMacroKeyValue = TMacroDict.TDictionaryPair;
 
-{ `TMacroDict.ExpandDictMacros`
+function TMacroDict.ToString: String;
+var 
+  Macro: TMacroKeyValue;
+  OutputStr, MacroStr: String;
+  N: Integer;
+begin
+  OutputStr := '';
+  N := 0;
+  for Macro in Self do
+  begin
+    MacroStr := IntToStr(N) + '. ' + Macro.Key + ': ' + Macro.Value;
+    OutputStr := OutputStr + MacroStr;
+  end;
+  result := OutputStr;
+end;
+    
+
+{ `TMacroDict.ExtractMacros`
+
+  Find, parse, and save macro definitions in a stringlist. Return a macro
+  dictionary; if no valid macros are found, it will be empty. The initial
+  values may still contain unexpanded macros.
+
+  A macro must have the form `label = < arg >` or `label = \command < arg >`
+  where `<>` are curly brackets. We don't accept `label = "string"` or other
+  formats. The label must be at the beginning of a line.
+}
+function TMacroDict.ExtractMacros(InputText: TStringList): TMacroDict;
+var
+  ThisString, Key, Value, TestStr: String;
+  LineIndex: Integer;
+  Outline: TIndexPair;
+  CommandArg: TCommandArg;
+  Found: Boolean;
+begin
+  Outline := TIndexPair.Create;
+  CommandArg := TCommandArg.Create;
+  try
+    LineIndex := 0;
+    for ThisString in InputText do
+    begin
+      Found := False;
+      if ThisString.Contains('=') then
+      begin
+        InputText.GetNameValue(LineIndex, Key, Value);
+        if Key.IsEmpty or Value.IsEmpty or Key.StartsWith(' ') then
+          continue;
+
+        Key := '\' + Key.Trim;
+        Value := Value.Trim;
+        case Value.Substring(0, 1) of
+        '{':
+          begin
+            TestStr := ListToStringFromIndex(InputText, LineIndex);
+            Outline := FindMatchedBraces(TestStr, Outline);
+            if Outline.IsValid then
+            begin
+              Value := ExtractStringRange(TestStr, Outline, rkExclusive);
+              Found := True;
+            end;
+          end;
+
+        '\':
+          begin
+            TestStr := ListToStringFromIndex(InputText, LineIndex);
+            CommandArg := CommandArg.ExtractFromString(TestStr, '\', '{', '}');
+            if CommandArg.IsValid then
+            begin
+              Value := CommandArg.ToString;
+              Found := True;
+            end;
+          end;
+        end;
+        if Found then
+          Self.Add(Key, Value);
+      end;
+      { TODO skip ahead if found? }
+      Inc(LineIndex);
+    end;
+
+  finally
+    FreeAndNil(CommandArg);
+    FreeAndNil(Outline);
+
+    DebugLn('FUNCTION ExtractMacros: Macro dictionary contents');
+    DebugLn(Self.ToString);
+
+    result := Self;
+  end;
+end;
+
+{ `CutMacroDefs`
+
+  Remove macro definitions from a stringlist.
+}
+function CutMacroDefs(InputText: TStringList; Dict: TMacroDict): TStringList;
+type
+  ReadMode = (rkNormal, rkMacro);
+var
+  OutputText: TStringList;
+  ThisMacro, SearchMacro: TMacroKeyValue;
+  ThisString, TestKey: String;
+  Mode: ReadMode;
+  LineIndex: Integer;
+begin
+  assert(Dict <> nil);
+  OutputText := TStringList.Create;
+  try
+    Mode := rkNormal;
+    LineIndex := 0;
+    for ThisString in InputText do
+    begin
+      case Mode of
+      rkNormal:
+        begin
+          for ThisMacro in Dict do
+          begin
+            TestKey := ThisMacro.Key.Substring(1); { leave off `\`}
+            if ThisString.StartsWith(TestKey) then 
+            begin
+              SearchMacro := ThisMacro;
+              Mode := rkMacro;
+              break;
+            end;
+            OutputText.Add(ThisString);
+          end;
+        end;
+      rkMacro:
+        begin
+          if ThisString.TrimRight.EndsWith(SearchMacro.Value) then
+          begin
+            Mode := rkNormal;
+          end;
+        end;
+      end;
+      Inc(LineIndex);
+    end; { for }
+
+    InputText.Assign(OutputText);
+  finally
+    FreeAndNil(OutputText);
+    result := InputText;
+  end;
+end;
+
+{ `FindReplaceMacros`
+
+  In a given string (not a list), replace all macro commands (`\command`) with
+  the corresponding definition in a macro dictionary.
+}
+function FindReplaceMacros(Source: String; Dict: TMacroDict): String;
+var
+  BufferStr, Command, AfterCommand, OutputStr: String;
+  ThisValue: String;
+begin
+  OutputStr := Source;
+  BufferStr := OutputStr;
+  while BufferStr.Contains('\') do
+  begin
+    BufferStr := StringDropBefore(BufferStr, '\');
+    Command := ExtractWord(1, BufferStr, [' ', LineEnding]);
+
+    { Continue searching after this command }
+    BufferStr := BufferStr.Substring(Length(Command));
+
+    { Replace command and add back the space or newline that followed it }
+    AfterCommand := BufferStr.Substring(0, 1);
+    if Dict.TryGetValue(Command, ThisValue) then
+    begin
+      OutputStr := ReplaceString(OutputStr, Command, ThisValue + AfterCommand);
+    end;
+  end;
+  result := OutputStr;
+end;
+
+{ `TMacroDict.ExpandMacrosInValues`
 
   Expand all the nested macros stored within macro dictionary values. 
 }
-function TMacroDict.ExpandDictMacros: TMacroDict;
+function TMacroDict.ExpandMacrosInValues: TMacroDict;
 var
   MacroPairI, MacroPairJ, MacroPairEdit: TMacroKeyValue;
 begin
@@ -291,43 +594,39 @@ begin
     MacroPairEdit := MacroPairI;
     for MacroPairJ in Self do
     begin
-      MacroPairEdit.Value := FindReplaceMacros(MacroPairEdit.Value, Dict);
+      MacroPairEdit.Value := FindReplaceMacros(MacroPairEdit.Value, Self);
       AddOrSetValue(MacroPairI.Key, MacroPairEdit.Value);
     end;
   end;
   result := Self;
 end;
 
+{ `ExpandMacros`
 
-{ find macro definitions, store keys and values (lyArg); also store list
-of indices?; Dict.ExpandDictMacros: expand macros in dictionary values }
-function TMacroDict.ExtractMacros(InputText: TStringList): TMacroDict;
-{ TODO }
-
-{ cut macro definition text from source (based on text or on list of
-indices? }
-function CutMacroDefs(InputText: TStringList; Dict: TMacroDict): TStringList;
-{ TODO}
-
-{ expand macros in source text} 
-function FindReplaceMacros(InputText: TStringList; Dict: TMacroDict): TStringList;
-
-{ process all macros in source text }
+  Process all macros in source text
+}
 function ExpandMacros(InputText: TStringList): TStringList;
 var
   Macros: TMacroDict;
+  TempLines: TStringList;
 begin
   Macros := TMacroDict.Create;
+  TempLines := TStringList.Create;
   try
     Macros := Macros.ExtractMacros(InputText);
     InputText := CutMacroDefs(InputText, Macros);
-    InputText := FindReplaceMacros(InputText, Macros);
-    InputText := RemoveBlankLines(InputText);
+    Macros := Macros.ExpandMacrosInValues;
+    TempLines := Lines(FindReplaceMacros(InputText.Text, Macros), TempLines);
+    TempLines := RemoveBlankLines(TempLines);
+    InputText.Assign(TempLines);
   finally
     FreeAndNil(Macros);
+    FreeAndNil(TempLines);
     result := InputText;
   end;
 end;
+
+
 
 
 { ## Parsing the header }
@@ -368,97 +667,6 @@ begin
     result := Source;
   end;
 end;
-
-type
-  TCommandArg = class
-  private
-    FCommand, FArg: String;
-    FValid: Boolean;
-  public
-    procedure Clear;
-    function IsValid: Boolean;
-  end;
-
-procedure TCommandArg.Clear;
-begin
-  FCommand := '';
-  FArg := '';
-  FValid := False;
-end;
-
-function TCommandArg.IsValid: Boolean;
-begin
-  result := FValid;
-end;
-
-{ `ExtractCommandArg`
-
-  In a string, find the first instance of command that starts with a given
-  control character (e.g., backslash). If it is followed by an argument
-  delimited by given strings (e.g., curly braces), return an object with both
-  the command and the argument. If not return the object marked invalid.
-  For instance, find the command `\markup < arg >` and 
-  return `('\markup', '< arg >').
-  The delimiters are included in the string.
-}
-function ExtractCommandArg(Source: String; ControlChar, ArgStartDelim,
-  ArgEndDelim: Char; CommandArg: TCommandArg): TCommandArg;
-var
-  TestStr, Command: String;
-  Outline: TIndexPair;
-begin
-  Outline := TIndexPair.Create;
-  try
-    CommandArg.Clear;
-    { find command }
-    TestStr := Source.Substring(Source.IndexOf(ControlChar));
-    TestStr := StringDropBefore(Source, ControlChar);
-    Command := ExtractWord(1, TestStr, [' ', ArgStartDelim]);
-    if not Command.IsEmpty then
-    begin
-      CommandArg.FCommand := ControlChar + Command;
-
-      { find arg within delimiters }
-      TestStr := StringDropBefore(TestStr, CommandArg.FCommand);
-      Outline := BalancedDelimiterSubstring(TestStr, ArgStartDelim,
-                  ArgEndDelim, Outline); 
-
-      if Outline.IsValid then
-        CommandArg.FArg := ExtractStringRange(TestStr, Outline, rkInclusive);
-
-      CommandArg.FValid := Outline.IsValid;
-    end;
-  finally
-    FreeAndNil(Outline);
-    result := CommandArg;
-  end;
-end;
-
-{ `LyArg`
-
-  Find the first occurence of a given Lilypond command in a string and return
-  its brace-delimited argument. Return an empty string if not found.
-}
-function LyArg(Source, Command: String): String;
-var
-  CommandArg: TCommandArg;
-  Arg: String;
-begin
-  CommandArg := TCommandArg.Create;
-  try
-    if Source.Contains(Command) then
-    begin
-      Source := Source.Substring(Source.IndexOf(Command));
-      CommandArg := ExtractCommandArg(Source, '\', '{', '}', CommandArg);
-      if CommandArg.IsValid and (CommandArg.FCommand = Command) then
-        Arg := CommandArg.FArg;
-    end;
-  finally
-    FreeAndNil(CommandArg);
-    result := Arg;
-  end;
-end;
-
 
 { CLASS: `THeader`
 
@@ -641,6 +849,7 @@ end;
 { # MAIN }
 var
   InputText, OutputText: TStringList;
+  ScoreInput: String;
   HeaderValues: THeader;
   CommandArg: TCommandArg;
 begin
@@ -662,6 +871,7 @@ begin
 
     { process macros }
     InputText := ExpandMacros(InputText);
+    DebugLn('Input after macro expansion: ' + InputText.Text);
 
     { process header }
     HeaderValues := ParseHeader(InputText, HeaderValues);
@@ -677,6 +887,8 @@ begin
 
     { output }
     WriteLn(OutputText.Text);
+    ScoreInput := LyArg(InputText.Text, '\score');
+    WriteLn(ScoreInput);
 
   finally
     FreeAndNil(CommandArg);
