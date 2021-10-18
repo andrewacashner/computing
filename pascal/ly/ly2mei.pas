@@ -171,6 +171,8 @@ type
                                 EndDelim: String): TIndexPair; 
   end;
 
+  TIndexList = specialize TObjectList<TIndexPair>;
+
 { ## `TIndexPair` class methods }
 
 procedure TIndexPair.Clear;
@@ -232,6 +234,21 @@ begin
   end;
 end;
 
+{ `CutStringRange`
+
+  Inverse of `ExtractStringRange`: Return a string with the portion between
+  the indices in a `TIndexPair` removed. 
+}
+function CutStringRange(Source: String; Outline: TIndexPair): String;
+begin
+  assert(Outline <> nil);
+  if not Outline.IsValid then
+    result := Source
+  else
+  begin
+    result := Source.Substring(0, Outline.FStart - 1) + Source.Substring(Outline.FEnd);
+  end;
+end;
 
 { `BalancedDelimiterSubstring`
 
@@ -292,12 +309,15 @@ end;
 
 { ## Parsing macro definitions and commands }
 
+type
+  TStatusCommandArg = (skCommand, skCommandArg, skInvalid);
+
 { CLASS: `TCommandArg` for a command and its argument }
 type
   TCommandArg = class
   private
     FCommand, FArg: String;
-    FValid: Boolean;
+    FStatus: TStatusCommandArg;
   public
     procedure Clear;
     function IsValid: Boolean;
@@ -310,17 +330,17 @@ procedure TCommandArg.Clear;
 begin
   FCommand := '';
   FArg := '';
-  FValid := False;
+  FStatus := skInvalid;
 end;
 
 function TCommandArg.IsValid: Boolean;
 begin
-  result := FValid;
+  result := not (FStatus = skInvalid);
 end;
 
 function TCommandArg.ToString: String;
 begin
-  if FValid then
+  if Self.IsValid then
     result := FCommand + ' ' + FArg
   else
     result := '';
@@ -347,21 +367,29 @@ begin
     Self.Clear;
     { find command }
     TestStr := Source.Substring(Source.IndexOf(ControlChar));
-    TestStr := StringDropBefore(Source, ControlChar);
-    Command := ExtractWord(1, TestStr, [' ', ArgStartDelim]);
+    Command := ExtractWord(1, TestStr, [' ', LineEnding, ArgStartDelim]);
     if not Command.IsEmpty then
     begin
-      FCommand := ControlChar + Command;
+      FCommand := Command;
+      FStatus := skCommand;
+      DebugLn('Found command ' + FCommand);
 
       { find arg within delimiters }
-      TestStr := StringDropBefore(TestStr, FCommand);
-      Outline := BalancedDelimiterSubstring(TestStr, ArgStartDelim,
-                  ArgEndDelim, Outline); 
-
-      if Outline.IsValid then
-        FArg := ExtractStringRange(TestStr, Outline, rkInclusive);
-
-      FValid := Outline.IsValid;
+      TestStr := TestStr.Substring(Length(FCommand));
+      DebugLn('After command ' + FCommand + ', Ready to test string starting: ' +
+        TestStr.Substring(0, 30));
+      if TestStr.TrimLeft.StartsWith(ArgStartDelim) then
+      begin
+        DebugLn('Looking for command arg...');
+        Outline := BalancedDelimiterSubstring(TestStr, ArgStartDelim,
+                    ArgEndDelim, Outline); 
+        if Outline.IsValid then
+        begin
+          FArg := ExtractStringRange(TestStr, Outline, rkInclusive);
+          DebugLn('Found argument: ' + FArg);
+          FStatus := skCommandArg;
+        end;
+      end;
     end;
   finally
     FreeAndNil(Outline);
@@ -399,12 +427,14 @@ end;
 { CLASS: Macro dictionary }
 type
   TMacroDict = class(specialize TDictionary<String, String>)
+  public
     function ToString: String; override;
     function ExtractMacros(InputText: TStringList): TMacroDict;
     function ExpandMacrosInValues: TMacroDict;
   end;
 
   TMacroKeyValue = TMacroDict.TDictionaryPair;
+
 
 function TMacroDict.ToString: String;
 var 
@@ -413,11 +443,12 @@ var
   N: Integer;
 begin
   OutputStr := '';
-  N := 0;
+  N := 1;
   for Macro in Self do
   begin
-    MacroStr := IntToStr(N) + '. ' + Macro.Key + ': ' + Macro.Value;
+    MacroStr := IntToStr(N) + '. ' + Macro.Key + ': ' + Macro.Value + LineEnding;
     OutputStr := OutputStr + MacroStr;
+    Inc(N);
   end;
   result := OutputStr;
 end;
@@ -441,20 +472,21 @@ var
   CommandArg: TCommandArg;
   Found: Boolean;
 begin
-  Outline := TIndexPair.Create;
+  Outline    := TIndexPair.Create;
   CommandArg := TCommandArg.Create;
   try
     LineIndex := 0;
     for ThisString in InputText do
     begin
       Found := False;
-      if ThisString.Contains('=') then
+      if ThisString.Contains('=') and not ThisString.StartsWith(' ') then
       begin
         InputText.GetNameValue(LineIndex, Key, Value);
-        if Key.IsEmpty or Value.IsEmpty or Key.StartsWith(' ') then
+        if Key.IsEmpty or Value.IsEmpty then
           continue;
-
-        Key := '\' + Key.Trim;
+        
+        DebugLn('Found possible macro: ' + Key + ' | ' + Value);
+        Key := Key.Trim;
         Value := Value.Trim;
         case Value.Substring(0, 1) of
         '{':
@@ -463,7 +495,7 @@ begin
             Outline := FindMatchedBraces(TestStr, Outline);
             if Outline.IsValid then
             begin
-              Value := ExtractStringRange(TestStr, Outline, rkExclusive);
+              Value := ExtractStringRange(TestStr, Outline, rkInclusive);
               Found := True;
             end;
           end;
@@ -472,15 +504,24 @@ begin
           begin
             TestStr := ListToStringFromIndex(InputText, LineIndex);
             CommandArg := CommandArg.ExtractFromString(TestStr, '\', '{', '}');
-            if CommandArg.IsValid then
-            begin
-              Value := CommandArg.ToString;
-              Found := True;
+            case CommandArg.FStatus of
+            skCommand:
+              begin
+                Value := CommandArg.FCommand;
+                Found := True;
+              end;
+            skCommandArg:
+              begin
+                Value := CommandArg.ToString;
+                Found := True;
+              end;
             end;
           end;
         end;
         if Found then
-          Self.Add(Key, Value);
+        begin
+          Self.Add('\' + Key, Value);
+        end;
       end;
       { TODO skip ahead if found? }
       Inc(LineIndex);
@@ -489,65 +530,7 @@ begin
   finally
     FreeAndNil(CommandArg);
     FreeAndNil(Outline);
-
-    DebugLn('FUNCTION ExtractMacros: Macro dictionary contents');
-    DebugLn(Self.ToString);
-
     result := Self;
-  end;
-end;
-
-{ `CutMacroDefs`
-
-  Remove macro definitions from a stringlist.
-}
-function CutMacroDefs(InputText: TStringList; Dict: TMacroDict): TStringList;
-type
-  ReadMode = (rkNormal, rkMacro);
-var
-  OutputText: TStringList;
-  ThisMacro, SearchMacro: TMacroKeyValue;
-  ThisString, TestKey: String;
-  Mode: ReadMode;
-  LineIndex: Integer;
-begin
-  assert(Dict <> nil);
-  OutputText := TStringList.Create;
-  try
-    Mode := rkNormal;
-    LineIndex := 0;
-    for ThisString in InputText do
-    begin
-      case Mode of
-      rkNormal:
-        begin
-          for ThisMacro in Dict do
-          begin
-            TestKey := ThisMacro.Key.Substring(1); { leave off `\`}
-            if ThisString.StartsWith(TestKey) then 
-            begin
-              SearchMacro := ThisMacro;
-              Mode := rkMacro;
-              break;
-            end;
-            OutputText.Add(ThisString);
-          end;
-        end;
-      rkMacro:
-        begin
-          if ThisString.TrimRight.EndsWith(SearchMacro.Value) then
-          begin
-            Mode := rkNormal;
-          end;
-        end;
-      end;
-      Inc(LineIndex);
-    end; { for }
-
-    InputText.Assign(OutputText);
-  finally
-    FreeAndNil(OutputText);
-    result := InputText;
   end;
 end;
 
@@ -558,25 +541,18 @@ end;
 }
 function FindReplaceMacros(Source: String; Dict: TMacroDict): String;
 var
-  BufferStr, Command, AfterCommand, OutputStr: String;
-  ThisValue: String;
+  OutputStr: String;
+  Macro: TMacroKeyValue;
 begin
   OutputStr := Source;
-  BufferStr := OutputStr;
-  while BufferStr.Contains('\') do
+  for Macro in Dict do
   begin
-    BufferStr := StringDropBefore(BufferStr, '\');
-    Command := ExtractWord(1, BufferStr, [' ', LineEnding]);
-
-    { Continue searching after this command }
-    BufferStr := BufferStr.Substring(Length(Command));
-
-    { Replace command and add back the space or newline that followed it }
-    AfterCommand := BufferStr.Substring(0, 1);
-    if Dict.TryGetValue(Command, ThisValue) then
-    begin
-      OutputStr := ReplaceString(OutputStr, Command, ThisValue + AfterCommand);
-    end;
+    OutputStr := StringReplace(OutputStr, Macro.Key + ' ', Macro.Value, [rfReplaceAll]);
+  end;
+  for Macro in Dict do
+  begin
+    OutputStr := StringReplace(OutputStr, Macro.Key + LineEnding, Macro.Value,
+      [rfReplaceAll]); 
   end;
   result := OutputStr;
 end;
@@ -609,15 +585,18 @@ function ExpandMacros(InputText: TStringList): TStringList;
 var
   Macros: TMacroDict;
   TempLines: TStringList;
+  TempStr: String;
 begin
   Macros := TMacroDict.Create;
   TempLines := TStringList.Create;
   try
     Macros := Macros.ExtractMacros(InputText);
-    InputText := CutMacroDefs(InputText, Macros);
-    Macros := Macros.ExpandMacrosInValues;
-    TempLines := Lines(FindReplaceMacros(InputText.Text, Macros), TempLines);
-    TempLines := RemoveBlankLines(TempLines);
+    DebugLn('Macro dictionary before expansion: ' + LineEnding + Macros.ToString);
+
+    TempStr   := InputText.Text;
+    Macros    := Macros.ExpandMacrosInValues;
+    TempStr   := FindReplaceMacros(TempStr, Macros);
+    TempLines := RemoveBlankLines(Lines(TempStr, TempLines));
     InputText.Assign(TempLines);
   finally
     FreeAndNil(Macros);
