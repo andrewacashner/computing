@@ -10,6 +10,7 @@
   - 2021/10/07: Began
   - 2021/10/12: Macro-substitution program complete
   - 2021/10/13: Header conversion program complete
+  - 2021/10/18: Macro-substitution functions revised and integrated
 }
 {$mode objfpc}{$H+}{$J-}{$ASSERTIONS+}
 
@@ -57,24 +58,6 @@ begin
   result := (Source.CountChar('"') = 2)
             and Source.StartsWith('"') 
             and Source.EndsWith('"');
-end;
-
-{ `ReplaceString`
-
-  Replace the first instance of one substring with another }
-function ReplaceString(Source, Cut, Add: String): String;
-var
-  CutFrom, CutTo: Integer;
-begin
-  CutFrom := Source.IndexOf(Cut);
-
-  if CutFrom = -1 then
-    result := Source { no substring found }
-  else
-  begin
-    CutTo := CutFrom + Length(Cut) + 1;
-    result := Source.Substring(0, CutFrom) + Add + Source.Substring(CutTo);
-  end;
 end;
 
 
@@ -170,8 +153,6 @@ type
     function FindRangeInString(Source, StartDelim, 
                                 EndDelim: String): TIndexPair; 
   end;
-
-  TIndexList = specialize TObjectList<TIndexPair>;
 
 { ## `TIndexPair` class methods }
 
@@ -429,8 +410,7 @@ type
   TMacroDict = class(specialize TDictionary<String, String>)
   public
     function ToString: String; override;
-    function ExtractMacros(InputText: TStringList): TMacroDict;
-    function ExpandMacrosInValues: TMacroDict;
+    function ExtractMacros(InputText, OutputText: TStringList): TMacroDict;
   end;
 
   TMacroKeyValue = TMacroDict.TDictionaryPair;
@@ -453,29 +433,73 @@ begin
   result := OutputStr;
 end;
     
+{ `FindReplaceMacros`
+
+  In a given string (not a list), replace all macro commands (`\command`) with
+  the corresponding definition in a macro dictionary. Repeat as necessary
+  until all known macros are expanded.
+}
+function FindReplaceMacros(Source: String; Dict: TMacroDict): String;
+var
+  OutputStr: String;
+  Macro: TMacroKeyValue;
+  HasMacros: Boolean;
+begin
+  OutputStr := Source;
+  HasMacros := True;
+  while HasMacros do
+  begin
+    for Macro in Dict do
+    begin
+      OutputStr := StringReplace(OutputStr, 
+        Macro.Key + ' ', Macro.Value + ' ', [rfReplaceAll]);
+      OutputStr := StringReplace(OutputStr, 
+        Macro.Key + LineEnding, Macro.Value + LineEnding, [rfReplaceAll]);
+    end;
+    HasMacros := False;
+    for Macro in Dict do
+    begin
+      if OutputStr.Contains(Macro.Key) then
+      begin
+        DebugLn('Source still contains macro key ' + Macro.Key );
+        HasMacros := True;
+      end;
+    end;
+  end;
+  result := OutputStr;
+end;
+
 
 { `TMacroDict.ExtractMacros`
 
   Find, parse, and save macro definitions in a stringlist. Return a macro
-  dictionary; if no valid macros are found, it will be empty. The initial
-  values may still contain unexpanded macros.
+  dictionary; if no valid macros are found, it will be empty. Values may
+  contain unexpanded macros.
 
   A macro must have the form `label = < arg >` or `label = \command < arg >`
   where `<>` are curly brackets. We don't accept `label = "string"` or other
   formats. The label must be at the beginning of a line.
 }
-function TMacroDict.ExtractMacros(InputText: TStringList): TMacroDict;
+function TMacroDict.ExtractMacros(InputText, OutputText: TStringList): TMacroDict;
 var
-  ThisString, Key, Value, TestStr: String;
+  InputStr, BufferStr, ThisString, NextStr, Key, Value, TestStr: String;
   LineIndex: Integer;
-  Outline: TIndexPair;
+  FindOutline, CopyOutline: TIndexPair;
   CommandArg: TCommandArg;
   Found: Boolean;
 begin
-  Outline    := TIndexPair.Create;
+  assert(InputText <> nil);
+  assert(OutputText <> nil);
+
+  FindOutline := TIndexPair.Create;
+  CopyOutline := TIndexPair.Create;
   CommandArg := TCommandArg.Create;
   try
     LineIndex := 0;
+    InputStr := InputText.Text;
+    CopyOutline.FStart := 0;
+    CopyOutline.FValid := True;
+    BufferStr := '';
     for ThisString in InputText do
     begin
       Found := False;
@@ -486,16 +510,19 @@ begin
           continue;
         
         DebugLn('Found possible macro: ' + Key + ' | ' + Value);
+
         Key := Key.Trim;
+        CopyOutline.FEnd := InputStr.IndexOf(Key + ' ');
+
         Value := Value.Trim;
         case Value.Substring(0, 1) of
         '{':
           begin
             TestStr := ListToStringFromIndex(InputText, LineIndex);
-            Outline := FindMatchedBraces(TestStr, Outline);
-            if Outline.IsValid then
+            FindOutline := FindMatchedBraces(TestStr, FindOutline);
+            if FindOutline.IsValid then
             begin
-              Value := ExtractStringRange(TestStr, Outline, rkInclusive);
+              Value := ExtractStringRange(TestStr, FindOutline, rkInclusive);
               Found := True;
             end;
           end;
@@ -521,60 +548,28 @@ begin
         if Found then
         begin
           Self.Add('\' + Key, Value);
+          NextStr := InputStr.Substring(CopyOutline.FStart, CopyOutline.Span);
+          if not NextStr.IsNullOrWhitespace(NextStr) then
+          begin
+            BufferStr := BufferStr + InputStr.Substring(CopyOutline.FStart,
+              CopyOutline.Span);
+              DebugLn('Copying from index ' + IntToStr(CopyOutline.FStart) 
+              + ' to ' + IntToStr(CopyOutline.FEnd)); 
+          end;
+          CopyOutline.FStart := InputStr.IndexOf(Value) + Length(Value);
         end;
       end;
-      { TODO skip ahead if found? }
       Inc(LineIndex);
     end;
+    BufferStr := BufferStr + InputStr.Substring(CopyOutline.FStart);
+    OutputText := Lines(BufferStr, OutputText);
 
   finally
     FreeAndNil(CommandArg);
-    FreeAndNil(Outline);
+    FreeAndNil(CopyOutline);
+    FreeAndNil(FindOutline);
     result := Self;
   end;
-end;
-
-{ `FindReplaceMacros`
-
-  In a given string (not a list), replace all macro commands (`\command`) with
-  the corresponding definition in a macro dictionary.
-}
-function FindReplaceMacros(Source: String; Dict: TMacroDict): String;
-var
-  OutputStr: String;
-  Macro: TMacroKeyValue;
-begin
-  OutputStr := Source;
-  for Macro in Dict do
-  begin
-    OutputStr := StringReplace(OutputStr, Macro.Key + ' ', Macro.Value, [rfReplaceAll]);
-  end;
-  for Macro in Dict do
-  begin
-    OutputStr := StringReplace(OutputStr, Macro.Key + LineEnding, Macro.Value,
-      [rfReplaceAll]); 
-  end;
-  result := OutputStr;
-end;
-
-{ `TMacroDict.ExpandMacrosInValues`
-
-  Expand all the nested macros stored within macro dictionary values. 
-}
-function TMacroDict.ExpandMacrosInValues: TMacroDict;
-var
-  MacroPairI, MacroPairJ, MacroPairEdit: TMacroKeyValue;
-begin
-  for MacroPairI in Self do
-  begin
-    MacroPairEdit := MacroPairI;
-    for MacroPairJ in Self do
-    begin
-      MacroPairEdit.Value := FindReplaceMacros(MacroPairEdit.Value, Self);
-      AddOrSetValue(MacroPairI.Key, MacroPairEdit.Value);
-    end;
-  end;
-  result := Self;
 end;
 
 { `ExpandMacros`
@@ -590,12 +585,10 @@ begin
   Macros := TMacroDict.Create;
   TempLines := TStringList.Create;
   try
-    Macros := Macros.ExtractMacros(InputText);
-    DebugLn('Macro dictionary before expansion: ' + LineEnding + Macros.ToString);
+    Macros := Macros.ExtractMacros(InputText, TempLines);
+    DebugLn('Macro dictionary: ' + LineEnding + Macros.ToString);
 
-    TempStr   := InputText.Text;
-    Macros    := Macros.ExpandMacrosInValues;
-    TempStr   := FindReplaceMacros(TempStr, Macros);
+    TempStr   := FindReplaceMacros(TempLines.Text, Macros);
     TempLines := RemoveBlankLines(Lines(TempStr, TempLines));
     InputText.Assign(TempLines);
   finally
@@ -847,6 +840,7 @@ begin
       InputText.LoadFromFile(ParamStr(1));
 
     InputText := RemoveComments(InputText);
+    InputText := RemoveBlankLines(InputText);
 
     { process macros }
     InputText := ExpandMacros(InputText);
@@ -861,11 +855,12 @@ begin
     end
     else
       OutputText := HeaderValues.ToMei(OutputText);
-   
+    
     { process score }
 
     { output }
     WriteLn(OutputText.Text);
+
     ScoreInput := LyArg(InputText.Text, '\score');
     WriteLn(ScoreInput);
 
