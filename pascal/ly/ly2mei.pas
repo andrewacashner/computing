@@ -191,6 +191,7 @@ begin
   result := Self;
 end;
 
+
 type
   TRangeMode = (rkInclusive, rkExclusive);
 
@@ -210,7 +211,8 @@ begin
   begin
     case ModeFlag of
       rkInclusive: result := Source.Substring(Outline.FStart, Outline.Span);
-      rkExclusive: result := Source.Substring(Outline.FStart + 1, Outline.Span - 2);
+      rkExclusive: result := Source.Substring(Outline.FStart + 1, 
+                                Outline.Span - 2);
     end;
   end;
 end;
@@ -227,7 +229,8 @@ begin
     result := Source
   else
   begin
-    result := Source.Substring(0, Outline.FStart - 1) + Source.Substring(Outline.FEnd);
+    result := Source.Substring(0, Outline.FStart - 1) 
+              + Source.Substring(Outline.FEnd); 
   end;
 end;
 
@@ -245,11 +248,9 @@ var
   ThisChar: Char;
 begin
   assert(StartDelim <> EndDelim);
-  
   Outline.Clear;
   BraceLevel := 0;
   SIndex := 0;
-
   for ThisChar in Source do
   begin
     if ThisChar = StartDelim then
@@ -276,7 +277,6 @@ begin
         end;
       end;
     end;
-
     Inc(SIndex);
   end; { for }
 
@@ -290,11 +290,10 @@ end;
 
 { ## Parsing macro definitions and commands }
 
-type
-  TStatusCommandArg = (skCommand, skCommandArg, skInvalid);
-
 { CLASS: `TCommandArg` for a command and its argument }
 type
+  TStatusCommandArg = (skCommand, skCommandArg, skInvalid);
+  
   TCommandArg = class
   private
     FCommand, FArg: String;
@@ -357,8 +356,8 @@ begin
 
       { find arg within delimiters }
       TestStr := TestStr.Substring(Length(FCommand));
-      DebugLn('After command ' + FCommand + ', Ready to test string starting: ' +
-        TestStr.Substring(0, 30));
+      DebugLn('After command ' + FCommand 
+        + ', Ready to test string starting: ' + TestStr.Substring(0, 30));
       if TestStr.TrimLeft.StartsWith(ArgStartDelim) then
       begin
         DebugLn('Looking for command arg...');
@@ -403,9 +402,7 @@ begin
   end;
 end;
 
-
-
-{ CLASS: Macro dictionary }
+{ CLASS: Macro dictionary of key-value pairs }
 type
   TMacroDict = class(specialize TDictionary<String, String>)
   public
@@ -415,7 +412,11 @@ type
 
   TMacroKeyValue = TMacroDict.TDictionaryPair;
 
+{ `TMacroDict.ToString`
 
+  Return the contents of a macro dictionary as a string, for testing/debugging
+  purposes.
+}
 function TMacroDict.ToString: String;
 var 
   Macro: TMacroKeyValue;
@@ -438,6 +439,9 @@ end;
   In a given string (not a list), replace all macro commands (`\command`) with
   the corresponding definition in a macro dictionary. Repeat as necessary
   until all known macros are expanded.
+
+  A macro call must be followed by a space or newline. Otherwise we could not
+  have commands like \SopranoI and \SopranoII.
 }
 function FindReplaceMacros(Source: String; Dict: TMacroDict): String;
 var
@@ -476,6 +480,9 @@ end;
   dictionary; if no valid macros are found, it will be empty. Values may
   contain unexpanded macros.
 
+  **Side effect:** The function also stores a copy of the input text minus
+  macro definitions in the second argument, another stringlist.
+
   A macro must have the form `label = < arg >` or `label = \command < arg >`
   where `<>` are curly brackets. We don't accept `label = "string"` or other
   formats. The label must be at the beginning of a line.
@@ -496,10 +503,11 @@ begin
   CommandArg := TCommandArg.Create;
   try
     LineIndex := 0;
-    InputStr := InputText.Text;
     CopyOutline.FStart := 0;
     CopyOutline.FValid := True;
     BufferStr := '';
+    InputStr := InputText.Text;
+    { Look for a `key = value` pair at the start of each line }
     for ThisString in InputText do
     begin
       Found := False;
@@ -509,14 +517,16 @@ begin
         if Key.IsEmpty or Value.IsEmpty then
           continue;
         
+        { Found key, mark start location }
         DebugLn('Found possible macro: ' + Key + ' | ' + Value);
-
         Key := Key.Trim;
         CopyOutline.FEnd := InputStr.IndexOf(Key + ' ');
 
+        { Parse value }
         Value := Value.Trim;
         case Value.Substring(0, 1) of
         '{':
+          { Value is a brace-delimited argument }
           begin
             TestStr := ListToStringFromIndex(InputText, LineIndex);
             FindOutline := FindMatchedBraces(TestStr, FindOutline);
@@ -528,15 +538,18 @@ begin
           end;
 
         '\':
+          { Value is a command, possibly followed by argument }
           begin
             TestStr := ListToStringFromIndex(InputText, LineIndex);
             CommandArg := CommandArg.ExtractFromString(TestStr, '\', '{', '}');
             case CommandArg.FStatus of
+            { Found only a command }
             skCommand:
               begin
                 Value := CommandArg.FCommand;
                 Found := True;
               end;
+            { Found a command and a brace-delimited argument }
             skCommandArg:
               begin
                 Value := CommandArg.ToString;
@@ -545,6 +558,8 @@ begin
             end;
           end;
         end;
+        { Add found key/value pair to dictionary; copy text from last ending
+        position to next start position to output; mark new start position }
         if Found then
         begin
           Self.Add('\' + Key, Value);
@@ -561,6 +576,7 @@ begin
       end;
       Inc(LineIndex);
     end;
+    { Add remaining text after last macro definition to output }
     BufferStr := BufferStr + InputStr.Substring(CopyOutline.FStart);
     OutputText := Lines(BufferStr, OutputText);
 
@@ -821,7 +837,7 @@ end;
 { # MAIN }
 var
   InputText, OutputText: TStringList;
-  ScoreInput: String;
+  ScoreInput, MEI: String;
   HeaderValues: THeader;
   CommandArg: TCommandArg;
 begin
@@ -842,11 +858,11 @@ begin
     InputText := RemoveComments(InputText);
     InputText := RemoveBlankLines(InputText);
 
-    { process macros }
+    { process macros: find and cut defs, expand macro commands }
     InputText := ExpandMacros(InputText);
     DebugLn('Input after macro expansion: ' + InputText.Text);
 
-    { process header }
+    { process header, convert to MEI }
     HeaderValues := ParseHeader(InputText, HeaderValues);
     if not HeaderValues.IsValid then
     begin
@@ -856,13 +872,18 @@ begin
     else
       OutputText := HeaderValues.ToMei(OutputText);
     
-    { process score }
+    { process score, convert to MEI }
+    ScoreInput := LyArg(InputText.Text, '\score');
+    if ScoreInput.IsEmpty then
+    begin
+      WriteLn(stderr, 'Did not find a valid \score expression');
+      exit;
+    end
+    else
+      MEI := OutputText.Text + ScoreInput;
 
     { output }
-    WriteLn(OutputText.Text);
-
-    ScoreInput := LyArg(InputText.Text, '\score');
-    WriteLn(ScoreInput);
+    WriteLn(MEI);
 
   finally
     FreeAndNil(CommandArg);
