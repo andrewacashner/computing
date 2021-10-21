@@ -226,5 +226,95 @@ where Label is not inside \header {}
 2. in assoc-list, store label as key and contents of {} (plain text) as value
 3. identify macro expression (\label), look up key and replace with value
 
+## Converting \score
 
+### MEI
+- mei @xmlns
+    - meiHead [...]
+    - music
+        - mdiv: @n @type
+            - score:
+                - scoreDef: @key.sig [@midi.bpm]
+                    - staffGrp: @n @xml:id @symbol="bracket"
+                        - staffDef: @n @xml:id @lines="5" @clef.shape @clef.line
+                                @mensur.sign @mensur.slash @mensur.tempus
+                                @proport.num 
+                            - label
+                            - labelAbbr
+                            - [layerDef: @n @xml:id]
+                - measure: @n
+                    - staff: @n @corresp="#{$xml:id}" (or @def?)
+                        - layer: @n [@corresp="#{@xml:id}"]
+                            - note: @pname @dur @dots 
+                                - accid: @accid.ges
+                                - verse
+                                    - syl: @con @wordpos
+                            - OR rest: @dur @dots
+
+### TBD
+- incipit staves??
+- figured bass?
+
+### Source of MEI data coming from Lilypond
+
+music/mdiv/score 
+    <- \score {}
+
+score/scoreDef/@key.sig 
+    <- first music expression, \CantusMollis or not (or \key )
+
+score/scoreDef/staffGrp 
+    <- \new ChoirStaff or StaffGroup (or none)
+
+//staffDef/@clef.shape, @clef.line 
+    <- first music expression on that staff, \clef ""
+
+//staffDef/@mensur.sign, @mensur.slash, @mensur.tempus, @proport.num
+    <- first music expr on that staff, \MeterTriple or \MeterDuple or \time
+
+//staffDef/label, labelAbbr 
+    <- \InstrumentName "LONG" "SHORT" or \IncipitStaff "LONG" "SHORT"
+
+//score/measure/staff/layer/note, rest 
+    <- \score { << ... \new Staff << \new Voice { | note note | }
+
+//score/measure/staff/layer/note/verse/syl 
+    <- \new Lyrics \lyricsto "label" { Ly -- rics }
+
+
+
+Ly:
+\score { << \new ChoirStaff << \new Staff << \new Voice { note1 note2 } \new
+Lyrics { syl1 syl2 } >> >> >> }
+-> music/mdiv/score/scoreDef
+-> music/mdiv/score/measure(1)/staff/layer(1)/note{$note1}/verse/syl{$syl1}
+                              /staff/layer(2)/...
+                   /measure(2)/staff/layer(1)/note{$note2}/verse/syl{$syl2}
+                   /measure(2)/staff/layer(2)/...
+
+ly: staff/voice/(measure/)note
+    staff/lyrics/syllable
+
+mei: measure/staff/layer/note/verse/syl
+
+
+- read through whole ly \score{} and store all needed info:
+    - number and labels of staff groups or choir staves
+    - for each group: number of staves
+    - for each staff: labels(instrument names), number of voices, voiceIDs
+    - for each voice: 
+        - clef, key, meter
+        - measures/notes, expression marks, section heads, barlines
+        - lyric syllables
+        - bass figures
+
+- then assemble MEI structure pulling out this data as needed
+- e.g., for each measure:
+    - get that measure from each staff/each voice
+    - get those syllables (!) 
+
+intermediate form for music/lyrics:
+
+voice:soprano, measure:1, notes:(c'4, d'4, es'4), lyrics:(one, two, three)
+voice:soprano, measure:2, notes:(e'4, fis'4, g'2), lyrics:(ev-, -en, more)
 
