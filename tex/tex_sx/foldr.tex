@@ -1,0 +1,24 @@
+\def\nil{\empty}
+\def\cons #1 #2{%
+    \def\ls{}%
+    \ifx\nil#2\edef\ls{#1}%
+    \else\edef\ls{#1 #2}%
+    \fi\ls{}%
+}
+\def\display#1{(#1)}
+
+(a)
+
+(\cons a b)
+
+(\cons a (\cons b \nil))
+
+(\cons a (\cons b (\cons c d)))
+
+(a (b (c d)))
+
+\edef\lsa{\cons a \nil}
+\lsa
+\cons b \lsa
+
+\bye

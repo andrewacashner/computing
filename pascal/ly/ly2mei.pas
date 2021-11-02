@@ -35,7 +35,7 @@ end;
 
 { `StringDropBefore`
   
-  Cut out everything up to a given substring from a larger string.
+  Cut out everything up to and including a given substring from a larger string.
 }
 function StringDropBefore(Source, Cut: String): String;
 begin
@@ -195,13 +195,13 @@ end;
 type
   TRangeMode = (rkInclusive, rkExclusive);
 
-{ `ExtractStringRange`
+{ `CopyStringRange`
 
   Return the portion of the string between the indices in a `TIndexPair`.
   The start and end characters of the range are included by default
   (`rkInclusive`). Return the original string if the index pair is invalid.
 }
-function ExtractStringRange(Source: String; Outline: TIndexPair; 
+function CopyStringRange(Source: String; Outline: TIndexPair; 
                               ModeFlag: TRangeMode): String;
 begin
   assert(Outline <> nil);
@@ -219,7 +219,7 @@ end;
 
 { `CutStringRange`
 
-  Inverse of `ExtractStringRange`: Return a string with the portion between
+  Inverse of `CopyStringRange`: Return a string with the portion between
   the indices in a `TIndexPair` removed. 
 }
 function CutStringRange(Source: String; Outline: TIndexPair): String;
@@ -285,8 +285,29 @@ end;
 
 function FindMatchedBraces(Source: String; Outline: TIndexPair): TIndexPair;
 begin
+  assert(Outline <> nil);
   result := BalancedDelimiterSubstring(Source, '{', '}', Outline);
 end;
+
+function CopyBraceExpr(Source: String): String;
+var
+  Outline: TIndexPair;
+  TempStr: String;
+begin
+  Outline := TIndexPair.Create;
+  try
+    Outline := FindMatchedBraces(Source, Outline);
+    if Outline.IsValid then
+      TempStr := CopyStringRange(Source, Outline, rkInclusive)
+    else 
+      TempStr := '';
+  finally
+    FreeAndNil(Outline);
+    result := TempStr;
+  end;
+end;
+
+
 
 { ## Parsing macro definitions and commands }
 
@@ -365,7 +386,7 @@ begin
                     ArgEndDelim, Outline); 
         if Outline.IsValid then
         begin
-          FArg := ExtractStringRange(TestStr, Outline, rkInclusive);
+          FArg := CopyStringRange(TestStr, Outline, rkInclusive);
           DebugLn('Found argument: ' + FArg);
           FStatus := skCommandArg;
         end;
@@ -532,7 +553,7 @@ begin
             FindOutline := FindMatchedBraces(TestStr, FindOutline);
             if FindOutline.IsValid then
             begin
-              Value := ExtractStringRange(TestStr, FindOutline, rkInclusive);
+              Value := CopyStringRange(TestStr, FindOutline, rkInclusive);
               Found := True;
             end;
           end;
@@ -638,7 +659,7 @@ begin
       Outline := Outline.FindRangeInString(Source, '"', '"');
       if Outline.IsValid then
       begin
-        Markup := ExtractStringRange(Source, Outline, rkExclusive);
+        Markup := CopyStringRange(Source, Outline, rkExclusive);
         MarkupStrings.Add(Markup);
         Source := Source.Substring(Outline.FEnd + 2);
       end
@@ -832,7 +853,124 @@ begin
   end;
 end;
 
+{ Types for Lilypond `\new XX < YY >` expressions }
+type
+  TLyObject = class
+  private
+    var
+      FType, FID, FContents: String;
+  public
+    constructor Create(TypeStr, IDStr, ContentsStr: String); 
+    procedure Clear;
+    function ToString: String; override;
+  end;
 
+constructor TLyObject.Create(TypeStr, IDStr, ContentsStr: String);
+begin
+  FType := TypeStr;
+  FID := IDStr;
+  FContents := ContentsStr;
+end;
+
+procedure TLyObject.Clear;
+begin
+  FType := '';
+  FID := '';
+  FContents := '';
+end;
+
+function TLyObject.ToString: String;
+begin
+  result := 'LYOBJECT: ' + LineEnding 
+            + '    TYPE: ' + FType + LineEnding
+            + '    ID: ' + FID + LineEnding
+            + '    CONTENTS: ' + FContents + LineEnding;
+end;
+
+
+type
+  TLyObjectList = specialize TObjectList<TLyObject>;
+
+function ListContents(Ls: TLyObjectList): String;
+var
+  ThisObject: TLyObject;
+  OutputStr: String = '';
+begin
+  try
+    for ThisObject in Ls do
+      OutputStr := OutputStr + ThisObject.ToString;
+  finally
+    result := OutputStr
+  end;
+end;
+
+{ `FindLyNew`
+
+  Find the argument of a Lilypond `\new` command 
+  (e.g., `\new Voice = "SI" < \MusicSI >`
+    => `LyObject < type = "Voice", id = "SI", contents = "< \MusicSI >" >`
+}
+function FindLyNew(Source: String; LyObjects: TLyObjectList): TLyObjectList;
+var
+  SearchIndex: Integer;
+  SearchStr: String;
+  ThisType, ThisID, ThisContents: String;
+  Outline: TIndexPair;
+begin
+  assert(LyObjects <> nil);
+  Outline := TIndexPair.Create;
+  try
+    SearchIndex := 0;
+    SearchStr := Source;
+    while (Length(SearchStr) > 0) and (SearchIndex <> -1) do
+    begin
+      SearchIndex := SearchStr.IndexOf('\new ');
+      if SearchIndex = -1 then break;
+      
+      DebugLn('Found a \new expression at line ' + IntToStr(SearchIndex));
+     
+      { Find Type: `\new Voice ...` => `Voice` }
+      SearchStr := SearchStr.Substring(SearchIndex);
+      ThisType := ExtractWord(2, SearchStr, StdWordDelims);
+      SearchStr := StringDropBefore(SearchStr, ThisType);
+   
+      { Find ID: `\new Voice = "Soprano"` => 'Soprano' }
+      if SearchStr.StartsWith(' = "') then
+      begin 
+        SearchStr := StringDropBefore(SearchStr, ' = "');
+        ThisID := SearchStr.Substring(0, SearchStr.IndexOf('"'));
+        SearchStr := StringDropBefore(SearchStr, ThisID + '"');
+      end
+      else
+        ThisID := '';
+   
+      { Find Contents: Either an expression within `<<...>>` (here meaning
+      actually angle brackets), or an expression within curly braces and everything preceding it:
+        e.g., `\new Lyrics \lyricsto "Alto" < \LyricsA >`
+          => `\lyricsto "Alto" < \LyricsA >` (here meaning curly braces)
+      }
+      if SearchStr.TrimLeft.StartsWith('<<') then
+      begin
+        Outline := BalancedDelimiterSubstring(SearchStr, '<', '>', Outline);
+        ThisContents := CopyStringRange(SearchStr, Outline, rkInclusive);
+      end
+      else
+      begin
+        ThisContents := SearchStr.Substring(0, SearchStr.IndexOf('{'));
+        ThisContents := ThisContents + CopyBraceExpr(SearchStr);
+      end;
+
+      LyObjects.Add(TLyObject.Create(ThisType, ThisID, ThisContents));
+      DebugLn('Added object to list: ');
+      
+      { Skip past '\new ' to look for next}
+      Source := Source.Substring(SearchIndex + 5); 
+    end;
+  finally
+    FreeAndNil(Outline);
+    result := LyObjects;
+  end;
+end;
 
 { # MAIN }
 var
@@ -840,12 +978,14 @@ var
   ScoreInput, MEI: String;
   HeaderValues: THeader;
   CommandArg: TCommandArg;
+  NewObjects: TLyObjectList;
 begin
   InputText     := TStringList.Create;
   OutputText    := TStringList.Create;
   HeaderValues  := THeader.Create;
   CommandArg    := TCommandArg.Create;
-  
+  NewObjects    := TLyObjectList.Create;
+
   try
     if ParamCount <> 1 then
     begin
@@ -878,14 +1018,19 @@ begin
     begin
       WriteLn(stderr, 'Did not find a valid \score expression');
       exit;
-    end
-    else
-      MEI := OutputText.Text + ScoreInput;
+    end;
+
+    DebugLn('Found score expression: ' + ScoreInput);
+    NewObjects := FindLyNew(ScoreInput, NewObjects);
+    DebugLn('Found ' + IntToStr(NewObjects.Count) + ' \new objects');
+
+    MEI := OutputText.Text + ListContents(NewObjects);
 
     { output }
     WriteLn(MEI);
 
   finally
+    FreeAndNil(NewObjects);
     FreeAndNil(CommandArg);
     FreeAndNil(HeaderValues);
     FreeAndNil(OutputText);
