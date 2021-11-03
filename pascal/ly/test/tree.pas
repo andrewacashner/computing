@@ -44,7 +44,9 @@ begin
   if Tree <> nil then
   begin
     if Length(OutputStr) > 0 then
-      OutputStr := OutputStr + ' '; OutputStr := OutputStr + Tree^.FData + ' '
+      OutputStr := OutputStr + ' '; 
+
+    OutputStr := OutputStr + Tree^.FData + ' '
                   + TreeToStringPreorder(Tree^.FPLeft)
                   + TreeToStringPreorder(Tree^.FPRight);
   end;
