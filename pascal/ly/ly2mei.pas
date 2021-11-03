@@ -953,6 +953,7 @@ begin
       begin
         Outline := BalancedDelimiterSubstring(SearchStr, '<', '>', Outline);
         ThisContents := CopyStringRange(SearchStr, Outline, rkInclusive);
+        { look for \new objects within the <<...>> range }
       end
       else
       begin
