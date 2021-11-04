@@ -1,9 +1,12 @@
 { `Family Tree`
 
-  Test of implementing an LCRS tree with objects
+  Test of implementing an LCRS tree with a CLASS
 
-  Andrew Cashner, 2021/11/03
+  Andrew Cashner, 2021/11/04
 }
+
+{ TODO make this into a generic tree that could be used with any class }
+{ OR do the same with nested lists? }
 
 {$mode objfpc}{$H+}{$J-}
 
@@ -12,25 +15,21 @@ program FamilyTree(output);
 uses SysUtils, Classes;
 
 type 
-  TPBio = ^TBio;
-
-  TBio = object
+  TBio = class
   private
     var
       FFirstName, FLastName: String;
       FBirthDate, FDeathDate: Integer;
-      FChild: TPBio;
-      FSibling: TPBio;
+      FChild: TBio;
+      FSibling: TBio;
   public
-    constructor Create(First, Last: String; Birth, Death: Integer; Child, Sib:
-      TPBio); 
-    destructor Destroy;
-    function DateString: String;
-    function ToString: String; 
+    constructor Create(First, Last: String; Birth, Death: Integer; 
+      Child, Sib: TBio); 
+    function ToString: String; override;
   end;
 
-constructor TBio.Create(First, Last: String; Birth, Death: Integer; Child,
-  Sib: TPBio); 
+constructor TBio.Create(First, Last: String; Birth, Death: Integer;
+  Child, Sib: TBio);
 begin
   FFirstName  := First;
   FLastName   := Last;
@@ -40,71 +39,61 @@ begin
   FSibling    := Sib;
 end;
 
-destructor TBio.Destroy;
-begin
-  inherited;
-end;
-
-function TBio.DateString: String;
-  function SingleDateToString(Date: Integer): String;
+function TBio.ToString: String;
+  function YearToString(Date: Integer): String;
   begin
     if Date = -1 then
       result := '*'
     else
       result := IntToStr(Date);
   end;
-begin
-  result := '(' + SingleDateToString(FBirthDate) + '-' +
-            SingleDateToString(FDeathDate) + ')'; 
-end;
-
-function TBio.ToString: String;
-begin
-  result :=  FFirstName + ' ' + FLastName + ' ' + Self.DateString;
-end;
-
-function NewPerson(First, Last: String; Birth, Death: Integer): TPBio;
 var
-  Person: TPBio;
+  DateString: String;
 begin
-  new(Person, Create(First, Last, Birth, Death, nil, nil));
-  result := Person;
+  DateString := '(' + YearToString(FBirthDate) + '-' 
+                + YearToString(FDeathDate) + ')'; 
+  result :=  FFirstName + ' ' + FLastName + ' ' + DateString;
 end;
 
-function AddChildSib(Parent, Child, Sibling: TPBio): TPBio;
+function NewPerson(First, Last: String; Birth, Death: Integer): TBio;
+begin
+  result := TBio.Create(First, Last, Birth, Death, nil, nil);
+end;
+
+function AddChildSib(Parent, Child, Sibling: TBio): TBio;
 begin
   assert(Parent <> nil);
-  Parent^.FChild := Child;
-  Parent^.FSibling := Sibling;
-  result := Parent;
+  Parent.FChild := Child;
+  Parent.FSibling := Sibling;
+  result := Parent; 
 end;
 
-function FamilyTreeToString(Parent: TPBio; Generation: Integer): String;
+function FamilyTreeToString(Parent: TBio; Generation: Integer): String;
 var
   Indent: String;
 begin
   if Parent <> nil then
   begin
     Indent := StringOfChar(' ', 2 * Generation);
-    result := Indent + Parent^.ToString + LineEnding 
-              + FamilyTreeToString(Parent^.FChild, Generation + 1) 
-              + FamilyTreeToString(Parent^.FSibling, Generation);
+    result := Indent + Parent.ToString + LineEnding 
+              + FamilyTreeToString(Parent.FChild, Generation + 1) 
+              + FamilyTreeToString(Parent.FSibling, Generation);
   end;
 end;
 
-procedure FreeTree(Tree: TPBio);
+procedure FreeTree(Tree: TBio);
 begin
   if Tree <> nil then
   begin
-    FreeTree(Tree^.FChild);
-    FreeTree(Tree^.FSibling);
-    dispose(Tree, Destroy);
+    FreeTree(Tree.FChild);
+    FreeTree(Tree.FSibling);
+    FreeAndNil(Tree);
   end;
 end;
 
 { MAIN }
 var
-  Cashners: TPBio = nil;
+  Cashners: TBio = nil;
 begin
   Cashners := 
     AddChildSib(NewPerson('Ray', 'Cashner', 1925, 1975),
@@ -123,6 +112,27 @@ begin
           nil)),
       nil);
     
+  Write(FamilyTreeToString(Cashners, 0));
+  FreeTree(Cashners);
+
+  { second method }
+  Cashners := nil;
+  Cashners :=
+    TBio.Create('Ray', 'Cashner', 1925, 1975, 
+      TBio.Create('Randall', 'Cashner', 1950, -1,
+        TBio.Create('Matthew', 'Cashner', 1978, -1, 
+          nil,
+          TBio.Create('Andrew', 'Cashner', 1981, -1, 
+            TBio.Create('Benjamin', 'Cashner', 2011, -1, nil,
+              TBio.Create('Joy', 'Cashner', 2014, -1, nil, nil)),
+            nil)),
+        TBio.Create('Terrence', 'Cashner', 1952, -1,
+          TBio.Create('Kyle', 'Cashner', 1975 , -1,
+            TBio.Create('Little Kyle', 'Cashner', 1990, -1, nil, nil),
+            TBio.Create('Darchelle', 'Cashner', 1977, -1, nil, nil)),
+          nil)),
+      nil);
+  
   Write(FamilyTreeToString(Cashners, 0));
   FreeTree(Cashners);
 end.
