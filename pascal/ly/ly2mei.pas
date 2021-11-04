@@ -862,21 +862,25 @@ type
       FType, FID, FContents: String;
       FChild, FSibling: TLyObject;
   public
-    constructor Create(TypeStr, IDStr, ContentsStr: String,
+    constructor Create();
+    constructor Create(TypeStr, IDStr, ContentsStr: String; 
       Child, Sibling: TLyObject);
-    constructor Create(TypeStr, IDStr, ContentsStr: String);
-    destructor Destroy;
-    procedure AddChild(NewObject: TLyObject);
-    procedure AddSibling(NewObject: TLyObject);
-    procedure AddBranches(Child, Sibling: TLyObject);
-    function ToStringThis: String;
-    function TLyObject.ToStringTree(Parent: TLyObject; Generation: Integer):
-      String; 
-    end;
+    destructor Destroy; override;
+    function AddChild(NewObject: TLyObject): TLyObject;
+    function AddSibling(NewObject: TLyObject): TLyObject;
+    function AddBranches(Child, Sibling: TLyObject): TLyObject;
+    function ToString: String; override;
+  end;
 
-constructor TLyObject.Create(TypeStr, IDStr, ContentsStr: String,
+constructor TLyObject.Create();
+begin
+  inherited Create;
+end;
+
+constructor TLyObject.Create(TypeStr, IDStr, ContentsStr: String;
   Child, Sibling: TLyObject);
 begin
+  inherited Create;
   FType     := TypeStr;
   FID       := IDStr;
   FContents := ContentsStr;
@@ -884,68 +888,64 @@ begin
   FSibling  := Sibling;
 end;
 
-constructor TLyObject.Create(TypeStr, IDStr, ContentsStr: String);
+destructor TLyObject.Destroy;
 begin
-  FType     := TypeStr;
-  FID       := IDStr;
-  FContents := ContentsStr;
-  FChild    := nil;
-  FSibling  := nil;
+  if FChild <> nil then 
+    FChild.Destroy;
+  if FSibling <> nil then 
+    FSibling.Destroy;
+  inherited Destroy;
 end;
 
-procedure TLyObject.Destroy;
-  procedure FreeTree(Tree: TLyObject);
-  begin
-    if Tree <> nil then
-    begin
-      FreeLyObjectTree(Tree.FChild);
-      FreeLyObjectTree(Tree.FSibling);
-      FreeAndNil(Tree);
-    end;
-  end;
-begin
-  FreeTree(Self);
-end;
-
-procedure TLyObject.AddChild(NewObject: TLyObject);
+function TLyObject.AddChild(NewObject: TLyObject): TLyObject;
 begin
   FChild := NewObject;
+  result := Self;
 end;
 
-procedure TLyObject.AddSibling(NewObject: TLyObject);
+function TLyObject.AddSibling(NewObject: TLyObject): TLyObject;
 begin
   FSibling := NewObject;
+  result := Self;
 end;
 
-procedure TLyObject.AddBranches(Child, Sibling: TLyObject);
+function TLyObject.AddBranches(Child, Sibling: TLyObject): TLyObject;
 begin
   Self.AddChild(Child);
   Self.AddSibling(Sibling);
+  result := Self;
 end;
 
 function TLyObject.ToString: String; 
-  function ParentToString(Parent: TLyObject): String;
-  begin
-    result := 'LYOBJECT: ' + LineEnding 
-              + '    TYPE: ' + Parent.FType + LineEnding
-              + '    ID: ' + Parent.FID + LineEnding
-              + '    CONTENTS: ' + Parent.FContents + LineEnding;
-  end;
-
   function TreeToString(Parent: TLyObject; Generation: Integer): String;
   var
     Indent: String;
+    ParentStr, ChildStr, SibStr, IDStr: String;
   begin
     if Parent <> nil then
     begin
       Indent := StringOfChar(' ', 2 * Generation);
-      result := Indent + ParentToString(Parent) + LineEnding
-                + TreeToString(Parent.FChild, Generation + 1)
-                + TreeToString(Parent.FSibling, Generation);
+
+      if Parent.FID <> '' then 
+        IDStr := '" id="' + Parent.FID;
+      
+      ParentStr := 'type="' + Parent.FType + IDStr + '">' + Parent.FContents;
+
+      if Parent.FChild <> nil then
+        ChildStr := LineEnding + TreeToString(Parent.FChild, Generation + 1) + Indent;
+
+      SibStr := LineEnding;
+      if Parent.FSibling <> nil then 
+        SibStr := SibStr + TreeToString(Parent.FSibling, Generation);
+
+      result := Indent + '<lyobject ' + ParentStr + ChildStr + '</lyobject>' + SibStr;
     end;
   end;
 begin
-  TreeToString(Self, 0)
+  if FType = '' then
+    result := ''
+  else 
+    result := TreeToString(Self, 0);
 end;
 
 { `FindLyNewTree`
@@ -998,6 +998,12 @@ begin
         ThisContents := CopyStringRange(SearchStr, Outline, rkInclusive);
         { look for \new objects within the <<...>> range }
         { add them as children to the tree }
+        if Tree = nil then
+          Tree := TLyObject.Create(ThisType, ThisID, '', nil, nil)
+//            FindLyNewTree(ThisContents, nil), nil)
+        else
+          Tree := Tree.AddChild(TLyObject.Create(ThisType, ThisID, '', nil, nil));
+//            FindLyNewTree(ThisContents, nil), nil));
       end
       else
       begin
@@ -1005,7 +1011,10 @@ begin
         ThisContents := ThisContents + CopyBraceExpr(SearchStr);
       end;
 
-      Tree.AddSibling(TLyObject.Create(ThisType, ThisID, ThisContents));
+      if Tree = nil then
+        Tree := TLyObject.Create(ThisType, ThisID, ThisContents, nil, nil)
+      else
+        Tree := Tree.AddSibling(TLyObject.Create(ThisType, ThisID, ThisContents, nil, nil));
       DebugLn('Added object to list: ');
       
       { Skip past '\new ' to look for next}
@@ -1013,95 +1022,7 @@ begin
     end;
   finally
     FreeAndNil(Outline);
-    result := LyObject;
-  end;
-end;
-
-
-
-{ LIST of `TLyObject` }
-type
-  TLyObjectList = specialize TObjectList<TLyObject>;
-
-function ListContents(Ls: TLyObjectList): String;
-var
-  ThisObject: TLyObject;
-  OutputStr: String = '';
-begin
-  try
-    for ThisObject in Ls do
-      OutputStr := OutputStr + ThisObject.ToString;
-  finally
-    result := OutputStr
-  end;
-end;
-
-{ `FindLyNew`
-
-  Find the argument of a Lilypond `\new` command 
-  (e.g., `\new Voice = "SI" < \MusicSI >`
-    => `LyObject < type = "Voice", id = "SI", contents = "< \MusicSI >" >`
-}
-function FindLyNew(Source: String; LyObjects: TLyObjectList): TLyObjectList;
-var
-  SearchIndex: Integer;
-  SearchStr: String;
-  ThisType, ThisID, ThisContents: String;
-  Outline: TIndexPair;
-begin
-  assert(LyObjects <> nil);
-  Outline := TIndexPair.Create;
-  try
-    SearchIndex := 0;
-    SearchStr := Source;
-    while (Length(SearchStr) > 0) and (SearchIndex <> -1) do
-    begin
-      SearchIndex := SearchStr.IndexOf('\new ');
-      if SearchIndex = -1 then break;
-      
-      DebugLn('Found a \new expression at line ' + IntToStr(SearchIndex));
-     
-      { Find Type: `\new Voice ...` => `Voice` }
-      SearchStr := SearchStr.Substring(SearchIndex);
-      ThisType := ExtractWord(2, SearchStr, StdWordDelims);
-      SearchStr := StringDropBefore(SearchStr, ThisType);
-   
-      { Find ID: `\new Voice = "Soprano"` => 'Soprano' }
-      if SearchStr.StartsWith(' = "') then
-      begin 
-        SearchStr := StringDropBefore(SearchStr, ' = "');
-        ThisID := SearchStr.Substring(0, SearchStr.IndexOf('"'));
-        SearchStr := StringDropBefore(SearchStr, ThisID + '"');
-      end
-      else
-        ThisID := '';
-   
-      { Find Contents: Either an expression within `<<...>>` (here meaning
-      actually angle brackets), or an expression within curly braces and everything preceding it:
-        e.g., `\new Lyrics \lyricsto "Alto" < \LyricsA >`
-          => `\lyricsto "Alto" < \LyricsA >` (here meaning curly braces)
-      }
-      if SearchStr.TrimLeft.StartsWith('<<') then
-      begin
-        Outline := BalancedDelimiterSubstring(SearchStr, '<', '>', Outline);
-        ThisContents := CopyStringRange(SearchStr, Outline, rkInclusive);
-        { look for \new objects within the <<...>> range }
-      end
-      else
-      begin
-        ThisContents := SearchStr.Substring(0, SearchStr.IndexOf('{'));
-        ThisContents := ThisContents + CopyBraceExpr(SearchStr);
-      end;
-
-      LyObjects.Add(TLyObject.Create(ThisType, ThisID, ThisContents));
-      DebugLn('Added object to list: ');
-      
-      { Skip past '\new ' to look for next}
-      Source := Source.Substring(SearchIndex + 5); 
-    end;
-  finally
-    FreeAndNil(Outline);
-    result := LyObjects;
+    result := Tree;
   end;
 end;
 
@@ -1117,7 +1038,7 @@ begin
   OutputText    := TStringList.Create;
   HeaderValues  := THeader.Create;
   CommandArg    := TCommandArg.Create;
-  LyObjectTree  := TLyObject.Create; { START - integrate new tree approach }
+  LyObjectTree  := TLyObject.Create;
 
   try
     if ParamCount <> 1 then
@@ -1151,13 +1072,27 @@ begin
     begin
       WriteLn(stderr, 'Did not find a valid \score expression');
       exit;
-    end;
+    end
+    else
+      DebugLn('Found score expression: ' + ScoreInput);
+    
+   LyObjectTree.FChild := FindLyNewTree(ScoreInput, LyObjectTree);
+   { START memory leak! }
+    
+    LyObjectTree := 
+      TLyObject.Create('ChoirStaff', 'ChorusI', '',
+        TLyObject.Create('Staff', '', '', 
+          TLyObject.Create('Voice', 'Soprano', '{ g''4 a''4 }', 
+            nil, 
+            TLyObject.Create('Voice', 'Alto', '{ e''4 f''4 }', nil, nil)), 
+          TLyObject.Create('Staff', '', '',
+            TLyObject.Create('Voice', 'Tenor', '{ c''4 c''4 }', nil, nil),
+            nil)),
+        nil);
 
-    DebugLn('Found score expression: ' + ScoreInput);
-    NewObjects := FindLyNew(ScoreInput, NewObjects);
-    DebugLn('Found ' + IntToStr(NewObjects.Count) + ' \new objects');
-
-    MEI := OutputText.Text + ListContents(NewObjects);
+    MEI := '<mei>' + LineEnding 
+            + OutputText.Text + LyObjectTree.ToString
+            + '</mei>';
 
     { output }
     WriteLn(MEI);
