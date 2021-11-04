@@ -853,41 +853,173 @@ begin
   end;
 end;
 
+
 { Types for Lilypond `\new XX < YY >` expressions }
 type
   TLyObject = class
   private
     var
       FType, FID, FContents: String;
+      FChild, FSibling: TLyObject;
   public
-    constructor Create(TypeStr, IDStr, ContentsStr: String); 
-    procedure Clear;
-    function ToString: String; override;
-  end;
+    constructor Create(TypeStr, IDStr, ContentsStr: String,
+      Child, Sibling: TLyObject);
+    constructor Create(TypeStr, IDStr, ContentsStr: String);
+    destructor Destroy;
+    procedure AddChild(NewObject: TLyObject);
+    procedure AddSibling(NewObject: TLyObject);
+    procedure AddBranches(Child, Sibling: TLyObject);
+    function ToStringThis: String;
+    function TLyObject.ToStringTree(Parent: TLyObject; Generation: Integer):
+      String; 
+    end;
+
+constructor TLyObject.Create(TypeStr, IDStr, ContentsStr: String,
+  Child, Sibling: TLyObject);
+begin
+  FType     := TypeStr;
+  FID       := IDStr;
+  FContents := ContentsStr;
+  FChild    := Child;
+  FSibling  := Sibling;
+end;
 
 constructor TLyObject.Create(TypeStr, IDStr, ContentsStr: String);
 begin
-  FType := TypeStr;
-  FID := IDStr;
+  FType     := TypeStr;
+  FID       := IDStr;
   FContents := ContentsStr;
+  FChild    := nil;
+  FSibling  := nil;
 end;
 
-procedure TLyObject.Clear;
+procedure TLyObject.Destroy;
+  procedure FreeTree(Tree: TLyObject);
+  begin
+    if Tree <> nil then
+    begin
+      FreeLyObjectTree(Tree.FChild);
+      FreeLyObjectTree(Tree.FSibling);
+      FreeAndNil(Tree);
+    end;
+  end;
 begin
-  FType := '';
-  FID := '';
-  FContents := '';
+  FreeTree(Self);
 end;
 
-function TLyObject.ToString: String;
+procedure TLyObject.AddChild(NewObject: TLyObject);
 begin
-  result := 'LYOBJECT: ' + LineEnding 
-            + '    TYPE: ' + FType + LineEnding
-            + '    ID: ' + FID + LineEnding
-            + '    CONTENTS: ' + FContents + LineEnding;
+  FChild := NewObject;
+end;
+
+procedure TLyObject.AddSibling(NewObject: TLyObject);
+begin
+  FSibling := NewObject;
+end;
+
+procedure TLyObject.AddBranches(Child, Sibling: TLyObject);
+begin
+  Self.AddChild(Child);
+  Self.AddSibling(Sibling);
+end;
+
+function TLyObject.ToString: String; 
+  function ParentToString(Parent: TLyObject): String;
+  begin
+    result := 'LYOBJECT: ' + LineEnding 
+              + '    TYPE: ' + Parent.FType + LineEnding
+              + '    ID: ' + Parent.FID + LineEnding
+              + '    CONTENTS: ' + Parent.FContents + LineEnding;
+  end;
+
+  function TreeToString(Parent: TLyObject; Generation: Integer): String;
+  var
+    Indent: String;
+  begin
+    if Parent <> nil then
+    begin
+      Indent := StringOfChar(' ', 2 * Generation);
+      result := Indent + ParentToString(Parent) + LineEnding
+                + TreeToString(Parent.FChild, Generation + 1)
+                + TreeToString(Parent.FSibling, Generation);
+    end;
+  end;
+begin
+  TreeToString(Self, 0)
+end;
+
+{ `FindLyNewTree`
+
+  Find the argument of a Lilypond `\new` command 
+  (e.g., `\new Voice = "SI" < \MusicSI >`
+    => `LyObject < type = "Voice", id = "SI", contents = "< \MusicSI >" >`
+}
+function FindLyNewTree(Source: String; Tree: TLyObject): TLyObject;
+var
+  SearchIndex: Integer;
+  SearchStr: String;
+  ThisType, ThisID, ThisContents: String;
+  Outline: TIndexPair;
+begin
+  Outline := TIndexPair.Create;
+  try
+    SearchIndex := 0;
+    SearchStr := Source;
+    while (Length(SearchStr) > 0) and (SearchIndex <> -1) do
+    begin
+      SearchIndex := SearchStr.IndexOf('\new ');
+      if SearchIndex = -1 then break;
+      
+      DebugLn('Found a \new expression at line ' + IntToStr(SearchIndex));
+     
+      { Find Type: `\new Voice ...` => `Voice` }
+      SearchStr := SearchStr.Substring(SearchIndex);
+      ThisType := ExtractWord(2, SearchStr, StdWordDelims);
+      SearchStr := StringDropBefore(SearchStr, ThisType);
+   
+      { Find ID: `\new Voice = "Soprano"` => 'Soprano' }
+      if SearchStr.StartsWith(' = "') then
+      begin 
+        SearchStr := StringDropBefore(SearchStr, ' = "');
+        ThisID := SearchStr.Substring(0, SearchStr.IndexOf('"'));
+        SearchStr := StringDropBefore(SearchStr, ThisID + '"');
+      end
+      else
+        ThisID := '';
+   
+      { Find Contents: Either an expression within `<<...>>` (here meaning
+      actually angle brackets), or an expression within curly braces and everything preceding it:
+        e.g., `\new Lyrics \lyricsto "Alto" < \LyricsA >`
+          => `\lyricsto "Alto" < \LyricsA >` (here meaning curly braces)
+      }
+      if SearchStr.TrimLeft.StartsWith('<<') then
+      begin
+        Outline := BalancedDelimiterSubstring(SearchStr, '<', '>', Outline);
+        ThisContents := CopyStringRange(SearchStr, Outline, rkInclusive);
+        { look for \new objects within the <<...>> range }
+        { add them as children to the tree }
+      end
+      else
+      begin
+        ThisContents := SearchStr.Substring(0, SearchStr.IndexOf('{'));
+        ThisContents := ThisContents + CopyBraceExpr(SearchStr);
+      end;
+
+      Tree.AddSibling(TLyObject.Create(ThisType, ThisID, ThisContents));
+      DebugLn('Added object to list: ');
+      
+      { Skip past '\new ' to look for next}
+      Source := Source.Substring(SearchIndex + 5); 
+    end;
+  finally
+    FreeAndNil(Outline);
+    result := LyObject;
+  end;
 end;
 
 
+
+{ LIST of `TLyObject` }
 type
   TLyObjectList = specialize TObjectList<TLyObject>;
 
@@ -979,13 +1111,13 @@ var
   ScoreInput, MEI: String;
   HeaderValues: THeader;
   CommandArg: TCommandArg;
-  NewObjects: TLyObjectList;
+  LyObjectTree: TLyObject;
 begin
   InputText     := TStringList.Create;
   OutputText    := TStringList.Create;
   HeaderValues  := THeader.Create;
   CommandArg    := TCommandArg.Create;
-  NewObjects    := TLyObjectList.Create;
+  LyObjectTree  := TLyObject.Create; { START - integrate new tree approach }
 
   try
     if ParamCount <> 1 then
@@ -1031,7 +1163,7 @@ begin
     WriteLn(MEI);
 
   finally
-    FreeAndNil(NewObjects);
+    FreeAndNil(LyObjectTree);
     FreeAndNil(CommandArg);
     FreeAndNil(HeaderValues);
     FreeAndNil(OutputText);
