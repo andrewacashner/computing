@@ -29,3 +29,15 @@ LyricsS = \lyricmode {
   >>
 }
 
+% <score>
+%     <choirStaff>
+%         <staff>
+%             <voice></voice>
+%             <lyrics></lyrics>
+%         </staff>
+%         <staff>
+%             <voice></voice>
+%             <lyrics</lyrics>
+%         </staff>
+%     </choirStaff>
+% </score>

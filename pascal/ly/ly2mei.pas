@@ -12,7 +12,9 @@
   - 2021/10/13: Header conversion program complete
   - 2021/10/18: Macro-substitution functions revised and integrated
 }
-{$mode objfpc}{$H+}{$J-}{$ASSERTIONS+}
+{$mode objfpc}{$H+}{$J-}
+{$ASSERTIONS+}
+{$OPTIMIZATION tailrec}
 
 program ly2mei(input, output, stderr);
 
@@ -776,7 +778,7 @@ begin
   assert(MEI <> nil);
   MEI.Clear;
 
-  MEI.Add('<meiHead xmlns="http://www.music-encoding.org/ns/mei">');
+  MEI.Add('<meiHead>');
   MEI.Add('  <fileDesc>');
   MEI.Add('    <titleStmt>');
   MEI.Add('      <title type="main">' + FTitle + '</title>');
@@ -863,18 +865,31 @@ type
       FChild, FSibling: TLyObject;
   public
     constructor Create();
+    constructor Create(TypeStr, IDStr, ContentsStr: String);
     constructor Create(TypeStr, IDStr, ContentsStr: String; 
       Child, Sibling: TLyObject);
     destructor Destroy; override;
     function AddChild(NewObject: TLyObject): TLyObject;
     function AddSibling(NewObject: TLyObject): TLyObject;
-    function AddBranches(Child, Sibling: TLyObject): TLyObject;
+    function LastChild: TLyObject;
+    function LastSibling: TLyObject;
     function ToString: String; override;
   end;
 
 constructor TLyObject.Create();
 begin
   inherited Create;
+end;
+
+constructor TLyObject.Create(TypeStr, IDStr, ContentsStr: String);
+begin
+  inherited Create;
+  FType     := TypeStr;
+  FID       := IDStr;
+  FContents := ContentsStr;
+  FChild    := nil;
+  FSibling  := nil;
+
 end;
 
 constructor TLyObject.Create(TypeStr, IDStr, ContentsStr: String;
@@ -909,11 +924,21 @@ begin
   result := Self;
 end;
 
-function TLyObject.AddBranches(Child, Sibling: TLyObject): TLyObject;
+function TLyObject.LastChild: TLyObject;
 begin
-  Self.AddChild(Child);
-  Self.AddSibling(Sibling);
-  result := Self;
+  if FChild = nil then
+    result := Self
+  else
+    result := FChild.LastChild;
+end;
+
+
+function TLyObject.LastSibling: TLyObject;
+begin
+  if FSibling = nil then
+    result := Self
+  else
+    result := FSibling.LastSibling;
 end;
 
 function TLyObject.ToString: String; 
@@ -960,13 +985,18 @@ var
   SearchStr: String;
   ThisType, ThisID, ThisContents: String;
   Outline: TIndexPair;
+  EntryNestLevel, CurrentNestLevel: Integer;
+  InsideAngleBrackets: Boolean;
 begin
   Outline := TIndexPair.Create;
   try
     SearchIndex := 0;
     SearchStr := Source;
+    EntryNestLevel := 0;
+    InsideAngleBrackets := False;
     while (Length(SearchStr) > 0) and (SearchIndex <> -1) do
     begin
+      CurrentNestLevel := EntryNestLevel;
       SearchIndex := SearchStr.IndexOf('\new ');
       if SearchIndex = -1 then break;
       
@@ -994,32 +1024,38 @@ begin
       }
       if SearchStr.TrimLeft.StartsWith('<<') then
       begin
+        InsideAngleBrackets := True;
+        Inc(CurrentNestLevel);
         Outline := BalancedDelimiterSubstring(SearchStr, '<', '>', Outline);
         ThisContents := CopyStringRange(SearchStr, Outline, rkInclusive);
         { look for \new objects within the <<...>> range }
         { add them as children to the tree }
-        if Tree = nil then
-          Tree := TLyObject.Create(ThisType, ThisID, '', nil, nil)
-//            FindLyNewTree(ThisContents, nil), nil)
-        else
-          Tree := Tree.AddChild(TLyObject.Create(ThisType, ThisID, '', nil, nil));
-//            FindLyNewTree(ThisContents, nil), nil));
       end
       else
       begin
+        InsideAngleBrackets := False;
         ThisContents := SearchStr.Substring(0, SearchStr.IndexOf('{'));
         ThisContents := ThisContents + CopyBraceExpr(SearchStr);
       end;
 
       if Tree = nil then
-        Tree := TLyObject.Create(ThisType, ThisID, ThisContents, nil, nil)
+        Tree := TLyObject.Create(ThisType, ThisID, '')
       else
-        Tree := Tree.AddSibling(TLyObject.Create(ThisType, ThisID, ThisContents, nil, nil));
-      DebugLn('Added object to list: ');
-      
+      begin
+        if CurrentNestLevel > EntryNestLevel then
+        begin
+          Tree.LastChild.FChild := TLyObject.Create(ThisType, ThisID, '');
+          Dec(CurrentNestLevel);
+        end
+        else
+          Tree.LastSibling.FSibling := TLyObject.Create(ThisType, ThisID, '');
+      end;
+      if InsideAngleBrackets then
+        Tree.LastChild.FChild := FindLyNewTree(ThisContents, nil);
+
       { Skip past '\new ' to look for next}
       Source := Source.Substring(SearchIndex + 5); 
-    end;
+      end; 
   finally
     FreeAndNil(Outline);
     result := Tree;
@@ -1027,9 +1063,12 @@ begin
 end;
 
 { # MAIN }
+const
+  XMLversion = '<?xml version="1.0" encoding="UTF-8"?>' + LineEnding;
+  MeiNamespace = 'xmlns="http://www.music-encoding.org/ns/mei"';
 var
   InputText, OutputText: TStringList;
-  ScoreInput, MEI: String;
+  ScoreInput, MEIheader, MEIscore, MEI: String;
   HeaderValues: THeader;
   CommandArg: TCommandArg;
   LyObjectTree: TLyObject;
@@ -1038,7 +1077,7 @@ begin
   OutputText    := TStringList.Create;
   HeaderValues  := THeader.Create;
   CommandArg    := TCommandArg.Create;
-  LyObjectTree  := TLyObject.Create;
+  LyObjectTree  := nil;
 
   try
     if ParamCount <> 1 then
@@ -1064,7 +1103,7 @@ begin
       exit;
     end
     else
-      OutputText := HeaderValues.ToMei(OutputText);
+      MEIheader := HeaderValues.ToMei(OutputText).Text;
     
     { process score, convert to MEI }
     ScoreInput := LyArg(InputText.Text, '\score');
@@ -1075,26 +1114,18 @@ begin
     end
     else
       DebugLn('Found score expression: ' + ScoreInput);
-    
-   LyObjectTree.FChild := FindLyNewTree(ScoreInput, LyObjectTree);
-   { START memory leak! }
-    
-    LyObjectTree := 
-      TLyObject.Create('ChoirStaff', 'ChorusI', '',
-        TLyObject.Create('Staff', '', '', 
-          TLyObject.Create('Voice', 'Soprano', '{ g''4 a''4 }', 
-            nil, 
-            TLyObject.Create('Voice', 'Alto', '{ e''4 f''4 }', nil, nil)), 
-          TLyObject.Create('Staff', '', '',
-            TLyObject.Create('Voice', 'Tenor', '{ c''4 c''4 }', nil, nil),
-            nil)),
-        nil);
 
-    MEI := '<mei>' + LineEnding 
-            + OutputText.Text + LyObjectTree.ToString
-            + '</mei>';
+    LyObjectTree := FindLyNewTree(ScoreInput, LyObjectTree);
+
+    if LyObjectTree = nil then
+      MEIscore := '<score></score>' + LineEnding
+    else
+      MEIscore := LyObjectTree.ToString;
 
     { output }
+    MEI := XMLversion + '<mei ' + MEINamespace + '>' + LineEnding 
+            + MEIheader + MEIscore
+            + '</mei>';
     WriteLn(MEI);
 
   finally
