@@ -1023,7 +1023,7 @@ begin
     if SearchStr.TrimLeft.StartsWith('<<') then
     begin
       { Search within group for nested `\new` expressions and save them as
-      children; then move on after this group }
+      children; then move on after this group. Omit content string. }
       Outline := BalancedDelimiterSubstring(SearchStr, '<', '>', Outline);
       ThisContents := CopyStringRange(SearchStr, Outline, rkInclusive);
       if Tree = nil then
@@ -1040,9 +1040,9 @@ begin
       ThisContents := SearchStr.Substring(0, SearchStr.IndexOf('{'));
       ThisContents := ThisContents + CopyBraceExpr(SearchStr);
       if Tree = nil then
-        Tree := TLyObject.Create(ThisType, ThisID, '')
+        Tree := TLyObject.Create(ThisType, ThisID, ThisContents)
       else
-        Tree.LastSibling.FSibling := TLyObject.Create(ThisType, ThisID, '');
+        Tree.LastSibling.FSibling := TLyObject.Create(ThisType, ThisID, ThisContents);
       
       Source := Source.Substring(SearchIndex + 1); 
     end;
