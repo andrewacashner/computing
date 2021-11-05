@@ -982,80 +982,73 @@ end;
 function FindLyNewTree(Source: String; Tree: TLyObject): TLyObject;
 var
   SearchIndex: Integer;
-  SearchStr: String;
-  ThisType, ThisID, ThisContents: String;
+  SearchStr, ThisType, ThisID, ThisContents: String;
   Outline: TIndexPair;
-  EntryNestLevel, CurrentNestLevel: Integer;
-  InsideAngleBrackets: Boolean;
 begin
   Outline := TIndexPair.Create;
+  SearchStr := Source;
   try
     SearchIndex := 0;
-    SearchStr := Source;
-    EntryNestLevel := 0;
-    InsideAngleBrackets := False;
-    while (Length(SearchStr) > 0) and (SearchIndex <> -1) do
+    if (Length(Source) = 0) then
     begin
-      CurrentNestLevel := EntryNestLevel;
-      SearchIndex := SearchStr.IndexOf('\new ');
-      if SearchIndex = -1 then break;
-      
-      DebugLn('Found a \new expression at line ' + IntToStr(SearchIndex));
+      result := Tree;
+      exit;
+    end;
+   
+    SearchIndex := SearchStr.IndexOf('\new ');
+    if SearchIndex = -1 then 
+    begin
+      result := Tree;
+      exit;
+    end;
      
-      { Find Type: `\new Voice ...` => `Voice` }
-      SearchStr := SearchStr.Substring(SearchIndex);
-      ThisType := ExtractWord(2, SearchStr, StdWordDelims);
-      SearchStr := StringDropBefore(SearchStr, ThisType);
-   
-      { Find ID: `\new Voice = "Soprano"` => 'Soprano' }
-      if SearchStr.StartsWith(' = "') then
-      begin 
-        SearchStr := StringDropBefore(SearchStr, ' = "');
-        ThisID := SearchStr.Substring(0, SearchStr.IndexOf('"'));
-        SearchStr := StringDropBefore(SearchStr, ThisID + '"');
-      end
-      else
-        ThisID := '';
-   
-      { Find Contents: Either an expression within `<<...>>` (here meaning
-      actually angle brackets), or an expression within curly braces and everything preceding it:
-        e.g., `\new Lyrics \lyricsto "Alto" < \LyricsA >`
-          => `\lyricsto "Alto" < \LyricsA >` (here meaning curly braces)
-      }
-      if SearchStr.TrimLeft.StartsWith('<<') then
-      begin
-        InsideAngleBrackets := True;
-        Inc(CurrentNestLevel);
-        Outline := BalancedDelimiterSubstring(SearchStr, '<', '>', Outline);
-        ThisContents := CopyStringRange(SearchStr, Outline, rkInclusive);
-        { look for \new objects within the <<...>> range }
-        { add them as children to the tree }
-      end
-      else
-      begin
-        InsideAngleBrackets := False;
-        ThisContents := SearchStr.Substring(0, SearchStr.IndexOf('{'));
-        ThisContents := ThisContents + CopyBraceExpr(SearchStr);
-      end;
-
+    { Find Type: `\new Voice ...` => `Voice` }
+    SearchStr := SearchStr.Substring(SearchIndex);
+    ThisType := ExtractWord(2, SearchStr, StdWordDelims);
+    SearchStr := StringDropBefore(SearchStr, ThisType);
+ 
+    { Find ID: `\new Voice = "Soprano"` => 'Soprano' }
+    if SearchStr.StartsWith(' = "') then
+    begin 
+      SearchStr := StringDropBefore(SearchStr, ' = "');
+      ThisID := SearchStr.Substring(0, SearchStr.IndexOf('"'));
+      SearchStr := StringDropBefore(SearchStr, ThisID + '"');
+    end
+    else
+      ThisID := '';
+ 
+    { Find Contents: Either an expression within double angle brackets or
+    one within curly braces. If angle brackets, recursively look for nested
+    `\new` expressions.  }
+    if SearchStr.TrimLeft.StartsWith('<<') then
+    begin
+      { Search within group for nested `\new` expressions and save them as
+      children; then move on after this group }
+      Outline := BalancedDelimiterSubstring(SearchStr, '<', '>', Outline);
+      ThisContents := CopyStringRange(SearchStr, Outline, rkInclusive);
       if Tree = nil then
         Tree := TLyObject.Create(ThisType, ThisID, '')
       else
-      begin
-        if CurrentNestLevel > EntryNestLevel then
-        begin
-          Tree.LastChild.FChild := TLyObject.Create(ThisType, ThisID, '');
-          Dec(CurrentNestLevel);
-        end
-        else
-          Tree.LastSibling.FSibling := TLyObject.Create(ThisType, ThisID, '');
-      end;
-      if InsideAngleBrackets then
-        Tree.LastChild.FChild := FindLyNewTree(ThisContents, nil);
-
-      { Skip past '\new ' to look for next}
-      Source := Source.Substring(SearchIndex + 5); 
-      end; 
+        Tree.LastChild.FChild := TLyObject.Create(ThisType, ThisID, '');
+    
+      Tree.LastChild.FChild := FindLyNewTree(ThisContents, nil);
+      Source := StringDropBefore(Source.Substring(SearchIndex), ThisContents);
+    end
+    else
+    begin
+      { Add this expression as a sibling, then move on to next }
+      ThisContents := SearchStr.Substring(0, SearchStr.IndexOf('{'));
+      ThisContents := ThisContents + CopyBraceExpr(SearchStr);
+      if Tree = nil then
+        Tree := TLyObject.Create(ThisType, ThisID, '')
+      else
+        Tree.LastSibling.FSibling := TLyObject.Create(ThisType, ThisID, '');
+      
+      Source := Source.Substring(SearchIndex + 1); 
+    end;
+  
+    { Look for the next sibling where you left off from the last search }
+    Tree.LastSibling.FSibling := FindLyNewTree(Source, nil);
   finally
     FreeAndNil(Outline);
     result := Tree;
