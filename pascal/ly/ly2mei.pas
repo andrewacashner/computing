@@ -62,6 +62,11 @@ begin
             and Source.EndsWith('"');
 end;
 
+function IndentStr(Degree: Integer = 1): String;
+begin
+  result := StringOfChar(' ', 2 * Degree);
+end;
+
 
 { # `TStringList` methods }
 
@@ -75,6 +80,27 @@ begin
   OutputList.StrictDelimiter := True;
   OutputList.DelimitedText := InputStr;
   result := OutputList;
+end;
+
+function XMLElementLines(InputLines, OutputLines: TStringList; Tag: String;
+  Attributes: String = ''): TStringList; 
+var
+  HeadTag: String;
+  ThisLine: String;
+begin
+  assert(InputLines <> nil);
+  assert(OutputLines <> nil);
+  if Attributes = '' then
+    HeadTag := Tag
+  else 
+    HeadTag := Tag + ' ' + Attributes;
+
+  OutputLines.Clear;
+  OutputLines.Add('<' + HeadTag + '>');
+  for ThisLine in InputLines do
+    OutputLines.Add(IndentStr + ThisLine);
+  OutputLines.Add('</' + Tag + '>');
+  result := OutputLines;
 end;
 
 { `ListToStringFromIndex`
@@ -219,23 +245,6 @@ begin
   end;
 end;
 
-{ `CutStringRange`
-
-  Inverse of `CopyStringRange`: Return a string with the portion between
-  the indices in a `TIndexPair` removed. 
-}
-function CutStringRange(Source: String; Outline: TIndexPair): String;
-begin
-  assert(Outline <> nil);
-  if not Outline.IsValid then
-    result := Source
-  else
-  begin
-    result := Source.Substring(0, Outline.FStart - 1) 
-              + Source.Substring(Outline.FEnd); 
-  end;
-end;
-
 { `BalancedDelimiterSubstring`
 
   In a string, mark the start and end indices of a single expression between
@@ -375,21 +384,16 @@ begin
     begin
       FCommand := Command;
       FStatus := skCommand;
-      DebugLn('Found command ' + FCommand);
 
       { find arg within delimiters }
       TestStr := TestStr.Substring(Length(FCommand));
-      DebugLn('After command ' + FCommand 
-        + ', Ready to test string starting: ' + TestStr.Substring(0, 30));
       if TestStr.TrimLeft.StartsWith(ArgStartDelim) then
       begin
-        DebugLn('Looking for command arg...');
         Outline := BalancedDelimiterSubstring(TestStr, ArgStartDelim,
                     ArgEndDelim, Outline); 
         if Outline.IsValid then
         begin
           FArg := CopyStringRange(TestStr, Outline, rkInclusive);
-          DebugLn('Found argument: ' + FArg);
           FStatus := skCommandArg;
         end;
       end;
@@ -485,13 +489,8 @@ begin
     end;
     HasMacros := False;
     for Macro in Dict do
-    begin
       if OutputStr.Contains(Macro.Key) then
-      begin
-        DebugLn('Source still contains macro key ' + Macro.Key );
         HasMacros := True;
-      end;
-    end;
   end;
   result := OutputStr;
 end;
@@ -541,7 +540,6 @@ begin
           continue;
         
         { Found key, mark start location }
-        DebugLn('Found possible macro: ' + Key + ' | ' + Value);
         Key := Key.Trim;
         CopyOutline.FEnd := InputStr.IndexOf(Key + ' ');
 
@@ -591,8 +589,6 @@ begin
           begin
             BufferStr := BufferStr + InputStr.Substring(CopyOutline.FStart,
               CopyOutline.Span);
-              DebugLn('Copying from index ' + IntToStr(CopyOutline.FStart) 
-              + ' to ' + IntToStr(CopyOutline.FEnd)); 
           end;
           CopyOutline.FStart := InputStr.IndexOf(Value) + Length(Value);
         end;
@@ -625,9 +621,7 @@ begin
   TempLines := TStringList.Create;
   try
     Macros := Macros.ExtractMacros(InputText, TempLines);
-    DebugLn('Macro dictionary: ' + LineEnding + Macros.ToString);
-
-    TempStr   := FindReplaceMacros(TempLines.Text, Macros);
+    TempStr := FindReplaceMacros(TempLines.Text, Macros);
     TempLines := RemoveBlankLines(Lines(TempStr, TempLines));
     InputText.Assign(TempLines);
   finally
@@ -636,8 +630,6 @@ begin
     result := InputText;
   end;
 end;
-
-
 
 
 { ## Parsing the header }
@@ -777,50 +769,61 @@ function THeader.ToMEI(MEI: TStringList): TStringList;
 begin
   assert(MEI <> nil);
   MEI.Clear;
+  if not Self.IsValid then
+  begin
+    MEI.Add('<meiHead>');
+    MEI.Add('</meiHead>');
+    result := MEI;
+    exit;
+  end;
 
   MEI.Add('<meiHead>');
-  MEI.Add('  <fileDesc>');
-  MEI.Add('    <titleStmt>');
-  MEI.Add('      <title type="main">' + FTitle + '</title>');
+  MEI.Add(IndentStr(1) + '<fileDesc>');
+  MEI.Add(IndentStr(2) + '<titleStmt>');
+  MEI.Add(IndentStr(3) + '<title type="main">' + FTitle + '</title>');
 
   if not FSubtitle.IsEmpty then
-    MEI.Add('      <title type="subtitle">' + FSubtitle + '</subtitle>');
+    MEI.Add(IndentStr(3) + '<title type="subtitle">' + FSubtitle + '</title>');
 
-  MEI.Add('      <respStmt>');
-  MEI.Add('        <composer>' + FComposer + ' ' + FDates + '</composer>');
+  MEI.Add(IndentStr(3) + '<respStmt>');
+
+  if not FDates.IsEmpty then
+    MEI.Add(IndentStr(4) + '<composer>' + FComposer + ' ' + FDates + '</composer>')
+  else
+    MEI.Add(IndentStr(4) + '<composer>' + FComposer + '</composer>');
 
   if not FPoet.IsEmpty then
-    MEI.Add('        <lyricist>' + FPoet + '</lyricist>');
+    MEI.Add(IndentStr(4) + '<lyricist>' + FPoet + '</lyricist>');
 
   if not FEditor.IsEmpty then
-    MEI.Add('        <editor>' + FEditor + '</editor>');
+    MEI.Add(IndentStr(4) + '<editor>' + FEditor + '</editor>');
 
-  MEI.Add('      </respStmt>');
-  MEI.Add('    </titleStmt>');
+  MEI.Add(IndentStr(3) + '</respStmt>');
+  MEI.Add(IndentStr(2) + '</titleStmt>');
   
   if not FEditor.IsEmpty then
   begin
-    MEI.Add('    <editionStmt>');
-    MEI.Add('      <respStmt><p>Edited by ' + FEditor + '</p></respStmt>');
-    MEI.Add('    </editionStmt>');
+    MEI.Add(IndentStr(2) + '<editionStmt>');
+    MEI.Add(IndentStr(3) + '<respStmt><p>Edited by ' + FEditor + '</p></respStmt>');
+    MEI.Add(IndentStr(2) + '</editionStmt>');
   end;
 
   if not FCopyright.IsEmpty then
   begin
-    MEI.Add('    <pubStmt>');
-    MEI.Add('      <availability><p>' + FCopyright + '</p></availability>');
-    MEI.Add('    </pubStmt>');
+    MEI.Add(IndentStr(2) + '<pubStmt>');
+    MEI.Add(IndentStr(3) + '<availability><p>' + FCopyright + '</p></availability>');
+    MEI.Add(IndentStr(2) + '</pubStmt>');
   end;
 
-  MEI.Add('  </fileDesc>');
-  MEI.Add('  <encodingDesc>');
-  MEI.Add('    <appInfo>');
-  MEI.Add('      <application><name>' + FProgramName + '</name></application>');
-  MEI.Add('    </appInfo>');
-  MEI.Add('  </encodingDesc>');
+  MEI.Add(IndentStr(1) + '</fileDesc>');
+  MEI.Add(IndentStr(1) + '<encodingDesc>');
+  MEI.Add(IndentStr(2) + '<appInfo>');
+  MEI.Add(IndentStr(3) + '<application><name>' + FProgramName + '</name></application>');
+  MEI.Add(IndentStr(2) + '</appInfo>');
+  MEI.Add(IndentStr(1) + '</encodingDesc>');
   
   if not FSource.IsEmpty then
-    MEI.Add('  <sourceDesc><source>' + FSource + '</source></sourceDesc>');
+    MEI.Add(IndentStr(1) + '<sourceDesc><source>' + FSource + '</source></sourceDesc>');
 
   MEI.Add('</meiHead>'); 
 
@@ -869,8 +872,6 @@ type
     constructor Create(TypeStr, IDStr, ContentsStr: String; 
       Child, Sibling: TLyObject);
     destructor Destroy; override;
-    function AddChild(NewObject: TLyObject): TLyObject;
-    function AddSibling(NewObject: TLyObject): TLyObject;
     function LastChild: TLyObject;
     function LastSibling: TLyObject;
     function ToString: String; override;
@@ -912,18 +913,6 @@ begin
   inherited Destroy;
 end;
 
-function TLyObject.AddChild(NewObject: TLyObject): TLyObject;
-begin
-  FChild := NewObject;
-  result := Self;
-end;
-
-function TLyObject.AddSibling(NewObject: TLyObject): TLyObject;
-begin
-  FSibling := NewObject;
-  result := Self;
-end;
-
 function TLyObject.LastChild: TLyObject;
 begin
   if FChild = nil then
@@ -949,21 +938,21 @@ function TLyObject.ToString: String;
   begin
     if Parent <> nil then
     begin
-      Indent := StringOfChar(' ', 2 * Generation);
+      Indent := IndentStr(Generation);
 
       if Parent.FID <> '' then 
         IDStr := '" id="' + Parent.FID;
       
-      ParentStr := 'type="' + Parent.FType + IDStr + '">' + Parent.FContents;
+      ParentStr := '<lyobject type="' + Parent.FType + IDStr + '">' + Parent.FContents;
 
       if Parent.FChild <> nil then
         ChildStr := LineEnding + TreeToString(Parent.FChild, Generation + 1) + Indent;
 
       SibStr := LineEnding;
       if Parent.FSibling <> nil then 
-        SibStr := SibStr + TreeToString(Parent.FSibling, Generation);
+        SibStr := LineEnding + TreeToString(Parent.FSibling, Generation);
 
-      result := Indent + '<lyobject ' + ParentStr + ChildStr + '</lyobject>' + SibStr;
+      result := Indent + ParentStr + ChildStr + '</lyobject>' + SibStr;
     end;
   end;
 begin
@@ -1039,6 +1028,7 @@ begin
       { Add this expression as a sibling, then move on to next }
       ThisContents := SearchStr.Substring(0, SearchStr.IndexOf('{'));
       ThisContents := ThisContents + CopyBraceExpr(SearchStr);
+      ThisContents := ThisContents.Trim;
       if Tree = nil then
         Tree := TLyObject.Create(ThisType, ThisID, ThisContents)
       else
@@ -1057,20 +1047,23 @@ end;
 
 { # MAIN }
 const
-  XMLversion = '<?xml version="1.0" encoding="UTF-8"?>' + LineEnding;
+  XMLversion = '<?xml version="1.0" encoding="UTF-8"?>';
   MeiNamespace = 'xmlns="http://www.music-encoding.org/ns/mei"';
 var
-  InputText, OutputText: TStringList;
-  ScoreInput, MEIheader, MEIscore, MEI: String;
+  InputText, TempText, OutputText, MEIHeaderLines, MEIScoreLines: TStringList;
+  ScoreInput: String;
   HeaderValues: THeader;
   CommandArg: TCommandArg;
   LyObjectTree: TLyObject;
 begin
-  InputText     := TStringList.Create;
-  OutputText    := TStringList.Create;
-  HeaderValues  := THeader.Create;
-  CommandArg    := TCommandArg.Create;
-  LyObjectTree  := nil;
+  InputText      := TStringList.Create;
+  TempText       := TStringList.Create;
+  OutputText     := TStringList.Create;
+  MEIHeaderLines := TStringList.Create;
+  MEIScoreLines  := TStringList.Create;
+  HeaderValues   := THeader.Create;
+  CommandArg     := TCommandArg.Create;
+  LyObjectTree   := nil;
 
   try
     if ParamCount <> 1 then
@@ -1081,50 +1074,43 @@ begin
     else
       InputText.LoadFromFile(ParamStr(1));
 
+    { process macros: find and cut defs, expand macro commands }
     InputText := RemoveComments(InputText);
     InputText := RemoveBlankLines(InputText);
-
-    { process macros: find and cut defs, expand macro commands }
     InputText := ExpandMacros(InputText);
-    DebugLn('Input after macro expansion: ' + InputText.Text);
 
     { process header, convert to MEI }
     HeaderValues := ParseHeader(InputText, HeaderValues);
-    if not HeaderValues.IsValid then
-    begin
-      WriteLn(stderr, 'Did not find a valid header definition');
-      exit;
-    end
-    else
-      MEIheader := HeaderValues.ToMei(OutputText).Text;
-    
+    MEIHeaderLines := HeaderValues.ToMEI(MEIHeaderLines);
+
     { process score, convert to MEI }
     ScoreInput := LyArg(InputText.Text, '\score');
-    if ScoreInput.IsEmpty then
+    OutputText.Clear;
+    if not ScoreInput.IsEmpty then
     begin
-      WriteLn(stderr, 'Did not find a valid \score expression');
-      exit;
-    end
-    else
-      DebugLn('Found score expression: ' + ScoreInput);
-
-    LyObjectTree := FindLyNewTree(ScoreInput, LyObjectTree);
-
-    if LyObjectTree = nil then
-      MEIscore := '<score></score>' + LineEnding
-    else
-      MEIscore := LyObjectTree.ToString;
+      LyObjectTree := FindLyNewTree(ScoreInput, LyObjectTree);
+      if LyObjectTree <> nil then
+        TempText := Lines(LyObjectTree.ToString, TempText);
+    end;
+    MEIScoreLines := XMLElementLines(TempText, MEIScoreLines, 'score');
 
     { output }
-    MEI := XMLversion + '<mei ' + MEINamespace + '>' + LineEnding 
-            + MEIheader + MEIscore
-            + '</mei>';
-    WriteLn(MEI);
+    TempText.Clear;
+    TempText.Assign(MEIHeaderLines);
+    TempText.AddStrings(MEIScoreLines);
+
+    OutputText := XMLElementLines(TempText, OutputText, 'mei', MEINamespace);
+    OutputText.Insert(0, XMLversion);
+
+    WriteLn(OutputText.Text);
 
   finally
     FreeAndNil(LyObjectTree);
     FreeAndNil(CommandArg);
     FreeAndNil(HeaderValues);
+    FreeAndNil(MEIHeaderLines);
+    FreeAndNil(MEIScoreLines);
+    FreeAndNil(TempText);
     FreeAndNil(OutputText);
     FreeAndNil(InputText);
   end;
