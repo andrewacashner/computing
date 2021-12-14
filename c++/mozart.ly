@@ -2,8 +2,15 @@
 
 % Mozart Clarinet Quintet
 \header {
-  composer = "Wolfgang Amadé Mozart"
-  title = "Quintet for Clarinet and Strings in A Major"
+  title = "Missa da Requiem"
+  composer = \markup { 
+    \column {
+      \line { "Wolfgang" \italic "Amadé" }
+      \line { "Mozart" }
+      "(1756-1791)"
+    }
+  }
+  poet = "Roman Catholic Liturgy"
 }
 
 MusicViolinI = {

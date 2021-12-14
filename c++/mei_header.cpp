@@ -11,10 +11,14 @@
 #include <sstream>
 #include <string>
 #include <map>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
 #include <mei/mei.h>
 #include <mei/header.h>
 #include <mei/shared.h>
 #include <mei/xmlexport.h>
+#pragma clang diagnostic pop
 
 /* Read the contents of a file into a string. */
 std::string file_to_string(std::string filename) {
@@ -25,72 +29,145 @@ std::string file_to_string(std::string filename) {
         file_str << infile.rdbuf();
         output_str = file_str.str();
     }
-    return(output_str);
+    return output_str;
 }
+
+/* TRIM WHITESPACE */
+const std::string kWhitespace = " \r\n\t\f\v";
+
+/* Trim from left side of string */
+std::string trim_left(std::string source) {
+    std::string output_str = source;
+    size_t end_index = source.find_first_not_of(kWhitespace);
+    if (end_index != std::string::npos) {
+        output_str = source.erase(0, end_index);
+    }
+    return output_str;
+}
+
+/* Trim from right side of string */
+std::string trim_right(std::string source) {
+    std::string output_str = source;
+    size_t start_index = source.find_last_not_of(kWhitespace);
+    if (start_index != std::string::npos) {
+        output_str = source.erase(start_index + 1);
+    } else {
+        output_str = "";
+    }
+    return output_str;
+}
+
+/* Trim whitespace from both ends of a string. */
+std::string trim(std::string source) {
+    return (trim_right(trim_left(source)));
+}
+
+/* EXTRACT PORTIONS OF STRINGS */
 
 /* Copy the portion of a string within balanced delimiters such as curly
  * brackets, including any nested delimited strings. Delimiters are included
  * in the output string. */
-std::string balanced_delimiter_string(std::string source,
+std::string balanced_delimiter_substring(std::string source,
         char start_delim, char end_delim) {
     
     std::string output_str = "";
-    int start_index = source.find(start_delim);
-    int expr_length;
-    bool found = false;
+    size_t start_index = source.find(start_delim);
+    size_t end_index, expr_length;
 
     if (start_index != std::string::npos) {
         int brace_level = 0;
-        for (int i = start_index; (i < source.length()) && !found; ++i) {
-            if (source[i] == start_delim) {
+        size_t end_index = start_index;
+        for (auto &c : source) {
+            if (c == start_delim) {
                 ++brace_level;
-            } else if (source[i] == end_delim) {
+            } else if (c == end_delim) {
                 --brace_level;
                 if (brace_level == 0) {
-                    expr_length = i - start_index + 1;
-                    found = true;
+                    size_t expr_length = end_index - start_index + 1;
+                    output_str = source.substr(start_index, expr_length);
+                    break;
                 }
             }
-        }
-        if (found) {
-            output_str = source.substr(start_index, expr_length);
+            ++end_index;
         }
     }
-    return(output_str);
+    return output_str;
+}
+
+/* Find substring delimited by curly braces. */
+std::string brace_delimited_substring(std::string source) {
+    return (balanced_delimiter_substring(source, '{', '}'));
+}
+
+/* Find the position starting after the given substring */
+size_t find_first_after_substring(std::string source, std::string substring) {
+    size_t index = source.find(substring);
+    if (index != std::string::npos) {
+        index += substring.length();
+    }
+    return index;
+}
+
+/* Given a Lilypond command (e.g., \markup {}) extract its
+ * curly-brace-delimited argument. */
+std::string ly_brace_argument(std::string source, std::string command) {
+    std::string arg = "";
+    size_t start_index = find_first_after_substring(source, command);
+    if (start_index != std::string::npos) {
+        arg = brace_delimited_substring(
+                source.substr(start_index, std::string::npos));
+    }
+    return arg;
+}
+
+std::string drop_before(std::string source, std::string prefix) {
+    std::string output_str = source;
+    size_t index = find_first_after_substring(source, prefix);
+    if (index != std::string::npos) {
+        output_str = source.erase(0, index);
+    }
+    return output_str;
+}
+
+std::string drop_after(std::string source, std::string suffix) {
+    std::string output_str = source;
+    size_t index = source.find(suffix);
+    if (index != std::string::npos) {
+        output_str = source.erase(index);
+    }
+    return output_str;
 }
 
 /* Copy the portion of a string between quotation marks ('"'). */
-std::string copy_quoted_string(std::string source) {
+std::string quoted_substring(std::string source) {
     std::string output_str = "";
-    int start_index = source.find('"');
-    if (start_index != std::string::npos) {
-        int end_index = source.find('"', start_index + 1);
-        if (end_index != std::string::npos) {
-            output_str = source.substr(start_index + 1, 
-                             end_index - start_index - 1);
-        }
+    if (source.find('"') != std::string::npos) {
+        std::string after_quote = drop_before(source, "\"");
+        output_str = drop_after(after_quote, "\"");
     }
-    return(output_str);
+    return output_str;
 }
 
-/* Trim whitespace from both ends of a string. */
-std::string trim_whitespace(std::string source) {
-    const std::string whitespace = " \r\n\t\f\v";
-    int start_index = source.find_first_not_of(whitespace);
-    if (start_index != std::string::npos) {
-        source.erase(0, start_index);
-        int end_index = source.find_last_not_of(whitespace);
-        if (end_index != std::string::npos) {
-            source.erase(end_index + 1);
-        } else {
-            source.clear();
+std::string concat_quoted_substrings(std::string source) {
+    std::string output_str = "";
+    while (source.find('"') != std::string::npos) {
+        std::string this_substring = quoted_substring(source);
+        if (!this_substring.empty()) {
+            output_str += " " + this_substring;
+            source = drop_before(source, "\"" + this_substring + "\""); 
         }
     }
-    return(source);
+    return trim(output_str);
 }
 
-/* Dictionary for header */
+
+
+/* DICTIONARY FOR HEADER */
 using dictionary = std::map<std::string, std::string>;
+
+bool starts_with(std::string source, std::string start_string) {
+    return (source.find(start_string) == 0);
+}
 
 /* Find a Lilypond \header{} and return a dictionary with the keys and values
  * that were defined within it. */
@@ -98,16 +175,29 @@ dictionary header_to_dict(std::string source) {
     dictionary header_dict;
     std::istringstream source_stream(source);
     std::string this_line;
+    size_t this_line_index = 0;
     while (std::getline(source_stream, this_line)) {
-        int start_index = this_line.find(" = ");
+        size_t start_index = this_line.find(" = ");
         if (start_index != std::string::npos) {
-            std::string key = trim_whitespace(this_line.substr(0, start_index));
-            std::string value = copy_quoted_string(this_line.substr(
-                                    start_index + 3, std::string::npos));
+            std::string key = trim(this_line.substr(0, start_index));
+            std::string value = this_line.substr(start_index + 3, std::string::npos);
+
+            std::string markup_cmd = "\\markup ";
+            if (starts_with(trim_left(value), markup_cmd)) {
+                std::string test = source.substr(this_line_index, std::string::npos);
+                value = concat_quoted_substrings(ly_brace_argument(test, markup_cmd));
+
+                this_line_index += find_first_after_substring(this_line, markup_cmd) 
+                                    + value.length();
+            } else {
+                value = quoted_substring(value);
+                this_line_index += this_line.length();
+            }
+
             header_dict.emplace(key, value);
         }
     }
-    return(header_dict);
+    return header_dict;
 }
 
 /* Create the MEI meiHead element from the contents of the header dictionary.
@@ -115,9 +205,11 @@ dictionary header_to_dict(std::string source) {
 mei::MeiHead* create_header(dictionary dict) {
     mei::MeiHead *meiHead = new mei::MeiHead();
     
+    mei::TitleStmt *titleStmt = new mei::TitleStmt();
+    meiHead->addChild(titleStmt);
+
     auto iter = dict.find("title");
     if (iter != dict.end()) {
-        mei::TitleStmt *titleStmt = new mei::TitleStmt();
         
         mei::MeiElement *title = new mei::MeiElement("title");
         mei::MeiAttribute *title_type = new mei::MeiAttribute("type", "main");
@@ -125,21 +217,26 @@ mei::MeiHead* create_header(dictionary dict) {
 
         title->setValue(iter->second);
         titleStmt->addChild(title);
-        meiHead->addChild(titleStmt);
     }
+
+    mei::RespStmt *respStmt = new mei::RespStmt();
+    meiHead->addChild(respStmt);
 
     iter = dict.find("composer");
     if (iter != dict.end()) {
-        mei::RespStmt *respStmt = new mei::RespStmt();
-       
         mei::MeiElement *composer = new mei::MeiElement("composer");
         composer->setValue(iter->second);
-       
         respStmt->addChild(composer);
-        meiHead->addChild(respStmt);
     }
 
-    return(meiHead);
+    iter = dict.find("poet");
+    if (iter != dict.end()) {
+        mei::MeiElement *lyricist = new mei::MeiElement("lyricist");
+        lyricist->setValue(iter->second);
+        respStmt->addChild(lyricist);
+    }
+    // TODO add more header fields
+    return meiHead;
 }
 
 /* Create the MEI music element. */
@@ -158,7 +255,7 @@ mei::Music* create_music(void) { // TODO for now
     mei::ScoreDef *scoreDef = new mei::ScoreDef();
     score->addChild(scoreDef);
 
-    return(music);
+    return music;
 }
 
 
@@ -175,7 +272,7 @@ int main(int argc, char **argv) {
     infile_str = file_to_string(infile_name);
 
     // Find \header{}
-    std::string header = balanced_delimiter_string(infile_str, '{', '}');
+    std::string header = balanced_delimiter_substring(infile_str, '{', '}');
 
     // Parse header 
     dictionary header_dict = header_to_dict(header);
