@@ -1,0 +1,13 @@
+span {
+  position: relative;
+}
+span::before {
+/*  visibility: hidden;  */
+  position: absolute;
+  top: -2em;
+  font-size: 0.8em;
+  font-style: italic;
+  content: attr(title);
+}
+
+

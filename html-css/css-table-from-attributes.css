@@ -1,0 +1,13 @@
+span.gloss {
+  display: table, inline;
+}
+span.gloss::before {
+  display: table-row;
+  content: attr(data-trans);
+}
+span.gloss::after {
+  display: table-row;
+  content: attr(data-orig);
+}
+
+/* <span class="gloss" data-orig="I:’" data-trans="I/me"></span> */
