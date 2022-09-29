@@ -19,7 +19,7 @@ main = do
     putStrLn outputStr 
 
 parse :: String -> String
-parse s = show $ checkArgCommands $ words s
+parse s = show $ tokenize $ words s
 
 startsWith s c  = head s == c
 endsWith s c    = last s == c
@@ -31,20 +31,12 @@ endsBraceExpr s   = s `endsWith` '}'
 
 isWord s = not $ isCommand s || isQuoteArg s || startsBraceExpr s || endsBraceExpr s
 
-data Token = 
-    Word {
-        base :: String
-    }
-    |
-    CommandSimple {
-        base :: String,
-        arg :: [String] 
-    }
-    |
-    CommandNested {
-        base :: String,
-        commandArg :: Command
-    }
+data Token = Word { base :: String }
+            | Command { base :: String }
+            | CommandArg {
+                command :: String,
+                arg :: Token
+            } deriving Show
 
 isSimpleCommand x y = isCommand x && (not . isCommand) y
 isNestedCommand x y = isCommand x && isCommand y
@@ -57,13 +49,20 @@ mapPairs :: (a -> a -> b)
 mapPairs f d (x:[]) = [d]
 mapPairs f d (x:y:ys) = (f x y):(mapPairs f d (y:ys))
 
-checkCommands = mapPairs False isSimpleCommand
-checkNestedCommands = mapPairs False isNestedCommand
+checkCommands = mapPairs isSimpleCommand False
+checkNestedCommands = mapPairs isNestedCommand False
 
-makeCommand :: String -> String -> Command
-makeCommand x y | isSimpleCommand x y = CommandSimple x y
-                | isNestedCommand x y = CommandNested x y
+toToken :: String -> String -> Token
+toToken x y | isCommand x = CommandArg x (Word y)
+            | otherwise = Word x
 
-makeCommands = mapPairs makeCommand 
+-- TODO does not work properly! this is the wrong approach
+tokenize :: [String] -> [Token]
+tokenize (x:[]) = [toToken x ""]
+tokenize (x:y:[]) | isCommand x = [toToken x y, toToken y ""]
+                  | otherwise = [Word x, toToken y ""]
+tokenize (x:y:ys) | isCommand x = (toToken x y):(tokenize (ys))
+                  | otherwise = [Word x, toToken x y]
+
 
 
