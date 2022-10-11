@@ -1,11 +1,14 @@
-main :: IO()
+import System.Environment (getArgs)
+
+charCodes :: String -> [Int]
+charCodes = map fromEnum
+
+selectInput :: [String] -> IO String
+selectInput []   = getLine
+selectInput args = readFile $ head args
+
+main :: IO ()
 main = do
-    codes <- map fromEnum <$> getLine
-    putStrLn $ show codes
-
-    -- or:
-    --  inputStr <- getLine
-    --  let
-    --      codes = mapFromEnum inputStr
-    --  putStrLn $ show codes
-
+    args <- getArgs
+    chars <- selectInput args
+    putStrLn $ show $ charCodes chars

@@ -1,5 +1,5 @@
 {$mode objfpc}
-program func;
+program charCodes;
 uses SysUtils, Classes, Generics.Collections;
 
 type
@@ -43,11 +43,24 @@ end;
 
 { MAIN }
 var
+  InputText: TStringList;
   InputStr: String;
   Codes: TIntList;
 begin
-  ReadLn(InputStr);
+  InputText := TStringList.Create;
+  if (ParamCount = 1) then
+  begin
+    InputText.LoadFromFile(ParamStr(1));
+    InputStr := InputText[0];
+  end
+  else
+  begin
+    ReadLn(InputStr);
+  end;
+  
   Codes := TIntList.Create(InputStr);
   WriteLn(Codes.ToString);
+ 
   FreeAndNil(Codes);
+  FreeAndNil(InputText);
 end.

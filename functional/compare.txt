@@ -1,0 +1,22 @@
+# Times
+
+Lang    Total   User    System
+------- ------  ------  -------
+scheme   0.021  0.016   0.001
+haskell  0.003  0.002   0.001
+pascal   0.003  0.000   0.002
+
+# Source Size
+
+Lang    Lines   Words   Bytes
+------  ------- ------- ---------
+scheme  17      41      425
+haskell 14      49      309
+pascal  66      131     1200
+
+# Binary Size
+
+scheme:  N/A
+haskell: 3.2M
+pascal:  1.1M
+
