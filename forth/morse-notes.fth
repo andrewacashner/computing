@@ -15,13 +15,15 @@
 : gap.char      gap.mid ;
 : gap.word      gap.long ;
 
-: |             gap.char ;
-: _             gap.word ;
-: dot           beep.short gap.tone ;
-: dash          beep.long gap.tone ;
+: '             gap.char ;
+: |             gap.word ;
+: o             beep.short gap.tone ;
+: -             beep.long gap.tone ;
 
-: S dot dot dot | ;
-: O dash dash dash | ;
+: S o o o ' ;
+: O - - - ' ;
+
+: SOS S O S | S O S | S O S ;
 
 : tone      beep.base ;
 : 8         tone dur.short s+ ;
@@ -40,7 +42,7 @@
 
 : , s+ system ;
 
-S O S _ S O S _ S O S
+SOS
 
 \ Oh when the saints go marching in
 8 a' , 8 cis'' , 8 d'' , 2 e'' , | |
