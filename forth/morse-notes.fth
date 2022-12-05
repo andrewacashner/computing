@@ -1,4 +1,4 @@
-\ Morse code and musci notes using sox in Linux system
+\ Morse code and music notes using sox in Linux system
 \ 2022/11/03
 : beep.base     s" play -n synth " ;
 : dur.short     s" 0.1" ;
