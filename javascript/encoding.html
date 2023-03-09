@@ -34,11 +34,15 @@ p.output {
         <fieldset>
           <legend>Select encoding:</legend>
           <div>
-            <input type="radio" id="encoding-alphanum" name="encoding" value="alphanum" />
+            <input type="radio" id="encoding-alphanum" name="encoding" value="alphanum" checked />
             <label for="encoding-alphanum">Alphanum</label>
 
-            <input type="radio" id="encoding-beetle" name="encoding" value="beetle" checked/>
+            <input type="radio" id="encoding-beetle" name="encoding" value="beetle" />
             <label for="encoding-beetle">Beetle</label>
+
+            <input type="radio" id="encoding-forbidden" name="encoding" value="forbidden" />
+            <label for="encoding-forbidden">Forbidden</label>
+
           </div>
         </fieldset>
         <button type="button" onclick="encode_form();">Encode</button>
@@ -50,7 +54,7 @@ p.output {
       </section>
     </main>
     <footer>
-      <p>Copyright © 2023 Andrew and Ben Cashner.</p>
+      <p>Copyright © 2023 Andrew, Ben, and Joy Cashner.</p>
     </footer>
   </body>
 </html>
