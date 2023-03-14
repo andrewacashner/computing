@@ -1,0 +1,27 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage{roboto}
+\pagestyle{empty}
+\usepackage[margin=1cm]{geometry}
+
+\RenewDocumentCommand{\familydefault}{}{\sfdefault}
+
+\NewDocumentCommand{\blmfont}{}{%
+    \fontsize{130}{150}\selectfont
+    \bfseries
+}
+\NewDocumentCommand{\blm}{}{%
+    \vspace*{\fill}%
+    \begin{center}
+        \blmfont
+        \begin{tabular}{c}
+            BLACK \\
+            LIVES \\
+            MATTER
+        \end{tabular}
+    \end{center}\par
+    \vspace*{\fill}%
+}
+\begin{document}
+\blm{}
+\end{document}
