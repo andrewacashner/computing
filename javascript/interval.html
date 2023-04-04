@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <title>Interval Calculator</title>
+    <meta name="author" content="Andrew Cashner">
+    <meta name="date" content="2023/03/16">
+    <script src="interval.js" defer></script>
+<style>
+body {
+  font-family: sans-serif;
+}
+</style>
+  </head>
+  <body>
+    <header>
+      <h1>Interval Calculator</h1>
+    </header>
+    <main>
+      <section id="note-plus-interval">
+        <h1>Add an interval to a pitch</h1>
+        <p>Given a starting pitch and an interval to add, find the next pitch.</p>
+        <form>
+          <p>
+          <label for="addition-starting-pitch-name">Starting pitch name</label>
+          <br />
+          <select name="pitch-names" id="pitch-name-select">
+            <option value="_">(Select a pitch name)</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="G">G</option>
+          </select>
+          </p>
+          <p>
+          <label for="addition-starting-pitch-accidental">Starting pitch accidental</label>
+          <br />
+          <select name="accidental" id="accidental-select">
+            <option value="">(Choose an accidental)</option>
+            <option value="♮">♮ (natural)</option>
+            <option value="♭">♭ (flat)</option>
+            <option value="♯">♯ (sharp)</option>
+          </select>
+          </p>
+          <p>
+          <label for="addition-starting-pitch-octave">Starting pitch octave</label>
+          <br />
+          <input type="number" id="addition-starting-pitch-octave" name="addition-starting-pitch-octave" min="1" max="8">
+          </p>
+          <p>
+          <label for="operation">Plus or minus (Interval above or below)</label>
+          <br />
+          <select name="operation" id="operation-select">
+            <option value="">(Choose an operation)</option>
+            <option value="+" selected>plus (interval above)</option>
+            <option value="-">minus (interval below)</option>
+          </select>
+          </p>
+          <p>
+          <label for="interval">Interval distance</label>
+          <br />
+          <input type="number" id="quantity" name="quantity" min="1">
+          </p>
+          <p>
+          <label for="quality">Interval quality</label>
+          <br />
+          <select name="qualities" id="quality-select">
+            <option value="_">(Choose an interval quality)</option>
+            <option value="P">perfect</option>
+            <option value="d">diminished</option>
+            <option value="a">augmented</option>
+            <option value="m">minor</option>
+            <option value="M">major</option>
+          </select>
+          </p>
+          <button id="find-pitch" type="button">Find end pitch</button>
+        </form>
+        <p>
+        <div id="addition-calculation">
+          <span id="input-pitch-name">_</span>
+          <span id="input-pitch-accidental">_</span>
+          <span id="input-pitch-octave">_</span>
+          &nbsp;
+          <span id="input-operation">+</span>
+          &nbsp;
+          <span id="input-interval-quality">_</span>
+          <span id="input-interval-distance">_</span>
+          &nbsp; = &nbsp;
+          <span id="output-pitch-name">_</span>
+          <span id="output-pitch-accidental">_</span>
+          <span id="output-pitch-octave">_</span>
+        </div>
+        </p>
+      </section>
+      <!--
+      <section id="calculate-interval">
+        <h1>Calculate the interval between two pitches</h1>
+        <p>Given a starting pitch and an end pitch, find the interval between them.</p>
+      </section>
+      -->
+    </main>
+    <footer>
+      <p>Copyright © 2023 Andrew A. Cashner</p>
+    </footer>
+  </body>
+</html>
+
