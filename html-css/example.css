@@ -1,0 +1,31 @@
+body {
+  background: LightGray;
+}
+
+header {
+  text-align: center;
+  border-top: 2px solid DarkSlateGray;
+  border-bottom: 2px solid DarkSlateGray;
+  background: white;
+  width: 100vw;
+  margin-left: -1em;
+  padding-left: 1em;
+}
+
+header nav {
+  text-align: left;
+}
+
+header nav a {
+  color: DarkSlateGray;
+}
+
+main h1 {
+  font-family: sans-serif;
+}
+
+footer {
+  margin-top: 2em;
+  color: DarkSlateGray;
+  border-top: 2px solid DarkSlateGray;
+}
