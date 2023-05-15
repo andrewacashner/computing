@@ -1,7 +1,10 @@
+; 2023/05/15
 (require '[clojure.string :as str])
 
 (defrecord Book [author title location publisher year keywords])
+
 (defrecord PersonName [lastname firstname])
+
 (def Cashner:HearingFaith 
   (map->Book 
     { :author (map->PersonName { :lastname "Cashner",
@@ -14,6 +17,7 @@
                    "Mexico -- Music, 17th century",
                    "Villancicos -- History and criticsm",
                    "Christianity -- Roman Catholicism -- Theology" }}))
+
 (def Kircher:Musurgia
   (map->Book
     { :author (map->PersonName { :lastname "Kircher", :firstname "Athanasius" }),
@@ -37,6 +41,7 @@
 (defn fmt-imprint
   [^Book book]
   (str (:location book) ": " (:publisher book)))
+
 
 
 (defn attr-str
@@ -104,3 +109,4 @@
 
 (println (fmt-bibliography :authordate :html bibliography))
 (println (fmt-bibliography :authordate :latex bibliography))
+
