@@ -11,29 +11,43 @@
   (inc n))
 
 (def grade-rubric 
-  { 100  "A+",
-     93  "A" ,
-     90  "A-",
-     87  "B+",
-     83  "B" ,
-     80  "B-",
-     77  "C+",
-     73  "C" ,
-     70  "C-",
-     67  "D+",
-     63  "D" ,
-     60  "D-",
-      0  "E" })
+  [["A+" 100.0] 
+   ["A"   93.0]  
+   ["A-"  90.0]  
+   ["B+"  87.0]  
+   ["B"   83.0]
+   ["B-"  80.0]
+   ["C+"  77.0]  
+   ["C"   73.0]
+   ["C-"  70.0]
+   ["D+"  67.0]  
+   ["D"   63.0]  
+   ["D-"  60.0]  
+   ["E"    0.0]])
 
-; loop, recur
+;; Two approaches: 
+;;  (1) use multiple map functions to transform all the scores and combine
+;;  them with the letters; 
+;;  (2) map a single function to transform each letter-score pair
 (defn gradescale
   {:doc "Return a formatted table (string) with the minimum percentages equivalent to each letter-grade value out of a given total, according to a given grading scheme (map matching letter keys to numeric values out of 100)"}
   [scale total]
-  (let [points       (map #(* 0.01 total %) (keys scale))
-        newscale     (zipmap points (vals scale))
-        sorted-scale (into (sorted-map-by >) newscale)
-        table-rows   (for [[score grade] sorted-scale]
-                         (str (format "%4.1f" score) "\t" grade))]
+  (let [letters    (map first scale)
+        old-points (map second scale)
+        new-points (map #(* 0.01 total %) old-points)
+        table-rows (map #(format "%s\t%4.1f" %1 %2) letters new-points)]
     (str/join "\n" table-rows)))
 
+(defn gradescale2
+  [scale total]
+  (letfn [(row 
+            [[grade score]] ; note destructuring (pattern matching)
+            (let [new-points (* 0.01 total score)]
+              (format "%s\t%4.1f" grade new-points)))]
+    (str/join "\n" (map row scale))))
+
 (defn grades [total] (gradescale grade-rubric total))
+
+(defn print-grades [total] (println (grades total)))
+
+
