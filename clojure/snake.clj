@@ -1,4 +1,5 @@
 ; Snake game, from "Programming in Clojure" (O'Reilly)
+; Added limit that snake can't go outside window
 (ns snake
   (:import (java.awt Color Dimension)
            (javax.swing JPanel JFrame Timer JOptionPane)
@@ -8,20 +9,6 @@
 ;; From book's example library; I just pasted it here because I couldn't
 ;; figure out the class path, packaging, requiring protocol
 (defmacro import-static
-  "Imports the named static fields and/or static methods of the class
-  as (private) symbols in the current namespace.
-
-  Example: 
-      user=> (import-static java.lang.Math PI sqrt)
-      nil
-      user=> PI
-      3.141592653589793
-      user=> (sqrt 16)
-      4.0
-
-  Note: The class name must be fully qualified, even if it has already
-  been imported.  Static methods are defined as MACROS, not
-  first-class fns."
   [class & fields-and-methods]
   (let [only (set (map str fields-and-methods))
         the-class (. Class forName (str class))
@@ -54,20 +41,24 @@
 (import-static java.awt.event.KeyEvent VK_LEFT VK_RIGHT VK_UP VK_DOWN)
 
 ;; Setup
+(def win-length 15)
+
 (def width 75)
 (def height 50)
 (def point-size 10)
 (def turn-millis 75)
-(def win-length 5)
+
 (def dirs { VK_LEFT   [-1  0]
             VK_RIGHT  [ 1  0]
             VK_UP     [ 0 -1]
             VK_DOWN   [ 0  1]})
 
-(defn add-points [ & pts]
+(defn add-points 
+  [ & pts]
   (vec (apply map + pts)))
 
-(defn point-to-screen-rect [pt]
+(defn point-to-screen-rect 
+  [pt]
   (map #(* point-size %)
        [(pt 0) (pt 1) 1 1]))
 
@@ -84,34 +75,54 @@
    :color (Color. 15 160 70)})
 
 ;; Movement
-(defn move [{:keys [body dir] :as snake} & grow]
-  (assoc snake :body (cons (add-points (first body) dir)
-                           (if grow body (butlast body)))))
+(defn out-of-window?
+  [[test-width test-height]]
+  (or (> test-width width)
+      (> test-height height)
+      (< test-width 0)
+      (< test-height 0)))
 
-(defn win? [{body :body}]
+(defn move 
+  [{:keys [body dir] :as snake} & grow]
+  (let [old-head  (first body)
+        test-head (add-points old-head dir)
+        tail      (if grow body (butlast body))
+        new-body  (if (out-of-window? test-head)
+                    body
+                    (cons test-head tail))]
+  (assoc snake :body new-body)))
+
+(defn win? 
+  [{body :body}]
   (>= (count body) win-length))
 
-(defn head-overlaps-body? [{[head & body] :body}]
+(defn head-overlaps-body? 
+  [{[head & body] :body}]
   (contains? (set body) head))
 
 (def lose? head-overlaps-body?)
 
-(defn eats? [{[snake-head] :body} {apple :location}]
+(defn eats? 
+  [{[snake-head] :body} {apple :location}]
   (= snake-head apple))
 
-(defn turn [snake newdir]
+(defn turn
+  [snake newdir]
   (assoc snake :dir newdir))
 
 ;; Mutable portion: reset, update
-(defn reset-game [snake apple]
+(defn reset-game 
+  [snake apple]
   (dosync (ref-set apple (create-apple))
           (ref-set snake (create-snake)))
   nil)
 
-(defn update-direction [snake newdir]
+(defn update-direction
+  [snake newdir]
   (when newdir (dosync (alter snake turn newdir))))
 
-(defn update-positions [snake apple]
+(defn update-positions
+  [snake apple]
   (dosync
           (if (eats? @snake @apple)
             (do (ref-set apple (create-apple))
@@ -120,21 +131,26 @@
   nil)
 
 ;; GUI
-(defn fill-point [g pt color]
+(defn fill-point
+  [g pt color]
   (let [[x y width height] (point-to-screen-rect pt)]
     (.setColor g color)
     (.fillRect g x y width height)))
 
-(defmulti paint (fn [g object & _] (:type object)))
+(defmulti paint 
+  (fn [g object & _] (:type object)))
 
-(defmethod paint :apple [g {:keys [location color]}]
+(defmethod paint :apple 
+  [g {:keys [location color]}]
   (fill-point g location color))
 
-(defmethod paint :snake [g {:keys [body color]}]
+(defmethod paint :snake 
+  [g {:keys [body color]}]
   (doseq [point body]
     (fill-point g point color)))
 
-(defn game-panel [frame snake apple]
+(defn game-panel 
+  [frame snake apple]
   (proxy [JPanel ActionListener KeyListener] []
     (paintComponent [g]
       (proxy-super paintComponent g)
@@ -144,10 +160,14 @@
       (update-positions snake apple)
       (when (lose? @snake)
         (reset-game snake apple)
-        (JOptionPane/showMessageDialog frame "You lose!"))
+        (JOptionPane/showMessageDialog 
+          frame 
+          "You ate your own head! You lose!"))
       (when (win? @snake)
         (reset-game snake apple)
-        (JOptionPane/showMessageDialog frame "You win!"))
+        (JOptionPane/showMessageDialog 
+          frame 
+          "You ate all the apples! You win!"))
       (.repaint this))
     (keyPressed [e]
       (update-direction snake (dirs (.getKeyCode e))))
@@ -172,7 +192,4 @@
       (.setVisible true))
     (.start timer)
     [snake, apple, timer]))
-
-
-
 
