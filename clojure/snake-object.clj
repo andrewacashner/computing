@@ -1,3 +1,6 @@
+;try to rewrite with a "Point" object/record
+; 2023/05/31
+
 ; Snake game, from "Programming in Clojure" (O'Reilly)
 ; Added limit that snake can't go outside window
 (ns snake
@@ -16,47 +19,62 @@
 
 (def width 60)          ; was 75
 (def height 40)         ; was 50
-(def point-size 20)     ; was 10
+(def point-size 10)     ; was 10
 (def turn-millis 150)   ; was 75
 
-(def dirs { VK_LEFT   [-1  0]
-            VK_RIGHT  [ 1  0]
-            VK_UP     [ 0 -1]
-            VK_DOWN   [ 0  1]})
+(defrecord Point [x y])
+
+(def dirs { VK_LEFT   (->Point -1  0)
+            VK_RIGHT  (->Point 1  0)
+            VK_UP     (->Point 0 -1)
+            VK_DOWN   (->Point 0  1)})
 
 (def light-green (Color.  15 160  70))
 (def dark-green  (Color.   7  85  38))
 (def red         (Color. 210  50  90))
 
-(defn add-points 
-  [& pts]
-  (vec (apply map + pts)))
 
 (defn point-to-screen-rect 
   [pt]
   (map #(* point-size %)
-       [(pt 0) (pt 1) 1 1]))
+       [(:x pt) (:y pt) 1 1]))
+
+(defn add-points
+  [{x1 :x, y1 :y} {x2 :x, y2 :y}]
+  (->Point (+ x1 x2) (+ y1 y2)))
+
+;(defn add-points
+;  ([] 0)
+;  ([x] x)
+;  ([{x1 :x, y1 :y} {x2 :x, y2 :y}]
+;   (->Point (+ x1 x2) (+ y1 y2)))
+;  ([x y & more]
+;   (reduce sum-points (sum-points x y) more)))
+
+;(defn add-points 
+;  [& pts]
+;  (vec (apply map + pts)))
 
 ;; Apple and snake
 (defn create-apple []
-  {:location [(rand-int width) (rand-int height)]
+  {:location [->Point (rand-int width) (rand-int height)]
    :color red
    :type :apple})
 
 (defn create-snake []
-  {:body (list [1 1])
-   :dir [1 0]
+  {:body (list [(->Point 1 1)])
+   :dir (->Point 1 0)
    :type :snake
    :color dark-green
    :head-color light-green})
 
 ;; Movement
 (defn out-of-window?
-  [[test-width test-height]]
-  (or (> test-width width)
-      (> test-height height)
-      (< test-width 0)
-      (< test-height 0)))
+  [{:keys [x y]}]
+  (or (> x width)
+      (> y height)
+      (< x 0)
+      (< y 0)))
 
 (defn move 
   [{:keys [body dir] :as snake} & grow]
