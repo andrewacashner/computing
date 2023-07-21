@@ -1,0 +1,39 @@
+\documentclass{article}
+\directlua{
+    function person(last, first, birth, death)
+        thisPerson = {
+            lastName = last,
+            firstName = first,
+            birthDate = birth,
+            deathDate = death
+        }
+        return thisPerson
+    end
+    function personName(data)
+        return data.firstName .. " " .. data.lastName .. 
+            " (" ..  data.birthDate .. "--" .. data.deathDate .. ")"
+    end
+    function printPersonName(data)
+        tex.print(personName(data))
+    end
+}
+\NewDocumentCommand{\newPerson}{ m m m m m }{%
+    % #1 csname, #2 last name, #3 first name, #4 birth date, #5 death date
+    \expandafter\def\csname #1\endcsname{%
+        \directlua{person(#2, #3, #4, #5)}%
+    }%
+}
+\NewDocumentCommand\thePerson{ m }{%
+    % #1 csname
+    \directlua{printPersonName(token.get_macro(\csname #1\endcsname))}%
+}
+
+\begin{document}
+%\directlua{
+%    BachJS = person("Bach", "Sebastian", 1685, 1750)
+%    printPersonName(BachJS)
+%}
+\newPerson{BachJS}{Bach}{Sebastian}{1685}{1750}
+%\thePerson{BachJS}
+
+\end{document}

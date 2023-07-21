@@ -1,15 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
 <head>
-  <meta charset="utf-8">
-  <meta name="generator" content="pandoc">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title></title>
-  <style type="text/css">code{white-space: pre;}</style>
-  <link rel="stylesheet" href="style.css">
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2023-07-06</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <header>
@@ -24,7 +28,8 @@
     <hr />
 </header>
 <main>
-<nav id="TOC">
+
+<nav id="TOC" role="doc-toc">
 <ul>
 <li><a href="#display-image-slides-without-powerpoint-or-beamer">Display image slides without PowerPoint or Beamer</a></li>
 <li><a href="#how-to-do-this-automatically">How to Do This Automatically</a></li>
@@ -33,9 +38,12 @@
 </ul>
 </nav>
 <hr />
+<p><em>2023-07-06</em></p>
+<p>Returning to this after a long time away. What was this? Does it work?</p>
+<hr />
 <p><em>2018-02-04</em></p>
 <h1 id="display-image-slides-without-powerpoint-or-beamer">Display image slides without PowerPoint or Beamer</h1>
-<p>If you are teaching or giving a presentation, sometimes you just need to show some pictures. You don't need the overhead of PowerPoint, or Beamer if you use LaTeX. All you need is your Unix-like file system (Linux or Mac) and a web browser like <code>chromium</code>.</p>
+<p>If you are teaching or giving a presentation, sometimes you just need to show some pictures. You don’t need the overhead of PowerPoint, or Beamer if you use LaTeX. All you need is your Unix-like file system (Linux or Mac) and a web browser like <code>chromium</code>.</p>
 <h2 id="find-the-images-and-store-them">Find the images and store them</h2>
 <p>For a class on music in the Victorian era in the UK and US, I wanted to compare the medieval Gothic architecture of Cambridge University with the neo-Gothic architecture of the University of Chicago, which was built starting in the 1890s.</p>
 <h3 id="do-an-image-search">Do an image search</h3>
@@ -51,7 +59,7 @@ chromium-browser http://www.google.com/images?q=&quot;$1&quot; &amp;</code></pre
 <p>So now you can do this:</p>
 <pre><code>~$ img-search &quot;University of Chicago&quot; </code></pre>
 <h3 id="save-the-files-in-your-pictures-folder">Save the files in your Pictures folder</h3>
-<p>You can use Google's tools to limit the photos to large size and, if you prefer, to those licensed for reuse. Click on the image, click &quot;View Image,&quot; then right click and select &quot;Save image as...&quot;</p>
+<p>You can use Google’s tools to limit the photos to large size and, if you prefer, to those licensed for reuse. Click on the image, click “View Image,” then right click and select “Save image as…”</p>
 <p>Save the image to your Pictures folder (mine is in <code>~/Pictures</code>) and give it a reasonable file name that will enable you to find it later. Follow the normal rules for searchable, sustainable file names: no spaces, no funky characters (e.g., accents, Unicode). I use hyphens (dashes) to separate the main parts and underscores for the secondary parts. For example, <code>Cambridge_University-Kings_College-exterior.jpg</code> and <code>University_of_Chicago-aerial.jpg</code>.</p>
 <h2 id="make-a-list-of-the-picture-file-names-and-display-them">Make a list of the picture file names and display them</h2>
 <p>Now you can use your web browser to display the images stored locally on your computer. You can display local files if, instead of starting the URL with <code>http://</code>, you use <code>file://</code> instead; then you need one more slash to indicate the root directory. In fact, you can even open the whole directory in the browser and search through the file names: <code>chromium-browser file:///home/andrew/Pictures</code>.</p>

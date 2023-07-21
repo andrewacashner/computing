@@ -1,0 +1,10 @@
+p {
+  width: 30em;
+}
+
+table { 
+  float: right; 
+  border: 1px solid gray;
+  width: 30em;
+  margin-right: 1em;
+}

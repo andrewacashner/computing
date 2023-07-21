@@ -1,0 +1,40 @@
+\directlua{
+    function square(n)
+        return n * n
+    end
+}
+\def\square#1{\directlua{tex.print(square(#1))}}
+\square 5
+
+\directlua{
+    function range(first, last, increment)
+        vals = {}
+        for i = first, last, increment do
+            table.insert(vals, i)
+        end
+        return vals
+    end
+}
+
+\def\daysOfChristmas{\directlua{tex.print(range(1, 12, 1))}}
+
+\def\skipCount#1#2{\directlua{tex.print(range(#1, #2, 2))}}
+
+Count to Christmas: \daysOfChristmas
+
+Skip count: \skipCount{28}{42}
+
+% vs. pure TeX approach
+\newcount\skipNum
+\def\otherSkip#1#2#3{%
+    \skipNum=#1
+    \loop
+    \the\skipNum\ 
+    \advance\skipNum by #3
+    \ifnum\skipNum < #2
+    \repeat
+}
+
+\otherSkip{11}{25}{3}
+
+\bye
