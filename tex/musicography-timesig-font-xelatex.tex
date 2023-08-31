@@ -1,0 +1,30 @@
+\documentclass{article}
+\usepackage{fontspec}
+\setmainfont{SourceSansPro-Light}[
+UprightFont = SourceSansPro-Light,
+ItalicFont = SourceSansPro-LightIt,
+BoldFont = SourceSansPro-Regular
+]
+\newfontfamily\xlightfont{SourceSansPro-ExtraLight}[
+UprightFont = SourceSansPro-ExtraLight,
+ItalicFont = SourceSansPro-ExtraLightIt,
+BoldFont = SourceSansPro-Light
+]
+%\renewcommand{\familydefault}{\sfdefault}
+\usepackage{musicography}
+\newfontfamily{\TimeSigFont}{Emmentaler-11}
+\NewDocumentCommand{\TimeSig}{ m m }{%
+    \musStack[\TimeSigFont]{#1 #2}%
+}
+
+\begin{document}
+In regards to rhythm, the standard notation renderer has been enhanced at the
+quantiser level.  
+Here, instead of writing two \TimeSig{4}{4} measures (see Figure 3.12,
+version 3.63), the algorithm writes eight \TimeSig{1}{4} measures (see
+Figures 3.13a and 3.13b, version 3.85. 
+This allows two things: 1) complex patterns are conveniently delineated by bar
+lines, and thus easier to decipher; TEST: \musFlat{}, \musSharp{}, and
+\musNatural{}, \musThirtySecond{}, \meterCThreeTwo{}, $8\times\TimeSig{1}{4}$
+instead of $2\times\TimeSig{4}{4}$.
+\end{document}
