@@ -130,11 +130,11 @@
   [timeline clue]
   (str/join "\n"
            (list  "\n**************************"
-                 "Current timeline:"
+                 "\nHere is the timeline you've made so far:"
                  (timeline-string timeline)
-                 "\nNext event:"
+                 "\nNew event: When did this happen?"
                  (event-string-clue clue)
-                 "\nInsert new event before which timeline entry? [Enter a number]:")))
+                 "\nWhich timeline number comes after the new event? [Enter a number:]")))
 
 (defn status-game-over
   "Message at game end with total points, final timeline"

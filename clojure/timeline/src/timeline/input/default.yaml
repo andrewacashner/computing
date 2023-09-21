@@ -1,4 +1,4 @@
-- {
+- { 
   date: "2001-09-11",
   place: "New York, NY, US",
   description: "Terrorist attack on the World Trade Center"
@@ -13,5 +13,14 @@
   place: "Global",
   description: "World War I ends with armistice"
   }
-
+- {
+  date: "1066",
+  place: "Hastings, England",
+  description: "William the Conqueror leads the Normans to victory in England"
+  }
+- {
+  date: "1918",
+  place: "Global",
+  description: "Spanish Flu epidemic"
+  }
 

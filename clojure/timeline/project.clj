@@ -7,6 +7,7 @@
                  [org.clojure/clojure "1.11.1"]
                  [clj-commons/clj-yaml "1.0.27"]
                  [clj-time "0.15.2"]
+                 [cljfx "1.7.24"]
                  ]
   :main ^:skip-aot timeline.core
   :target-path "target/%s"
