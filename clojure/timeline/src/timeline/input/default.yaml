@@ -1,0 +1,17 @@
+- {
+  date: "2001-09-11",
+  place: "New York, NY, US",
+  description: "Terrorist attack on the World Trade Center"
+  }
+- {
+  date: "2020-03-01",
+  place: "Global",
+  description: "First major surge of COVID-19 Pandemic"
+  }
+- {
+  date: "1918-11-11",
+  place: "Global",
+  description: "World War I ends with armistice"
+  }
+
+
