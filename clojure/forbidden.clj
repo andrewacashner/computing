@@ -1,68 +1,84 @@
 (ns forbidden
   (:require [clojure.string :as str]))
 
-(def letterDict
-  {"a" "Si"
-   "b" "Wa"
-   "c" "La"
-   "d" "Ni"
-   "e" "Lu"
-   "f" "Mi"
-   "g" "Yi"
-   "h" "He"
-   "i" "In"
-   "j" "Ge"
-   "k" "Ki"
-   "l" "Li"
-   "m" "Ma"
-   "n" "Nu"
-   "o" "Ot"
-   "p" "Pe"
-   "q" "Un"
-   "r" "Ri"
-   "s" "Swa"
-   "t" "Ti"
-   "u" "Uv"
-   "v" "Vi"
-   "w" "Wu"
-   "x" "Ya" 
-   "y" "Pu" 
-   "z" "Zi" })
-
-(def doubleLetterDict
-  {"oo" "Sela"
-   "ou" "Walu"
-   "ow" "Sule"
-   "oa" "Wavan"
-   "ai" "Yeka"
-   "ea" "Maya"
-   "ee" "Aya"
-   "th" "Selu"
-   "ch" "Melu"
+(def dictionary
+  {; single letters
+   "a" "Si",
+   "b" "Wa",
+   "c" "La",
+   "d" "Ni",
+   "e" "Lu",
+   "f" "Mi",
+   "g" "Yi",
+   "h" "He",
+   "i" "In",
+   "j" "Ge",
+   "k" "Ki",
+   "l" "Li",
+   "m" "Ma",
+   "n" "Nu",
+   "o" "Ot",
+   "p" "Pe",
+   "q" "Un",
+   "r" "Ri",
+   "s" "Swa",
+   "t" "Ti",
+   "u" "Uv",
+   "v" "Vi",
+   "w" "Wu",
+   "x" "Ya" ,
+   "y" "Pu" ,
+   "z" "Zi" ,
+   ; double letters
+   "oo" "Sela",
+   "ou" "Walu",
+   "ow" "Sule",
+   "oa" "Wavan",
+   "ai" "Yeka",
+   "ea" "Maya",
+   "ee" "Aya",
+   "th" "Selu",
+   "ch" "Melu",
    "sh" "Yaku"})
 
-(defn forbiddenLetter
-  [c]
-  (let [maybeTrans (letterDict (str/lower-case c))]
-    (if maybeTrans maybeTrans c)))
+(defn lookup-first-n
+  [n s]
+  (if (< (count s) n)
+    nil
+    (dictionary (str/lower-case (subs s 0 n)))))
 
-(defn forbiddenPair
-  [cs]
-  (if (>= (count cs) 2)
-    (doubleLetterDict (str/lower-case (apply str (take 2 cs))))))
+(def forbidden-pair (partial lookup-first-n 2))
+
+(defn subs-flip
+  [& args]
+  (apply subs (reverse args)))
+
+(def string-after-first      (partial subs-flip 1))
+(def string-after-first-pair (partial subs-flip 2))
+
+(defn string-first
+  [s]
+  (subs s 0 1))
+
+(defn forbidden-letter
+  [s]
+  (let [trial (lookup-first-n 1 s)]
+    (if trial trial (string-first s))))
 
 (defn parse
   [input output]
   (if (empty? input)
-    (apply str output)
-    (let [doubleTrans (forbiddenPair input)]
-      (if doubleTrans
-        (parse (drop 2 input) (concat output (seq doubleTrans)))
-        (parse (rest input) (concat output (list (forbiddenLetter (first input)))))))))
-        
+    output
+    (let [double-trans (forbidden-pair input)]
+      (if double-trans
+        (parse (string-after-first-pair input) 
+               (str output double-trans))
+        (parse (string-after-first input) 
+               (str output (forbidden-letter input)))))))
+
 (defn translate
   [s]
-  (parse s '()))
+  (parse s ""))
 
 ; TODO match case of original?
 
