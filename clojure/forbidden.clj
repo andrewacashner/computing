@@ -43,44 +43,33 @@
 
 (defn lookup-first-n
   [n s]
-  (if (< (count s) n)
-    nil
+  (when (>= (count s) n)
     (dictionary (str/lower-case (subs s 0 n)))))
 
-(def forbidden-pair (partial lookup-first-n 2))
+(def lookup-first-pair (partial lookup-first-n 2))
 
-(defn subs-flip
-  [& args]
-  (apply subs (reverse args)))
+(defn string-first       [s] (subs s 0 1))
+(defn string-after-first [s] (subs s 1))
+(defn string-after-pair  [s] (subs s 2))
 
-(def string-after-first      (partial subs-flip 1))
-(def string-after-first-pair (partial subs-flip 2))
-
-(defn string-first
+(defn lookup-first
   [s]
-  (subs s 0 1))
-
-(defn forbidden-letter
-  [s]
-  (let [trial (lookup-first-n 1 s)]
-    (if trial trial (string-first s))))
-
-(defn parse
-  [input output]
-  (if (empty? input)
-    output
-    (let [double-trans (forbidden-pair input)]
-      (if double-trans
-        (parse (string-after-first-pair input) 
-               (str output double-trans))
-        (parse (string-after-first input) 
-               (str output (forbidden-letter input)))))))
+  (or (lookup-first-n 1 s)
+      (string-first s)))
 
 (defn translate
   [s]
-  (parse s ""))
+  (letfn [(do-translate 
+            [orig trans]
+            (if (empty? orig)
+              trans
+              (let [trans-two (lookup-first-pair orig)]
+                (if trans-two
+                  (do-translate (string-after-pair orig) 
+                                (str trans trans-two))
+                  (do-translate (string-after-first orig) 
+                                (str trans (lookup-first orig)))))))]
+    (do-translate s "")))
 
 ; TODO match case of original?
-
-; TODO rewrite parse using reduce or fold?
 
