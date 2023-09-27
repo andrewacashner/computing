@@ -11,10 +11,28 @@
   [name-str]
   (ss/text name-str))
 
+(def Answer (atom ()))
+
+(defn set-click-alert
+  [object]
+  (ss/listen object :mouse-clicked
+             (fn [e] (if (= (:text e) @Answer)
+                      (ss/alert e "You got it!")
+                      (ss/alert e "Try again!")))))
+
+(def NameCards (map nameCard Names))
+
+(doseq [x NameCards] (set-click-alert x))
+
 (defn nameDeck
   [names]
-  (ss/flow-panel :items (map nameCard names)))
+  (ss/flow-panel :items names))
 
+(def NameDeck (nameDeck NameCards))
+
+(defn choose-answer
+  [items]
+  (rand-nth items))
 
 (def addOne   (ss/button :text "+1"))
 (def minusOne (ss/button :text "-1"))
@@ -27,7 +45,7 @@
   [n]
   (ss/border-panel 
     :west (score-panel n) 
-    :center (nameDeck Names)
+    :center NameDeck
     :east nameList))
 
 (def f (ss/frame :title "Game"
@@ -55,7 +73,9 @@
 
 (defn -main
   [& args]
-  (ss/invoke-later
-    (-> f
-        ss/pack!
-        ss/show!)))
+  (do
+    (reset! Answer (choose-answer Names))
+    (ss/invoke-later
+      (-> f
+          ss/pack!
+          ss/show!))))
