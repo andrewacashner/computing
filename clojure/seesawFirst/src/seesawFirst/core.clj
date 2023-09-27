@@ -3,32 +3,38 @@
 
 (ss/native!)
 
+(def nameList (ss/listbox :model ["Andrew" "Ann" "Ben" "Joy"]))
+
 (def addOne   (ss/button :text "+1"))
 (def minusOne (ss/button :text "-1"))
 
-(defn panel
+(defn score-panel
   [n]
-  (ss/flow-panel :items [(format "Score: %d" n) addOne minusOne]))
+  (ss/vertical-panel :items [(format "Score: %d" n) addOne minusOne]))
+
+(defn frame-contents 
+  [n]
+  (ss/border-panel 
+    :west (score-panel n) 
+    :east nameList))
 
 (def f (ss/frame :title "Game"
-                 :content (panel 0)
+                 :content (frame-contents 0)
                  :on-close :exit))
 
-(defn do!
-  [func a]
-  (reset! a (func @a)))
-
-(def inc! (partial do! inc))
-(def dec! (partial do! dec))
+(defn adjust-score [n] (ss/config! f :content (frame-contents n)))
 
 (def Score (atom 0))
+(defn inc! [a] (swap! a inc))
+(defn dec! [a] (swap! a dec))
 
-(defn adjust-score [n] (ss/config! f :content (panel n)))
-(defn inc-score [] (adjust-score (inc! Score)))
-(defn dec-score [] (adjust-score (dec! Score)))
+(ss/listen addOne   :action (fn [e] (adjust-score (inc! Score))))
+(ss/listen minusOne :action (fn [e] (adjust-score (dec! Score))))
 
-(ss/listen addOne   :action (fn [e] (inc-score)))
-(ss/listen minusOne :action (fn [e] (dec-score)))
+(ss/listen nameList :selection 
+        (fn [e] (when (= (ss/selection e) "Andrew")
+                  (adjust-score (inc! Score)))))
+
 
 
 (defn -main
