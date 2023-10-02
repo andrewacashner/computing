@@ -2,8 +2,6 @@
 ; Andrew Cashner, 2023/10/02
 ;
 ; TODO 
-; - use actual data structures from time module for dates, and use their
-; comparison functions
 ; - prompt for user to load YAML input, read input
 ; - better end-of-game action
 ; - better display all around
@@ -28,43 +26,48 @@
    {:date "2021-01-06"
     :description "Pro-Trump Insurrection at US Capitol"}])
 
-(def read-timeline (partial map map->Fact))
-
 (def make-clues shuffle)
 
-(defn show-fact
-  [fact]
-  (format "%s: %s" (:date fact) (:description fact)))
+(def isodate
+  (tf/formatter "yyyy-MM-dd"))
 
-(def show-timeline (partial map show-fact))
+(defn make-fact
+  [m]
+  (->Fact (tf/parse isodate (:date m)) 
+         (:description m)))
 
-(def isodate-now
-  "Return string with current date in YYYY-MM-DD format"
-  (tf/unparse (tf/formatter "yyyy-MM-dd") (t/now)))
+(defn read-timeline [ms] (map make-fact ms))
 
 (def fact-today
   "Starting condition of every timeline; just today's date"
-  (->Fact isodate-now "Now"))
+  (->Fact (t/now) "Now"))
 
 (def initial-timeline [fact-today])
 
+(defn show-date
+  "Return string with current date in YYYY-MM-DD format"
+  [date]
+  (tf/unparse isodate date))
+
+(defn show-fact
+  [fact]
+  (format "%s: %s" (show-date (:date fact)) (:description fact)))
+
+(def show-timeline (partial map show-fact))
 
 
-; TODO replace with function from time library using real dates
-(defn before?
-  "Is the date of one fact before or equal to the second?"
+(defn chrono-sort
+  [timeline]
+  (sort-by :date t/before? timeline))
+
+(defn fact-before?
   [fact1 fact2]
-  (<= (compare (:date fact1) (:date fact2)) 0))
+  (t/before? (:date fact1) (:date fact2)))
 
-(defn after?
-  "Is the date of one fact after the second?"
-  [fact1 fact2]
-  (> (compare (:date fact1) (:date fact2)) 0))
-
-(defn between?
-  [fact pre post]
-  (and (before? fact post)
-       (after? fact pre)))
+(defn valid-answer?
+  [clue guess timeline]
+  (let [after (filter (partial fact-before? clue) timeline)]
+    (= guess (first after))))
 
 (defn index-of
   [coll item]
@@ -72,33 +75,27 @@
             (when (= item this-item) index))]
     (first (keep-indexed #(match %1 %2) coll))))
 
-(defn valid-answer?
-  [clue post-guess timeline]
-  (if-let [index (index-of timeline post-guess)]
-    (cond (or (<= 1 (count timeline)) 
-              (= 0 index)) 
-          (before? clue post-guess)
+(defn find-matching-fact
+  [search-term fact-strings fact-list]
+  (let [pairs (map vector fact-strings fact-list)
+        match (keep #(when (= (first %) search-term) (second %)) pairs)]
+    (last match)))
 
-          :else (let [pre-guess (nth timeline (dec index))]
-                  (between? clue pre-guess post-guess)))))
 
-; TODO surely there is a better way of getting the selected item
-; as a record than by searching in the list of formatted strings of the
-; listbox and then using that index to lookup the record
 (defn check-and-advance
   [state event]
   (if (empty? (:clues @state))
     (ss/alert event "No more clues")
     (if-let [guess (ss/selection event)]
-      (let [guess-index   (index-of (:timeline-display @state) guess)
-            old-timeline  (:timeline @state)
-            test-fact     (nth old-timeline guess-index)
+      (let [old-timeline  (:timeline @state)
+            old-display   (:timeline-display @state)
+            test-fact     (find-matching-fact guess old-display old-timeline)
             old-clues     (:clues @state)
             new-fact      (first old-clues)
             new-clues     (rest old-clues)
-            new-timeline  (sort-by :date (cons new-fact old-timeline))
+            new-timeline  (chrono-sort (cons new-fact old-timeline))
             new-display   (show-timeline new-timeline)
-            correct?      (valid-answer? new-fact test-fact old-timeline)
+            correct?      (valid-answer? new-fact test-fact new-timeline)
             old-score     (:score @state)
             new-score     (if correct? (inc old-score) old-score)
             msg           (if correct? "Correct!" "Incorrect!")

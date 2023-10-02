@@ -6,7 +6,9 @@
   :dependencies [[org.clojure/clojure "1.11.1"]
                  [seesaw "1.5.0"]
                  [clj-time "0.15.2"]]
-  :main ^:skip-aot timelinegui.core
+;  :main ^:skip-aot timelinegui.core
+  :main timelinegui.core
+  :aot [timelinegui.core]
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all
                        :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})
