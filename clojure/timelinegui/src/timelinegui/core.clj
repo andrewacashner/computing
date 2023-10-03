@@ -3,7 +3,6 @@
 ;
 ; TODO 
 ; - prompt for user to load YAML input, read input
-; - better end-of-game action
 ; - better display all around
 
 (ns timelinegui.core
@@ -44,18 +43,6 @@
 
 (def initial-timeline [fact-today])
 
-(defn show-date
-  "Return string with current date in YYYY-MM-DD format"
-  [date]
-  (tf/unparse isodate date))
-
-(defn show-fact
-  [fact]
-  (format "%s: %s" (show-date (:date fact)) (:description fact)))
-
-(def show-timeline (partial map show-fact))
-
-
 (defn chrono-sort
   [timeline]
   (sort-by :date t/before? timeline))
@@ -69,42 +56,54 @@
   (let [after (filter (partial fact-before? clue) timeline)]
     (= guess (first after))))
 
-(defn index-of
-  [coll item]
-  (letfn [(match [index this-item] 
-            (when (= item this-item) index))]
-    (first (keep-indexed #(match %1 %2) coll))))
-
-(defn find-matching-fact
-  [search-term fact-strings fact-list]
-  (let [pairs (map vector fact-strings fact-list)
-        match (keep #(when (= (first %) search-term) (second %)) pairs)]
-    (last match)))
-
+(def last-fact (map->Fact {:description "Game over"}))
 
 (defn check-and-advance
-  [state event]
-  (if (empty? (:clues @state))
-    (ss/alert event "No more clues")
-    (if-let [guess (ss/selection event)]
-      (let [old-timeline  (:timeline @state)
-            old-display   (:timeline-display @state)
-            test-fact     (find-matching-fact guess old-display old-timeline)
-            old-clues     (:clues @state)
-            new-fact      (first old-clues)
-            new-clues     (rest old-clues)
-            new-timeline  (chrono-sort (cons new-fact old-timeline))
-            new-display   (show-timeline new-timeline)
-            correct?      (valid-answer? new-fact test-fact new-timeline)
-            old-score     (:score @state)
-            new-score     (if correct? (inc old-score) old-score)
-            msg           (if correct? "Correct!" "Incorrect!")
-            new-data      {:clues            new-clues 
-                           :timeline         new-timeline 
-                           :timeline-display new-display
-                           :score            new-score}]
-      (ss/alert event msg)
-      (reset! state new-data)))))
+  [state test-fact event]
+  (let [old-timeline  (:timeline @state)
+        old-score     (:score @state)
+        old-clues     (:clues @state)
+        new-fact      (first old-clues)
+        new-clues     (rest old-clues)
+        new-timeline  (chrono-sort (cons new-fact old-timeline))
+        correct?      (valid-answer? new-fact test-fact new-timeline)
+        new-score     (if correct? (inc old-score) old-score)
+        msg           (if correct? "Correct!" "Incorrect!")
+        new-data      {:clues     (if (empty? new-clues) [last-fact] new-clues)
+                       :timeline  new-timeline 
+                       :score     new-score}]
+    (ss/alert event msg)
+    (reset! state new-data)))
+
+(defn show-date
+  "Return string with current date in YYYY-MM-DD format"
+  [date]
+  (tf/unparse isodate date))
+
+(defn show-fact
+  [fact]
+  (format "%s\n\n%s" (show-date (:date fact)) (:description fact)))
+
+(defn clue-card
+  [fact]
+  (ss/text :text (:description fact)
+           :margin 10
+           :multi-line? true
+           :wrap-lines? true))
+
+(defn fact-card
+  [state fact]
+  (ss/text :text (show-fact fact)
+           :margin 10
+           :multi-line? true
+           :wrap-lines? true
+           :listen [:mouse-clicked (partial check-and-advance state fact)]))
+
+
+(defn timeline-cards
+  [state]
+  (let [cards (map (partial fact-card state) (:timeline @state))]
+    (ss/flow-panel :items cards)))
 
 
 (defn create-view-children
@@ -115,20 +114,15 @@
                                "Click the item on the timeline that happened just AFTER the event in the clue."
                                :multi-line? true
                                :wrap-lines? true)
-        clue-box (ss/text :text (:description clue)
-                          :multi-line? true
-                          :wrap-lines? true)
+        clue-box (ss/flow-panel :items [(clue-card clue)])
         score-box (ss/text :text (format "Score: %d" (:score @state)))
 
         prompt-panel (ss/vertical-panel 
                        :items [instructions clue-box score-box])
 
-        timeline-box (ss/listbox 
-                       :model (:timeline-display @state)
-                       :listen [:mouse-clicked
-                                (fn [e] (check-and-advance state e))])]
-                                                     
-    (ss/grid-panel :rows 1 :columns 2
+        timeline-box (timeline-cards state)]
+
+    (ss/grid-panel :rows 2 :columns 1
                    :items [prompt-panel timeline-box])))
 
 
@@ -155,17 +149,15 @@
   (let [master            (read-timeline Default-timeline)
         clues             (make-clues master)
         timeline          initial-timeline
-        timeline-display  (show-timeline timeline)
         score 0
         state (atom {:clues             clues
                      :timeline          timeline
-                     :timeline-display  (show-timeline timeline)
                      :score             score})
         view (create-view (create-view-children state))]
 
     (println @state)
     (add-watch state :update-view (update-view view state))
-    (add-watch state :logger state-logger)
+;    (add-watch state :logger state-logger)
 
     (ss/invoke-now (-> view ss/pack! ss/show!))))
 
