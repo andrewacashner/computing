@@ -2,54 +2,63 @@
 ; Andrew Cashner, 2023/10/02
 ;
 ; TODO 
-; - prompt for user to load YAML input, read input
 ; - better display all around
+; - add images, audio/video to cards
+; - better end-game action
 
 (ns timelinegui.core
   (:require [seesaw.core      :as ss]
-            [clj-time.core    :as t]
-            [clj-time.format  :as tf])
+            [seesaw.chooser   :as sc]
+            [clj-time.core    :as time]
+            [clj-time.format  :as timef]
+            [clj-yaml.core    :as yaml])
   (:gen-class))
 
 (ss/native!)
 
 (defrecord Fact [date description])
 
-(def Default-timeline 
-  [{:date "0001-12-25"
-    :description "Birth of Jesus?"}
-   {:date "1981-04-11"
-    :description "Birth of Andrew Cashner"}
-   {:date "2001-09-11"
-    :description "Terrorist attack on World Trade Center, New York, NY"}
-   {:date "2021-01-06"
-    :description "Pro-Trump Insurrection at US Capitol"}])
-
 (def make-clues shuffle)
 
 (def isodate
-  (tf/formatter "yyyy-MM-dd"))
+  (timef/formatter "yyyy-MM-dd"))
 
 (defn make-fact
   [m]
-  (->Fact (tf/parse isodate (:date m)) 
+  (->Fact (timef/parse isodate (:date m)) 
          (:description m)))
 
-(defn read-timeline [ms] (map make-fact ms))
+(defn read-timeline 
+  [ms] 
+  (map make-fact ms))
+
+(defn read-timeline-file
+  [filename]
+  (let [input (yaml/parse-string (slurp filename))]
+    (read-timeline input)))
+
+(defn open-timeline-file 
+  []
+  (let [infile (sc/choose-file 
+                 :all-files? false 
+                 :filters [["YAML files" ["yaml"]]])]
+    (read-timeline-file infile)))
+
+
 
 (def fact-today
   "Starting condition of every timeline; just today's date"
-  (->Fact (t/now) "Now"))
+  (->Fact (time/now) "Now"))
 
 (def initial-timeline [fact-today])
 
 (defn chrono-sort
   [timeline]
-  (sort-by :date t/before? timeline))
+  (sort-by :date time/before? timeline))
 
 (defn fact-before?
   [fact1 fact2]
-  (t/before? (:date fact1) (:date fact2)))
+  (time/before? (:date fact1) (:date fact2)))
 
 (defn valid-answer?
   [clue guess timeline]
@@ -60,44 +69,49 @@
 
 (defn check-and-advance
   [state test-fact event]
-  (let [old-timeline  (:timeline @state)
-        old-score     (:score @state)
-        old-clues     (:clues @state)
-        new-fact      (first old-clues)
-        new-clues     (rest old-clues)
-        new-timeline  (chrono-sort (cons new-fact old-timeline))
-        correct?      (valid-answer? new-fact test-fact new-timeline)
-        new-score     (if correct? (inc old-score) old-score)
-        msg           (if correct? "Correct!" "Incorrect!")
-        new-data      {:clues     (if (empty? new-clues) [last-fact] new-clues)
-                       :timeline  new-timeline 
-                       :score     new-score}]
-    (ss/alert event msg)
-    (reset! state new-data)))
+  (if (= (first (:clues @state)) last-fact)
+    (ss/alert event (format "Game over! Final score: %d" (:score @state)))
+    (let [old-timeline  (:timeline @state)
+          old-score     (:score @state)
+          old-clues     (:clues @state)
+          new-fact      (first old-clues)
+          new-clues     (rest old-clues)
+          new-timeline  (chrono-sort (cons new-fact old-timeline))
+          correct?      (valid-answer? new-fact test-fact new-timeline)
+          new-score     (if correct? (inc old-score) old-score)
+          msg           (if correct? "Correct!" "Incorrect!")
+          new-data      {:clues     (if (empty? new-clues) [last-fact] new-clues)
+                         :timeline  new-timeline 
+                         :score     new-score}]
+      (ss/alert event msg)
+      (reset! state new-data))))
 
 (defn show-date
   "Return string with current date in YYYY-MM-DD format"
   [date]
-  (tf/unparse isodate date))
+  (timef/unparse isodate date))
 
 (defn show-fact
   [fact]
   (format "%s\n\n%s" (show-date (:date fact)) (:description fact)))
 
+(def card-options {:margin 10
+                   :multi-line? true
+                   :wrap-lines? true
+                   :columns 10
+                   :rows 10})
+
 (defn clue-card
   [fact]
   (ss/text :text (:description fact)
-           :margin 10
-           :multi-line? true
-           :wrap-lines? true))
+           card-options))
 
 (defn fact-card
   [state fact]
   (ss/text :text (show-fact fact)
-           :margin 10
-           :multi-line? true
-           :wrap-lines? true
-           :listen [:mouse-clicked (partial check-and-advance state fact)]))
+           :listen [:mouse-clicked 
+                    (partial check-and-advance state fact)]
+           card-options))
 
 
 (defn timeline-cards
@@ -113,12 +127,14 @@
         instructions (ss/text :text 
                                "Click the item on the timeline that happened just AFTER the event in the clue."
                                :multi-line? true
-                               :wrap-lines? true)
+                               :wrap-lines? true
+                               :columns 20)
         clue-box (ss/flow-panel :items [(clue-card clue)])
         score-box (ss/text :text (format "Score: %d" (:score @state)))
 
-        prompt-panel (ss/vertical-panel 
-                       :items [instructions clue-box score-box])
+        prompt-panel (ss/vertical-panel :items [instructions 
+                                                clue-box
+                                                score-box])
 
         timeline-box (timeline-cards state)]
 
@@ -131,7 +147,7 @@
   (ss/frame :title "Timeline"
             :visible? true
             :on-close :exit
-            :minimum-size [1280 :by 1025]
+            :minimum-size [1920 :by 1080]
             :content children))
 
 (defn update-view
@@ -145,17 +161,17 @@
 
 (defn -main
   [& args]
-  ; TODO prompt to open timeline file
-  (let [master            (read-timeline Default-timeline)
-        clues             (make-clues master)
-        timeline          initial-timeline
-        score 0
-        state (atom {:clues             clues
-                     :timeline          timeline
-                     :score             score})
+  (let [master    (if (empty? args)
+                    (open-timeline-file)
+                    (read-timeline-file (first args)))
+        clues     (make-clues master)
+        timeline  initial-timeline
+        score     0
+        state     (atom {:clues     clues
+                         :timeline  timeline
+                         :score     score})
         view (create-view (create-view-children state))]
 
-    (println @state)
     (add-watch state :update-view (update-view view state))
 ;    (add-watch state :logger state-logger)
 

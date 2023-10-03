@@ -5,7 +5,8 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.11.1"]
                  [seesaw "1.5.0"]
-                 [clj-time "0.15.2"]]
+                 [clj-time "0.15.2"]
+                 [clj-commons/clj-yaml "1.0.27"]]
 ;  :main ^:skip-aot timelinegui.core
   :main timelinegui.core
   :aot [timelinegui.core]
