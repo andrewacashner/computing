@@ -9,9 +9,11 @@
 (ns timelinegui.core
   (:require [seesaw.core      :as ss]
             [seesaw.chooser   :as sc]
+            [seesaw.behave    :as sb]
             [clj-time.core    :as time]
             [clj-time.format  :as timef]
             [clj-yaml.core    :as yaml])
+  (:import [javax.swing SwingUtilities])
   (:gen-class))
 
 (ss/native!)
@@ -20,8 +22,11 @@
 
 (def make-clues shuffle)
 
+; We allow input in either yyyy or yyyy-mm-dd format, but we only display the
+; year in the timeline. (Full dates allow more precise sorting.)
+; TODO change or make configurable? 
 (def isodate
-  (timef/formatter "yyyy-MM-dd"))
+  (timef/formatter time/utc "yyyy" "yyyy-MM-dd"))
 
 (defn make-fact
   [m]
@@ -44,6 +49,14 @@
                  :filters [["YAML files" ["yaml"]]])]
     (read-timeline-file infile)))
 
+(defn show-date
+  "Return string with the year of the given date"
+  [date]
+  (timef/unparse isodate date))
+
+(defn show-fact
+  [fact]
+  (format "%s\n\n%s" (show-date (:date fact)) (:description fact)))
 
 
 (def fact-today
@@ -86,25 +99,40 @@
       (ss/alert event msg)
       (reset! state new-data))))
 
-(defn show-date
-  "Return string with current date in YYYY-MM-DD format"
-  [date]
-  (timef/unparse isodate date))
 
-(defn show-fact
-  [fact]
-  (format "%s\n\n%s" (show-date (:date fact)) (:description fact)))
+;from seesaw github seesaw/test/examples/xyz_panel.clj
+(defn moveable
+  [widget]
+  (let [start-point (java.awt.Point.)]
+    (sb/when-mouse-dragged 
+      widget
+      :start (fn [e] (ss/move! e :to-front)
+               (.setLocation start-point (.getPoint e)))
+      :drag (fn [e _]
+              (let [p (.getPoint e)]
+                (ss/move! e :by [(- (.x p) (.x start-point))
+                                 (- (.y p) (.y start-point))])))
+      :finish (fn [e] (ss/alert e "Dragged!"))))
+      ; TODO move timeline cards to allow space for new card
+      ; check if correct place
+  widget)
 
-(def card-options {:margin 10
-                   :multi-line? true
-                   :wrap-lines? true
-                   :columns 10
-                   :rows 10})
+(def center-align {:halign :center})
+
+; TODO center card text or just center the year?
+; (can't center a JTextArea (<- ss/text :multi-line? true)
+(def card-options 
+  {:margin 10
+   :multi-line? true
+   :wrap-lines? true
+   :size [250 :by 350]})
+
 
 (defn clue-card
   [fact]
+  (moveable
   (ss/text :text (:description fact)
-           card-options))
+           card-options)))
 
 (defn fact-card
   [state fact]
@@ -120,26 +148,26 @@
     (ss/flow-panel :items cards)))
 
 
+(def instruction-text 
+  "Drag the event card to insert it into the timeline.")
+
 (defn create-view-children
   [state]
-  (let [clue (first (:clues @state))
+  (let [clue           (first (:clues @state))
+        instructions   (ss/text :text instruction-text center-align)
+        clue-label     (ss/text :text "CLUE" center-align)
+        clue-box       (clue-card clue)
+        timeline-label (ss/text :text "TIMELINE" center-align)
+        timeline       (timeline-cards state)
+        score-box      (ss/text :text (format "Score: %d" (:score @state))
+                                center-align)]
 
-        instructions (ss/text :text 
-                               "Click the item on the timeline that happened just AFTER the event in the clue."
-                               :multi-line? true
-                               :wrap-lines? true
-                               :columns 20)
-        clue-box (ss/flow-panel :items [(clue-card clue)])
-        score-box (ss/text :text (format "Score: %d" (:score @state)))
-
-        prompt-panel (ss/vertical-panel :items [instructions 
-                                                clue-box
-                                                score-box])
-
-        timeline-box (timeline-cards state)]
-
-    (ss/grid-panel :rows 2 :columns 1
-                   :items [prompt-panel timeline-box])))
+    (ss/vertical-panel :items [;instructions 
+                               ;clue-label
+                               clue-box
+                               ;timeline-label
+                               timeline
+                               score-box])))
 
 
 (defn create-view
