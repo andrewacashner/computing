@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!-- Drag and drop experiments from MDN guide 
+  Andrew Cashner, 2024/01/09
+  TODO: 
+    - show supply of grocery items
+    - be able to remove items from cart
+    - sort cart
+    - running total
+    - simplify code for entering new produce items
+-->
+<html>
+  <head>
+    <title>Drag and Drop</title>
+    <script>
+      function dragstartHandler(ev) {
+        // Add the target element's id to the data transfer object
+        ev.dataTransfer.setData("application/my-app", ev.currentTarget.id);
+        ev.dataTransfer.effectAllowed = "copy";
+      }
+      function dragoverHandler(ev) {
+        ev.preventDefault();
+        ev.dataTransfer.dropEffect = "copy";
+      }
+      function dropHandler(ev) {
+        ev.preventDefault();
+        // Get the ID of the target and add the moved element to the target's DOM
+        const data = ev.dataTransfer.getData("application/my-app");
+        let source = document.getElementById(data);
+        let copy = source.cloneNode(true);
+        ev.currentTarget.appendChild(copy);
+        }
+      function checkout() {
+        const produce = document.getElementById("target").querySelectorAll("span[data-price]");
+        var prices = [];
+        produce.forEach((item) => 
+            prices.push(Number(item.getAttribute("data-price")))
+          );
+        const sum = prices.reduce((a, b) => a + b, 0)
+        const total = document.getElementById("total");
+        totalString = "$" + parseFloat(sum).toFixed(2);
+        total.innerHTML = totalString;
+      }
+    </script>
+<style>
+span.produce {
+  font-size: 300%;
+}
+div.cart {
+  border: 1px solid black;
+  min-height: 4em;
+}
+p.total {
+  font-size: 200%;
+  font-weight: bold;
+}
+</style>
+  </head>
+  <body>
+    <div>
+      <span class="produce" id="potato" draggable="true" ondragstart="dragstartHandler(event)" data-price="1.50">🥔</span>
+      <span class="produce" id="carrot" draggable="true" ondragstart="dragstartHandler(event)" data-price="1.00">🥕</span>
+      <span class="produce" id="eggplant" draggable="true" ondragstart="dragstartHandler(event)" data-price="2.00">🍆</span>
+    </div>
+    <div>
+      <h1>Shopping Cart</h1>
+      <div id="target"
+           class="cart"
+          ondrop="dropHandler(event)" 
+          ondragover="dragoverHandler(event)">
+      </div>
+    </div>
+    <p>
+    <button onclick="checkout()">Check Out</button>
+    </p>
+    <p class="total">Total: <span id="total">$0.00</span></p>
+  </body>
+</html>
+

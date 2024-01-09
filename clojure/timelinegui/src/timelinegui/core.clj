@@ -131,7 +131,7 @@
 
 
 (def instruction-text 
-  "Drag the event card to insert it into the timeline.")
+  "Click on the timeline event that happened just AFTER the clue to insert the card in that spot.")
 
 (defn create-view-children
   [state]
