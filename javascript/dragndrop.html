@@ -2,52 +2,136 @@
 <!-- Drag and drop experiments from MDN guide 
   Andrew Cashner, 2024/01/09
   TODO: 
-    - show supply of grocery items
+    - groups/packs of items 
     - be able to remove items from cart
     - sort cart
-    - running total
-    - simplify code for entering new produce items
+    - running total?
 -->
 <html>
   <head>
-    <title>Drag and Drop</title>
+    <title>Grocery Shopping</title>
     <script>
+
+      function formatPrice(n) {
+        return "$" + parseFloat(n).toFixed(2);
+      }
+
+      document.addEventListener("DOMContentLoaded", (event) => {
+        var bins = document.querySelectorAll("div.bin");
+        bins.forEach((bin) => {
+          console.log("Setting up bin " + bin.id);
+
+          var head = document.createElement("h1");
+          head.textContent = bin.dataset.label;
+          var priceLabel = document.createElement("span");
+          priceLabel.textContent = formatPrice(bin.dataset.price);
+          head.appendChild(priceLabel);
+          bin.appendChild(head);
+          console.log("Created bin label");
+          console.log(head);
+
+          var produceList = document.createElement("ul");
+          produceList.className = "bin-contents";
+          console.log("Created produce list");
+          console.log(produceList);
+
+          var item = document.createElement("span");
+          item.className = "produce";
+          item.id = bin.id.replace("bin:", "");
+          item.setAttribute("data-price", bin.dataset.price);
+          item.setAttribute("draggable", "true");
+          item.setAttribute("ondragstart", "dragstartHandler(event)");
+          item.textContent = bin.dataset.img;
+          console.log("Creating produce item " + bin.id.replace("bin:", ""));
+          console.log(item);
+
+          let max = bin.getAttribute("data-startAmount");
+          console.log("Creating " + max + " items");
+          for (let i = 0; i < max; ++i) {
+            let newItem = item.cloneNode(true);
+            produceList.appendChild(newItem);
+            console.log("Added item to bin x" + (i + 1));
+          }
+          bin.appendChild(produceList);
+        });
+      });
+
+//        <h1>Potato</h1>
+//        <ul class="bin-contents">
+//          <li>
+//            <span class="produce" id="potato" 
+//                  ondragstart="dragstartHandler(event)">🥔</span>
+//          </li>
+//        </ul>
+ 
       function dragstartHandler(ev) {
         // Add the target element's id to the data transfer object
         ev.dataTransfer.setData("application/my-app", ev.currentTarget.id);
-        ev.dataTransfer.effectAllowed = "copy";
+        ev.dataTransfer.effectAllowed = "move";
       }
       function dragoverHandler(ev) {
         ev.preventDefault();
-        ev.dataTransfer.dropEffect = "copy";
+        ev.dataTransfer.dropEffect = "move";
       }
       function dropHandler(ev) {
         ev.preventDefault();
         // Get the ID of the target and add the moved element to the target's DOM
         const data = ev.dataTransfer.getData("application/my-app");
-        let source = document.getElementById(data);
-        let copy = source.cloneNode(true);
-        ev.currentTarget.appendChild(copy);
-        }
+        let item = document.getElementById(data);
+        ev.currentTarget.appendChild(item);
+      }
       function checkout() {
-        const produce = document.getElementById("target").querySelectorAll("span[data-price]");
+        var produce = document.querySelectorAll("div.cart > span.produce");
         var prices = [];
         produce.forEach((item) => 
-            prices.push(Number(item.getAttribute("data-price")))
-          );
+            prices.push(Number(item.dataset.price))
+        );
         const sum = prices.reduce((a, b) => a + b, 0)
         const total = document.getElementById("total");
-        totalString = "$" + parseFloat(sum).toFixed(2);
-        total.innerHTML = totalString;
+        total.textContent = formatPrice(sum);
       }
     </script>
 <style>
+html {
+  font-family: sans-serif;
+}
+
+div.case {
+  height: 25em;
+}
+div.bin {
+  display: inline-block;
+  vertical-align: top;
+  border: 2px solid black;
+  height: 100%;
+  width: 8em;
+  text-align: center;
+}
+div.bin h1 {
+  font-size: 150%;
+}
+div.bin h1 span {
+  font-size: 80%;
+  display: block;
+}
+ul.bin-contents {
+  list-style: none;
+  padding-left: 0;
+}
 span.produce {
   font-size: 300%;
 }
+
 div.cart {
-  border: 1px solid black;
-  min-height: 4em;
+  border: 4px solid black;
+  min-height: 6em;
+  max-width: 30em;
+}
+
+button {
+  font-size: 110%;
+  padding: 1ex;
+  margin: 1ex;
 }
 p.total {
   font-size: 200%;
@@ -56,11 +140,21 @@ p.total {
 </style>
   </head>
   <body>
+    <header>
+      <h1>Let’s Shop at the Grocery!</h1>
+    </header>
+    <main>
     <div>
-      <span class="produce" id="potato" draggable="true" ondragstart="dragstartHandler(event)" data-price="1.50">🥔</span>
-      <span class="produce" id="carrot" draggable="true" ondragstart="dragstartHandler(event)" data-price="1.00">🥕</span>
-      <span class="produce" id="eggplant" draggable="true" ondragstart="dragstartHandler(event)" data-price="2.00">🍆</span>
-    </div>
+      <div class="case">
+        <div class="bin" id="bin:potato" data-price="0.50" data-label="Potato" data-img="🥔" data-startAmount="5"></div>
+        <div class="bin" id="bin:carrot" data-price="0.25" data-label="Carrot" data-img="🥕" data-startAmount="7"></div>
+        <div class="bin" id="bin:eggplant" data-price="0.75" data-label="Eggplant" data-img="🍆" data-startAmount="4"></div>
+        <div class="bin" id="bin:avocado" data-price="1.25" data-label="Avocado" data-img="🥑" data-startAmount="4"></div>
+        <div class="bin" id="bin:chile" data-price="0.30" data-label="Chile Pepper" data-img="🌶️" data-startAmount="8"></div>
+        <div class="bin" id="bin:bellPepper" data-price="0.40" data-label="Bell Pepper" data-img="🫑" data-startAmount="6"></div>
+        <div class="bin" id="bin:onion" data-price="0.10" data-label="Onion" data-img="🧅" data-startAmount="7"></div>
+        <div class="bin" id="bin:beans" data-price="0.05" data-label"Kidney Beans" data-img="🫘" data-startAmount="9"></div>
+      </div>
     <div>
       <h1>Shopping Cart</h1>
       <div id="target"
@@ -71,8 +165,10 @@ p.total {
     </div>
     <p>
     <button onclick="checkout()">Check Out</button>
+    <button onclick="location.reload()">Empty Cart</button>
     </p>
     <p class="total">Total: <span id="total">$0.00</span></p>
+    </main>
   </body>
 </html>
 
