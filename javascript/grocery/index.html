@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<!-- Drag and drop experiments from MDN guide 
+<!-- Drag and drop items from grocery shelf into cart
   Andrew Cashner, 2024/01/09
   TODO: 
-    - groups/packs of items 
-    - sort cart
-    - running total?
-    - improve display
-    - use JSON/YAML to import data instead of quasi-XML in div.bin?
+  - groups/packs of items 
+  - sort cart
 -->
 <html>
   <head>
@@ -20,31 +17,22 @@
       <h1>Let’s Shop at the Grocery!</h1>
     </header>
     <main>
-    <div>
-      <div class="case"
-          ondrop="putBackItem(event)" 
-          ondragover="dragoverHandler(event)">
-        <div class="bin" id="bin:potato" data-price="0.50" data-label="Potato" data-img="🥔"></div>
-        <div class="bin" id="bin:carrot" data-price="0.25" data-label="Carrot" data-img="🥕"></div>
-        <div class="bin" id="bin:eggplant" data-price="0.75" data-label="Eggplant" data-img="🍆"></div>
-        <div class="bin" id="bin:avocado" data-price="1.25" data-label="Avocado" data-img="🥑"></div>
-        <div class="bin" id="bin:chile" data-price="0.30" data-label="Chile Pepper" data-img="🌶️"></div>
-        <div class="bin" id="bin:bellPepper" data-price="0.40" data-label="Bell Pepper" data-img="🫑"></div>
-        <div class="bin" id="bin:onion" data-price="0.10" data-label="Onion" data-img="🧅"></div>
-        <div class="bin" id="bin:beans" data-price="0.05" data-label="Kidney Beans" data-img="🫘"></div>
+      <div class="shelf"
+           ondrop="putBackItem(event)" 
+           ondragover="dragoverHandler(event)">
       </div>
-    <div>
-      <h1>Shopping Cart</h1>
-      <div class="cart" 
-          ondrop="dropHandler(event)" 
-          ondragover="dragoverHandler(event)">
+      <div>
+        <h1>Shopping Cart</h1>
+        <div class="cart" 
+             ondrop="dropInCart(event)" 
+             ondragover="dragoverHandler(event)">
+        </div>
       </div>
-    </div>
-    <p>
-    <button onclick="checkout()">Check Out</button>
-    <button onclick="emptyCart()">Empty Cart</button>
-    </p>
-    <p class="total">Total: <span id="total">$0.00</span></p>
+      <p>
+      <button onclick="checkout()">Check Out</button>
+      <button onclick="emptyCart()">Empty Cart</button>
+      </p>
+      <p class="total" data-valid='true'>Total: <span id="totalUSD">$0.00</span></p>
     </main>
   </body>
 </html>

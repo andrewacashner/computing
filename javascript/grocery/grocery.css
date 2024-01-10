@@ -2,17 +2,20 @@ html {
   font-family: sans-serif;
 }
 
-div.case {
-  height: 25em;
+div.shelf {
+  display: table;
+  border: 4px solid black;
 }
 div.bin {
-  display: inline-block;
+  display: table-cell;
   vertical-align: top;
-  border: 2px solid black;
-  height: 100%;
   width: 8em;
   text-align: center;
 }
+div.bin + div.bin {
+  border-left: 2px solid black;
+}
+
 div.bin h1 {
   font-size: 150%;
 }
@@ -40,7 +43,14 @@ button {
   padding: 1ex;
   margin: 1ex;
 }
-p.total {
+p.total[data-valid='false'] {
   font-size: 200%;
   font-weight: bold;
+  color: grey;
 }
+p.total[data-valid='true'] {
+  font-size: 200%;
+  font-weight: bold;
+  color: black;
+}
+*

@@ -1,3 +1,54 @@
+const inventory = [
+    {
+        "id": "potato",
+        "label": "Potato",
+        "price": 0.50,
+        "img": "🥔"
+    },
+    {
+        "id": "carrot",
+        "label": "Carrot",
+        "price": 0.25,
+        "img" : "🥕"
+    },
+    { 
+        "id": "eggplant",
+        "price": 0.75,
+        "label": "Eggplant",
+        "img": "🍆"
+    },
+    {
+        "id": "avocado",
+        "price": 1.25,
+        "label": "Avocado",
+        "img": "🥑"
+    },
+    {
+        "id": "chile",
+        "price": 0.30,
+        "label": "Chile Pepper",
+        "img": "🌶️"
+    },
+    {
+        "id": "bellPepper",
+        "price": 0.40,
+        "label": "Bell Pepper",
+        "img": "🫑"
+    },
+    {
+        "id": "onion",
+        "price": 0.10,
+        "label": "Onion",
+        "img": "🧅"
+    },
+    {
+        "id": "beans",
+        "price": 0.05,
+        "label": "Kidney Beans",
+        "img": "🫘"
+    }
+]
+
 function formatPrice(n) {
     return "$" + parseFloat(n).toFixed(2);
 }
@@ -6,17 +57,21 @@ function getRandomStartAmount() {
     return Math.floor(Math.random() * 8 + 1);
 }
 
-document.addEventListener("DOMContentLoaded", (event) => {
-    var bins = document.querySelectorAll("div.bin");
-    bins.forEach((bin) => {
-        console.log("Setting up bin " + bin.id);
+function stockShelf(inventory) {
+    var shelf = document.querySelector("div.shelf");
+
+    inventory.forEach((product) => {
+        console.log("Setting up bin " + product.id);
+        var bin = document.createElement("div");
+        bin.className = "bin";
+        bin.id = "bin:" + product.id;
         bin.setAttribute("ondrop", "putBackItem(event)");
         bin.setAttribute("ondragover", "dragoverHandler(event)");
 
         var head = document.createElement("h1");
-        head.textContent = bin.dataset.label;
+        head.textContent = product.label;
         var priceLabel = document.createElement("span");
-        priceLabel.textContent = formatPrice(bin.dataset.price);
+        priceLabel.textContent = formatPrice(product.price);
         head.appendChild(priceLabel);
         bin.appendChild(head);
         console.log("Created bin label");
@@ -24,13 +79,13 @@ document.addEventListener("DOMContentLoaded", (event) => {
 
         var item = document.createElement("span");
         item.className = "produce";
-        item.id = bin.id.replace("bin:", "");
-        item.setAttribute("data-price", bin.dataset.price);
+        item.id = product.id;
+        item.setAttribute("data-price", product.price);
         item.setAttribute("draggable", "true");
         item.setAttribute("ondragstart", "dragstartHandler(event)");
         item.setAttribute("data-incart", "false");
-        item.textContent = bin.dataset.img;
-        console.log("Creating produce item " + bin.id.replace("bin:", ""));
+        item.textContent = product.img;
+        console.log("Creating produce item " + item.id);
         console.log(item);
 
         let max = getRandomStartAmount();
@@ -41,7 +96,14 @@ document.addEventListener("DOMContentLoaded", (event) => {
             bin.appendChild(newItem);
             console.log("Added item to bin x" + (i + 1));
         }
+
+        shelf.appendChild(bin);
+        console.log("Added bin " + bin.id + " to shelf");
     });
+}
+
+document.addEventListener("DOMContentLoaded", (event) => {
+    stockShelf(inventory);
 });
 
 //        <h1>Potato</h1>
@@ -59,7 +121,19 @@ function dragoverHandler(ev) {
     ev.preventDefault();
     ev.dataTransfer.dropEffect = "move";
 }
-function dropHandler(ev) {
+function setTotalStatus(bool) {
+    var total = document.querySelector("p.total");
+    total.dataset.valid = bool;
+}
+function markTotalValid() {
+    console.log("Total is up to date");
+    setTotalStatus("true");
+}
+function markTotalInvalid() {
+    console.log("Total needs updating");
+    setTotalStatus("false");
+}
+function dropInCart(ev) {
     ev.preventDefault();
     // Get the ID of the target and add the moved element to the target's DOM
     const data = ev.dataTransfer.getData("application/my-app");
@@ -73,7 +147,10 @@ function dropHandler(ev) {
     } else {
         console.log("Item already in cart");
     }
+    markTotalInvalid();
 }
+
+
 function getBinIdFromItem(item) {
     return "bin:" + item.id.split("-")[0];
 }
@@ -97,8 +174,9 @@ function putBackItem(ev) {
 
 
 function updatePrice(f) {
-    var total = document.getElementById("total");
-    total.textContent = formatPrice(f);
+    var totalNum = document.getElementById("totalUSD");
+    totalNum.textContent = formatPrice(f);
+    markTotalValid();
 }
 function checkout() {
     console.log("Checking out: Calculating sum of prices");
