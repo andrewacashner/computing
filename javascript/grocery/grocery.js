@@ -142,7 +142,8 @@ function dropInCart(ev) {
     console.log(item);
     if (item.dataset.incart == "false") {
         item.dataset.incart = "true";
-        ev.target.appendChild(item);
+        let cart = document.querySelector("div.cart");
+        cart.appendChild(item);
         console.log("Dragged and moved item");
     } else {
         console.log("Item already in cart");
