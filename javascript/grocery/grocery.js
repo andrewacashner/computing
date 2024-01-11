@@ -1,3 +1,5 @@
+"use strict";
+
 const inventory = [
     {
         "id": "potato",
@@ -57,46 +59,72 @@ function getRandomStartAmount() {
     return Math.floor(Math.random() * 8 + 1);
 }
 
+function newBinHead(product) {
+    let head = document.createElement("h1");
+    head.textContent = product.label;
+
+    let priceLabel = document.createElement("span");
+    priceLabel.textContent = formatPrice(product.price);
+    head.appendChild(priceLabel);
+
+    console.log("Created bin label");
+    console.log(head);
+
+    return head;
+}
+
+function newBin(product) {
+    console.log("Setting up bin " + product.id);
+    let bin = document.createElement("div");
+    bin.className = "bin";
+    bin.id = "bin:" + product.id;
+    bin.setAttribute("ondrop", "putBackItem(event)");
+    bin.setAttribute("ondragover", "dragoverHandler(event)");
+
+    let head = newBinHead(product);
+    bin.appendChild(head);
+
+    return bin;
+}
+
+function newSaleItem(product, n) {
+    let item = document.createElement("span");
+    item.className = "produce";
+    item.id = product.id + '-' + n;
+    item.setAttribute("data-price", product.price);
+    item.setAttribute("draggable", "true");
+    item.setAttribute("ondragstart", "dragstartHandler(event)");
+    item.setAttribute("data-incart", "false");
+    item.textContent = product.img;
+
+    console.log("Creating produce item " + item.id);
+    console.log(item);
+
+    return item;
+}
+
+function stockBin(bin, product) {
+    let max = getRandomStartAmount();
+    console.log("Creating " + max + " items");
+    for (let i = 0; i < max; ++i) {
+        let newItem = newSaleItem(product, i + 1);
+        bin.appendChild(newItem);
+        console.log("Added item to bin x" + (i + 1));
+    }
+
+    return bin;
+}
+
+function newStockedBin(product) {
+    let bin = newBin(product);
+    return stockBin(bin, product);
+}
+
 function stockShelf(inventory) {
-    var shelf = document.querySelector("div.shelf");
+    let shelf = document.querySelector("div.shelf");
 
     inventory.forEach((product) => {
-        console.log("Setting up bin " + product.id);
-        var bin = document.createElement("div");
-        bin.className = "bin";
-        bin.id = "bin:" + product.id;
-        bin.setAttribute("ondrop", "putBackItem(event)");
-        bin.setAttribute("ondragover", "dragoverHandler(event)");
-
-        var head = document.createElement("h1");
-        head.textContent = product.label;
-        var priceLabel = document.createElement("span");
-        priceLabel.textContent = formatPrice(product.price);
-        head.appendChild(priceLabel);
-        bin.appendChild(head);
-        console.log("Created bin label");
-        console.log(head);
-
-        var item = document.createElement("span");
-        item.className = "produce";
-        item.id = product.id;
-        item.setAttribute("data-price", product.price);
-        item.setAttribute("draggable", "true");
-        item.setAttribute("ondragstart", "dragstartHandler(event)");
-        item.setAttribute("data-incart", "false");
-        item.textContent = product.img;
-        console.log("Creating produce item " + item.id);
-        console.log(item);
-
-        let max = getRandomStartAmount();
-        console.log("Creating " + max + " items");
-        for (let i = 0; i < max; ++i) {
-            let newItem = item.cloneNode(true);
-            newItem.id = newItem.id + "-" +  (i + 1);
-            bin.appendChild(newItem);
-            console.log("Added item to bin x" + (i + 1));
-        }
-
+        let bin = newStockedBin(product);
         shelf.appendChild(bin);
         console.log("Added bin " + bin.id + " to shelf");
     });
@@ -105,12 +133,6 @@ function stockShelf(inventory) {
 document.addEventListener("DOMContentLoaded", (event) => {
     stockShelf(inventory);
 });
-
-//        <h1>Potato</h1>
-//        <span class="produce" id="potato" 
-//              ondragstart="dragstartHandler(event)">🥔</span>
-//        <span class="produce" id="potato" ...</span>
-//        ...
 
 function dragstartHandler(ev) {
     // Add the target element's id to the data transfer object
@@ -122,7 +144,7 @@ function dragoverHandler(ev) {
     ev.dataTransfer.dropEffect = "move";
 }
 function setTotalStatus(bool) {
-    var total = document.querySelector("p.total");
+    let total = document.querySelector("p.total");
     total.dataset.valid = bool;
 }
 function markTotalValid() {
@@ -136,10 +158,12 @@ function markTotalInvalid() {
 function dropInCart(ev) {
     ev.preventDefault();
     // Get the ID of the target and add the moved element to the target's DOM
-    const data = ev.dataTransfer.getData("application/my-app");
+    let data = ev.dataTransfer.getData("application/my-app");
     let item = document.getElementById(data);
+
     console.log("Try to put item in cart");
     console.log(item);
+
     if (item.dataset.incart == "false") {
         item.dataset.incart = "true";
         let cart = document.querySelector("div.cart");
@@ -155,15 +179,18 @@ function dropInCart(ev) {
 function getBinIdFromItem(item) {
     return "bin:" + item.id.split("-")[0];
 }
+
 function putBackItem(ev) {
     ev.preventDefault();
     // Get the ID of the target and add the moved element to the target's DOM
-    const data = ev.dataTransfer.getData("application/my-app");
+    let data = ev.dataTransfer.getData("application/my-app");
     let item = document.getElementById(data);
+
     if (item.dataset.incart == "true") {
         console.log("Try to put item back");
         console.log(item);
         item.dataset.incart = "false";
+
         let matchID = getBinIdFromItem(item);
         let bin = document.getElementById(matchID);
         bin.appendChild(item);
@@ -173,16 +200,16 @@ function putBackItem(ev) {
     }
 }
 
-
 function updatePrice(f) {
-    var totalNum = document.getElementById("totalUSD");
+    let totalNum = document.getElementById("totalUSD");
     totalNum.textContent = formatPrice(f);
     markTotalValid();
 }
+
 function checkout() {
     console.log("Checking out: Calculating sum of prices");
-    var produce = document.querySelectorAll("div.cart > span.produce");
-    var prices = [];
+    let produce = document.querySelectorAll("div.cart > span.produce");
+    let prices = [];
     produce.forEach((item) => 
         prices.push(Number(item.dataset.price))
     );
@@ -192,12 +219,12 @@ function checkout() {
 
 function emptyCart() {
     console.log("Emptying cart");
-    var cartItems = document.querySelectorAll("div.cart > span.produce");
+    let cartItems = document.querySelectorAll("div.cart > span.produce");
     cartItems.forEach((item) => {
         let thisID = item.id;
         let matchID = getBinIdFromItem(item);
         console.log("Adding item back to " + matchID);
-        var bin = document.getElementById(matchID);
+        let bin = document.getElementById(matchID);
         bin.appendChild(item);
     });
     updatePrice(0);
