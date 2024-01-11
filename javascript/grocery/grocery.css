@@ -43,14 +43,14 @@ button {
   padding: 1ex;
   margin: 1ex;
 }
-p.total[data-valid='false'] {
+p.total[data-status='invalid'] {
   font-size: 200%;
   font-weight: bold;
   color: grey;
 }
-p.total[data-valid='true'] {
+p.total[data-status='valid'] {
   font-size: 200%;
   font-weight: bold;
   color: black;
 }
-*
+
