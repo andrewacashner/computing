@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Javasript Sandbox</title>
+    <meta name="author" content="Andrew A. Cashner" />
+    <meta name="date" content="2024/01/12" />
+    <script>
+      const NAMES = [ "Andrew", "Ann", "Ben", "Joy" ];
+
+      function arrayToOrderedList(arr) {
+        let list = document.createElement("ol");
+        for (let item of arr) {
+          let entry = document.createElement("li");
+          entry.textContent = item;
+          list.append(entry);
+        }
+        return list;
+      }
+
+      function setupList(section, arr) {
+        let newList = arrayToOrderedList(arr);
+        section.appendChild(newList);
+        return section;
+      }
+
+      const CASHNERS = [
+        { name: "Andrew",
+          birthdate: "1981-04-11"
+        },
+        { name: "Ann",
+          birthdate: "1983-03-24"
+        },
+        {
+          name: "Ben",
+          birthdate: "2011-01-16"
+        },
+        {
+          name: "Joy",
+          birthdate: "2014-03-10"
+        }
+      ]
+
+      function bioTable(table, bios) {
+
+        function newCell(text) {
+          let cell = document.createElement("td");
+          cell.textContent = text;
+          return cell;
+        }
+
+        function newRow(obj) {
+          let row = document.createElement("tr");
+          for (let info in obj) {
+            let cell = newCell(obj[info]);
+            row.appendChild(cell);
+          }
+          return row;
+        }
+
+        let tableBody = table.querySelector("tbody");
+
+        for (let thisBio of bios) {
+          row = newRow(thisBio);
+          tableBody.appendChild(row);
+        }
+
+        return table;
+      }
+
+      function setupTable(section, arr) {
+        let newTable = document.createElement("table");
+        newTable.innerHTML = "<thead><tr><th>Name</th><th>Birthdate</th></tr></thead><tbody></tbody>";
+ 
+        newTable = bioTable(newTable, arr);
+        section.appendChild(newTable);
+        return section;
+      }
+
+      document.addEventListener("DOMContentLoaded", (event) => {
+        let listSection = document.querySelector("section#list");
+        listSection = setupList(listSection, NAMES);
+
+        let tableSection = document.querySelector("section#table");
+        tableSection = setupTable(tableSection, CASHNERS);
+      });
+
+
+    </script>
+  </head>
+  <body>
+    <h1>Javascript Sandbox</h1>
+    <section id="list">
+      <h2>Dynamic List</h2>
+    </section>
+    <section id="table">
+      <h2>Dynamic Table</h2>
+    </section>
+
+  </body>
+</html>
