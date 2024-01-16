@@ -8,22 +8,6 @@
     <script>
       const NAMES = [ "Andrew", "Ann", "Ben", "Joy" ];
 
-      function arrayToOrderedList(arr) {
-        let list = document.createElement("ol");
-        for (let item of arr) {
-          let entry = document.createElement("li");
-          entry.textContent = item;
-          list.append(entry);
-        }
-        return list;
-      }
-
-      function setupList(section, arr) {
-        let newList = arrayToOrderedList(arr);
-        section.appendChild(newList);
-        return section;
-      }
-
       const CASHNERS = [
         { name: "Andrew",
           birthdate: "1981-04-11"
@@ -40,6 +24,22 @@
           birthdate: "2014-03-10"
         }
       ]
+
+      function arrayToOrderedList(arr) {
+        let list = document.createElement("ol");
+        for (let item of arr) {
+          let entry = document.createElement("li");
+          entry.textContent = item;
+          list.append(entry);
+        }
+        return list;
+      }
+
+      function setupList(section, arr) {
+        let newList = arrayToOrderedList(arr);
+        section.appendChild(newList);
+        return section;
+      }
 
       function bioTable(table, bios) {
 
@@ -96,6 +96,5 @@
     <section id="table">
       <h2>Dynamic Table</h2>
     </section>
-
   </body>
 </html>

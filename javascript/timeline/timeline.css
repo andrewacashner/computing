@@ -1,0 +1,61 @@
+body {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+header {
+  border-bottom: 1pt solid grey;
+  margin-bottom: 2em;
+}
+
+p.instructions {
+  font-style: italic;
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
+
+div.clue {
+  display: flex;
+  justify-content: center;
+  height: 300px;
+}
+
+div.clue div.card {
+  background: LightBlue;
+}
+
+div.timeline {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  border-bottom: 4px solid gray;
+}
+
+div.card {
+  display: flex;
+  flex-direction: column;
+  height: 200px;
+  width: 130px;
+  padding: 1ex;
+  margin: 1ex;
+  border-radius: 10px;
+  text-align: center;
+  outline: 1pt solid black;
+  background: LightGray;
+}
+
+div.card span {
+}
+
+div.card span.date {
+  font-weight: bold;
+  font-size: 200%;
+  margin-bottom: 1ex;
+}
+
+span.fact {
+}
