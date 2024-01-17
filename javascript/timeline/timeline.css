@@ -22,11 +22,30 @@ div.clue div.card {
   background: LightBlue;
 }
 
+div.timelineBar {
+  position: relative;
+  overflow: scroll;
+}
+
+div.timelineBar hr {
+  position: absolute;
+  top: 100px;
+  left: 0;
+  right: 0;
+  z-index: -1;
+}
+
 div.timeline {
   display: flex;
-  justify-content: center;
   flex-direction: row;
-  border-bottom: 4px solid gray;
+  width: calc(100% + 20px);
+}
+
+@media (min-width: 600px) {
+  div.timeline {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 div.card {
