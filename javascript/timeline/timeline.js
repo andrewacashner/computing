@@ -37,8 +37,8 @@ const TIMELINE = [
  * We use this class to store information on the historical events used as
  * clues and inserted into the timeline, and to generate the HTML node for a
  * card (div.card). The HTML differs for clues vs. answers (clue shows "??" as
- * its date and is a draggable object; answer shows the real date and is a
- * drop target).
+ * its date and is a draggable object; answer shows the real date and is not
+ * draggable). 
  *
  * @constructor
  * @param {number} date - Year of event 
@@ -68,9 +68,7 @@ class Card {
     card.className = "card";
     card.setAttribute("data-when", this.date);
 
-    if (mode === "answer") {
-      makeDropTarget(card);
-    } else {
+    if (mode !== "answer") {
       makeDraggable(card);
     }
 
@@ -95,14 +93,12 @@ class Card {
 }
 
 /** 
- * Set card node as a drop target, not a draggable object.
+ * Set node as a drop target.
  * @param {Element} cardNode - a Card DOM Element (div.card)
  */
-function makeDropTarget(cardNode) {
-  cardNode.removeAttribute("draggable");
-  cardNode.removeAttribute("ondragstart");
-  cardNode.setAttribute("ondrop", "dropHandler(event)");
-  cardNode.setAttribute("ondragover", "dragoverHandler(event)");
+function makeDropTarget(el) {
+  el.setAttribute("ondrop", "dropHandler(event)");
+  el.setAttribute("ondragover", "dragoverHandler(event)");
 }
 
 /** 
@@ -110,8 +106,6 @@ function makeDropTarget(cardNode) {
  * @param {Element} cardNode - a Card DOM Element (div.card)
  */
 function makeDraggable(cardNode) {
-  cardNode.removeAttribute("ondrop");
-  cardNode.removeAttribute("ondragover");
   cardNode.setAttribute("draggable", "true");
   cardNode.setAttribute("ondragstart", "dragstartHandler(event)");
 }
@@ -234,6 +228,7 @@ function initializeTimeline() {
 
   let now = firstEvent();
   let timelineBay = document.querySelector("div.timeline");
+  makeDropTarget(timelineBay);
   timelineBay.appendChild(now);
 }
 
@@ -265,17 +260,55 @@ function dragoverHandler(event) {
 }
 
 /**
- * Reset a clue card to be an answer card: Show the date and make it a target
- * instead of a droppable item.
+ * Reset a clue card to be an answer card: Show the date.
  * @param {Element} card node
  * @returns {Element} card node
  */
 function clueToAnswer(clue) {
   let clueDateText = clue.querySelector("span.date");
   clueDateText.textContent = clue.dataset.when;
-  makeDropTarget(clue);
 
   return clue;
+}
+
+
+/**
+ * Given an event (e.g., from a drop), start from its coordinates and search
+ * to the right until a card element is found. Return the card or null.
+ * @param {Event} event 
+ * @returns {Element} Card element or null
+ */
+function findFirstCardToRight(event) {
+
+  /** Return a card element, if found at given coordinates; or null. */
+  function cardAtCoord(x, y) {
+    let card = null;
+    let el = document.elementFromPoint(x, y);
+    if (el.className === "card") {
+      card = el;
+    }
+    return card;
+  }
+
+  let x = event.clientX;
+  let y = event.clientY;
+
+  let card;
+  let testCard = cardAtCoord(x, y);
+  if (testCard) {
+    card = testCard;
+  } else {
+    console.log("Looking for nearest card to timeline drop point");
+    let max = document.documentElement.clientWidth;
+    
+    for (let testX = x; testX < max; ++testX) {
+      card = cardAtCoord(testX, y);
+      if (card) {
+        break;
+      }
+    }
+  } 
+  return card;
 }
 
 /**
@@ -316,22 +349,30 @@ function dropHandler(event) {
   let clue = document.querySelector(`div.card[data-when="${date}"]`);
   let clueDate = clue.dataset.when;
 
-  let guess = event.target.closest("div.card");
-  let beforeGuess = guess.previousElementSibling;
+  // Find nearest answer (first card found to right of click) to compare
+  let guess = findFirstCardToRight(event);
 
-  if (isClueBetweenDates(clue, guess, beforeGuess)) {
-    console.log("Correct: ++Score");
-    let answer = clueToAnswer(clue);
-    guess.insertAdjacentElement("beforebegin", answer);
+  if (guess) {
+    let beforeGuess = guess.previousElementSibling;
 
-    ++window.gameState.score;
-    displayScore(window.gameState.score);
+    if (isClueBetweenDates(clue, guess, beforeGuess)) {
+      console.log("Correct: ++Score");
 
-    drawNextClue(window.gameState);
+      // Make clue card into a timeline card and insert
+      let answer = clueToAnswer(clue);
+      guess.insertAdjacentElement("beforebegin", answer);
+
+      ++window.gameState.score;
+      displayScore(window.gameState.score);
+
+      drawNextClue(window.gameState);
+    } else {
+      console.log("Incorrect: --Score");
+      --window.gameState.score;
+      displayScore(window.gameState.score);
+    }
   } else {
-    console.log("Incorrect: --Score");
-    --window.gameState.score;
-    displayScore(window.gameState.score);
+    console.log("No card found at drop location");
   }
 }
 
