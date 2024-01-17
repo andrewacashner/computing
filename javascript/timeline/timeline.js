@@ -1,10 +1,30 @@
-/* Timeline game
+/**
+ * Timeline Game
  * Andrew A. Cashner
  * 2024/01/16
+ * 
+ * In this game, players build a chronological timeline of historical events.
+ * Given a clue with no date, the user drags the clue onto the timeline where
+ * they think it belongs.
+ * If they are correct, the clue is inserted in the timeline and they get a
+ * point.
+ * If they are incorrect, the clue is not inserted so they can guess again,
+ * but they lose a point.
+ * When all clues are done, the final score is shown.
  *
  * TODO
  * - allow user to supply timeline data (JSON or YAML, or custom interface)
- * - refactor code, separate functions
+ * - animation/color when user gets answer right or wrong
+ * - documentation
+ */
+
+"use strict";
+
+/**
+ * Timeline data input
+ *
+ * TODO give user option to upload (or create) this data
+ * (better to do that on a separate landing page)
  */
 const TIMELINE = [
     {   date: 1648,
@@ -24,27 +44,46 @@ const TIMELINE = [
     }
 ]
 
+/**
+ * We use this class to store information on the historical events used as
+ * clues and inserted into the timeline, and to generate the HTML node for a
+ * card (div.card). The HTML differs for clues vs. answers (clue shows "??" as
+ * its date and is a draggable object; answer shows the real date and is a
+ * drop target).
+ *
+ * @constructor
+ * @param {number} date - Year of event 
+ *      (NB - We cannot process more complex dates, just years)
+ * @param {string} info - Brief description of event 
+ */
 class Card {
+    date;
+    info;
+
     constructor(date, info) {
         this.date = date;
         this.info = info;
     }
-
+    
+    /**
+     * Create HTML div.card node
+     * @param {string} mode - "answer" or other ("question")
+     *
+     */
     toHtml(mode) {
         let card = document.createElement("div");
         card.className = "card";
         card.setAttribute("data-when", this.date);
 
         if (mode === "answer") {
-            card.setAttribute("ondrop", "dropHandler(event)");
-            card.setAttribute("ondragover", "dragoverHandler(event)");
+            makeDropTarget(card);
         } else {
-            card.setAttribute("draggable", "true");
-            card.setAttribute("ondragstart", "dragstartHandler(event)");
+            makeDraggable(card);
         }
 
         let dateNode = document.createElement("span");
         dateNode.className = "date";
+
         if (mode === "answer") {
             dateNode.textContent = this.date;
         } else {
@@ -62,13 +101,41 @@ class Card {
     }
 }
 
+/** 
+ * Set card node as a drop target, not a draggable object.
+ * @param {Element} cardNode - a Card DOM Element (div.card)
+ */
+function makeDropTarget(cardNode) {
+    cardNode.removeAttribute("draggable");
+    cardNode.removeAttribute("ondragstart");
+    cardNode.setAttribute("ondrop", "dropHandler(event)");
+    cardNode.setAttribute("ondragover", "dragoverHandler(event)");
+}
+
+/** 
+ * Set card node as a draggable object, not a drop target.
+ * @param {Element} cardNode - a Card DOM Element (div.card)
+ */
+function makeDraggable(cardNode) {
+    cardNode.removeAttribute("ondrop");
+    cardNode.removeAttribute("ondragover");
+    cardNode.setAttribute("draggable", "true");
+    cardNode.setAttribute("ondragstart", "dragstartHandler(event)");
+}
+
+/**
+ * Return a random integer up to the given max.
+ * @param {number} max
+ */
 function randomInt(max) {
     return Math.floor(Math.random() * max);
 }
 
-
-// Fisher-Yates/Knuth shuffle
-// https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+/**
+ * Return a shuffled copy of a given array, using the Fisher-Yates/Knuth
+ * shuffle (`https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle`)
+ * @param {Array} array
+ */
 function newShuffledArray(array) {
 
     function swapIndices(array, i, j) {
@@ -106,16 +173,20 @@ class FactList {
     }
 }
 
-function gameOver() {
+function gameOver(score) {
     let clueBay = document.querySelector("div.clue");
-    clueBay.innerHTML = `<div class="gameover"><p>Game over!</p><p>Final score: ${score} points</p></div>`;
+    clueBay.innerHTML = 
+        `<div class="gameover">
+          <p>Game over!</p>
+          <p>Final score: ${score} points</p>
+        </div>`;
 }
 
-function drawNextClue(factList) {
-    if (factList.isEmpty()) {
-        gameOver();
+function drawNextClue(state) {
+    if (state.clues.isEmpty()) {
+        gameOver(state.score);
     } else {
-        let clue = factList.extractEvent();
+        let clue = state.clues.extractEvent();
         let clueNode = clue.toHtml("clue");
         let clueBay = document.querySelector("div.clue");
         clueBay.appendChild(clueNode);
@@ -135,26 +206,10 @@ function initializeTimeline() {
     timelineBay.appendChild(now);
 }
 
-function addUpdateScore(n) {
-    score = score + n;
+function displayScore(score) {
     let scoreNode = document.querySelector("span.score");
     scoreNode.textContent = score;
 }
-
-// TODO how to deal with globals
-var clues = new FactList(TIMELINE);
-var score = 0;
-
-function setRestartButton() {
-    let button = document.querySelector("button.restart");
-    button.setAttribute("onclick", "location.reload()");
-}
-
-document.addEventListener("DOMContentLoaded", (event) => {
-    setRestartButton();
-    initializeTimeline();
-    drawNextClue(clues);
-});
 
 function dragstartHandler(event) {
     event.dataTransfer.setData("date", event.target.dataset.when);
@@ -169,13 +224,22 @@ function dragoverHandler(event) {
 function clueToAnswer(clue) {
     let clueDateText = clue.querySelector("span.date");
     clueDateText.textContent = clue.dataset.when;
-
-    clue.removeAttribute("draggable");
-    clue.removeAttribute("ondragstart");
-    clue.setAttribute("ondrop", "dropHandler(event)");
-    clue.setAttribute("ondragover", "dragoverHandler(event)");
+    makeDropTarget(clue);
 
     return clue;
+}
+
+function isClueBetweenDates(clue, guess, preGuess) {
+    let clueDate = clue.dataset.when;
+    let guessDate = guess.dataset.when;
+    
+    let isBeforeGuess = clueDate <= guessDate;
+
+    let noPreGuess = !preGuess;
+    let isAfterPreGuess = preGuess && (clueDate >= preGuess.dataset.when);
+    let isAfterAnyPreGuess = noPreGuess || isAfterPreGuess;
+
+    return isBeforeGuess && isAfterAnyPreGuess;
 }
 
 function dropHandler(event) {
@@ -190,16 +254,32 @@ function dropHandler(event) {
     let guess = event.target.closest("div.card");
     let beforeGuess = guess.previousElementSibling;
 
-    if ((clueDate <= guess.dataset.when)
-        && ((!beforeGuess) ||
-            (beforeGuess && (clueDate >= beforeGuess.dataset.when)))) {
-        console.log("Correct");
+    if (isClueBetweenDates(clue, guess, beforeGuess)) {
+        console.log("Correct: ++Score");
         let answer = clueToAnswer(clue);
         guess.insertAdjacentElement("beforebegin", answer);
-        addUpdateScore(1);
-        drawNextClue(clues);
+
+        ++window.gameState.score;
+        displayScore(window.gameState.score);
+
+        drawNextClue(window.gameState);
     } else {
-        addUpdateScore(-1);
+        console.log("Incorrect: --Score");
+        --window.gameState.score;
+        displayScore(window.gameState.score);
     }
 }
+
+document.addEventListener("DOMContentLoaded", (event) => {
+    let timeline = TIMELINE;
+
+    window.gameState = {
+        clues: new FactList(timeline),
+        score: 0
+    }
+
+    initializeTimeline();
+    drawNextClue(window.gameState);
+});
+
 
