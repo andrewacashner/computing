@@ -5,252 +5,253 @@
 	.STRN {color: #393;}
 	.REGX {color: #339;}
 	.line {border-right: 1px dotted #666; color: #666; font-style: normal;}
-	</style></head><body><pre><span class='line'>  1</span> <span class="COMM">/** Timeline Game
-<span class='line'>  2</span>  * Andrew A. Cashner
-<span class='line'>  3</span>  * 2024/01/16
-<span class='line'>  4</span>  * 
-<span class='line'>  5</span>  * In this game, players build a chronological timeline of historical events.
-<span class='line'>  6</span>  * Given a clue with no date, the user drags the clue onto the timeline where
-<span class='line'>  7</span>  * they think it belongs.
-<span class='line'>  8</span>  * If they are correct, the clue is inserted in the timeline and they get a
-<span class='line'>  9</span>  * point.
-<span class='line'> 10</span>  * If they are incorrect, the clue is not inserted so they can guess again,
-<span class='line'> 11</span>  * but they lose a point.
-<span class='line'> 12</span>  * When all clues are done, the final score is shown.
-<span class='line'> 13</span>  *
-<span class='line'> 14</span>  * TODO
-<span class='line'> 15</span>  * - allow user to supply timeline data (JSON or YAML, or custom interface)
-<span class='line'> 16</span>  * - animation/color when user gets answer right or wrong
-<span class='line'> 17</span>  * - documentation
-<span class='line'> 18</span>  */</span><span class="WHIT">
-<span class='line'> 19</span> 
-<span class='line'> 20</span> </span><span class="STRN">"use strict"</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 21</span> 
-<span class='line'> 22</span> </span><span class="COMM">/** 
-<span class='line'> 23</span>  * Timeline data input
-<span class='line'> 24</span>  *
-<span class='line'> 25</span>  * TODO give user option to upload (or create) this data
-<span class='line'> 26</span>  * (better to do that on a separate landing page)
-<span class='line'> 27</span>  */</span><span class="WHIT">
-<span class='line'> 28</span> </span><span class="KEYW">const</span><span class="WHIT"> </span><span class="NAME">TIMELINE</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="WHIT">
-<span class='line'> 29</span> </span><span class="WHIT">    </span><span class="PUNC">{</span><span class="WHIT">   </span><span class="NAME">date</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">1648</span><span class="PUNC">,</span><span class="WHIT">
-<span class='line'> 30</span> </span><span class="WHIT">        </span><span class="NAME">info</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"End of the Thirty Years’ War."</span><span class="WHIT">
-<span class='line'> 31</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
-<span class='line'> 32</span> </span><span class="WHIT">    </span><span class="PUNC">{</span><span class="WHIT">   </span><span class="NAME">date</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">1865</span><span class="PUNC">,</span><span class="WHIT">
-<span class='line'> 33</span> </span><span class="WHIT">        </span><span class="NAME">info</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"US Civil War ends with Lee’s surrender at Appomattox."</span><span class="WHIT">
-<span class='line'> 34</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
-<span class='line'> 35</span> </span><span class="WHIT">    </span><span class="PUNC">{</span><span class="WHIT">   </span><span class="NAME">date</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">1918</span><span class="PUNC">,</span><span class="WHIT">
-<span class='line'> 36</span> </span><span class="WHIT">        </span><span class="NAME">info</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"World War I ends in an armistice."</span><span class="WHIT">
-<span class='line'> 37</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
-<span class='line'> 38</span> </span><span class="WHIT">    </span><span class="PUNC">{</span><span class="WHIT">   </span><span class="NAME">date</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">1939</span><span class="PUNC">,</span><span class="WHIT">
-<span class='line'> 39</span> </span><span class="WHIT">        </span><span class="NAME">info</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"End of Spanish Civil War."</span><span class="WHIT">
-<span class='line'> 40</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
-<span class='line'> 41</span> </span><span class="WHIT">    </span><span class="PUNC">{</span><span class="WHIT">   </span><span class="NAME">date</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">1945</span><span class="PUNC">,</span><span class="WHIT">
-<span class='line'> 42</span> </span><span class="WHIT">        </span><span class="NAME">info</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"World War II ends with the unconditional surrender of Japan."</span><span class="WHIT">
-<span class='line'> 43</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'> 44</span> </span><span class="PUNC">]</span><span class="WHIT">
-<span class='line'> 45</span> 
-<span class='line'> 46</span> </span><span class="COMM">/**
-<span class='line'> 47</span>  * We use this class to store information on the historical events used as
-<span class='line'> 48</span>  * clues and inserted into the timeline, and to generate the HTML node for a
-<span class='line'> 49</span>  * card (div.card). The HTML differs for clues vs. answers (clue shows "??" as
-<span class='line'> 50</span>  * its date and is a draggable object; answer shows the real date and is a
-<span class='line'> 51</span>  * drop target).
-<span class='line'> 52</span>  *
-<span class='line'> 53</span>  * @constructor
-<span class='line'> 54</span>  * @param {number} date - Year of event 
-<span class='line'> 55</span>  *      (NB - We cannot process more complex dates, just years)
-<span class='line'> 56</span>  * @param {string} info - Brief description of event 
-<span class='line'> 57</span>  */</span><span class="WHIT">
-<span class='line'> 58</span> </span><span class="NAME">class</span><span class="WHIT"> </span><span class="NAME">Card</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'> 59</span> </span><span class="WHIT">    </span><span class="NAME">date</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 60</span> </span><span class="WHIT">    </span><span class="NAME">info</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 61</span> 
-<span class='line'> 62</span> </span><span class="WHIT">    </span><span class="NAME">constructor</span><span class="PUNC">(</span><span class="NAME">date</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">info</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'> 63</span> </span><span class="WHIT">        </span><span class="NAME">this.date</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">date</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 64</span> </span><span class="WHIT">        </span><span class="NAME">this.info</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">info</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 65</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'> 66</span> </span><span class="WHIT">    
-<span class='line'> 67</span>     </span><span class="COMM">/**
-<span class='line'> 68</span>      * Create HTML div.card node
-<span class='line'> 69</span>      * @param {string} mode - "answer" or other ("question")
-<span class='line'> 70</span>      *
-<span class='line'> 71</span>      */</span><span class="WHIT">
-<span class='line'> 72</span> </span><span class="WHIT">    </span><span class="NAME">toHtml</span><span class="PUNC">(</span><span class="NAME">mode</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'> 73</span> </span><span class="WHIT">        </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">card</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">document.createElement</span><span class="PUNC">(</span><span class="STRN">"div"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 74</span> </span><span class="WHIT">        </span><span class="NAME">card.className</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="STRN">"card"</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 75</span> </span><span class="WHIT">        </span><span class="NAME">card.setAttribute</span><span class="PUNC">(</span><span class="STRN">"data-when"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">this.date</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 76</span> 
-<span class='line'> 77</span> </span><span class="WHIT">        </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">mode</span><span class="WHIT"> </span><span class="PUNC">===</span><span class="WHIT"> </span><span class="STRN">"answer"</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'> 78</span> </span><span class="WHIT">            </span><span class="NAME">makeDropTarget</span><span class="PUNC">(</span><span class="NAME">card</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 79</span> </span><span class="WHIT">        </span><span class="PUNC">}</span><span class="WHIT"> </span><span class="KEYW">else</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'> 80</span> </span><span class="WHIT">            </span><span class="NAME">makeDraggable</span><span class="PUNC">(</span><span class="NAME">card</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 81</span> </span><span class="WHIT">        </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'> 82</span> 
-<span class='line'> 83</span> </span><span class="WHIT">        </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">dateNode</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">document.createElement</span><span class="PUNC">(</span><span class="STRN">"span"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 84</span> </span><span class="WHIT">        </span><span class="NAME">dateNode.className</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="STRN">"date"</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 85</span> 
-<span class='line'> 86</span> </span><span class="WHIT">        </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">mode</span><span class="WHIT"> </span><span class="PUNC">===</span><span class="WHIT"> </span><span class="STRN">"answer"</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'> 87</span> </span><span class="WHIT">            </span><span class="NAME">dateNode.textContent</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">this.date</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 88</span> </span><span class="WHIT">        </span><span class="PUNC">}</span><span class="WHIT"> </span><span class="KEYW">else</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'> 89</span> </span><span class="WHIT">            </span><span class="NAME">dateNode.textContent</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="STRN">"??"</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 90</span> </span><span class="WHIT">        </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'> 91</span> 
-<span class='line'> 92</span> </span><span class="WHIT">        </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">infoNode</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">document.createElement</span><span class="PUNC">(</span><span class="STRN">"span"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 93</span> </span><span class="WHIT">        </span><span class="NAME">infoNode.className</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="STRN">"info"</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 94</span> </span><span class="WHIT">        </span><span class="NAME">infoNode.textContent</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">this.info</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 95</span> 
-<span class='line'> 96</span> </span><span class="WHIT">        </span><span class="NAME">card.appendChild</span><span class="PUNC">(</span><span class="NAME">dateNode</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 97</span> </span><span class="WHIT">        </span><span class="NAME">card.appendChild</span><span class="PUNC">(</span><span class="NAME">infoNode</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'> 98</span> 
-<span class='line'> 99</span> </span><span class="WHIT">        </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">card</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>100</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>101</span> </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>102</span> 
-<span class='line'>103</span> </span><span class="COMM">/** 
-<span class='line'>104</span>  * Set card node as a drop target, not a draggable object.
-<span class='line'>105</span>  * @param {Element} cardNode - a Card DOM Element (div.card)
-<span class='line'>106</span>  */</span><span class="WHIT">
-<span class='line'>107</span> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="NAME">makeDropTarget</span><span class="PUNC">(</span><span class="NAME">cardNode</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>108</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.removeAttribute</span><span class="PUNC">(</span><span class="STRN">"draggable"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>109</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.removeAttribute</span><span class="PUNC">(</span><span class="STRN">"ondragstart"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>110</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.setAttribute</span><span class="PUNC">(</span><span class="STRN">"ondrop"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">"dropHandler(event)"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>111</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.setAttribute</span><span class="PUNC">(</span><span class="STRN">"ondragover"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">"dragoverHandler(event)"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>112</span> </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>113</span> 
-<span class='line'>114</span> </span><span class="COMM">/** 
-<span class='line'>115</span>  * Set card node as a draggable object, not a drop target.
-<span class='line'>116</span>  * @param {Element} cardNode - a Card DOM Element (div.card)
-<span class='line'>117</span>  */</span><span class="WHIT">
-<span class='line'>118</span> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="NAME">makeDraggable</span><span class="PUNC">(</span><span class="NAME">cardNode</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>119</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.removeAttribute</span><span class="PUNC">(</span><span class="STRN">"ondrop"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>120</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.removeAttribute</span><span class="PUNC">(</span><span class="STRN">"ondragover"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>121</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.setAttribute</span><span class="PUNC">(</span><span class="STRN">"draggable"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">"true"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>122</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.setAttribute</span><span class="PUNC">(</span><span class="STRN">"ondragstart"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">"dragstartHandler(event)"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>123</span> </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>124</span> 
-<span class='line'>125</span> </span><span class="COMM">/**
-<span class='line'>126</span>  * Return a random integer up to the given max.
-<span class='line'>127</span>  * @param {number} max
-<span class='line'>128</span>  */</span><span class="WHIT">
-<span class='line'>129</span> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="NAME">randomInt</span><span class="PUNC">(</span><span class="NAME">max</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>130</span> </span><span class="WHIT">    </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">Math.floor</span><span class="PUNC">(</span><span class="NAME">Math.random</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">*</span><span class="WHIT"> </span><span class="NAME">max</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>131</span> </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>132</span> 
-<span class='line'>133</span> </span><span class="COMM">/**
-<span class='line'>134</span>  * Return a shuffled copy of a given array, using the Fisher-Yates/Knuth
-<span class='line'>135</span>  * shuffle (`https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle`)
-<span class='line'>136</span>  * @param {Array} array
-<span class='line'>137</span>  */</span><span class="WHIT">
-<span class='line'>138</span> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="NAME">newShuffledArray</span><span class="PUNC">(</span><span class="NAME">array</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>139</span> 
-<span class='line'>140</span> </span><span class="WHIT">    </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="NAME">swapIndices</span><span class="PUNC">(</span><span class="NAME">array</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">i</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">j</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>141</span> </span><span class="WHIT">        </span><span class="PUNC">[</span><span class="NAME">array</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">array</span><span class="PUNC">[</span><span class="NAME">j</span><span class="PUNC">]</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="NAME">array</span><span class="PUNC">[</span><span class="NAME">j</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">array</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>142</span> </span><span class="WHIT">        </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">array</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>143</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>144</span> 
-<span class='line'>145</span> </span><span class="WHIT">    </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">newArray</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">.</span><span class="PUNC">.</span><span class="PUNC">.</span><span class="NAME">array</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>146</span> </span><span class="WHIT">    </span><span class="KEYW">for</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">newArray.length</span><span class="WHIT"> </span><span class="PUNC">-</span><span class="WHIT"> </span><span class="NUMB">1</span><span class="PUNC">;</span><span class="WHIT"> </span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">></span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="WHIT"> </span><span class="PUNC">--</span><span class="NAME">i</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>147</span> </span><span class="WHIT">        </span><span class="NAME">newArray</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">swapIndices</span><span class="PUNC">(</span><span class="NAME">newArray</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">i</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">randomInt</span><span class="PUNC">(</span><span class="NAME">i</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>148</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>149</span> </span><span class="WHIT">    </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">newArray</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>150</span> </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>151</span> 
-<span class='line'>152</span> </span><span class="NAME">class</span><span class="WHIT"> </span><span class="NAME">FactList</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>153</span> </span><span class="WHIT">    </span><span class="NAME">constructor</span><span class="PUNC">(</span><span class="NAME">factArray</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>154</span> </span><span class="WHIT">        </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">clueList</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>155</span> </span><span class="WHIT">        </span><span class="KEYW">for</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">fact</span><span class="WHIT"> </span><span class="NAME">of</span><span class="WHIT"> </span><span class="NAME">factArray</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>156</span> </span><span class="WHIT">            </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">newClue</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Card</span><span class="PUNC">(</span><span class="NAME">fact.date</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">fact.info</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>157</span> </span><span class="WHIT">            </span><span class="NAME">clueList.push</span><span class="PUNC">(</span><span class="NAME">newClue</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>158</span> </span><span class="WHIT">        </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>159</span> </span><span class="WHIT">        </span><span class="NAME">this.facts</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">newShuffledArray</span><span class="PUNC">(</span><span class="NAME">clueList</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>160</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>161</span> 
-<span class='line'>162</span> </span><span class="WHIT">    </span><span class="NAME">extractEvent</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>163</span> </span><span class="WHIT">        </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">randomInt</span><span class="PUNC">(</span><span class="NAME">this.facts.length</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>164</span> </span><span class="WHIT">        </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">fact</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">this.facts</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>165</span> 
-<span class='line'>166</span> </span><span class="WHIT">        </span><span class="NAME">this.facts.splice</span><span class="PUNC">(</span><span class="NAME">i</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NUMB">1</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>167</span> </span><span class="WHIT">        </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">fact</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>168</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>169</span> 
-<span class='line'>170</span> </span><span class="WHIT">    </span><span class="NAME">isEmpty</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>171</span> </span><span class="WHIT">        </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this.facts.length</span><span class="WHIT"> </span><span class="PUNC">===</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>172</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>173</span> </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>174</span> 
-<span class='line'>175</span> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="NAME">gameOver</span><span class="PUNC">(</span><span class="NAME">score</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>176</span> </span><span class="WHIT">    </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">clueBay</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">document.querySelector</span><span class="PUNC">(</span><span class="STRN">"div.clue"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>177</span> </span><span class="WHIT">    </span><span class="NAME">clueBay.innerHTML</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> 
-<span class='line'>178</span>         </span><span class="TOKN">`</span><span class="PUNC">&lt;</span><span class="NAME">div</span><span class="WHIT"> </span><span class="NAME">class</span><span class="PUNC">=</span><span class="STRN">"gameover"</span><span class="PUNC">></span><span class="WHIT">
-<span class='line'>179</span> </span><span class="WHIT">          </span><span class="PUNC">&lt;</span><span class="NAME">p</span><span class="PUNC">></span><span class="NAME">Game</span><span class="WHIT"> </span><span class="NAME">over</span><span class="PUNC">!</span><span class="PUNC">&lt;</span><span class="REGX">/p>
-<span class='line'>180</span>           &lt;p>Final score: ${score} points&lt;/</span><span class="NAME">p</span><span class="PUNC">></span><span class="WHIT">
-<span class='line'>181</span> </span><span class="WHIT">        </span><span class="PUNC">&lt;</span><span class="REGX">/div>`;
-<span class='line'>182</span> }
-<span class='line'>183</span> 
-<span class='line'>184</span> function drawNextClue(state) {
-<span class='line'>185</span>     if (state.clues.isEmpty()) {
-<span class='line'>186</span>         gameOver(state.score);
-<span class='line'>187</span>     } else {
-<span class='line'>188</span>         let clue = state.clues.extractEvent();
-<span class='line'>189</span>         let clueNode = clue.toHtml("clue");
-<span class='line'>190</span>         let clueBay = document.querySelector("div.clue");
-<span class='line'>191</span>         clueBay.appendChild(clueNode);
-<span class='line'>192</span>     }
-<span class='line'>193</span> }
-<span class='line'>194</span> 
-<span class='line'>195</span> function initializeTimeline() {
-<span class='line'>196</span>     function firstEvent() {
-<span class='line'>197</span>         let thisYear = new Date().getFullYear();
-<span class='line'>198</span>         let now = new Card(thisYear, "Now");
-<span class='line'>199</span>         let nowNode = now.toHtml("answer");
-<span class='line'>200</span>         return nowNode;
-<span class='line'>201</span>     }
-<span class='line'>202</span> 
-<span class='line'>203</span>     let now = firstEvent();
-<span class='line'>204</span>     let timelineBay = document.querySelector("div.timeline");
-<span class='line'>205</span>     timelineBay.appendChild(now);
-<span class='line'>206</span> }
-<span class='line'>207</span> 
-<span class='line'>208</span> function displayScore(score) {
-<span class='line'>209</span>     let scoreNode = document.querySelector("span.score");
-<span class='line'>210</span>     scoreNode.textContent = score;
-<span class='line'>211</span> }
-<span class='line'>212</span> 
-<span class='line'>213</span> function dragstartHandler(event) {
-<span class='line'>214</span>     event.dataTransfer.setData("date", event.target.dataset.when);
-<span class='line'>215</span>     event.dataTransfer.effectAllowed = "move";
-<span class='line'>216</span> }
-<span class='line'>217</span> 
-<span class='line'>218</span> function dragoverHandler(event) {
-<span class='line'>219</span>     event.preventDefault();
-<span class='line'>220</span>     event.dataTransfer.effectAllowed = "move";
-<span class='line'>221</span> }
-<span class='line'>222</span> 
-<span class='line'>223</span> function clueToAnswer(clue) {
-<span class='line'>224</span>     let clueDateText = clue.querySelector("span.date");
-<span class='line'>225</span>     clueDateText.textContent = clue.dataset.when;
-<span class='line'>226</span>     makeDropTarget(clue);
-<span class='line'>227</span> 
-<span class='line'>228</span>     return clue;
-<span class='line'>229</span> }
-<span class='line'>230</span> 
-<span class='line'>231</span> function isClueBetweenDates(clue, guess, preGuess) {
-<span class='line'>232</span>     let clueDate = clue.dataset.when;
-<span class='line'>233</span>     let guessDate = guess.dataset.when;
-<span class='line'>234</span>     
-<span class='line'>235</span>     let isBeforeGuess = clueDate &lt;= guessDate;
-<span class='line'>236</span> 
-<span class='line'>237</span>     let noPreGuess = !preGuess;
-<span class='line'>238</span>     let isAfterPreGuess = preGuess && (clueDate >= preGuess.dataset.when);
-<span class='line'>239</span>     let isAfterAnyPreGuess = noPreGuess || isAfterPreGuess;
-<span class='line'>240</span> 
-<span class='line'>241</span>     return isBeforeGuess && isAfterAnyPreGuess;
-<span class='line'>242</span> }
-<span class='line'>243</span> 
-<span class='line'>244</span> function dropHandler(event) {
-<span class='line'>245</span>     event.preventDefault();
-<span class='line'>246</span>     let date = event.dataTransfer.getData("date");
-<span class='line'>247</span>     console.log(`Dropping card with date ${date}`);
-<span class='line'>248</span> 
-<span class='line'>249</span>     /</span><span class="TOKN"></span></pre></body></html>
+	</style></head><body><pre><span class='line'>  1</span> <span class="COMM">/**
+<span class='line'>  2</span>  * Timeline Game
+<span class='line'>  3</span>  * Andrew A. Cashner
+<span class='line'>  4</span>  * 2024/01/16
+<span class='line'>  5</span>  * 
+<span class='line'>  6</span>  * In this game, players build a chronological timeline of historical events.
+<span class='line'>  7</span>  * Given a clue with no date, the user drags the clue onto the timeline where
+<span class='line'>  8</span>  * they think it belongs.
+<span class='line'>  9</span>  * If they are correct, the clue is inserted in the timeline and they get a
+<span class='line'> 10</span>  * point.
+<span class='line'> 11</span>  * If they are incorrect, the clue is not inserted so they can guess again,
+<span class='line'> 12</span>  * but they lose a point.
+<span class='line'> 13</span>  * When all clues are done, the final score is shown.
+<span class='line'> 14</span>  *
+<span class='line'> 15</span>  * TODO
+<span class='line'> 16</span>  * - allow user to supply timeline data (JSON or YAML, or custom interface)
+<span class='line'> 17</span>  * - animation/color when user gets answer right or wrong
+<span class='line'> 18</span>  * - documentation
+<span class='line'> 19</span>  */</span><span class="WHIT">
+<span class='line'> 20</span> 
+<span class='line'> 21</span> </span><span class="STRN">"use strict"</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 22</span> 
+<span class='line'> 23</span> </span><span class="COMM">/**
+<span class='line'> 24</span>  * Timeline data input
+<span class='line'> 25</span>  *
+<span class='line'> 26</span>  * TODO give user option to upload (or create) this data
+<span class='line'> 27</span>  * (better to do that on a separate landing page)
+<span class='line'> 28</span>  */</span><span class="WHIT">
+<span class='line'> 29</span> </span><span class="KEYW">const</span><span class="WHIT"> </span><span class="NAME">TIMELINE</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="WHIT">
+<span class='line'> 30</span> </span><span class="WHIT">    </span><span class="PUNC">{</span><span class="WHIT">   </span><span class="NAME">date</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">1648</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 31</span> </span><span class="WHIT">        </span><span class="NAME">info</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"End of the Thirty Years’ War."</span><span class="WHIT">
+<span class='line'> 32</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 33</span> </span><span class="WHIT">    </span><span class="PUNC">{</span><span class="WHIT">   </span><span class="NAME">date</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">1865</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 34</span> </span><span class="WHIT">        </span><span class="NAME">info</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"US Civil War ends with Lee’s surrender at Appomattox."</span><span class="WHIT">
+<span class='line'> 35</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 36</span> </span><span class="WHIT">    </span><span class="PUNC">{</span><span class="WHIT">   </span><span class="NAME">date</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">1918</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 37</span> </span><span class="WHIT">        </span><span class="NAME">info</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"World War I ends in an armistice."</span><span class="WHIT">
+<span class='line'> 38</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 39</span> </span><span class="WHIT">    </span><span class="PUNC">{</span><span class="WHIT">   </span><span class="NAME">date</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">1939</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 40</span> </span><span class="WHIT">        </span><span class="NAME">info</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"End of Spanish Civil War."</span><span class="WHIT">
+<span class='line'> 41</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 42</span> </span><span class="WHIT">    </span><span class="PUNC">{</span><span class="WHIT">   </span><span class="NAME">date</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">1945</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 43</span> </span><span class="WHIT">        </span><span class="NAME">info</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">"World War II ends with the unconditional surrender of Japan."</span><span class="WHIT">
+<span class='line'> 44</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'> 45</span> </span><span class="PUNC">]</span><span class="WHIT">
+<span class='line'> 46</span> 
+<span class='line'> 47</span> </span><span class="COMM">/**
+<span class='line'> 48</span>  * We use this class to store information on the historical events used as
+<span class='line'> 49</span>  * clues and inserted into the timeline, and to generate the HTML node for a
+<span class='line'> 50</span>  * card (div.card). The HTML differs for clues vs. answers (clue shows "??" as
+<span class='line'> 51</span>  * its date and is a draggable object; answer shows the real date and is a
+<span class='line'> 52</span>  * drop target).
+<span class='line'> 53</span>  *
+<span class='line'> 54</span>  * @constructor
+<span class='line'> 55</span>  * @param {number} date - Year of event 
+<span class='line'> 56</span>  *      (NB - We cannot process more complex dates, just years)
+<span class='line'> 57</span>  * @param {string} info - Brief description of event 
+<span class='line'> 58</span>  */</span><span class="WHIT">
+<span class='line'> 59</span> </span><span class="NAME">class</span><span class="WHIT"> </span><span class="NAME">Card</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 60</span> </span><span class="WHIT">    </span><span class="NAME">date</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 61</span> </span><span class="WHIT">    </span><span class="NAME">info</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 62</span> 
+<span class='line'> 63</span> </span><span class="WHIT">    </span><span class="NAME">constructor</span><span class="PUNC">(</span><span class="NAME">date</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">info</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 64</span> </span><span class="WHIT">        </span><span class="NAME">this.date</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">date</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 65</span> </span><span class="WHIT">        </span><span class="NAME">this.info</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">info</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 66</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'> 67</span> </span><span class="WHIT">    
+<span class='line'> 68</span>     </span><span class="COMM">/**
+<span class='line'> 69</span>      * Create HTML div.card node
+<span class='line'> 70</span>      * @param {string} mode - "answer" or other ("question")
+<span class='line'> 71</span>      *
+<span class='line'> 72</span>      */</span><span class="WHIT">
+<span class='line'> 73</span> </span><span class="WHIT">    </span><span class="NAME">toHtml</span><span class="PUNC">(</span><span class="NAME">mode</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 74</span> </span><span class="WHIT">        </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">card</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">document.createElement</span><span class="PUNC">(</span><span class="STRN">"div"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 75</span> </span><span class="WHIT">        </span><span class="NAME">card.className</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="STRN">"card"</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 76</span> </span><span class="WHIT">        </span><span class="NAME">card.setAttribute</span><span class="PUNC">(</span><span class="STRN">"data-when"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">this.date</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 77</span> 
+<span class='line'> 78</span> </span><span class="WHIT">        </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">mode</span><span class="WHIT"> </span><span class="PUNC">===</span><span class="WHIT"> </span><span class="STRN">"answer"</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 79</span> </span><span class="WHIT">            </span><span class="NAME">makeDropTarget</span><span class="PUNC">(</span><span class="NAME">card</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 80</span> </span><span class="WHIT">        </span><span class="PUNC">}</span><span class="WHIT"> </span><span class="KEYW">else</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 81</span> </span><span class="WHIT">            </span><span class="NAME">makeDraggable</span><span class="PUNC">(</span><span class="NAME">card</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 82</span> </span><span class="WHIT">        </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'> 83</span> 
+<span class='line'> 84</span> </span><span class="WHIT">        </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">dateNode</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">document.createElement</span><span class="PUNC">(</span><span class="STRN">"span"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 85</span> </span><span class="WHIT">        </span><span class="NAME">dateNode.className</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="STRN">"date"</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 86</span> 
+<span class='line'> 87</span> </span><span class="WHIT">        </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">mode</span><span class="WHIT"> </span><span class="PUNC">===</span><span class="WHIT"> </span><span class="STRN">"answer"</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 88</span> </span><span class="WHIT">            </span><span class="NAME">dateNode.textContent</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">this.date</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 89</span> </span><span class="WHIT">        </span><span class="PUNC">}</span><span class="WHIT"> </span><span class="KEYW">else</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'> 90</span> </span><span class="WHIT">            </span><span class="NAME">dateNode.textContent</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="STRN">"??"</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 91</span> </span><span class="WHIT">        </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'> 92</span> 
+<span class='line'> 93</span> </span><span class="WHIT">        </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">infoNode</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">document.createElement</span><span class="PUNC">(</span><span class="STRN">"span"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 94</span> </span><span class="WHIT">        </span><span class="NAME">infoNode.className</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="STRN">"info"</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 95</span> </span><span class="WHIT">        </span><span class="NAME">infoNode.textContent</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">this.info</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 96</span> 
+<span class='line'> 97</span> </span><span class="WHIT">        </span><span class="NAME">card.appendChild</span><span class="PUNC">(</span><span class="NAME">dateNode</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 98</span> </span><span class="WHIT">        </span><span class="NAME">card.appendChild</span><span class="PUNC">(</span><span class="NAME">infoNode</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'> 99</span> 
+<span class='line'>100</span> </span><span class="WHIT">        </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">card</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>101</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>102</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>103</span> 
+<span class='line'>104</span> </span><span class="COMM">/** 
+<span class='line'>105</span>  * Set card node as a drop target, not a draggable object.
+<span class='line'>106</span>  * @param {Element} cardNode - a Card DOM Element (div.card)
+<span class='line'>107</span>  */</span><span class="WHIT">
+<span class='line'>108</span> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="NAME">makeDropTarget</span><span class="PUNC">(</span><span class="NAME">cardNode</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>109</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.removeAttribute</span><span class="PUNC">(</span><span class="STRN">"draggable"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>110</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.removeAttribute</span><span class="PUNC">(</span><span class="STRN">"ondragstart"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>111</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.setAttribute</span><span class="PUNC">(</span><span class="STRN">"ondrop"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">"dropHandler(event)"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>112</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.setAttribute</span><span class="PUNC">(</span><span class="STRN">"ondragover"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">"dragoverHandler(event)"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>113</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>114</span> 
+<span class='line'>115</span> </span><span class="COMM">/** 
+<span class='line'>116</span>  * Set card node as a draggable object, not a drop target.
+<span class='line'>117</span>  * @param {Element} cardNode - a Card DOM Element (div.card)
+<span class='line'>118</span>  */</span><span class="WHIT">
+<span class='line'>119</span> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="NAME">makeDraggable</span><span class="PUNC">(</span><span class="NAME">cardNode</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>120</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.removeAttribute</span><span class="PUNC">(</span><span class="STRN">"ondrop"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>121</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.removeAttribute</span><span class="PUNC">(</span><span class="STRN">"ondragover"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>122</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.setAttribute</span><span class="PUNC">(</span><span class="STRN">"draggable"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">"true"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>123</span> </span><span class="WHIT">    </span><span class="NAME">cardNode.setAttribute</span><span class="PUNC">(</span><span class="STRN">"ondragstart"</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">"dragstartHandler(event)"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>124</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>125</span> 
+<span class='line'>126</span> </span><span class="COMM">/**
+<span class='line'>127</span>  * Return a random integer up to the given max.
+<span class='line'>128</span>  * @param {number} max
+<span class='line'>129</span>  */</span><span class="WHIT">
+<span class='line'>130</span> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="NAME">randomInt</span><span class="PUNC">(</span><span class="NAME">max</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>131</span> </span><span class="WHIT">    </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">Math.floor</span><span class="PUNC">(</span><span class="NAME">Math.random</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">*</span><span class="WHIT"> </span><span class="NAME">max</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>132</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>133</span> 
+<span class='line'>134</span> </span><span class="COMM">/**
+<span class='line'>135</span>  * Return a shuffled copy of a given array, using the Fisher-Yates/Knuth
+<span class='line'>136</span>  * shuffle (`https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle`)
+<span class='line'>137</span>  * @param {Array} array
+<span class='line'>138</span>  */</span><span class="WHIT">
+<span class='line'>139</span> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="NAME">newShuffledArray</span><span class="PUNC">(</span><span class="NAME">array</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>140</span> 
+<span class='line'>141</span> </span><span class="WHIT">    </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="NAME">swapIndices</span><span class="PUNC">(</span><span class="NAME">array</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">i</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">j</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>142</span> </span><span class="WHIT">        </span><span class="PUNC">[</span><span class="NAME">array</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">array</span><span class="PUNC">[</span><span class="NAME">j</span><span class="PUNC">]</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="NAME">array</span><span class="PUNC">[</span><span class="NAME">j</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">array</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>143</span> </span><span class="WHIT">        </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">array</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>144</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>145</span> 
+<span class='line'>146</span> </span><span class="WHIT">    </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">newArray</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">.</span><span class="PUNC">.</span><span class="PUNC">.</span><span class="NAME">array</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>147</span> </span><span class="WHIT">    </span><span class="KEYW">for</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">newArray.length</span><span class="WHIT"> </span><span class="PUNC">-</span><span class="WHIT"> </span><span class="NUMB">1</span><span class="PUNC">;</span><span class="WHIT"> </span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">></span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="WHIT"> </span><span class="PUNC">--</span><span class="NAME">i</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>148</span> </span><span class="WHIT">        </span><span class="NAME">newArray</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">swapIndices</span><span class="PUNC">(</span><span class="NAME">newArray</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">i</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">randomInt</span><span class="PUNC">(</span><span class="NAME">i</span><span class="PUNC">)</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>149</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>150</span> </span><span class="WHIT">    </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">newArray</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>151</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>152</span> 
+<span class='line'>153</span> </span><span class="NAME">class</span><span class="WHIT"> </span><span class="NAME">FactList</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>154</span> </span><span class="WHIT">    </span><span class="NAME">constructor</span><span class="PUNC">(</span><span class="NAME">factArray</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>155</span> </span><span class="WHIT">        </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">clueList</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>156</span> </span><span class="WHIT">        </span><span class="KEYW">for</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">fact</span><span class="WHIT"> </span><span class="NAME">of</span><span class="WHIT"> </span><span class="NAME">factArray</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>157</span> </span><span class="WHIT">            </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">newClue</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Card</span><span class="PUNC">(</span><span class="NAME">fact.date</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">fact.info</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>158</span> </span><span class="WHIT">            </span><span class="NAME">clueList.push</span><span class="PUNC">(</span><span class="NAME">newClue</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>159</span> </span><span class="WHIT">        </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>160</span> </span><span class="WHIT">        </span><span class="NAME">this.facts</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">newShuffledArray</span><span class="PUNC">(</span><span class="NAME">clueList</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>161</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>162</span> 
+<span class='line'>163</span> </span><span class="WHIT">    </span><span class="NAME">extractEvent</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>164</span> </span><span class="WHIT">        </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">i</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">randomInt</span><span class="PUNC">(</span><span class="NAME">this.facts.length</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>165</span> </span><span class="WHIT">        </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">fact</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">this.facts</span><span class="PUNC">[</span><span class="NAME">i</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>166</span> 
+<span class='line'>167</span> </span><span class="WHIT">        </span><span class="NAME">this.facts.splice</span><span class="PUNC">(</span><span class="NAME">i</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NUMB">1</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>168</span> </span><span class="WHIT">        </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">fact</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>169</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>170</span> 
+<span class='line'>171</span> </span><span class="WHIT">    </span><span class="NAME">isEmpty</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>172</span> </span><span class="WHIT">        </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this.facts.length</span><span class="WHIT"> </span><span class="PUNC">===</span><span class="WHIT"> </span><span class="NUMB">0</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>173</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>174</span> </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>175</span> 
+<span class='line'>176</span> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="NAME">gameOver</span><span class="PUNC">(</span><span class="NAME">score</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>177</span> </span><span class="WHIT">    </span><span class="NAME">let</span><span class="WHIT"> </span><span class="NAME">clueBay</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">document.querySelector</span><span class="PUNC">(</span><span class="STRN">"div.clue"</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>178</span> </span><span class="WHIT">    </span><span class="NAME">clueBay.innerHTML</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> 
+<span class='line'>179</span>         </span><span class="TOKN">`</span><span class="PUNC">&lt;</span><span class="NAME">div</span><span class="WHIT"> </span><span class="NAME">class</span><span class="PUNC">=</span><span class="STRN">"gameover"</span><span class="PUNC">></span><span class="WHIT">
+<span class='line'>180</span> </span><span class="WHIT">          </span><span class="PUNC">&lt;</span><span class="NAME">p</span><span class="PUNC">></span><span class="NAME">Game</span><span class="WHIT"> </span><span class="NAME">over</span><span class="PUNC">!</span><span class="PUNC">&lt;</span><span class="REGX">/p>
+<span class='line'>181</span>           &lt;p>Final score: ${score} points&lt;/</span><span class="NAME">p</span><span class="PUNC">></span><span class="WHIT">
+<span class='line'>182</span> </span><span class="WHIT">        </span><span class="PUNC">&lt;</span><span class="REGX">/div>`;
+<span class='line'>183</span> }
+<span class='line'>184</span> 
+<span class='line'>185</span> function drawNextClue(state) {
+<span class='line'>186</span>     if (state.clues.isEmpty()) {
+<span class='line'>187</span>         gameOver(state.score);
+<span class='line'>188</span>     } else {
+<span class='line'>189</span>         let clue = state.clues.extractEvent();
+<span class='line'>190</span>         let clueNode = clue.toHtml("clue");
+<span class='line'>191</span>         let clueBay = document.querySelector("div.clue");
+<span class='line'>192</span>         clueBay.appendChild(clueNode);
+<span class='line'>193</span>     }
+<span class='line'>194</span> }
+<span class='line'>195</span> 
+<span class='line'>196</span> function initializeTimeline() {
+<span class='line'>197</span>     function firstEvent() {
+<span class='line'>198</span>         let thisYear = new Date().getFullYear();
+<span class='line'>199</span>         let now = new Card(thisYear, "Now");
+<span class='line'>200</span>         let nowNode = now.toHtml("answer");
+<span class='line'>201</span>         return nowNode;
+<span class='line'>202</span>     }
+<span class='line'>203</span> 
+<span class='line'>204</span>     let now = firstEvent();
+<span class='line'>205</span>     let timelineBay = document.querySelector("div.timeline");
+<span class='line'>206</span>     timelineBay.appendChild(now);
+<span class='line'>207</span> }
+<span class='line'>208</span> 
+<span class='line'>209</span> function displayScore(score) {
+<span class='line'>210</span>     let scoreNode = document.querySelector("span.score");
+<span class='line'>211</span>     scoreNode.textContent = score;
+<span class='line'>212</span> }
+<span class='line'>213</span> 
+<span class='line'>214</span> function dragstartHandler(event) {
+<span class='line'>215</span>     event.dataTransfer.setData("date", event.target.dataset.when);
+<span class='line'>216</span>     event.dataTransfer.effectAllowed = "move";
+<span class='line'>217</span> }
+<span class='line'>218</span> 
+<span class='line'>219</span> function dragoverHandler(event) {
+<span class='line'>220</span>     event.preventDefault();
+<span class='line'>221</span>     event.dataTransfer.effectAllowed = "move";
+<span class='line'>222</span> }
+<span class='line'>223</span> 
+<span class='line'>224</span> function clueToAnswer(clue) {
+<span class='line'>225</span>     let clueDateText = clue.querySelector("span.date");
+<span class='line'>226</span>     clueDateText.textContent = clue.dataset.when;
+<span class='line'>227</span>     makeDropTarget(clue);
+<span class='line'>228</span> 
+<span class='line'>229</span>     return clue;
+<span class='line'>230</span> }
+<span class='line'>231</span> 
+<span class='line'>232</span> function isClueBetweenDates(clue, guess, preGuess) {
+<span class='line'>233</span>     let clueDate = clue.dataset.when;
+<span class='line'>234</span>     let guessDate = guess.dataset.when;
+<span class='line'>235</span>     
+<span class='line'>236</span>     let isBeforeGuess = clueDate &lt;= guessDate;
+<span class='line'>237</span> 
+<span class='line'>238</span>     let noPreGuess = !preGuess;
+<span class='line'>239</span>     let isAfterPreGuess = preGuess && (clueDate >= preGuess.dataset.when);
+<span class='line'>240</span>     let isAfterAnyPreGuess = noPreGuess || isAfterPreGuess;
+<span class='line'>241</span> 
+<span class='line'>242</span>     return isBeforeGuess && isAfterAnyPreGuess;
+<span class='line'>243</span> }
+<span class='line'>244</span> 
+<span class='line'>245</span> function dropHandler(event) {
+<span class='line'>246</span>     event.preventDefault();
+<span class='line'>247</span>     let date = event.dataTransfer.getData("date");
+<span class='line'>248</span>     console.log(`Dropping card with date ${date}`);
+<span class='line'>249</span> 
+<span class='line'>250</span>     /</span><span class="TOKN"></span></pre></body></html>
