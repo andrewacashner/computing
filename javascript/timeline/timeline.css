@@ -12,12 +12,6 @@ p.instructions {
   font-style: italic;
 }
 
-footer {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-}
-
 div.clue {
   display: flex;
   justify-content: center;
@@ -57,5 +51,25 @@ div.card span.date {
   margin-bottom: 1ex;
 }
 
-span.fact {
+span.info {
 }
+
+footer {
+  position: fixed;
+  bottom: 1em;
+  width: 100%;
+}
+
+footer h1 span.score {
+  margin-left: 1em;
+}
+
+footer button.restart {
+}
+
+div.gameover {
+  font-size: 300%;
+  color: red;
+}
+
+
