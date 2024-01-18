@@ -4,7 +4,6 @@ body {
 }
 
 header {
-  border-bottom: 1pt solid grey;
   margin-bottom: 2em;
 }
 
@@ -19,7 +18,7 @@ div.clue {
 }
 
 div.clue div.card {
-  background: LightBlue;
+  background: LightPink; /* TODO or gray? */
 }
 
 div.timelineBar {

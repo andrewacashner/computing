@@ -33,10 +33,11 @@ const TIMELINE = [
   }
 ]
 
+
 /**
  * We use this class to store information on the historical events used as
  * clues and inserted into the timeline, and to generate the HTML node for a
- * card (div.card). The HTML differs for clues vs. answers (clue shows "??" as
+ * card (div.card). The HTML differs for clues vs. answers (clue shows "CLUE" as
  * its date and is a draggable object; answer shows the real date and is not
  * draggable). 
  *
@@ -78,7 +79,7 @@ class Card {
     if (mode === "answer") {
       dateNode.textContent = this.date;
     } else {
-      dateNode.textContent = "??";
+      dateNode.textContent = "CLUE";
     }
 
     let infoNode = document.createElement("span");
@@ -223,6 +224,7 @@ function initializeTimeline() {
     let thisYear = new Date().getFullYear();
     let now = new Card(thisYear, "Now");
     let nowNode = now.toHtml("answer");
+    setColor(nowNode, VIOLET);
     return nowNode;
   }
 
@@ -230,6 +232,8 @@ function initializeTimeline() {
   let timelineBay = document.querySelector("div.timeline");
   makeDropTarget(timelineBay);
   timelineBay.appendChild(now);
+
+  
 }
 
 /**
@@ -362,17 +366,86 @@ function dropHandler(event) {
       let answer = clueToAnswer(clue);
       guess.insertAdjacentElement("beforebegin", answer);
 
+      let cards = document.querySelectorAll("div.timeline div.card");
+      setCardColors(cards, SPECTRUM);
+
+      // TODO play sound, alert
       ++window.gameState.score;
       displayScore(window.gameState.score);
 
       drawNextClue(window.gameState);
     } else {
-      console.log("Incorrect: --Score");
-      --window.gameState.score;
-      displayScore(window.gameState.score);
+      // TODO play sound, alert
+      console.log("Incorrect");
     }
   } else {
     console.log("No card found at drop location");
+  }
+}
+
+class RgbColorMix {
+  red;
+  green;
+  blue;
+  decimalPercentWhite;
+
+  constructor(r, g, b, w) {
+    this.red = r;
+    this.green = g;
+    this.blue = b;
+    this.percentWhite = w; // as decimal, 0.5 not 50%
+  }
+
+  toCss() {
+    let rgb = `rgb(${this.red}, ${this.green}, ${this.blue})`;
+    return `color-mix(in srgb, ${rgb}, ${this.percentWhite}% white)`;
+  }
+}
+
+function colorSpectrum(max, min, opacity) {
+  let reds = [];
+  let blues = [];
+  let greens = [];
+
+  // Increase red against others to go red -> orange
+  for (let i = 0; i < max; ++i) {
+    reds.push   ([max, i, min, opacity]);
+  }
+  // *Decrease* green and blue against others to continue in spectrum order
+  for (let i = max - 1; i >= 0; --i) {
+    greens.push ([i, max, min, opacity]);
+    blues.push  ([min, i, max, opacity]);
+  }
+  let perms = [...reds, ...greens, ...blues];
+  let colors = perms.map((p) => new RgbColorMix(...p));
+  return colors;
+}
+
+const SPECTRUM = colorSpectrum(256, 0, 50);
+
+function lastColor(spectrum) {
+  return spectrum[spectrum.length - 1];
+}
+
+const VIOLET = lastColor(SPECTRUM);
+
+function setColor(el, color) {
+  el.style.background = color.toCss();
+}
+
+function setCardColors(cards, spectrum) {
+  let cardMax = cards.length;
+  let colorMax = spectrum.length;
+  let interval = Math.floor(colorMax / cardMax);
+ 
+  // We already set the last card color, so start with penultimate
+  let thisCard = cardMax - 2;
+  let thisColor = colorMax - 1 - interval;
+  while (thisCard >= 0 && thisColor >= 0) {
+    console.log(`Set card ${thisCard} to color index ${thisColor}`);
+    setColor(cards[thisCard], spectrum[thisColor]);
+    --thisCard;
+    thisColor = thisColor - interval;
   }
 }
 
@@ -391,3 +464,15 @@ document.addEventListener("DOMContentLoaded", (event) => {
   initializeTimeline();
   drawNextClue(window.gameState);
 });
+
+// TESTING
+function showColorSpectrum(spectrum) {
+  let tree = document.createElement("div");
+  for (let i = 0; i < spectrum.length; ++i) {
+    let span = document.createElement("span");
+    span.textContent = `${i}|`;
+    setColor(span, spectrum[i]);
+    tree.appendChild(span);
+  }
+  return tree;
+}

@@ -11,4 +11,5 @@
 
 - animation, sound when getting it right
 - no penalty when getting it wrong; + error sound
-- rainbow colors for timeline
+
+- color of clue card?
