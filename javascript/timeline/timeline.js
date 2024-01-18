@@ -193,10 +193,15 @@ class FactList {
  */
 function gameOver(score) {
   let clueBay = document.querySelector("div.clue");
+  let pointWord = "point";
+  if (score !== 1) {
+    pointWord = "points";
+  }
+
   clueBay.innerHTML = 
     `<div class="gameover">
           <p>Game over!</p>
-          <p>Final score: ${score} points</p>
+          <p>Final score: ${score} ${pointWord}</p>
         </div>`;
 }
 
@@ -376,18 +381,32 @@ function dropHandler(event) {
       drawNextClue(window.gameState);
     } else {
       // TODO play sound, alert
-      console.log("Incorrect");
+      console.log("Incorrect, --Score");
+      if (window.gameState.score > 0) {
+        --window.gameState.score;
+      }
+      displayScore(window.gameState.score);
     }
   } else {
     console.log("No card found at drop location");
   }
 }
 
+/**
+ * Colors: This class holds the information for one color: red, green, blue
+ * values plus a percentage of white to mix in.
+ * @constructor
+ * @param {number} r - red, integer 0 <= n < 256
+ * @param {number} g - green, integer 0 <= n < 256
+ * @param {number} b - blue, integer 0 <= n < 256
+ * @param {number} percentWhite - integer percentage of white to mix in 
+ *      (50 = * 50%)
+ */
 class RgbColorMix {
   red;
   green;
   blue;
-  decimalPercentWhite;
+  percentWhite;
 
   constructor(r, g, b, w) {
     this.red = r;
@@ -396,43 +415,74 @@ class RgbColorMix {
     this.percentWhite = w; // as decimal, 0.5 not 50%
   }
 
+  /**
+   * Create CSS color (color-mix with rgb color)
+   * @returns {string} CSS color-mix expression
+   */
   toCss() {
     let rgb = `rgb(${this.red}, ${this.green}, ${this.blue})`;
     return `color-mix(in srgb, ${rgb}, ${this.percentWhite}% white)`;
   }
 }
 
-function colorSpectrum(max, min, opacity) {
+/**
+ * List of all colors available in range.
+ * For each of red, blue, and green, iterate through values of primary with
+ * constant secondary and white values (tertiary color is zero).
+ *
+ * @param {number} max - Highest color value possible for each 
+ *      (red, green, blue)
+ * @param {number} min - Used for secondary color, 
+ *      fixed value mixed in to each primary
+ * @param {number} white - Percent white to mix in, fixed for all
+ * @returns {Array} array of RgbColorMix instances
+ */
+function colorSpectrum(max, min, white) {
   let reds = [];
   let blues = [];
   let greens = [];
 
   // Increase red against others to go red -> orange
   for (let i = 0; i < max; ++i) {
-    reds.push   ([max, i, min, opacity]);
+    reds.push   ([max, i, min, white]);
   }
   // *Decrease* green and blue against others to continue in spectrum order
   for (let i = max - 1; i >= 0; --i) {
-    greens.push ([i, max, min, opacity]);
-    blues.push  ([min, i, max, opacity]);
+    greens.push ([i, max, min, white]);
+    blues.push  ([min, i, max, white]);
   }
   let perms = [...reds, ...greens, ...blues];
   let colors = perms.map((p) => new RgbColorMix(...p));
   return colors;
 }
 
+/**
+ * Available spectrum of colors up to max, with given white proportion,
+ * red -> violet order.
+ */
 const SPECTRUM = colorSpectrum(256, 0, 50);
 
-function lastColor(spectrum) {
-  return spectrum[spectrum.length - 1];
-}
+/**
+ * Right-most, final color of spectrum.
+ */
+const VIOLET = SPECTRUM[SPECTRUM.length - 1];
 
-const VIOLET = lastColor(SPECTRUM);
-
+/**
+ * Procedure: Set an element's inline style to the given RgbColorMix.
+ * @param {Element} el - DOM element
+ * @param {RgbColorMix} color
+ */
 function setColor(el, color) {
   el.style.background = color.toCss();
 }
 
+/** Procedure: Set the colors of a set of cards (timeline) to equidistant
+ * points on the color spectrum, ROYGBIV order. The rightmost card was already
+ * set during initialization, so we skip it.
+ *
+ * @param {NodeList} cards - Node list of div.card DOM elements
+ * @param {Array} spectrum - Array of RgbColorMix instances
+ */
 function setCardColors(cards, spectrum) {
   let cardMax = cards.length;
   let colorMax = spectrum.length;
@@ -466,6 +516,11 @@ document.addEventListener("DOMContentLoaded", (event) => {
 });
 
 // TESTING
+/** 
+ * Create spectrum showing colors at each index
+ * @param {Array} spectrum - array of RgbColorMix instances
+ * @returns {Element} Div DOM element containing spans for each color
+ */
 function showColorSpectrum(spectrum) {
   let tree = document.createElement("div");
   for (let i = 0; i < spectrum.length; ++i) {

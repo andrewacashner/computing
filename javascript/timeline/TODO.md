@@ -11,5 +11,6 @@
 
 - animation, sound when getting it right
 - no penalty when getting it wrong; + error sound
+- negative points or not? (currently wrong = negative down to zero)
 
 - color of clue card?
