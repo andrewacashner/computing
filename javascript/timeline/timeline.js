@@ -35,6 +35,10 @@ const TIMELINE = [
     date: 1939,
     info: "End of Spanish Civil War."
   },
+  {
+    date: 1939,
+    info: "Hitler invades Poland, resulting in World War II."
+  },
   { 
     date: 1945,
     info: "World War II ends with the unconditional surrender of Japan."
@@ -65,6 +69,7 @@ class Card {
   constructor(date, info) {
     this.date = date;
     this.info = info;
+    this.id = crypto.randomUUID();
   }
 
   /**
@@ -75,6 +80,7 @@ class Card {
   toHtml(mode) {
     let card = document.createElement("div");
     card.className = "card";
+    card.id = this.id;
     card.setAttribute("data-when", this.date);
 
     if (mode !== "answer") {
@@ -87,7 +93,7 @@ class Card {
     if (mode === "answer") {
       dateNode.textContent = this.date;
     } else {
-      dateNode.textContent = "CLUE";
+      dateNode.textContent = "Clue";
     }
 
     let infoNode = document.createElement("span");
@@ -200,6 +206,7 @@ class FactList {
  * @param {number} score
  */
 function gameOver(score) {
+  console.log("Game over");
   let clueBay = document.querySelector("div.clue");
   let pointWord = "point";
   if (score !== 1) {
@@ -213,6 +220,13 @@ function gameOver(score) {
         </div>`;
 }
 
+function appendNextClue(clueBay, clues) {
+  let clue = clues.extractEvent();
+  let clueNode = clue.toHtml("clue");
+  clueBay.appendChild(clueNode);
+}
+
+
 /**
  * Procedure: Draw the next clue and update the page to display it; if no
  * clues left, do gameOver. Use the div.clue element as the space for the
@@ -222,10 +236,12 @@ function drawNextClue(state) {
   if (state.clues.isEmpty()) {
     gameOver(state.score);
   } else {
-    let clue = state.clues.extractEvent();
-    let clueNode = clue.toHtml("clue");
+    console.log(`Clues remaining: ${state.clues.facts.length}`);
     let clueBay = document.querySelector("div.clue");
-    clueBay.appendChild(clueNode);
+    appendNextClue(clueBay, state.clues);
+    
+    // Remove one card from stubs showing remaining cards
+    clueBay.removeChild(clueBay.firstChild);
   }
 }
 
@@ -266,10 +282,11 @@ function displayScore(score) {
  */
 function dragstartHandler(event) {
   event.dataTransfer.setData("date", event.target.dataset.when);
+  event.dataTransfer.setData("id", event.target.id);
   
   let boundingBox = event.target.getBoundingClientRect();
   event.dataTransfer.setData("toRightEdge", boundingBox.right - event.clientX);
-  console.log(`Drag started at ${event.clientX}`);
+  // console.log(`Drag started at ${event.clientX}`);
 
   event.dataTransfer.effectAllowed = "move";
 }
@@ -318,13 +335,17 @@ function findFirstCardToRight(event) {
 
   let x = event.clientX;
   let y = event.clientY;
-  console.log(`Card dropped with pointer at (${x}, ${y})`);
+  // console.log(`Card dropped with pointer at (${x}, ${y})`);
 
   // Right edge of clue must be left of right edge of after-answer
   // Right edge of clue must be right of right edge of before-answer
   let rightDistance = event.dataTransfer.getData("toRightEdge");
-  let rightEdge = x + parseFloat(rightDistance);
-  console.log(`Search relative to right edge at ${rightEdge}`);
+
+  // Need to include margin on right edge
+  let cardStyle = window.getComputedStyle(document.querySelector("div.card"));
+  let cardMargin = cardStyle.getPropertyValue("margin-right");
+  let rightEdge = x + parseFloat(rightDistance) + parseFloat(cardMargin);
+  // console.log(`Search relative to right edge at ${rightEdge}`);
 
   let card;
   let testCard = cardAtCoord(rightEdge, y);
@@ -343,6 +364,20 @@ function findFirstCardToRight(event) {
     }
   } 
   return card;
+}
+
+function sleep(ms = 0) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function blinkCard(card) {
+  let startColor = card.style.backgroundColor;
+  for (let i = 0; i < 2; ++i) {
+    card.style.backgroundColor = "red";
+    await sleep(100);
+    card.style.backgroundColor = startColor;
+    await sleep(100);
+  }
 }
 
 /**
@@ -380,7 +415,7 @@ function dropHandler(event) {
   console.log(`Dropping card with date ${date}`);
 
   // Show date on clue card 
-  let clue = document.querySelector(`div.card[data-when="${date}"]`);
+  let clue = document.getElementById(event.dataTransfer.getData("id"));
   let clueDate = clue.dataset.when;
 
   // Find nearest answer (first card found to right of click) to compare
@@ -406,6 +441,7 @@ function dropHandler(event) {
       drawNextClue(window.gameState);
     } else {
       // TODO play sound, alert
+      blinkCard(clue);
       console.log("Incorrect, --Score");
       if (window.gameState.score > 0) {
         --window.gameState.score;
@@ -499,7 +535,7 @@ const RED = SPECTRUM[0];
  * @param {RgbColorMix} color
  */
 function setColor(el, color) {
-  el.style.background = color.toCss();
+  el.style.backgroundColor = color.toCss();
 }
 
 /** Procedure: Set the colors of a set of cards (timeline) to equidistant
@@ -531,20 +567,34 @@ function setCardColors(cards, spectrum) {
   }
 }
 
+function fillDeck(n) {
+  console.log(`Filling deck with ${n} cards`);
+  let deck = document.querySelector("div.clue");
+
+  for (let i = 0; i < n - 1; ++i) {
+    let card = document.createElement("div");
+    card.className = "cardStub";
+    deck.appendChild(card);
+  }
+}
+
 /**
  * On page load, set up the timeline, initialize game state, and draw and
  * display the first clue.
  */
 document.addEventListener("DOMContentLoaded", (event) => {
-  let timeline = TIMELINE;
+  let clues = new FactList(TIMELINE);
 
   window.gameState = {
-    clues: new FactList(timeline),
+    clues: clues,
     score: 0
   }
 
   initializeTimeline();
-  drawNextClue(window.gameState);
+  fillDeck(clues.facts.length);
+
+  let clueBay = document.querySelector("div.clue");
+  appendNextClue(clueBay, clues);
 });
 
 // TESTING
