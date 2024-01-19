@@ -503,9 +503,11 @@ function setCardColors(cards, spectrum) {
     setColor(cards[0], RED);
 
     if (cardMax > 2) {
+      let thisCard = cardMax - 2;
       let thisColor = colorMax - 1 - interval;
-      for (thisCard = cardMax - 2; thisCard > 0; --thisCard) {
+      while (thisCard > 0 && thisColor > 0) {
         setColor(cards[thisCard], spectrum[thisColor]);
+        --thisCard;
         thisColor = thisColor - interval;
       }
     }
