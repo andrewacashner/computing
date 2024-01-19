@@ -1,0 +1,36 @@
+[
+  { 
+    "date": 1648,
+    "info": "End of the Thirty Years’ War."
+  },
+  {
+    "date": 1783,
+    "info": "American Revolution ends with United States victory."
+  },
+  {
+    "date": 1815,
+    "info": "Napoleon defeated at Waterloo."
+  },
+  { 
+    "date": 1865,
+    "info": "US Civil War ends with Lee’s surrender at Appomattox."
+  },
+  { 
+    "date": 1918,
+    "info": "World War I ends in an armistice."
+  },
+  { 
+    "date": 1939,
+    "info": "End of Spanish Civil War."
+  },
+  {
+    "date": 1939,
+    "info": "Hitler invades Poland, resulting in World War II."
+  },
+  { 
+    "date": 1945,
+    "info": "World War II ends with the unconditional surrender of Japan."
+  }
+]
+
+

@@ -4,24 +4,36 @@
     <title>Timeline</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="timeline.css">
-    <script src="timeline.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
     <header>
       <h1>Timeline</h1>
-      <p class="instructions">Drag the clue card to the correct spot in the timeline.</p>
+      <p class="instructions">Test your chronological knowledge by building a timeline!</p>
     </header>
     <main>
-      <div class="clue"></div>
-      <div class="timelineBar">
-        <hr />
-        <div class="timeline"></div>
-      </div>
+      <p>
+      <form action="play.php" method="post">
+        <noscript>
+          <p>
+          Javascript must be enabled in your browser in order to
+          play this game.
+          </p>
+        </noscript>
+        <legend>
+          <label for="topic">Choose a topic:</label>
+          <select name="topic" id="topic" required>
+            <option value="music">Music</option>
+            <option value="wars" selected>Wars</option>
+            <option value="cashners">Cashners</option>
+          </select>
+        </legend>
+        </p>
+        <p>
+        <button type="submit">Play!</button>
+        </p>
     </main>
     <footer>
-      <h1>Score: <span class="score">0</span></h1>
-      <button class="restart" onclick="location.reload()">Start Over</button>
     </footer>
   </body>
 </html>

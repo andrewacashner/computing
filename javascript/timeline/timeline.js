@@ -7,44 +7,8 @@
 
 "use strict";
 
-/**
- * Timeline data input
- */
-const TIMELINE = [
-  { 
-    date: 1648,
-    info: "End of the Thirty Years’ War."
-  },
-  {
-    date: 1783,
-    info: "American Revolution ends with United States victory."
-  },
-  {
-    date: 1815,
-    info: "Napoleon defeated at Waterloo."
-  },
-  { 
-    date: 1865,
-    info: "US Civil War ends with Lee’s surrender at Appomattox."
-  },
-  { 
-    date: 1918,
-    info: "World War I ends in an armistice."
-  },
-  { 
-    date: 1939,
-    info: "End of Spanish Civil War."
-  },
-  {
-    date: 1939,
-    info: "Hitler invades Poland, resulting in World War II."
-  },
-  { 
-    date: 1945,
-    info: "World War II ends with the unconditional surrender of Japan."
-  }
-]
-
+//const INFILE imported from PHP in play.html
+// console.log(INFILE);
 
 /**
  * We use this class to store information on the historical events used as
@@ -367,15 +331,16 @@ function findFirstCardToRight(event) {
 }
 
 function sleep(ms = 0) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms)
+  });
 }
 
-async function blinkCard(card) {
-  let startColor = card.style.backgroundColor;
+async function flashAlert(el) {
   for (let i = 0; i < 2; ++i) {
-    card.style.backgroundColor = "red";
+    el.setAttribute("data-alert", "true");
     await sleep(100);
-    card.style.backgroundColor = startColor;
+    el.removeAttribute("data-alert");
     await sleep(100);
   }
 }
@@ -441,7 +406,7 @@ function dropHandler(event) {
       drawNextClue(window.gameState);
     } else {
       // TODO play sound, alert
-      blinkCard(clue);
+      flashAlert(clue);
       console.log("Incorrect, --Score");
       if (window.gameState.score > 0) {
         --window.gameState.score;
@@ -578,23 +543,45 @@ function fillDeck(n) {
   }
 }
 
+function setUpButtons() {
+  let restart = document.querySelector("button.restart");
+  let newgame = document.querySelector("button.newgame");
+  restart.addEventListener("click", function (event) {
+    location.reload();
+  });
+  newgame.addEventListener("click", function (event) {
+    window.location = "index.html";
+  });
+}
+
+async function loadTimeline(url) {
+  const response = await fetch(url);
+  const timeline = await response.json();
+  return timeline;
+}
+
 /**
  * On page load, set up the timeline, initialize game state, and draw and
  * display the first clue.
  */
-document.addEventListener("DOMContentLoaded", (event) => {
-  let clues = new FactList(TIMELINE);
+document.addEventListener("DOMContentLoaded", function (event) {
+  let infile = document.querySelector("meta[name='filename']").content;
+  loadTimeline(infile).then(
+    function (timeline) {
+      let clues = new FactList(timeline);
 
-  window.gameState = {
-    clues: clues,
-    score: 0
-  }
+      window.gameState = {
+        clues: clues,
+        score: 0
+      }
 
-  initializeTimeline();
-  fillDeck(clues.facts.length);
+      setUpButtons();
+      initializeTimeline();
+      fillDeck(clues.facts.length);
 
-  let clueBay = document.querySelector("div.clue");
-  appendNextClue(clueBay, clues);
+      let clueBay = document.querySelector("div.clue");
+      appendNextClue(clueBay, clues);
+    });
 });
 
 // TESTING

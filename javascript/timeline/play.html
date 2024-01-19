@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Timeline</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="timeline.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="filename" content="<?php echo $infile?>"/>
+    <script src="timeline.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Timeline</h1>
+      <p class="instructions">Drag the clue card to the correct spot in the timeline.</p>
+    </header>
+    <main>
+      <div class="clue"></div>
+      <div class="timelineBar">
+        <hr />
+        <div class="timeline"></div>
+      </div>
+    </main>
+    <footer>
+      <h1>Score: <span class="score">0</span></h1>
+      <button class="restart">Play Again</button>
+      <button class="newgame">New Timeline</button>
+    </footer>
+  </body>
+</html>

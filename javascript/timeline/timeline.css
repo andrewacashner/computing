@@ -1,12 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IM+Fell+English:ital@0;1&display=swap');
 
+:root {
+  --roman-font: "IM Fell English", "EB Garamond", "Goudy Old Style", Georgia, serif;
+  --heading-font: "IM Fell English SC", "IM Fell English", "EB Garamond", "Goudy Old Style", Georgia, serif;
+  --card-height: 14em; /* h:w = 6:5 */
+  --card-width: 10em;
+}
+
 html {
-  font-family: "IM Fell English";
-  font-size: 120%;
-  text-align: center;
   height: 100%;
-  background: linear-gradient(30deg, AntiqueWhite, transparent),
-              linear-gradient(-120deg, Linen, transparent);
+  background: linear-gradient(30deg,   NavajoWhite,  transparent),
+              linear-gradient(-120deg, AntiqueWhite, transparent),
+              linear-gradient(50deg,   Linen,        transparent),
+              linear-gradient(-80deg,  BurlyWood,    transparent);
+}
+
+body {
+  font-family: var(--roman-font);
+  text-align: center;
+  margin: 0;
 }
 
 header {
@@ -14,39 +26,44 @@ header {
 }
 
 header h1, div.card span.date, footer h1 {
-  font-family: "IM Fell English SC";
+  font-family: var(--heading-font);
 }
 
 p.instructions {
   font-style: italic;
+  font-size: 110%;
 }
 
 div.card {
   display: flex;
   flex-direction: column;
-  height: 200px;
-  width: 130px;
+  height: var(--card-height);
+  width: var(--card-width);
+  min-width: calc(.5 * var(--card-width));
   padding: 1ex;
   margin: 1ex;
-  border-radius: 10px;
+  border-radius: 1ex;
   text-align: center;
   border: 1pt solid black;
   background-color: LightGray;
+  overflow: scroll;
 }
 
 div.card span.date {
   font-weight: bold;
   font-size: 200%;
   margin-bottom: 1ex;
-  font-family: "IM Fell English SC";
+  font-family: var(--heading-font);
 }
 
+div.card span.fact {
+}
 
 div.clue {
   display: flex;
   flex-direction: horizontal;
   justify-content: center;
-  height: 250px;
+  height: calc(var(--card-height) + 3em);
 }
 
 div.clue div.card {
@@ -54,17 +71,21 @@ div.clue div.card {
   margin-left: -1px;
 }
 
+div.clue div.card[data-alert] {
+  background-color: Crimson;
+}
+
 div.clue div.cardStub {
   border: 1px solid black;
   border-right: 0;
-  border-radius: 10px 0 0 10px;
-  height: 200px;
-  width: 20px;
+  border-radius: 1ex 0 0 1ex;
+  height: var(--card-height);
+  width: 1em;
   margin-top: 1ex;
   margin-bottom: 1ex;
   padding-top: 1ex;
   padding-bottom: 1ex;
-  margin-right: -10px;
+  margin-right: -1ex;
   padding-right: 0;
   background-color: LightGray;
 }
@@ -76,11 +97,11 @@ div.timelineBar {
 
 div.timelineBar hr {
   position: absolute;
-  top: 100px;
+  top: 6em;
   left: 0;
   right: 0;
   z-index: -1;
-  height: 5px;
+  height: 1ex;
   border: 0;
   background: linear-gradient(to right, Black, LightGray);
 }
@@ -88,7 +109,7 @@ div.timelineBar hr {
 div.timeline {
   display: flex;
   flex-direction: row;
-  width: calc(100% + 20px);
+  width: calc(100% + 20px); /* TODO fix */
 }
 
 @media (min-width: 600px) {
@@ -108,15 +129,15 @@ footer h1 span.score {
   margin-left: 1em;
 }
 
-footer button.restart {
-  font-family: "IM Fell English";
+button, option {
+  font-family: var(--main-font);
   font-size: 100%;
 }
 
 div.gameover {
   font-size: 240%;
   font-style: italic;
-  color: red;
+  color: Crimson;
 }
 
 div.gameover p {
