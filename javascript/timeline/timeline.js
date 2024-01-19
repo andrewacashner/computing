@@ -15,6 +15,14 @@ const TIMELINE = [
     date: 1648,
     info: "End of the Thirty Years’ War."
   },
+  {
+    date: 1783,
+    info: "American Revolution ends with United States victory."
+  },
+  {
+    date: 1815,
+    info: "Napoleon defeated at Waterloo."
+  },
   { 
     date: 1865,
     info: "US Civil War ends with Lee’s surrender at Appomattox."
@@ -462,10 +470,11 @@ function colorSpectrum(max, min, white) {
  */
 const SPECTRUM = colorSpectrum(256, 0, 50);
 
-/**
- * Right-most, final color of spectrum.
- */
+/** Right-most, final color of spectrum. */
 const VIOLET = SPECTRUM[SPECTRUM.length - 1];
+
+/** Left-most color. */
+const RED = SPECTRUM[0];
 
 /**
  * Procedure: Set an element's inline style to the given RgbColorMix.
@@ -488,14 +497,18 @@ function setCardColors(cards, spectrum) {
   let colorMax = spectrum.length;
   let interval = Math.floor(colorMax / cardMax);
  
-  // We already set the last card color, so start with penultimate
-  let thisCard = cardMax - 2;
-  let thisColor = colorMax - 1 - interval;
-  while (thisCard >= 0 && thisColor >= 0) {
-    console.log(`Set card ${thisCard} to color index ${thisColor}`);
-    setColor(cards[thisCard], spectrum[thisColor]);
-    --thisCard;
-    thisColor = thisColor - interval;
+  // We already set the rightmost card to be violet in page setup
+  // Leftmost card is always red
+  if (cardMax > 1) {
+    setColor(cards[0], RED);
+
+    if (cardMax > 2) {
+      let thisColor = colorMax - 1 - interval;
+      for (thisCard = cardMax - 2; thisCard > 0; --thisCard) {
+        setColor(cards[thisCard], spectrum[thisColor]);
+        thisColor = thisColor - interval;
+      }
+    }
   }
 }
 
