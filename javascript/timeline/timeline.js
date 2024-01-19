@@ -259,11 +259,18 @@ function displayScore(score) {
 }
 
 /**
- * Procedure: When a card is dragged, transfer its date.
+ * Procedure: When a card is dragged, transfer its date and the distance from
+ * the click point to the right edge (used to calculate end position on
+ * timeline).
  * @param {Event} event
  */
 function dragstartHandler(event) {
   event.dataTransfer.setData("date", event.target.dataset.when);
+  
+  let boundingBox = event.target.getBoundingClientRect();
+  event.dataTransfer.setData("toRightEdge", boundingBox.right - event.clientX);
+  console.log(`Drag started at ${event.clientX}`);
+
   event.dataTransfer.effectAllowed = "move";
 }
 
@@ -291,7 +298,9 @@ function clueToAnswer(clue) {
 
 /**
  * Given an event (e.g., from a drop), start from its coordinates and search
- * to the right until a card element is found. Return the card or null.
+ * to the right until a card element is found. We measure the card
+ * relative to its right edge: the guess is the next card whose right edge is
+ * to the right edge of the clue when dropped. Return the answer card or null.
  * @param {Event} event 
  * @returns {Element} Card element or null
  */
@@ -309,9 +318,17 @@ function findFirstCardToRight(event) {
 
   let x = event.clientX;
   let y = event.clientY;
+  console.log(`Card dropped with pointer at (${x}, ${y})`);
+
+  // Right edge of clue must be left of right edge of after-answer
+  // Right edge of clue must be right of right edge of before-answer
+  let rightDistance = event.dataTransfer.getData("toRightEdge");
+  let rightEdge = x + parseFloat(rightDistance);
+  console.log(`Search relative to right edge at ${rightEdge}`);
 
   let card;
-  let testCard = cardAtCoord(x, y);
+  let testCard = cardAtCoord(rightEdge, y);
+
   if (testCard) {
     card = testCard;
   } else {
