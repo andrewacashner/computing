@@ -7,9 +7,6 @@
 
 "use strict";
 
-//const INFILE imported from PHP in play.html
-// console.log(INFILE);
-
 /**
  * We use this class to store information on the historical events used as
  * clues and inserted into the timeline, and to generate the HTML node for a
@@ -184,17 +181,22 @@ function gameOver(score) {
         </div>`;
 }
 
+/**
+ * Procedure: Given a parent node, extract a clue, create a clue card, and
+ * append it as a child. (Removes a clue from the given FactList.)
+ * @param {Element} clueBay - div.clue to hold div.card object
+ * @param {FactList} clues - Source of clue card data
+ */
 function appendNextClue(clueBay, clues) {
   let clue = clues.extractEvent();
   let clueNode = clue.toHtml("clue");
   clueBay.appendChild(clueNode);
 }
 
-
 /**
  * Procedure: Draw the next clue and update the page to display it; if no
  * clues left, do gameOver. Use the div.clue element as the space for the
- * final message.
+ * final message. Remove one card from card stubs showing in the deck.
  */
 function drawNextClue(state) {
   if (state.clues.isEmpty()) {
@@ -225,8 +227,6 @@ function initializeTimeline() {
   let timelineBay = document.querySelector("div.timeline");
   makeDropTarget(timelineBay);
   timelineBay.appendChild(now);
-
-  
 }
 
 /**
@@ -250,7 +250,6 @@ function dragstartHandler(event) {
   
   let boundingBox = event.target.getBoundingClientRect();
   event.dataTransfer.setData("toRightEdge", boundingBox.right - event.clientX);
-  // console.log(`Drag started at ${event.clientX}`);
 
   event.dataTransfer.effectAllowed = "move";
 }
@@ -330,12 +329,20 @@ function findFirstCardToRight(event) {
   return card;
 }
 
+/** 
+ * Procedure: Wait the given time.
+ * @param {number} ms - milliseconds
+ */
 function sleep(ms = 0) {
   return new Promise(function (resolve) {
     setTimeout(resolve, ms)
   });
 }
 
+/**
+ * Procedure: Quickly toggle the given element's alert state on and off twice.
+ * @param {Element} el - DOM Element
+ */
 async function flashAlert(el) {
   for (let i = 0; i < 2; ++i) {
     el.setAttribute("data-alert", "true");
@@ -532,6 +539,10 @@ function setCardColors(cards, spectrum) {
   }
 }
 
+/**
+ * Procedure: Fill the clue deck with stubs for the remaining clues.
+ * @param {number} n - Number of clues
+ */
 function fillDeck(n) {
   console.log(`Filling deck with ${n} cards`);
   let deck = document.querySelector("div.clue");
@@ -543,6 +554,10 @@ function fillDeck(n) {
   }
 }
 
+/**
+ * Procedure: Set the buttons to do what we want (restart or go back to
+ * landing page).
+ */
 function setUpButtons() {
   let restart = document.querySelector("button.restart");
   let newgame = document.querySelector("button.newgame");
@@ -554,6 +569,11 @@ function setUpButtons() {
   });
 }
 
+/**
+ * Load a JSON timeline from a given URL.
+ * @param {string} URL
+ * @returns {Array} Array of timeline facts
+ */
 async function loadTimeline(url) {
   const response = await fetch(url);
   const timeline = await response.json();
