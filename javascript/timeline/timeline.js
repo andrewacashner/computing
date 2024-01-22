@@ -564,19 +564,18 @@ function fillDeck(n) {
   }
 }
 
-/**
- * Procedure: Set the buttons to do what we want (restart or go back to
- * landing page).
- */
-function setUpButtons() {
-  let restart = document.querySelector("button.restart");
-  let newgame = document.querySelector("button.newgame");
-  restart.addEventListener("click", function (event) {
-    location.reload();
-  });
-  newgame.addEventListener("click", function (event) {
-    window.location = "index.html";
-  });
+function restart() {
+  console.log("Restart");
+  let input = document.getElementById("fileInput");
+  let form = document.getElementById("inputForm");
+  form.reset();
+  location.reload();
+}
+
+function userUploadUrl(input) {
+  let infile = input.files[0];
+  let url = URL.createObjectURL(infile);
+  return url;
 }
 
 /**
@@ -586,35 +585,53 @@ function setUpButtons() {
  */
 async function loadTimeline(url) {
   const response = await fetch(url);
-  const timeline = await response.json();
+  const data = await response.json().catch((err) => {
+    console.error(err);
+    return [];
+  });
+  let timeline;
+  if (isInputValid(data)) {
+    timeline = data;
+  }
   return timeline;
 }
 
-function setupGame(input) {
-  if (input.files.length === 0) {
-    console.log("No file selected.");
-  } else {
-    let infile = input.files[0];
-    let url = URL.createObjectURL(infile);
-    playGame(url);
-  }
+function isInputValid(timeline) {
+  let isArray = Array.isArray(timeline);
+  let isNotEmpty = timeline.length > 0;
+  let hasProperFields = timeline.every(
+    function (fact) {
+      return (("date" in fact) && ("info" in fact));
+    });
+  return (isArray && isNotEmpty && hasProperFields);
 }
 
 function playGame(url) {
+  let selector = document.getElementById("inputForm");
+  selector.className = "hide";
+
+  let uploadButton = document.getElementById("file");
+  uploadButton.className = "hide";
+
   loadTimeline(url).then( function(timeline) {
-    let clues = new FactList(timeline);
+    if (timeline) {
+      let clues = new FactList(timeline);
 
-    window.gameState = {
-      clues: clues,
-      score: 0
+      window.gameState = {
+        clues: clues,
+        score: 0
+      }
+
+      initializeTimeline();
+      fillDeck(clues.facts.length);
+
+      let clueBay = document.querySelector("div.clue");
+      appendNextClue(clueBay, clues);
+    } else {
+      console.log(`Invalid timeline input from ${url}`);
+      alert("Invalid timeline input");
+//      restart();
     }
-
-    setUpButtons();
-    initializeTimeline();
-    fillDeck(clues.facts.length);
-
-    let clueBay = document.querySelector("div.clue");
-    appendNextClue(clueBay, clues);
   });
 }
 
@@ -623,25 +640,37 @@ function playGame(url) {
  * display the first clue.
  */
 document.addEventListener("DOMContentLoaded", function (event) {
-//  let infile = document.querySelector("meta[name='filename']").content;
-  
-  let button = document.getElementById("playbutton");
-  button.addEventListener("click", function () {
-    let input = document.querySelector("input");
-    if (input.files.length > 0) {
-      setupGame(input);
-    } else {
-      let select = document.getElementById("topic");
-      let choice = select.value;
-      let url = `input/${choice}.json`;
-      console.log(url);
+  let source = document.getElementById("source");
+  source.addEventListener("change", 
+    function() {
+      let fileSelector = document.getElementById("file");
+      if (source.value === "upload") {
+        fileSelector.className = "show";
+      } else {
+        fileSelector.className = "hide";
+      }
+    }
+  );
+
+  let playButton = document.getElementById("playbutton");
+  playButton.addEventListener("click", function () {
+    let url;
+    let input = document.getElementById("fileInput");
+    let select = document.getElementById("source");
+    if (select.value) {
+      if (input.files.length > 0) {
+        url = userUploadUrl(input);
+      } else {
+        let choice = select.value;
+        url = `input/${choice}.json`;
+      }
+      console.log(`Loading file ${url}`);
       playGame(url);
+    } else {
+      console.log("No input source selected");
     }
   });
-
 });
-
-
 
 // TESTING
 /** 

@@ -34,14 +34,20 @@ p.instructions {
   font-size: 110%;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
-  width: 50%;
+.hide {
+  visibility: hidden;
+  height: 0;
+  width: 0;
 }
-form input, form button {
-  display: block;
+
+.show {
+  visibility: visible;
 }
+
+form button {
+  margin: 1em;
+}
+
 div.card {
   display: flex;
   flex-direction: column;

@@ -5,61 +5,39 @@
     <meta charset="utf-8" />
     <link rel="stylesheet" href="timeline.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="filename" content="<?php echo $infile?>"/>
+    <script src="timeline.js"></script>
   </head>
   <body>
     <header>
       <h1>Timeline</h1>
-      <p class="instructions">Test your chronological knowledge by building a timeline!</p>
+      <p class="instructions">Drag the clue card to the correct spot in the timeline.</p>
+      <form id="inputForm">
+        <label for="source">Choose a timeline:</label>
+        <select name="source" id="source" required>
+          <option value="">Select a topic</option>
+          <option value="music">Music</option>
+          <option value="wars">Wars</option>
+          <option value="cashners">Cashners</option>
+          <option value="upload">Upload a custom timeline...</option>
+        </select>
+      <div id="file" class="hide">
+        <input id="fileInput" type="file" accept=".json">Upload JSON timeline file</input>
+      </div>
+      <button type="button" id="playbutton">Play!</button>
+      </form>
+
     </header>
     <main>
-      <p>
-      <form action="play.php" method="POST" enctype="multipart/form-data">
-        <noscript>
-          <p>
-          Javascript must be enabled in your browser in order to
-          play this game.
-          </p>
-        </noscript>
-        <!--
-        <fieldset>
-          <legend>Choose a premade timeline or upload your own:</legend>
-          <ul>
-            <li>
-              <input type="radio" id="existing" name="source" value="existing" checked />
-              <label for="existing">Premade timeline:</label>
-              <ul>
-                <li>
-                  <legend>
-                    <label for="topic">Choose a topic:</label>
-                    <select name="topic" id="topic" required>
-                      <option value="music">Music</option>
-                      <option value="wars" selected>Wars</option>
-                      <option value="cashners">Cashners</option>
-                    </select>
-                  </legend>
-                </li>
-              </ul>
-            </li>
-            <li>
-              <input type="radio" id="upload" name="source" value="upload" />
-              <label for="existing">Upload your own timeline</label>
-              <ul>
-                <li>
-            -->
-                  <input type="file" name="upload">Select a JSON file</input>
-                  <!--
-                </li>
-              </ul>
-            </li>
-          </ul>
-        </fieldset>
-                  -->
-        <p>
-        <button type="submit">Play!</button>
-        </p>
-      </form>
+      <div class="clue"></div>
+      <div class="timelineBar">
+        <hr />
+        <div class="timeline"></div>
+      </div>
     </main>
     <footer>
+      <h1>Score: <span class="score">0</span></h1>
+      <button id="restart" onclick="restart()">Play Again</button>
     </footer>
   </body>
 </html>
