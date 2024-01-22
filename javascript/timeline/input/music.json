@@ -2,39 +2,42 @@
     {
         "date": 1098,
         "info": "Birth of Hildegard of Bingen, first known European composer",
-        "img": "img/corn.jpg"
+        "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Hildegard_von_Bingen.jpg/440px-Hildegard_von_Bingen.jpg"
     },
     {
         "date": 1436,
         "info": "Dufay’s “Nuper rosarum flores” sung for the consecration of Florence Cathedral",
-        "img": "img/corn.jpg"
+        "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/View_of_Santa_Maria_del_Fiore_in_Florence.jpg/440px-View_of_Santa_Maria_del_Fiore_in_Florence.jpg"
     },
     {
         "date": 1685,
         "info": "Birth of J. S. Bach",
-        "img": "img/corn.jpg"
+        "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Johann_Sebastian_Bach.jpg/440px-Johann_Sebastian_Bach.jpg"
 
     },
     {
         "date": 1791,
         "info": "Death of W. A. Mozart",
-        "img": "img/corn.jpg"
-
+        "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Mozart-1783-lange.jpg/440px-Mozart-1783-lange.jpg"
     },
     {
         "date": 1742,
-        "info": "First performance of Handel’s “Messiah”"
+        "info": "First performance of Handel’s “Messiah”",
+        "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/George_Frideric_Handel_by_Balthasar_Denner.jpg/440px-George_Frideric_Handel_by_Balthasar_Denner.jpg"
     },
     {
         "date": 1943,
-        "info": "Duke Ellington premieres “Black, Brown, and Beige” at Carnegie Hall"
+        "info": "Duke Ellington premieres “Black, Brown, and Beige” at Carnegie Hall",
+        "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Duke_Ellington_-_publicity.JPG/440px-Duke_Ellington_-_publicity.JPG"
     },
     {
         "date": 2007,
-        "info": "Radiohead releases “In Rainbows” online, letting customers name their own price"
+        "info": "Radiohead releases “In Rainbows” online, letting customers name their own price",
+        "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Radiohead_France_2008.jpg/440px-Radiohead_France_2008.jpg"
     },
     {
         "date": 2016,
-        "info": "Beyoncé releases “Lemonade” as a visual album"
+        "info": "Beyoncé releases “Lemonade” as a visual album",
+        "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Beyonce.jpg/300px-Beyonce.jpg"
     }
 ]
