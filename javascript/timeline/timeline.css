@@ -34,6 +34,14 @@ p.instructions {
   font-size: 110%;
 }
 
+form {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+}
+form input, form button {
+  display: block;
+}
 div.card {
   display: flex;
   flex-direction: column;

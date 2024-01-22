@@ -13,25 +13,51 @@
     </header>
     <main>
       <p>
-      <form action="play.php" method="post">
+      <form action="play.php" method="POST" enctype="multipart/form-data">
         <noscript>
           <p>
           Javascript must be enabled in your browser in order to
           play this game.
           </p>
         </noscript>
-        <legend>
-          <label for="topic">Choose a topic:</label>
-          <select name="topic" id="topic" required>
-            <option value="music">Music</option>
-            <option value="wars" selected>Wars</option>
-            <option value="cashners">Cashners</option>
-          </select>
-        </legend>
-        </p>
+        <!--
+        <fieldset>
+          <legend>Choose a premade timeline or upload your own:</legend>
+          <ul>
+            <li>
+              <input type="radio" id="existing" name="source" value="existing" checked />
+              <label for="existing">Premade timeline:</label>
+              <ul>
+                <li>
+                  <legend>
+                    <label for="topic">Choose a topic:</label>
+                    <select name="topic" id="topic" required>
+                      <option value="music">Music</option>
+                      <option value="wars" selected>Wars</option>
+                      <option value="cashners">Cashners</option>
+                    </select>
+                  </legend>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <input type="radio" id="upload" name="source" value="upload" />
+              <label for="existing">Upload your own timeline</label>
+              <ul>
+                <li>
+            -->
+                  <input type="file" name="upload">Select a JSON file</input>
+                  <!--
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </fieldset>
+                  -->
         <p>
         <button type="submit">Play!</button>
         </p>
+      </form>
     </main>
     <footer>
     </footer>

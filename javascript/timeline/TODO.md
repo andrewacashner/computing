@@ -1,8 +1,10 @@
 # TO DO
 
 - deal with dates BC
+    - use Javascript Date type?
 - reload without reposting?
     - get data from php a better way?
+        - read json in php, not javascript?
 
 ## Expansions
 - add more fields to cards (image, sound/video)

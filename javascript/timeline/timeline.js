@@ -226,6 +226,7 @@ function initializeTimeline() {
   let now = firstEvent();
   let timelineBay = document.querySelector("div.timeline");
   makeDropTarget(timelineBay);
+  removeChildren(timelineBay);
   timelineBay.appendChild(now);
 }
 
@@ -539,6 +540,14 @@ function setCardColors(cards, spectrum) {
   }
 }
 
+function removeChildren(node) {
+  let child = node.lastChild;
+  while (child) {
+    node.removeChild(child);
+    child = node.lastChild;
+  }
+}
+
 /**
  * Procedure: Fill the clue deck with stubs for the remaining clues.
  * @param {number} n - Number of clues
@@ -546,6 +555,7 @@ function setCardColors(cards, spectrum) {
 function fillDeck(n) {
   console.log(`Filling deck with ${n} cards`);
   let deck = document.querySelector("div.clue");
+  removeChildren(deck);
 
   for (let i = 0; i < n - 1; ++i) {
     let card = document.createElement("div");
@@ -580,29 +590,58 @@ async function loadTimeline(url) {
   return timeline;
 }
 
+function setupGame(input) {
+  if (input.files.length === 0) {
+    console.log("No file selected.");
+  } else {
+    let infile = input.files[0];
+    let url = URL.createObjectURL(infile);
+    playGame(url);
+  }
+}
+
+function playGame(url) {
+  loadTimeline(url).then( function(timeline) {
+    let clues = new FactList(timeline);
+
+    window.gameState = {
+      clues: clues,
+      score: 0
+    }
+
+    setUpButtons();
+    initializeTimeline();
+    fillDeck(clues.facts.length);
+
+    let clueBay = document.querySelector("div.clue");
+    appendNextClue(clueBay, clues);
+  });
+}
+
 /**
  * On page load, set up the timeline, initialize game state, and draw and
  * display the first clue.
  */
 document.addEventListener("DOMContentLoaded", function (event) {
-  let infile = document.querySelector("meta[name='filename']").content;
-  loadTimeline(infile).then(
-    function (timeline) {
-      let clues = new FactList(timeline);
+//  let infile = document.querySelector("meta[name='filename']").content;
+  
+  let button = document.getElementById("playbutton");
+  button.addEventListener("click", function () {
+    let input = document.querySelector("input");
+    if (input.files.length > 0) {
+      setupGame(input);
+    } else {
+      let select = document.getElementById("topic");
+      let choice = select.value;
+      let url = `input/${choice}.json`;
+      console.log(url);
+      playGame(url);
+    }
+  });
 
-      window.gameState = {
-        clues: clues,
-        score: 0
-      }
-
-      setUpButtons();
-      initializeTimeline();
-      fillDeck(clues.facts.length);
-
-      let clueBay = document.querySelector("div.clue");
-      appendNextClue(clueBay, clues);
-    });
 });
+
+
 
 // TESTING
 /** 
