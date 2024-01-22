@@ -1,19 +1,25 @@
 [
     {
         "date": 1098,
-        "info": "Birth of Hildegard of Bingen, first known European composer"
+        "info": "Birth of Hildegard of Bingen, first known European composer",
+        "img": "img/corn.jpg"
     },
     {
         "date": 1436,
-        "info": "Dufay’s “Nuper rosarum flores” sung for the consecration of Florence Cathedral"
+        "info": "Dufay’s “Nuper rosarum flores” sung for the consecration of Florence Cathedral",
+        "img": "img/corn.jpg"
     },
     {
-        "date": 1650,
-        "info": "Death of J. S. Bach"
+        "date": 1685,
+        "info": "Birth of J. S. Bach",
+        "img": "img/corn.jpg"
+
     },
     {
         "date": 1791,
-        "info": "Death of W. A. Mozart"
+        "info": "Death of W. A. Mozart",
+        "img": "img/corn.jpg"
+
     },
     {
         "date": 1742,

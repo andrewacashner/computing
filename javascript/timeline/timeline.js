@@ -27,10 +27,11 @@ class Card {
   /** @type {string} */
   info;
 
-  constructor(date, info) {
+  constructor(date, info, img) {
+    this.id = crypto.randomUUID();
     this.date = date;
     this.info = info;
-    this.id = crypto.randomUUID();
+    this.img = img;
   }
 
   /**
@@ -57,12 +58,21 @@ class Card {
       dateNode.textContent = "Clue";
     }
 
+    card.appendChild(dateNode);
+
     let infoNode = document.createElement("span");
     infoNode.className = "info";
     infoNode.textContent = this.info;
 
-    card.appendChild(dateNode);
+    if (this.img) {
+      let imageNode = document.createElement("img");
+      imageNode.src = this.img;
+      card.appendChild(imageNode);
+    }
+
     card.appendChild(infoNode);
+    
+
 
     return card;
   }
@@ -134,7 +144,7 @@ class FactList {
   constructor(factArray) {
     let clueList = [];
     for (let fact of factArray) {
-      let newClue = new Card(fact.date, fact.info);
+      let newClue = new Card(fact.date, fact.info, fact.img);
       clueList.push(newClue);
     }
     this.facts = newShuffledArray(clueList);

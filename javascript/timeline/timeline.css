@@ -70,6 +70,14 @@ div.card span.date {
   font-family: var(--heading-font);
 }
 
+div.card img {
+  width: 90%;
+  height: 40%;
+  margin-bottom: 0.5ex;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 div.card span.fact {
 }
 
