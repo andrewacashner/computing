@@ -5,28 +5,29 @@
     <meta charset="utf-8" />
     <link rel="stylesheet" href="timeline.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="filename" content="<?php echo $infile?>"/>
     <script src="timeline.js"></script>
   </head>
   <body>
     <header>
       <h1>Timeline</h1>
-      <p class="instructions">Drag the clue card to the correct spot in the timeline.</p>
+      <p class="instructions">Drag the clue card to the correct spot in the timeline. (<a href="about.html">?</a>)</p>
       <form id="inputForm">
         <label for="source">Choose a timeline:</label>
         <select name="source" id="source" required>
-          <option value="">Select a topic</option>
-          <option value="music">Music</option>
+          <option value="music" selected>Music</option>
           <option value="wars">Wars</option>
           <option value="cashners">Cashners</option>
           <option value="upload">Upload a custom timeline...</option>
         </select>
       <div id="file" class="hide">
-        <input id="fileInput" type="file" accept=".json">Upload JSON timeline file</input>
+        <input id="fileInput" type="file" accept=".json">Upload JSON timeline file (<a href="about.html">?</a>)</input>
       </div>
       <button type="button" id="playbutton">Play!</button>
       </form>
-
+      <div id="score" class="hide">
+        <h1>Score: <span class="score">0</span></h1>
+        <button id="restart" onclick="restart()">Play Again</button>
+      </div>
     </header>
     <main>
       <div class="clue"></div>
@@ -36,8 +37,6 @@
       </div>
     </main>
     <footer>
-      <h1>Score: <span class="score">0</span></h1>
-      <button id="restart" onclick="restart()">Play Again</button>
     </footer>
   </body>
 </html>

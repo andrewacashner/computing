@@ -29,7 +29,11 @@ class Card {
 
   constructor(date, info, img) {
     this.id = crypto.randomUUID();
-    this.date = date;
+    
+    let year = date;
+    this.date = new Date();
+    this.date.setFullYear(year); // TODO this accepts year only
+
     this.info = info;
     this.img = img;
   }
@@ -43,7 +47,7 @@ class Card {
     let card = document.createElement("div");
     card.className = "card";
     card.id = this.id;
-    card.setAttribute("data-when", this.date);
+    card.setAttribute("data-when", this.date.getFullYear());
 
     if (mode !== "answer") {
       makeDraggable(card);
@@ -53,7 +57,7 @@ class Card {
     dateNode.className = "date";
 
     if (mode === "answer") {
-      dateNode.textContent = this.date;
+      dateNode.textContent = showDate(this.date.getFullYear());
     } else {
       dateNode.textContent = "Clue";
     }
@@ -72,11 +76,27 @@ class Card {
 
     card.appendChild(infoNode);
     
-
-
     return card;
   }
 }
+
+// Show year if positive or year BC if negative
+function showDate(year) { // TODO Year only
+  console.log(`showDate year: ${year}`);
+
+  let testYear = new Date();
+  testYear.setFullYear(year);
+
+  let yearZero = new Date();
+  yearZero.setFullYear(0);
+
+  let displayYear = year;
+  if (testYear < yearZero) {
+    displayYear = `${year * -1} bce`; // TODO Technically BC should be offset by one year
+  } 
+  return displayYear;
+}
+
 
 /** 
  * Set node as a drop target.
@@ -281,7 +301,7 @@ function dragoverHandler(event) {
  */
 function clueToAnswer(clue) {
   let clueDateText = clue.querySelector("span.date");
-  clueDateText.textContent = clue.dataset.when;
+  clueDateText.textContent = showDate(clue.dataset.when);
 
   return clue;
 }
@@ -622,6 +642,9 @@ function playGame(url) {
 
   let uploadButton = document.getElementById("file");
   uploadButton.className = "hide";
+
+  let scoreDisplay = document.getElementById("score");
+  scoreDisplay.className = "show";
 
   loadTimeline(url).then( function(timeline) {
     if (timeline) {
