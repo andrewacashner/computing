@@ -20,12 +20,13 @@
           <option value="upload">Upload a custom timeline...</option>
         </select>
       <div id="file" class="hide">
-        <input id="fileInput" type="file" accept=".json">Upload JSON timeline file (<a href="about.html">?</a>)</input>
+        <label for="fileInput">Upload JSON timeline file (<a href="about.html">?</a>)</label>
+        <input id="fileInput" type="file" accept=".json">
       </div>
       <button type="button" id="playbutton">Play!</button>
       </form>
       <div id="score" class="hide">
-        <h1>Score: <span class="score">0</span></h1>
+        <p>Score: <span class="score">0</span></p>
         <button id="restart" onclick="restart()">Play Again</button>
       </div>
     </header>

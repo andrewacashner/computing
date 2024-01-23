@@ -47,6 +47,7 @@ class Card {
     let card = document.createElement("div");
     card.className = "card";
     card.id = this.id;
+    card.setAttribute("data-noselect", "noselect");
     card.setAttribute("data-when", this.date.getFullYear());
 
     if (mode !== "answer") {
@@ -82,8 +83,6 @@ class Card {
 
 // Show year if positive or year BC if negative
 function showDate(year) { // TODO Year only
-  console.log(`showDate year: ${year}`);
-
   let testYear = new Date();
   testYear.setFullYear(year);
 
@@ -115,6 +114,16 @@ function makeDraggable(cardNode) {
   cardNode.setAttribute("draggable", "true");
   cardNode.setAttribute("ondragstart", "dragstartHandler(event)");
 }
+
+/** 
+ * Set card node as a non-draggable object.
+ * @param {Element} cardNode - a Card DOM Element (div.card)
+ */
+function makeNonDraggable(cardNode) {
+  cardNode.removeAttribute("draggable");
+  cardNode.removeAttribute("ondragstart");
+}
+
 
 /**
  * Return a random integer up to the given max.
@@ -281,6 +290,7 @@ function dragstartHandler(event) {
   
   let boundingBox = event.target.getBoundingClientRect();
   event.dataTransfer.setData("toRightEdge", boundingBox.right - event.clientX);
+  event.dataTransfer.setData("toLeftEdge", event.clientX - boundingBox.left);
 
   event.dataTransfer.effectAllowed = "move";
 }
@@ -291,6 +301,20 @@ function dragstartHandler(event) {
  */
 function dragoverHandler(event) {
   event.preventDefault();
+  console.log(`Dragging over me ${event.target.dataset.when}`);
+  console.log(`Current x = ${event.clientX}`);
+  console.log(`Target left edge = ${event.target.getBoundingClientRect().left}`);
+  let targetBounds = event.target.getBoundingClientRect();
+  let targetLeft = targetBounds.left;
+  let targetRight = targetBounds.right;
+  let targetCenter = (targetBounds.right - targetBounds.left) / 2 + targetBounds.left;
+  if (event.clientX > targetCenter) {
+    console.log("In range!");
+    // Get target at coord (use function from above)
+    // set target background or flash it
+    // event.target.style.backgroundColor = "Gray";
+  }
+
   event.dataTransfer.effectAllowed = "move";
 }
 
@@ -302,16 +326,17 @@ function dragoverHandler(event) {
 function clueToAnswer(clue) {
   let clueDateText = clue.querySelector("span.date");
   clueDateText.textContent = showDate(clue.dataset.when);
-
+  makeNonDraggable(clue);
   return clue;
 }
 
 
 /**
  * Given an event (e.g., from a drop), start from its coordinates and search
- * to the right until a card element is found. We measure the card
- * relative to its right edge: the guess is the next card whose right edge is
- * to the right edge of the clue when dropped. Return the answer card or null.
+ * to the right until a card element is found. The card must be dropped to
+ * left of the midpoint of the card.
+ * TODO Is there a better way?
+ * Return the answer card or null.
  * @param {Event} event 
  * @returns {Element} Card element or null
  */
@@ -328,35 +353,31 @@ function findFirstCardToRight(event) {
   }
 
   let x = event.clientX;
-  let y = event.clientY;
-  // console.log(`Card dropped with pointer at (${x}, ${y})`);
+  console.log(`Card dropped with pointer at (${x}, ${event.clientY})`);
 
-  // Right edge of clue must be left of right edge of after-answer
-  // Right edge of clue must be right of right edge of before-answer
-  let rightDistance = event.dataTransfer.getData("toRightEdge");
-
-  // Need to include margin on right edge
-  let cardStyle = window.getComputedStyle(document.querySelector("div.card"));
-  let cardMargin = cardStyle.getPropertyValue("margin-right");
-  let rightEdge = x + parseFloat(rightDistance) + parseFloat(cardMargin);
-  // console.log(`Search relative to right edge at ${rightEdge}`);
+  // Search along the timeline bar regardless of where the drop was vertically
+  let timelineBar = document.querySelector("div.timelineBar hr");
+  let y = timelineBar.getBoundingClientRect().top;
 
   let card;
-  let testCard = cardAtCoord(rightEdge, y);
+  console.log("Looking for nearest card to timeline drop point");
+  let max = document.documentElement.clientWidth; // TODO window instead?
 
-  if (testCard) {
-    card = testCard;
-  } else {
-    console.log("Looking for nearest card to timeline drop point");
-    let max = document.documentElement.clientWidth;
-    
-    for (let testX = x; testX < max; ++testX) {
-      card = cardAtCoord(testX, y);
-      if (card) {
+  for (let testX = x; testX < max; ++testX) {
+    card = cardAtCoord(testX, y);
+    if (card) {
+      let cardCoords = card.getBoundingClientRect();
+      let midPoint = (cardCoords.right - cardCoords.left) / 2 + cardCoords.left;
+
+//      console.log(`Found card (left: ${cardCoords.left}, right: ${cardCoords.right}) with date ${card.dataset.when}`);
+//      console.log(`Compare x ${x} to midPoint ${midPoint}`);
+
+      if (x < midPoint) {
         break;
       }
     }
-  } 
+  }
+
   return card;
 }
 
@@ -376,7 +397,7 @@ function sleep(ms = 0) {
  */
 async function flashAlert(el) {
   for (let i = 0; i < 2; ++i) {
-    el.setAttribute("data-alert", "true");
+    el.setAttribute("data-alert", "alert");
     await sleep(100);
     el.removeAttribute("data-alert");
     await sleep(100);
