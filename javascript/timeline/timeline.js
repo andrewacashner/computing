@@ -2,7 +2,7 @@
  * @filedescription Timeline Game
  * @author Andrew A. Cashner
  * @copyright Copyright © 2024 Andrew A. Cashner
- * @version 0.0.1
+ * @version 0.1.0
  */
 
 "use strict";
@@ -15,16 +15,16 @@
  * draggable). 
  *
  * @constructor
- * @param {number} date - Year of event 
- *      (NB - We cannot process more complex dates, just years)
- * @param {string} info - Brief description of event 
+ * @param {Number} date - Year of event 
+ *      (NB - We currently use years only)
+ * @param {String} info - Brief description of event 
  */
 class Card {
 
-  /** @type {number} */
+  /** @type {Number} */
   date;
 
-  /** @type {string} */
+  /** @type {String} */
   info;
 
   constructor(date, info, img) {
@@ -32,28 +32,20 @@ class Card {
     
     let year = date;
     this.date = new Date();
-    this.date.setFullYear(year); // TODO this accepts year only
+    this.date.setFullYear(year);
 
     this.info = info;
     this.img = img;
   }
 
   /**
-   * Create HTML div.card node
-   * @param {string} mode - "answer" or other ("question")
-   *
+   * Procedure: Add the element to display the date to the HTML card we are
+   * making.  
+   * @param{Element} card -- HTML DOM object for a div.card
+   * @param{String} mode -- "answer" or other
    */
-  toHtml(mode) {
-    let card = document.createElement("div");
-    card.className = "card";
-    card.id = this.id;
-    card.setAttribute("data-noselect", "noselect");
-    card.setAttribute("data-when", this.date.getFullYear());
-
-    if (mode !== "answer") {
-      makeDraggable(card);
-    }
-
+  addHtmlDate(card, mode) {
+    // Show CLUE for clues and the date for answers
     let dateNode = document.createElement("span");
     dateNode.className = "date";
 
@@ -62,20 +54,57 @@ class Card {
     } else {
       dateNode.textContent = "Clue";
     }
-
     card.appendChild(dateNode);
-
+  }
+  
+  /**
+   * Procedure: Add the element to display the description information to the
+   * HTML card we are making.  
+   * @param{Element} card -- HTML DOM object for a div.card
+   */
+  addHtmlInfo(card) {
     let infoNode = document.createElement("span");
     infoNode.className = "info";
     infoNode.textContent = this.info;
-
+    card.appendChild(infoNode);
+  }
+  
+  /**
+   * Procedure: If there is an img field, add the element for the image to the
+   * HTML card we are making.
+   * @param{Element} card -- HTML DOM object for a div.card
+   */
+  addHtmlImg(card) {
     if (this.img) {
       let imageNode = document.createElement("img");
       imageNode.src = this.img;
       card.appendChild(imageNode);
     }
+  }
 
-    card.appendChild(infoNode);
+  /**
+   * Create HTML div.card node
+   * @param {String} mode - "answer" or other ("question")
+   *
+   */
+  toHtml(mode) {
+    let card = document.createElement("div");
+    card.className = "card";
+    card.id = this.id;
+    card.setAttribute("data-when", this.date.getFullYear());
+
+    // CSS will use this to make it impossible to select card contents
+    // accidentally
+    card.setAttribute("data-noselect", "noselect");
+
+    // Only clues can be dragged
+    if (mode !== "answer") {
+      makeDraggable(card);
+    }
+
+    this.addHtmlDate(card, mode);
+    this.addHtmlImg(card);
+    this.addHtmlInfo(card);
     
     return card;
   }
@@ -128,8 +157,8 @@ function makeNonDraggable(cardNode) {
 
 /**
  * Return a random integer up to the given max.
- * @param {number} max 
- * @returns {number}
+ * @param {Number} max 
+ * @returns {Number}
  */
 function randomInt(max) {
   return Math.floor(Math.random() * max);
@@ -204,7 +233,7 @@ class FactList {
 /**
  * Procedure: Update the page with a "Game Over" message including the final
  * score.
- * @param {number} score
+ * @param {Number} score
  */
 function gameOver(score) {
   console.log("Game over");
@@ -272,7 +301,7 @@ function initializeTimeline() {
 
 /**
  * Procedure: Update the page with the given score.
- * @param {number} score
+ * @param {Number} score
  */
 function displayScore(score) {
   let scoreNode = document.querySelector("span.score");
@@ -420,7 +449,7 @@ function findFirstCardToRight(event) {
 
 /** 
  * Procedure: Wait the given time.
- * @param {number} ms - milliseconds
+ * @param {Number} ms - milliseconds
  */
 function sleep(ms = 0) {
   return new Promise(function (resolve) {
@@ -523,10 +552,10 @@ function dropHandler(event) {
  * Colors: This class holds the information for one color: red, green, blue
  * values plus a percentage of white to mix in.
  * @constructor
- * @param {number} r - red, integer 0 <= n < 256
- * @param {number} g - green, integer 0 <= n < 256
- * @param {number} b - blue, integer 0 <= n < 256
- * @param {number} percentWhite - integer percentage of white to mix in 
+ * @param {Number} r - red, integer 0 <= n < 256
+ * @param {Number} g - green, integer 0 <= n < 256
+ * @param {Number} b - blue, integer 0 <= n < 256
+ * @param {Number} percentWhite - integer percentage of white to mix in 
  *      (50 = * 50%)
  */
 class RgbColorMix {
@@ -544,7 +573,7 @@ class RgbColorMix {
 
   /**
    * Create CSS color (color-mix with rgb color)
-   * @returns {string} CSS color-mix expression
+   * @returns {String} CSS color-mix expression
    */
   toCss() {
     let rgb = `rgb(${this.red}, ${this.green}, ${this.blue})`;
@@ -557,11 +586,11 @@ class RgbColorMix {
  * For each of red, blue, and green, iterate through values of primary with
  * constant secondary and white values (tertiary color is zero).
  *
- * @param {number} max - Highest color value possible for each 
+ * @param {Number} max - Highest color value possible for each 
  *      (red, green, blue)
- * @param {number} min - Used for secondary color, 
+ * @param {Number} min - Used for secondary color, 
  *      fixed value mixed in to each primary
- * @param {number} white - Percent white to mix in, fixed for all
+ * @param {Number} white - Percent white to mix in, fixed for all
  * @returns {Array} array of RgbColorMix instances
  */
 function colorSpectrum(max, min, white) {
@@ -643,7 +672,7 @@ function removeChildren(node) {
 
 /**
  * Procedure: Fill the clue deck with stubs for the remaining clues.
- * @param {number} n - Number of clues
+ * @param {Number} n - Number of clues
  */
 function fillDeck(n) {
   console.log(`Filling deck with ${n} cards`);
@@ -673,7 +702,7 @@ function userUploadUrl(input) {
 
 /**
  * Load a JSON timeline from a given URL.
- * @param {string} URL
+ * @param {String} URL
  * @returns {Array} Array of timeline facts
  */
 async function loadTimeline(url) {

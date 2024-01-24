@@ -20,7 +20,7 @@ directory.
 
 # Changelog
 
-- 2024/01/24: Improved drag/drop, layout, add images
+- 2024/01/24: Version 0.1.0, Improved drag/drop, layout, add images
 - 2024/01/17: Working prototype
 - 2024/01/16: Begun
 
