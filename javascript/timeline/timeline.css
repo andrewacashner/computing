@@ -5,6 +5,7 @@
   --heading-font: "IM Fell English SC", "IM Fell English", "EB Garamond", "Goudy Old Style", Georgia, serif;
   --card-height: 16.8em; /* h:w = 5:7 */
   --card-width: 12em;
+  --card-margin: 1ex;
 }
 
 html {
@@ -65,8 +66,6 @@ header div#score {
   margin-top: 0;
   margin-bottom: 0;
   padding: 0;
-  font-family: var(--heading-font);
-  font-size: 200%;
   height: 1em;
 }
 
@@ -74,6 +73,8 @@ div#score p {
   margin: 0;
   padding: 0;
   height: 1em;
+  font-family: var(--heading-font);
+  font-size: 200%;
 }
 
 
@@ -92,7 +93,7 @@ div.card {
   display: flex;
   flex-direction: column;
   padding: 1ex;
-  margin: 1ex;
+  margin: var(--card-margin);
   border-radius: 1ex;
   text-align: center;
   border: 1pt solid black;
@@ -149,8 +150,7 @@ div.clue div.card img {
   margin-right: auto;
 }
 
-div.clue div.card[data-alert="alert"], 
-div.timeline div.card[data-alert="alert"] { /* TODO why not just div.card */
+div.clue div.card[data-alert="alert"] { 
   background-color: Crimson;
 }
 
@@ -206,12 +206,6 @@ footer {
 footer {
   height: 0;
 }
-
-/* button, option {
-*   font-family: var(--main-font);
-*   font-size: 100%;
-* }
-/
 
 div.gameover {
   font-size: 240%;

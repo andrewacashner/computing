@@ -104,6 +104,7 @@ function showDate(year) { // TODO Year only
 function makeDropTarget(el) {
   el.setAttribute("ondrop", "dropHandler(event)");
   el.setAttribute("ondragover", "dragoverHandler(event)");
+  el.setAttribute("ondragleave", "dragleaveHandler(event)");
 }
 
 /** 
@@ -295,27 +296,75 @@ function dragstartHandler(event) {
   event.dataTransfer.effectAllowed = "move";
 }
 
+const CARD_LEFT_MARGIN = "var(--card-margin)";
+
+function setCardLeftMargin(card, val) {
+  card.style.marginLeft = val;
+}
+
+function insertTimelineGap(card) {
+  setCardLeftMargin(card, `calc(5 * ${CARD_LEFT_MARGIN}`);
+}
+
+function removeTimelineGap(card) {
+  setCardLeftMargin(card, CARD_LEFT_MARGIN);
+}
+
+function removeAllTimelineGaps(cards) {
+  for (let card of cards) {
+    removeTimelineGap(card);
+  }
+}
+
+function midpoint(left, right) {
+  return (right - left) / 2 + left;
+}
+
+/** Return a card element, if found at given coordinates; or null. */
+function cardAtCoord(x, y) {
+  let card = null;
+  let el = document.elementFromPoint(x, y);
+  if (isCard(el)) {
+    card = el;
+  }
+  return card;
+}
+
+
 /**
  * Procedure: Allow to move by dragging.
  * @param {Event} event
  */
 function dragoverHandler(event) {
   event.preventDefault();
+
   console.log(`Dragging over me ${event.target.dataset.when}`);
   console.log(`Current x = ${event.clientX}`);
   console.log(`Target left edge = ${event.target.getBoundingClientRect().left}`);
-  let targetBounds = event.target.getBoundingClientRect();
-  let targetLeft = targetBounds.left;
-  let targetRight = targetBounds.right;
-  let targetCenter = (targetBounds.right - targetBounds.left) / 2 + targetBounds.left;
-  if (event.clientX > targetCenter) {
-    console.log("In range!");
-    // Get target at coord (use function from above)
-    // set target background or flash it
-    // event.target.style.backgroundColor = "Gray";
-  }
 
+  let targetBounds = event.target.getBoundingClientRect();
+  let targetCenter = midpoint(targetBounds.left, targetBounds.right);
+
+  if (event.clientX <= targetCenter) {
+    console.log("In range!");
+    let cardUnderDrag = cardAtCoord(event.clientX, event.clientY);
+    if (cardUnderDrag) {
+      insertTimelineGap(cardUnderDrag);
+    }
+  }
   event.dataTransfer.effectAllowed = "move";
+}
+
+function isCard(el) {
+  return el.className === "card";
+}
+
+function dragleaveHandler(event) {
+  console.log("Dragged card leaving target!");
+  let el = event.target
+  if (isCard(el)) {
+    removeTimelineGap(el);
+  }
 }
 
 /**
@@ -331,6 +380,7 @@ function clueToAnswer(clue) {
 }
 
 
+
 /**
  * Given an event (e.g., from a drop), start from its coordinates and search
  * to the right until a card element is found. The card must be dropped to
@@ -341,16 +391,6 @@ function clueToAnswer(clue) {
  * @returns {Element} Card element or null
  */
 function findFirstCardToRight(event) {
-
-  /** Return a card element, if found at given coordinates; or null. */
-  function cardAtCoord(x, y) {
-    let card = null;
-    let el = document.elementFromPoint(x, y);
-    if (el.className === "card") {
-      card = el;
-    }
-    return card;
-  }
 
   let x = event.clientX;
   console.log(`Card dropped with pointer at (${x}, ${event.clientY})`);
@@ -367,12 +407,9 @@ function findFirstCardToRight(event) {
     card = cardAtCoord(testX, y);
     if (card) {
       let cardCoords = card.getBoundingClientRect();
-      let midPoint = (cardCoords.right - cardCoords.left) / 2 + cardCoords.left;
+      let cardCenter = midpoint(cardCoords.left, cardCoords.right);
 
-//      console.log(`Found card (left: ${cardCoords.left}, right: ${cardCoords.right}) with date ${card.dataset.when}`);
-//      console.log(`Compare x ${x} to midPoint ${midPoint}`);
-
-      if (x < midPoint) {
+      if (x <= cardCenter) {
         break;
       }
     }
@@ -456,21 +493,26 @@ function dropHandler(event) {
       guess.insertAdjacentElement("beforebegin", answer);
 
       let cards = document.querySelectorAll("div.timeline div.card");
+      removeAllTimelineGaps(cards);
       setCardColors(cards, SPECTRUM);
 
       // TODO play sound, alert
-      ++window.gameState.score;
-      displayScore(window.gameState.score);
+      ++globalThis.gameState.score;
+      displayScore(globalThis.gameState.score);
 
-      drawNextClue(window.gameState);
+      drawNextClue(globalThis.gameState);
     } else {
+      let cards = document.querySelectorAll("div.timeline div.card");
+      removeAllTimelineGaps(cards);
+      
       // TODO play sound, alert
       flashAlert(clue);
+
       console.log("Incorrect, --Score");
-      if (window.gameState.score > 0) {
-        --window.gameState.score;
+      if (globalThis.gameState.score > 0) {
+        --globalThis.gameState.score;
       }
-      displayScore(window.gameState.score);
+      displayScore(globalThis.gameState.score);
     }
   } else {
     console.log("No card found at drop location");
@@ -635,8 +677,8 @@ function userUploadUrl(input) {
  * @returns {Array} Array of timeline facts
  */
 async function loadTimeline(url) {
-  const response = await fetch(url);
-  const data = await response.json().catch((err) => {
+  let response = await fetch(url);
+  let data = await response.json().catch((err) => {
     console.error(err);
     return [];
   });
@@ -671,7 +713,7 @@ function playGame(url) {
     if (timeline) {
       let clues = new FactList(timeline);
 
-      window.gameState = {
+      globalThis.gameState = {
         clues: clues,
         score: 0
       }
