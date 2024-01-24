@@ -10,14 +10,15 @@
 /**
  * We use this class to store information on the historical events used as
  * clues and inserted into the timeline, and to generate the HTML node for a
- * card (div.card). The HTML differs for clues vs. answers (clue shows "CLUE" as
- * its date and is a draggable object; answer shows the real date and is not
- * draggable). 
+ * card (div.card). The HTML differs for clues vs. answers (clue shows "CLUE"
+ * as its date and is a draggable object; answer shows the real date and is
+ * not draggable). 
  *
  * @constructor
- * @param {Number} date - Year of event 
+ * @param {Number} year - Four-digit Year of event 
  *      (NB - We currently use years only)
  * @param {String} info - Brief description of event 
+ * @param {String} img - URL of image (on web, not local)
  */
 class Card {
 
@@ -27,15 +28,35 @@ class Card {
   /** @type {String} */
   info;
 
-  constructor(date, info, img) {
+  constructor(year, info, img) {
     this.id = crypto.randomUUID();
     
-    let year = date;
     this.date = new Date();
     this.date.setFullYear(year);
 
     this.info = info;
     this.img = img;
+  }
+  
+  /**
+   * Return the year if positive or year BC if negative. (Deals with the year
+   * only.) 
+   *
+   * Technically BC should be offset by one year but we told users to use
+   * negative numbers as years BC.
+   *
+   * @returns{String} Formatted string for year, with BC if the year was
+   *    negative
+   */
+  dateToString() { 
+    let yearZero = new Date();
+    yearZero.setFullYear(0);
+
+    let displayYear = this.date.getFullYear();
+    if (this.date < yearZero) {
+      displayYear = `${-displayYear} bce`; 
+    } 
+    return displayYear;
   }
 
   /**
@@ -50,7 +71,7 @@ class Card {
     dateNode.className = "date";
 
     if (mode === "answer") {
-      dateNode.textContent = showDate(this.date.getFullYear());
+      dateNode.textContent = this.dateToString();
     } else {
       dateNode.textContent = "Clue";
     }
@@ -85,6 +106,7 @@ class Card {
   /**
    * Create HTML div.card node
    * @param {String} mode - "answer" or other ("question")
+   * TODO use Symbol instead
    *
    */
   toHtml(mode) {
@@ -98,7 +120,10 @@ class Card {
     card.setAttribute("data-noselect", "noselect");
 
     // Only clues can be dragged
-    if (mode !== "answer") {
+    if (mode === "answer") {
+      makeNonDraggable(card);
+      makeDropTarget(card);
+    } else {
       makeDraggable(card);
     }
 
@@ -108,21 +133,6 @@ class Card {
     
     return card;
   }
-}
-
-// Show year if positive or year BC if negative
-function showDate(year) { // TODO Year only
-  let testYear = new Date();
-  testYear.setFullYear(year);
-
-  let yearZero = new Date();
-  yearZero.setFullYear(0);
-
-  let displayYear = year;
-  if (testYear < yearZero) {
-    displayYear = `${year * -1} bce`; // TODO Technically BC should be offset by one year
-  } 
-  return displayYear;
 }
 
 
@@ -200,13 +210,20 @@ class FactList {
    * Given information, construct an array of Card instances, shuffle it, and
    * store it in this class's facts member.
    */
+  // TODO construct array of cards elsewhere from json input, so that this
+  // constructor only receives a single type?
   constructor(factArray) {
     let clueList = [];
-    for (let fact of factArray) {
-      let newClue = new Card(fact.date, fact.info, fact.img);
-      clueList.push(newClue);
+    if (factArray.every((item) => item instanceof Card)) {
+      clueList = [...factArray];
+    } else {
+      for (let fact of factArray) {
+        let newClue = new Card(fact.date, fact.info, fact.img);
+        clueList.push(newClue);
+      }
     }
-    this.facts = newShuffledArray(clueList);
+    this.facts = clueList;
+    this.shuffle();
   }
 
   /**
@@ -214,11 +231,24 @@ class FactList {
    * @returns {Card} Card instance
    */
   extractEvent() {
-    let i = randomInt(this.facts.length);
-    let fact = this.facts[i];
-
-    this.facts.splice(i, 1);
+    let fact = this.facts.pop();
     return fact;
+  }
+
+  shuffle() {
+    this.facts = newShuffledArray(this.facts);
+  }
+
+  addEvent(card) {
+    this.facts.push(card);
+    this.facts.sort(function (card1, card2) { 
+      let [date1, date2] = [card1, card2].map((c) => c.date.getFullYear());
+      return date1 - date2;
+    });
+  }
+
+  count() {
+    return this.facts.length;
   }
 
   /**
@@ -226,7 +256,11 @@ class FactList {
    * @returns {bool}
    */
   isEmpty() {
-    return this.facts.length === 0;
+    return this.count() === 0;
+  }
+
+  last() {
+    return this.facts[this.facts.length - 1];
   }
 }
 
@@ -237,13 +271,13 @@ class FactList {
  */
 function gameOver(score) {
   console.log("Game over");
-  let clueBay = document.querySelector("div.clue");
+  let deck = document.querySelector("div.clue");
   let pointWord = "point";
   if (score !== 1) {
     pointWord = "points";
   }
 
-  clueBay.innerHTML = 
+  deck.innerHTML = 
     `<div class="gameover">
           <p>Game over!</p>
           <p>Final score: ${score} ${pointWord}</p>
@@ -251,61 +285,14 @@ function gameOver(score) {
 }
 
 /**
- * Procedure: Given a parent node, extract a clue, create a clue card, and
- * append it as a child. (Removes a clue from the given FactList.)
- * @param {Element} clueBay - div.clue to hold div.card object
- * @param {FactList} clues - Source of clue card data
- */
-function appendNextClue(clueBay, clues) {
-  let clue = clues.extractEvent();
-  let clueNode = clue.toHtml("clue");
-  clueBay.appendChild(clueNode);
-}
-
-/**
  * Procedure: Draw the next clue and update the page to display it; if no
  * clues left, do gameOver. Use the div.clue element as the space for the
  * final message. Remove one card from card stubs showing in the deck.
  */
-function drawNextClue(state) {
-  if (state.clues.isEmpty()) {
-    gameOver(state.score);
-  } else {
-    console.log(`Clues remaining: ${state.clues.facts.length}`);
-    let clueBay = document.querySelector("div.clue");
-    appendNextClue(clueBay, state.clues);
-    
-    // Remove one card from stubs showing remaining cards
-    clueBay.removeChild(clueBay.firstChild);
-  }
-}
-
-/**
- * Procedure: Put a starting card with today's date in the timeline.
- */
-function initializeTimeline() {
-  function firstEvent() {
-    let thisYear = new Date().getFullYear();
-    let now = new Card(thisYear, "Now");
-    let nowNode = now.toHtml("answer");
-    setColor(nowNode, VIOLET);
-    return nowNode;
-  }
-
-  let now = firstEvent();
-  let timelineBay = document.querySelector("div.timeline");
-  makeDropTarget(timelineBay);
-  removeChildren(timelineBay);
-  timelineBay.appendChild(now);
-}
-
-/**
- * Procedure: Update the page with the given score.
- * @param {Number} score
- */
-function displayScore(score) {
-  let scoreNode = document.querySelector("span.score");
-  scoreNode.textContent = score;
+function displayNewClue(clue) {
+  let deck = document.querySelector("div.clue");
+  let clueNode = clue.toHtml("clue");
+  deck.appendChild(clueNode);
 }
 
 /**
@@ -315,13 +302,7 @@ function displayScore(score) {
  * @param {Event} event
  */
 function dragstartHandler(event) {
-  event.dataTransfer.setData("date", event.target.dataset.when);
   event.dataTransfer.setData("id", event.target.id);
-  
-  let boundingBox = event.target.getBoundingClientRect();
-  event.dataTransfer.setData("toRightEdge", boundingBox.right - event.clientX);
-  event.dataTransfer.setData("toLeftEdge", event.clientX - boundingBox.left);
-
   event.dataTransfer.effectAllowed = "move";
 }
 
@@ -337,12 +318,6 @@ function insertTimelineGap(card) {
 
 function removeTimelineGap(card) {
   setCardLeftMargin(card, CARD_LEFT_MARGIN);
-}
-
-function removeAllTimelineGaps(cards) {
-  for (let card of cards) {
-    removeTimelineGap(card);
-  }
 }
 
 function midpoint(left, right) {
@@ -367,9 +342,9 @@ function cardAtCoord(x, y) {
 function dragoverHandler(event) {
   event.preventDefault();
 
-  console.log(`Dragging over me ${event.target.dataset.when}`);
-  console.log(`Current x = ${event.clientX}`);
-  console.log(`Target left edge = ${event.target.getBoundingClientRect().left}`);
+//  console.log(`Dragging over me ${event.target.dataset.when}`);
+//  console.log(`Current x = ${event.clientX}`);
+//  console.log(`Target left edge = ${event.target.getBoundingClientRect().left}`);
 
   let targetBounds = event.target.getBoundingClientRect();
   let targetCenter = midpoint(targetBounds.left, targetBounds.right);
@@ -395,19 +370,6 @@ function dragleaveHandler(event) {
     removeTimelineGap(el);
   }
 }
-
-/**
- * Reset a clue card to be an answer card: Show the date.
- * @param {Element} card node
- * @returns {Element} card node
- */
-function clueToAnswer(clue) {
-  let clueDateText = clue.querySelector("span.date");
-  clueDateText.textContent = showDate(clue.dataset.when);
-  makeNonDraggable(clue);
-  return clue;
-}
-
 
 
 /**
@@ -470,6 +432,42 @@ async function flashAlert(el) {
   }
 }
 
+function updateTimeline(timeline) {
+  let currentTimeline = document.querySelector("div.timeline");
+
+  let newTimeline = document.createElement("div");
+  newTimeline.className = "timeline";
+
+  for (let fact of timeline.facts) {
+    let factNode = fact.toHtml("answer");
+    newTimeline.appendChild(factNode);
+  }
+  setCardColors(newTimeline, SPECTRUM);
+  currentTimeline.replaceWith(newTimeline);
+}
+
+function updateClues(clues) {
+  let currentDeckNode = document.querySelector("div.clue");
+  let newDeckNode = document.createElement("div");
+  newDeckNode.className = "clue";
+
+  fillDeck(newDeckNode, clues.count());
+
+  if (clues.count() > 0) {
+    let currentClue = clues.last();
+    let clueNode = currentClue.toHtml("clue");
+    newDeckNode.appendChild(clueNode);
+  }
+
+  currentDeckNode.replaceWith(newDeckNode);
+}
+
+function scoreDec(score) {
+  return score > 0 ? --score : score;
+}
+
+
+
 /**
  * Procedure: When the user drops a card onto a timeline card, 
  * find the closest card, test if the date on the clue is between that card
@@ -501,47 +499,29 @@ function dropHandler(event) {
   }
 
   event.preventDefault();
-  let date = event.dataTransfer.getData("date");
-  console.log(`Dropping card with date ${date}`);
-
-  // Show date on clue card 
-  let clue = document.getElementById(event.dataTransfer.getData("id"));
-  let clueDate = clue.dataset.when;
 
   // Find nearest answer (first card found to right of click) to compare
+  let clue = document.getElementById(event.dataTransfer.getData("id"));
   let guess = findFirstCardToRight(event);
 
   if (guess) {
     let beforeGuess = guess.previousElementSibling;
+    let state = globalThis.state;
 
     if (isClueBetweenDates(clue, guess, beforeGuess)) {
+      // TODO play sound
       console.log("Correct: ++Score");
+      state.incrementScore();
+      state.advanceState();
+      updateDisplay(state);
 
-      // Make clue card into a timeline card and insert
-      let answer = clueToAnswer(clue);
-      guess.insertAdjacentElement("beforebegin", answer);
-
-      let cards = document.querySelectorAll("div.timeline div.card");
-      removeAllTimelineGaps(cards);
-      setCardColors(cards, SPECTRUM);
-
-      // TODO play sound, alert
-      ++globalThis.gameState.score;
-      displayScore(globalThis.gameState.score);
-
-      drawNextClue(globalThis.gameState);
     } else {
-      let cards = document.querySelectorAll("div.timeline div.card");
-      removeAllTimelineGaps(cards);
-      
-      // TODO play sound, alert
+      // TODO play sound
+      console.log("Incorrect, --Score");
       flashAlert(clue);
 
-      console.log("Incorrect, --Score");
-      if (globalThis.gameState.score > 0) {
-        --globalThis.gameState.score;
-      }
-      displayScore(globalThis.gameState.score);
+      state.decrementScore();
+      updateDisplay(state);
     }
   } else {
     console.log("No card found at drop location");
@@ -637,27 +617,31 @@ function setColor(el, color) {
  * points on the color spectrum, ROYGBIV order. The rightmost card was already
  * set during initialization, so we skip it.
  *
- * @param {NodeList} cards - Node list of div.card DOM elements
+ * @param {Element} timeline - div.timeline DOM element with div.card children
  * @param {Array} spectrum - Array of RgbColorMix instances
  */
-function setCardColors(cards, spectrum) {
+function setCardColors(timeline, spectrum) {
+  let cards = timeline.querySelectorAll("div.card");
   let cardMax = cards.length;
   let colorMax = spectrum.length;
   let interval = Math.floor(colorMax / cardMax);
- 
-  // We already set the rightmost card to be violet in page setup
+
+  // Rightmost card is always violet
+  setColor(cards[cardMax - 1], VIOLET);
+
   // Leftmost card is always red
   if (cardMax > 1) {
     setColor(cards[0], RED);
+  } 
 
-    if (cardMax > 2) {
-      let thisCard = cardMax - 2;
-      let thisColor = colorMax - 1 - interval;
-      while (thisCard > 0 && thisColor > 0) {
-        setColor(cards[thisCard], spectrum[thisColor]);
-        --thisCard;
+  // The rest are evenly spaced on a spectrum
+  if (cardMax > 1) {
+    let thisCard = cardMax - 2;
+    let thisColor = colorMax - 1 - interval;
+    while (thisCard > 0 && thisColor > 0) {
+      setColor(cards[thisCard], spectrum[thisColor]);
+      --thisCard;
         thisColor = thisColor - interval;
-      }
     }
   }
 }
@@ -674,9 +658,8 @@ function removeChildren(node) {
  * Procedure: Fill the clue deck with stubs for the remaining clues.
  * @param {Number} n - Number of clues
  */
-function fillDeck(n) {
+function fillDeck(deck, n) {
   console.log(`Filling deck with ${n} cards`);
-  let deck = document.querySelector("div.clue");
   removeChildren(deck);
 
   for (let i = 0; i < n - 1; ++i) {
@@ -728,6 +711,46 @@ function isInputValid(timeline) {
   return (isArray && isNotEmpty && hasProperFields);
 }
 
+const NOW_IMAGE_URL = "https://images.pexels.com/photos/17139860/pexels-photo-17139860/free-photo-of-hourglass-with-sand.jpeg";
+
+class Game {
+  clues;
+  timeline;
+  score;
+
+  constructor(clues, timeline, score) {
+    this.clues = clues;
+    this.timeline = timeline;
+    this.score = score;
+  }
+
+  incrementScore() {
+    ++this.score;
+  }
+
+  decrementScore() {
+    this.score  = Math.max(0, this.score - 1);
+  }
+ 
+  moveCurrentClueToTimeline() {
+    this.timeline.addEvent(this.clues.extractEvent());
+  }
+
+  advanceState() {
+    if (this.clues.count() == 1) { // Last clue was just answered
+      gameOver(this.score);
+    } else {
+      this.moveCurrentClueToTimeline();
+      updateClues(this.clues);
+    }
+  }
+}
+
+function updateDisplay(state) {
+  updateScore(state.score);
+  updateTimeline(state.timeline);
+}
+
 function playGame(url) {
   let selector = document.getElementById("inputForm");
   selector.className = "hide";
@@ -738,27 +761,35 @@ function playGame(url) {
   let scoreDisplay = document.getElementById("score");
   scoreDisplay.className = "show";
 
-  loadTimeline(url).then( function(timeline) {
-    if (timeline) {
-      let clues = new FactList(timeline);
+  loadTimeline(url).then( function(timelineData) {
+    if (timelineData) {
+      let clues = new FactList(timelineData);
 
-      globalThis.gameState = {
-        clues: clues,
-        score: 0
-      }
+      let now = new Card(new Date().getFullYear(), "Now", NOW_IMAGE_URL);
+      let timeline = new FactList([now]);
 
-      initializeTimeline();
-      fillDeck(clues.facts.length);
+      let state = new Game(clues, timeline, 0);
+      globalThis.state = state;
 
-      let clueBay = document.querySelector("div.clue");
-      appendNextClue(clueBay, clues);
+      updateClues(state.clues);
+      updateDisplay(state);
     } else {
       console.log(`Invalid timeline input from ${url}`);
       alert("Invalid timeline input");
-//      restart();
+      restart();
     }
   });
 }
+
+/**
+ * Procedure: Update the page with the given score.
+ * @param {Number} score
+ */
+function updateScore(score) {
+  let scoreNode = document.querySelector("span.score");
+  scoreNode.textContent = score;
+}
+
 
 /**
  * On page load, set up the timeline, initialize game state, and draw and
