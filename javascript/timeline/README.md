@@ -14,11 +14,18 @@ If they are incorrect, the clue is not inserted so they can guess again,
 but they lose a point.
 When all clues are done, the final score is shown.
 
+Users can select a premade timeline or upload their own in a JSON format.
+See `about.html` for details, or look at the premade examples in the `input`
+directory.
+
 # Changelog
 
+- 2024/01/24: Improved drag/drop, layout, add images
 - 2024/01/17: Working prototype
 - 2024/01/16: Begun
 
 # License
 
-This work is in the public domain.
+Copyright © 2024 Andrew A. Cashner
+
+This project is made available under the MIT License (see `LICENSE.md`).
