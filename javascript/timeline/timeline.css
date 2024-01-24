@@ -39,31 +39,42 @@ p.instructions {
   font-style: italic;
   font-size: 110%;
   padding-bottom: 1ex;
-  margin: 1ex;
+  margin: 0;
 }
 
 header button {
   margin: 1ex;
 }
 
+header form {
+}
 
-div#file label, div#file input {
-  display: block;
+div#file {
+  layout: flex;
+  flex-direction: row;
   margin-top: 1ex;
-  margin-left: auto;
-  margin-right: auto;
-  width: 15em;
+}
+div#file input {
+  margin-left: 1em;
 }
 
 header div#score {
-  margin-left: auto;
   width: 50%;
+  margin-left: auto;
   margin-right: auto;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 0;
   font-family: var(--heading-font);
   font-size: 200%;
+  height: 1em;
 }
 
-
+div#score p {
+  margin: 0;
+  padding: 0;
+  height: 1em;
+}
 
 
 .hide {
@@ -196,10 +207,11 @@ footer {
   height: 0;
 }
 
-button, option {
-  font-family: var(--main-font);
-  font-size: 100%;
-}
+/* button, option {
+*   font-family: var(--main-font);
+*   font-size: 100%;
+* }
+/
 
 div.gameover {
   font-size: 240%;

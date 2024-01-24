@@ -2,7 +2,7 @@
 
 // Cryptography with Node.js
 // Andrew Cashner
-// 2024/04/23
+// 2024/01/23
 
 const LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
 const UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
