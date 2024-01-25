@@ -75,6 +75,7 @@ class Card {
     } else {
       dateNode.textContent = "Clue";
     }
+
     card.appendChild(dateNode);
   }
   
@@ -109,7 +110,7 @@ class Card {
    * TODO use Symbol instead
    *
    */
-  toHtml(mode) {
+  toHtml(mode, state) {
     let card = document.createElement("div");
     card.className = "card";
     card.id = this.id;
@@ -122,7 +123,7 @@ class Card {
     // Only clues can be dragged
     if (mode === "answer") {
       makeNonDraggable(card);
-      makeDropTarget(card);
+      makeDropTarget(card, state);
     } else {
       makeDraggable(card);
     }
@@ -138,30 +139,30 @@ class Card {
 
 /** 
  * Set node as a drop target.
- * @param {Element} cardNode - a Card DOM Element (div.card)
+ * @param {Element} el - a Card DOM Element (div.card)
  */
-function makeDropTarget(el) {
-  el.setAttribute("ondrop", "dropHandler(event)");
-  el.setAttribute("ondragover", "dragoverHandler(event)");
-  el.setAttribute("ondragleave", "dragleaveHandler(event)");
+function makeDropTarget(el, state) {
+  el.addEventListener("drop", (e) => dropHandler(state, event));
+  el.addEventListener("dragover", dragoverHandler);
+  el.addEventListener("dragleave", dragleaveHandler);
 }
 
 /** 
  * Set card node as a draggable object, not a drop target.
- * @param {Element} cardNode - a Card DOM Element (div.card)
+ * @param {Element} el - a Card DOM Element (div.card)
  */
-function makeDraggable(cardNode) {
-  cardNode.setAttribute("draggable", "true");
-  cardNode.setAttribute("ondragstart", "dragstartHandler(event)");
+function makeDraggable(el) {
+  el.setAttribute("draggable", "true");
+  el.addEventListener("dragstart", dragstartHandler);
 }
 
 /** 
  * Set card node as a non-draggable object.
- * @param {Element} cardNode - a Card DOM Element (div.card)
+ * @param {Element} el - a Card DOM Element (div.card)
  */
-function makeNonDraggable(cardNode) {
-  cardNode.removeAttribute("draggable");
-  cardNode.removeAttribute("ondragstart");
+function makeNonDraggable(el) {
+  el.removeAttribute("draggable");
+  el.removeEventListener("dragstart", dragstartHandler);
 }
 
 
@@ -217,10 +218,10 @@ class FactList {
     if (factArray.every((item) => item instanceof Card)) {
       clueList = [...factArray];
     } else {
-      for (let fact of factArray) {
+      factArray.map((fact) => {
         let newClue = new Card(fact.date, fact.info, fact.img);
         clueList.push(newClue);
-      }
+      });
     }
     this.facts = clueList;
     this.shuffle();
@@ -272,27 +273,13 @@ class FactList {
 function gameOver(score) {
   console.log("Game over");
   let deck = document.querySelector("div.clue");
-  let pointWord = "point";
-  if (score !== 1) {
-    pointWord = "points";
-  }
+  let pointWord = (score !== 1) ? "points" : "point";
 
   deck.innerHTML = 
     `<div class="gameover">
           <p>Game over!</p>
           <p>Final score: ${score} ${pointWord}</p>
         </div>`;
-}
-
-/**
- * Procedure: Draw the next clue and update the page to display it; if no
- * clues left, do gameOver. Use the div.clue element as the space for the
- * final message. Remove one card from card stubs showing in the deck.
- */
-function displayNewClue(clue) {
-  let deck = document.querySelector("div.clue");
-  let clueNode = clue.toHtml("clue");
-  deck.appendChild(clueNode);
 }
 
 /**
@@ -432,21 +419,30 @@ async function flashAlert(el) {
   }
 }
 
-function updateTimeline(timeline) {
+function updateTimeline(state) {
   let currentTimeline = document.querySelector("div.timeline");
-
-  let newTimeline = document.createElement("div");
-  newTimeline.className = "timeline";
-
-  for (let fact of timeline.facts) {
-    let factNode = fact.toHtml("answer");
-    newTimeline.appendChild(factNode);
-  }
-  setCardColors(newTimeline, SPECTRUM);
-  currentTimeline.replaceWith(newTimeline);
+  currentTimeline.replaceWith(state.timelineToHtml());
 }
 
-function updateClues(clues) {
+/**
+ * Procedure: Update the page with the given score.
+ * @param {Number} score
+ */
+function updateScore(state) {
+  let scoreNode = document.querySelector("span.score");
+  scoreNode.replaceWith(state.scoreToHtml());
+}
+
+function updateDisplay(state) {
+  updateScore(state);
+  updateTimeline(state);
+}
+
+
+
+
+function updateClues(state) {
+  let clues = state.clues;
   let currentDeckNode = document.querySelector("div.clue");
   let newDeckNode = document.createElement("div");
   newDeckNode.className = "clue";
@@ -455,16 +451,13 @@ function updateClues(clues) {
 
   if (clues.count() > 0) {
     let currentClue = clues.last();
-    let clueNode = currentClue.toHtml("clue");
+    let clueNode = currentClue.toHtml("clue", state);
     newDeckNode.appendChild(clueNode);
   }
 
   currentDeckNode.replaceWith(newDeckNode);
 }
 
-function scoreDec(score) {
-  return score > 0 ? --score : score;
-}
 
 
 
@@ -476,8 +469,7 @@ function scoreDec(score) {
  * score.
  * @param {Event} event
  */
-function dropHandler(event) {
-
+function dropHandler(state, event) {
   /**
    * Is the given clue between a given answer card and the one before it?
    * @param {Element} clue - card node
@@ -506,7 +498,6 @@ function dropHandler(event) {
 
   if (guess) {
     let beforeGuess = guess.previousElementSibling;
-    let state = globalThis.state;
 
     if (isClueBetweenDates(clue, guess, beforeGuess)) {
       // TODO play sound
@@ -514,7 +505,6 @@ function dropHandler(event) {
       state.incrementScore();
       state.advanceState();
       updateDisplay(state);
-
     } else {
       // TODO play sound
       console.log("Incorrect, --Score");
@@ -580,12 +570,12 @@ function colorSpectrum(max, min, white) {
 
   // Increase red against others to go red -> orange
   for (let i = 0; i < max; ++i) {
-    reds.push   ([max, i, min, white]);
+    reds.push([max, i, min, white]);
   }
   // *Decrease* green and blue against others to continue in spectrum order
   for (let i = max - 1; i >= 0; --i) {
-    greens.push ([i, max, min, white]);
-    blues.push  ([min, i, max, white]);
+    greens.push([i, max, min, white]);
+    blues.push([min, i, max, white]);
   }
   let perms = [...reds, ...greens, ...blues];
   let colors = perms.map((p) => new RgbColorMix(...p));
@@ -641,7 +631,7 @@ function setCardColors(timeline, spectrum) {
     while (thisCard > 0 && thisColor > 0) {
       setColor(cards[thisCard], spectrum[thisColor]);
       --thisCard;
-        thisColor = thisColor - interval;
+      thisColor = thisColor - interval;
     }
   }
 }
@@ -741,14 +731,28 @@ class Game {
       gameOver(this.score);
     } else {
       this.moveCurrentClueToTimeline();
-      updateClues(this.clues);
+      updateClues(this);
     }
   }
-}
 
-function updateDisplay(state) {
-  updateScore(state.score);
-  updateTimeline(state.timeline);
+  scoreToHtml() {
+    let scoreNode = document.createElement("span");
+    scoreNode.className = "score";
+    scoreNode.textContent = this.score;
+    return scoreNode;
+  }
+
+  timelineToHtml() {
+    let timelineNode = document.createElement("div");
+    timelineNode.className = "timeline";
+
+    this.timeline.facts.map((fact) =>  {
+      timelineNode.appendChild(fact.toHtml("answer", this));
+    });
+
+    setCardColors(timelineNode, SPECTRUM);
+    return timelineNode;
+  }
 }
 
 function playGame(url) {
@@ -769,9 +773,8 @@ function playGame(url) {
       let timeline = new FactList([now]);
 
       let state = new Game(clues, timeline, 0);
-      globalThis.state = state;
 
-      updateClues(state.clues);
+      updateClues(state);
       updateDisplay(state);
     } else {
       console.log(`Invalid timeline input from ${url}`);
@@ -780,16 +783,6 @@ function playGame(url) {
     }
   });
 }
-
-/**
- * Procedure: Update the page with the given score.
- * @param {Number} score
- */
-function updateScore(score) {
-  let scoreNode = document.querySelector("span.score");
-  scoreNode.textContent = score;
-}
-
 
 /**
  * On page load, set up the timeline, initialize game state, and draw and
