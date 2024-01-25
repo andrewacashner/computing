@@ -5,18 +5,19 @@ author: Andrew A. Cashner
 
 # Description
 
-In this game, players build a chronological timeline of historical events.
-Given a clue with no date, the user drags the clue onto the timeline where
-they think it belongs.
-If they are correct, the clue is inserted in the timeline and they get a
-point.
-If they are incorrect, the clue is not inserted so they can guess again,
-but they lose a point.
-When all clues are done, the final score is shown.
+The timeline game gives users a series of clues in random order. Each clue
+contains a historical fact and an optional image. Below the clues is a
+timeline starting with one card for "Now" with the current year. The user
+drags the clues one by one onto the timeline, slotting them in the correct
+place in chronological order. If they are correct, the card is inserted and
+the date is revealed. If not, a warning is given and they can try again.J
+The score increments for each correct guess, and decrements for each
+increment guess, but never goes below zero.
+After the last card is put into the timeline, a "game over" message shows
+with the final score.
 
-Users can select a premade timeline or upload their own in a JSON format.
-See `about.html` for details, or look at the premade examples in the `input`
-directory.
+Users can select from a list of premade timelines or upload their own in
+JSON format, as described on the About page.
 
 # Changelog
 
