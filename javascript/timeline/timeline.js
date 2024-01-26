@@ -1,5 +1,5 @@
 //{{{1 description
-/**
+/** 
  * @filedescription Timeline Game
  * @author Andrew A. Cashner
  * @copyright Copyright © 2024 Andrew A. Cashner
@@ -49,7 +49,6 @@
  * functions that mutate their arguments and are used only for side effects,
  * not their return value.
  */
-
 "use strict";
 //}}}1
 //{{{1 CONSTANTS
@@ -68,13 +67,6 @@ const CLUE = Symbol("clue");
  * card (div.card). The HTML differs for clues vs. answers (clue shows "CLUE"
  * as its date and is a draggable object; answer shows the real date and is
  * not draggable).
- *
- * @constructor
- * @param {number} year - Four-digit Year of event 
- *      (NB - We currently use years only)
- * @param {string} info - Brief description of event 
- * @param {string} img - URL of image (on web, not local)
- * @param {string} color - CSS color to be used in timeline
  */
 class Card {
 
@@ -90,7 +82,13 @@ class Card {
   /** @type {string} */
   color;
 
-  /** Each card gets the given info and a random unique identifier. */
+  /** Each card gets the given info and a random unique identifier.
+   * @param {number} year - Four-digit Year of event 
+   *      (NB - We currently use years only)
+   * @param {string} info - Brief description of event 
+   * @param {string} img - URL of image (on web, not local)
+   * @param {string} color - CSS color to be used in timeline
+   */
   constructor(year, info, img, color) {
     this.id = crypto.randomUUID();
     
@@ -106,63 +104,41 @@ class Card {
   /**
    * Procedure: Add the element to display the date to the HTML card we are
    * making. In the date field, just show "Clue" if this is a clue.
-   * @param {element} card -- HTML DOM object for a div.card
+   * @param {element} cardNode -- HTML DOM object for a div.card
    * @param {symbol} mode -- 'answer' or 'clue' 
    */
-  #addHtmlDate(card, mode = CLUE) {
+  #addHtmlDate(cardNode, mode = CLUE) {
     let dateNode = document.createElement("span");
     dateNode.className = "date";
     dateNode.textContent = (mode === ANSWER) ? this.dateToString() : "Clue";
-    card.appendChild(dateNode);
+    cardNode.appendChild(dateNode);
   }
 
   /**
    * Procedure: Add the element to display the description information to the
    * HTML card we are making.  
-   * @param {element} card -- HTML DOM object for a div.card
+   * @param {element} cardNode -- HTML DOM object for a div.card
    */
-  #addHtmlInfo(card) {
+  #addHtmlInfo(cardNode) {
     let infoNode = document.createElement("span");
     infoNode.className = "info";
     infoNode.textContent = this.info;
-    card.appendChild(infoNode);
+    cardNode.appendChild(infoNode);
   }
   
   /**
    * Procedure: If there is an img field, add the element for the image to the
    * HTML card we are making.
-   * @param {element} card -- HTML DOM object for a div.card
+   * @param {element} cardNode -- HTML DOM object for a div.card
    */
-  #addHtmlImg(card) {
+  #addHtmlImg(cardNode) {
     if (this.img) {
       let imageNode = document.createElement("img");
       imageNode.src = this.img;
-      card.appendChild(imageNode);
+      cardNode.appendChild(imageNode);
     }
   }
   
-  /** 
-   * Procedure: Set node as a drop target. 
-   *
-   * IMPORTANT: We pass the game state to the drop handler function so that the
-   * game can update when the card is dropped.
-   * @param {element} el - a Card DOM Element (div.card)
-   */
-  #makeDropTarget(el, state) {
-    el.addEventListener("drop", (e) => dropHandler(state, event));
-    el.addEventListener("dragover", dragoverHandler);
-    el.addEventListener("dragleave", dragleaveHandler);
-  }
-
-  /** 
-   * Procedure: Set card node as a draggable object, not a drop target.
-   * @param {element} el - a Card DOM Element (div.card)
-   */
-  #makeDraggable(el) {
-    el.setAttribute("draggable", "true");
-    el.addEventListener("dragstart", dragstartHandler);
-  }
-
   /**
    * Create HTML div.card node
    * @param {symbol} mode - 'answer' or 'clue'
@@ -180,11 +156,9 @@ class Card {
 
 
     if (mode === ANSWER) {
-      // Only clues can be dragged
-      this.#makeDropTarget(card, state);
       setColor(card, this.color);
     } else {
-      this.#makeDraggable(card);
+      makeDraggable(card);
     }
 
     this.#addHtmlDate(card, mode);
@@ -240,14 +214,35 @@ class Card {
     return this.#toHtml(ANSWER, state);
   }
 }
+
+/** 
+ * Procedure: Set node as a drop target. 
+ *
+ * IMPORTANT: We pass the game state to the drop handler function so that the
+ * game can update when the card is dropped.
+ * @param {element} el - a Card DOM Element (div.card)
+ */
+function makeDropTarget(el, state) {
+  el.addEventListener("drop", (e) => dropHandler(state, event));
+  el.addEventListener("dragover", dragoverHandler);
+  el.addEventListener("dragleave", dragleaveHandler);
+}
+
+/** 
+ * Procedure: Set card node as a draggable object, not a drop target.
+ * @param {element} el - a Card DOM Element (div.card)
+ */
+function makeDraggable(el) {
+  el.setAttribute("draggable", "true");
+  el.addEventListener("dragstart", dragstartHandler);
+}
+
 //}}}2
 //{{{2 FactList class
 /**
- * This class holds a list of facts (date + info) for the timeline, in its
- * facts member.
- *
- * @constructor
- * @param {array} factArray - List of objects with date and info fields
+ * An array of Card instances representing a list of facts (date + info) for
+ * the timeline.
+ * @extends Array
  */
 class FactList extends Array {
 
@@ -292,6 +287,10 @@ class FactList extends Array {
     }
   }
 
+  last() {
+    return this.at(-1);
+  }
+
   /**
    * Procedure: Add event to array and then resort by date.
    */
@@ -306,13 +305,7 @@ class FactList extends Array {
 /**
  * This class holds the game's state: the list of clues, list of answers
  * ("timeline"), and the score.
- *
- * @constructor
- * @param {FactList} clues - Custom array class with clue Card instances;
- *    shuffled on creation
- * @param {FactList} timeline - Custom array class with answer Cards
- * @param {number} score
- */
+  */
 class Game {
   /** @type FactList */
   clues;    
@@ -323,6 +316,12 @@ class Game {
   /** @type number */
   score;    
 
+  /**
+   * @param {FactList} clues - Custom array class with clue Card instances;
+   *    shuffled on creation
+   * @param {FactList} timeline - Custom array class with answer Cards
+   * @param {number} score
+   */
   constructor(clues, timeline, score) {
     this.clues = clues;
     this.timeline = timeline;
@@ -351,11 +350,11 @@ class Game {
 
   /** Procedure: Check for end of game, otherwise pull up the next clue. */
   nextClue() {
-    if (this.clues.length == 1) { // Last clue was just answered
-      displayGameOver(this.score);
-    } else {
-      this.#moveCurrentClueToTimeline();
+    this.#moveCurrentClueToTimeline();
+    if (this.clues.length > 0) {
       updateClues(this);
+    } else {
+      displayGameOver(this.score);
     }
   }
 
@@ -375,6 +374,8 @@ class Game {
   timelineToHtml() {
     let timelineNode = document.createElement("div");
     timelineNode.className = "timeline";
+
+    makeDropTarget(timelineNode, this);
 
     this.timeline.map((fact) =>  {
       timelineNode.appendChild(fact.toHtmlAnswer(this));
@@ -420,7 +421,7 @@ class Game {
     fillDeck(deckNode, this.clues.length);
 
     if (this.clues.length > 0) {
-      let currentClue = this.clues.at(-1);
+      let currentClue = this.clues.last();
       let clueNode = currentClue.toHtmlClue(this);
       deckNode.appendChild(clueNode);
     }
@@ -461,7 +462,7 @@ function setCardLeftMargin(cardNode, val) {
  * @param {element} cardNode - div.card DOM element in timeline
  */
 function insertTimelineGap(cardNode) {
-  setCardLeftMargin(cardNode, `calc(5 * ${CARD_LEFT_MARGIN}`);
+  setCardLeftMargin(cardNode, `calc(5 * ${CARD_LEFT_MARGIN})`);
 }
 
 /**
@@ -538,7 +539,7 @@ function dragleaveHandler(event) {
 }
 
 /**
- * Given an event (e.g., from a drop), start from its coordinates and search
+ * Given an event (from a drop), start from its coordinates and search
  * to the right until a card element is found. The card must be dropped to
  * left of the midpoint of the card.
  * Return the answer card or null.
@@ -568,15 +569,12 @@ function findFirstCardToRight(event) {
   return card;
 }
 
-
-/** Default sleep length */
-const DURATION = 100;
-
 /** 
  * Procedure: Wait the given time.
  * @param {number} ms - milliseconds
+ * @returns {Promise}
  */
-function sleep(ms = DURATION) {
+function sleep(ms) {
   return new Promise(function (resolve) {
     setTimeout(resolve, ms)
   });
@@ -587,11 +585,12 @@ function sleep(ms = DURATION) {
  * @param {element} el - DOM Element
  */
 async function flashAlert(el) {
+  let duration = 100;
   for (let i = 0; i < 2; ++i) {
     el.setAttribute("data-alert", "alert");
-    await sleep();
+    await sleep(duration);
     el.removeAttribute("data-alert");
-    await sleep();
+    await sleep(duration);
   }
 }
 
@@ -660,8 +659,8 @@ function displayGameOver(score) {
 }
 //}}}2
 //{{{2 Central function: Drop handler
-// When a card is dropped, process the guess and
-// update the game's state and display accordingly.
+// When a card is dropped, process the guess and update the game's state and
+// display accordingly.
 
 /**
  * Procedure: When the user drops a card onto a timeline card, 
@@ -669,7 +668,7 @@ function displayGameOver(score) {
  * and its previous neighbor (if there is one); if so insert the card and
  * increment the score; if not, do not insert the card and decrement the
  * score.
- * @param {Game} state 
+ * @param {Game} state
  * @param {event} event
  */
 function dropHandler(state, event) {
@@ -724,19 +723,20 @@ function dropHandler(state, event) {
 /**
  * Colors: This class holds the information for one color: red, green, blue
  * values plus a percentage of white to mix in.
- * @constructor
- * @param {number} r - red, integer 0 <= n < 256
- * @param {number} g - green, integer 0 <= n < 256
- * @param {number} b - blue, integer 0 <= n < 256
- * @param {number} percentWhite - integer percentage of white to mix in 
- *      (50 = * 50%)
- */
+  */
 class RgbColorMix {
   red;
   green;
   blue;
   percentWhite;
-
+  
+  /**
+   * @param {number} r - red, integer 0 <= n < 256
+   * @param {number} g - green, integer 0 <= n < 256
+   * @param {number} b - blue, integer 0 <= n < 256
+   * @param {number} percentWhite - integer percentage of white to mix in 
+   *      (50 = * 50%)
+   */
   constructor(r, g, b, w) {
     this.red = r;
     this.green = g;
@@ -788,15 +788,6 @@ function colorSpectrum(max, min, white) {
   let colors = perms.map((p) => new RgbColorMix(...p));
   return colors;
 }
-
-/**
- * Available spectrum of colors up to max, with given white proportion,
- * red -> violet order.
- */
-const SPECTRUM = colorSpectrum(256, 0, 50);
-
-/** Right-most, final color of spectrum. */
-const VIOLET = SPECTRUM.at(-1);
 
 /**
  * Procedure: Set an element's inline style to the given RgbColorMix.
@@ -894,15 +885,18 @@ function playGame(url) {
   hideInput();
   loadTimeline(url).then((cards) => {
     if (cards) {
+      let spectrum = colorSpectrum(256, 0, 50); 
+      let violet = spectrum.at(-1);
+
       let clues = new FactList(...cards);
-      clues.setColors(SPECTRUM);
+      clues.setColors(spectrum);
       clues.shuffle();
 
       let now = new Card(
         new Date().getFullYear(), 
         "Now", 
         NOW_IMAGE_URL, 
-        VIOLET);
+        violet);
       let timeline = new FactList(now);
 
       let state = new Game(clues, timeline, 0);
@@ -935,7 +929,7 @@ function getInputUrl() {
   return url;
 }
 
-/** Hide the timeline-chooser menu and load the selected file. */
+/** Procedure: Hide the timeline-chooser menu and load the selected file. */
 function setupGame() {
   let source = document.getElementById("source");
   source.addEventListener("change", () => {
