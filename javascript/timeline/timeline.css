@@ -157,21 +157,9 @@ div.clue div.cardStub {
 }
 
 div.scrollingTimeline {
+  position: relative;
   overflow-x: scroll;
   height: 50%;
-  position: relative;
-}
-
-/* TODO needs to continue for full width as timeline expands */
-div.scrollingTimeline hr { 
-  position: absolute;
-  top:  40%;
-  left: 0;
-  right: 0;
-  z-index: -1;
-  height: 1ex;
-  border: 0;
-  background: linear-gradient(to right, Black, LightGray);
 }
 
 div.timelineBar {
@@ -180,6 +168,31 @@ div.timelineBar {
   width: 100%;
   margin-left: auto;
   margin-right: auto;
+}
+
+hr {
+  position: absolute;
+  top:  40%;
+  width: 100%;
+  z-index: -1;
+  height: 1ex;
+  border: 0;
+}
+
+/* TODO
+ * We want an hr that is always 100% of the timeline or the window, whichever
+ * is wider. This is a hacky solution where we fake the timeline by displaying
+ * this one under the one inside div.timelineBar, visible only when the 
+ * timeline is less than the screen width.
+ */
+div.scrollingTimeline hr {
+  z-index: -2;
+  background: linear-gradient(to right, #d8d8d8, #d0d0d0, #d8d8d8);
+}
+
+/* TODO needs to continue for full width as timeline expands */
+div.timelineBar hr { 
+  background: linear-gradient(to right, LightGray, Black, LightGray);
 }
 
 div.timeline {

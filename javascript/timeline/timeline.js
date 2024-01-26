@@ -375,8 +375,6 @@ class Game {
     let timelineNode = document.createElement("div");
     timelineNode.className = "timeline";
 
-    makeDropTarget(timelineNode, this);
-
     this.timeline.map((fact) =>  {
       timelineNode.appendChild(fact.toHtmlAnswer(this));
     });
@@ -632,6 +630,12 @@ function updateTimelineWidth(state) {
   let width = `calc(${state.timeline.length} * (var(--card-width) + var(--card-margin)) + 4 * ${CARD_LEFT_MARGIN_EXTRA})`;
   let timelineBar = document.querySelector("div.timelineBar");
   timelineBar.style.width = width;
+
+  let timelineRule = document.querySelector("hr");
+  let windowWidth = document.documentElement.clientWidth;
+  if (width > windowWidth) {
+    timelineRule.style.width = width;
+  } 
 }
 
 /**
@@ -914,6 +918,9 @@ function playGame(url) {
 
       let state = new Game(clues, timeline, 0);
       
+      let timelineArea = document.querySelector("div.scrollingTimeline");
+      makeDropTarget(timelineArea, state);
+
       updateClues(state);
       updateDisplay(state);
     } else {
