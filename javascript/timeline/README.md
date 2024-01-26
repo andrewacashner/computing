@@ -21,6 +21,7 @@ JSON format, as described on the About page.
 
 # Changelog
 
+- 2024/01/26: Improved colors, layout
 - 2024/01/25: Version 0.1.1, Rewritten without globals
 - 2024/01/24: Version 0.1.0, Improved drag/drop, layout, add images
 - 2024/01/17: Working prototype
