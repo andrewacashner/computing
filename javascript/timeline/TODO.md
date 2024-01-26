@@ -18,3 +18,6 @@
 - Consistency and predictability of drag target
 - Dragover/dragleave on guess card vs. dropping to left of guess card
 - Shift left also?
+
+## Documentation
+- Fix Jsdoc errors

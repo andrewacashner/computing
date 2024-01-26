@@ -284,12 +284,14 @@ class FactList extends Array {
     let cardMax = this.length;
     let colorMax = spectrum.length;
     let interval = Math.floor(colorMax / cardMax);
+  
     for (let iCard = 0, iColor = 0; 
       iCard < cardMax && iColor < colorMax; 
       ++iCard, iColor +=interval) {
       this[iCard].color = spectrum[iColor];
     }
   }
+
   /**
    * Procedure: Add event to array and then resort by date.
    */
@@ -566,28 +568,30 @@ function findFirstCardToRight(event) {
   return card;
 }
 
+
+/** Default sleep length */
+const DURATION = 100;
+
+/** 
+ * Procedure: Wait the given time.
+ * @param {number} ms - milliseconds
+ */
+function sleep(ms = DURATION) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms)
+  });
+}
+
 /**
  * Procedure: Quickly toggle the given element's alert state on and off twice.
  * @param {element} el - DOM Element
  */
 async function flashAlert(el) {
-  /** 
-   * Procedure: Wait the given time.
-   * @param {number} ms - milliseconds
-   */
-  function sleep(ms = 0) {
-    return new Promise(function (resolve) {
-      setTimeout(resolve, ms)
-    });
-  }
-
-  const DURATION = 100;
-
   for (let i = 0; i < 2; ++i) {
     el.setAttribute("data-alert", "alert");
-    await sleep(DURATION);
+    await sleep();
     el.removeAttribute("data-alert");
-    await sleep(DURATION);
+    await sleep();
   }
 }
 
@@ -665,6 +669,7 @@ function displayGameOver(score) {
  * and its previous neighbor (if there is one); if so insert the card and
  * increment the score; if not, do not insert the card and decrement the
  * score.
+ * @param {Game} state 
  * @param {event} event
  */
 function dropHandler(state, event) {
