@@ -8,47 +8,42 @@
  * See README.md and about.html.
  *
  * The game state consists of the score, a list of clues, and a list of
- * answers that is the timeline.
- * Given an input file in JSON format (either local or supplied by the user),
- * we construct a deck of clues as a FactList instance, which contains an
- * array of fact Card instances.
- * The clue deck shows the current clue and the stubs of the remaining clues.
- * We shuffle the clue deck once at the beginning and display the timeline
- * with the "Now" card.
+ * answers that is the timeline.  Given an input file in JSON format (either
+ * local or supplied by the user), we construct a deck of clues as a FactList
+ * instance, which contains an array of fact Card instances.  The clue deck
+ * shows the current clue and the stubs of the remaining clues.  We shuffle
+ * the clue deck once at the beginning and display the timeline with the "Now"
+ * card.
  *
  * At each turn, we update the DOM to display the current clue (last card in
- * the clue deck).
- * The user selects the place to insert the clue by dragging the clue card
- * onto the timeline.
- * While they are dragging, we update the display to highlight where they can
- * drop the card.
- * When they drop the card, the dropHandler function evaluates their guess and
- * updates the game's state accordingly.
+ * the clue deck).  The user selects the place to insert the clue by dragging
+ * the clue card onto the timeline.  While they are dragging, we update the
+ * display to highlight where they can drop the card.  When they drop the
+ * card, the dropHandler function evaluates their guess and updates the game's
+ * state accordingly.
  *
  * If the guess is correct, we remove the current clue from the list of clues
- * and add it to the list of answers.
- * We sort the answers chronologically, then update the timeline display with
- * the new card included.
- * We increment and redisplay the score.
- * If at this point there are no more clues, we display a game over message
- * with the final score.
- * Otherwise we update the clue display to show the next clue and delete one
- * of the stubs.
+ * and add it to the list of answers.  We sort the answers chronologically,
+ * then update the timeline display with the new card included.  We increment
+ * and redisplay the score.  If at this point there are no more clues, we
+ * display a game over message with the final score.  Otherwise we update the
+ * clue display to show the next clue and delete one of the stubs.
  *
  * If the guess is incorrect we flash the color of the current guess card and
  * then decrement (only to zero) and redisplay the score.
  *
- * Whenever we display the timeline, we set the colors of the cards to be
- * equally spaced on a rainbow color spectrum, with the first card always red
- * and the last always violet.
- * (Actually we use colors mixed with white for a more muted effect.)
+ * When we create the clue deck, before shuffling to start play, we sort it
+ * chronologically and assign each card a color so that they are spread at
+ * equal intervals across the spectrum (defined as a constant array of 768
+ * color shades). The clue cards are displayed with a default color, but when
+ * the user moves a card to the timeline, it is given the color we assigned at
+ * the start. (We use colors mixed with white for a more muted effect.)
  *
  * We have avoided global state and instead pass the game state (a Game
- * instance) only to the functions that need it.
- * The game state only changes when a card is dropped.
- * The drop handler function is added only when we generate a DOM element
- * from a card (Card.toHtml()), so we pass the state to that function, which
- * includes the state in its call to dropHandler().
+ * instance) only to the functions that need it.  The game state only changes
+ * when a card is dropped.  The drop handler function is added only when we
+ * generate a DOM element from a card (Card.toHtml()), so we pass the state to
+ * that function, which includes the state in its call to dropHandler().
  *
  * In the documentation I preface the decription with "Procedure" for all
  * functions that mutate their arguments and are used only for side effects,
@@ -72,13 +67,14 @@ const CLUE = Symbol("clue");
  * clues and inserted into the timeline, and to generate the HTML node for a
  * card (div.card). The HTML differs for clues vs. answers (clue shows "CLUE"
  * as its date and is a draggable object; answer shows the real date and is
- * not draggable). 
+ * not draggable).
  *
  * @constructor
  * @param {number} year - Four-digit Year of event 
  *      (NB - We currently use years only)
  * @param {string} info - Brief description of event 
  * @param {string} img - URL of image (on web, not local)
+ * @param {string} color - CSS color to be used in timeline
  */
 class Card {
 
@@ -88,8 +84,14 @@ class Card {
   /** @type {string} */
   info;
 
+  /** @type {string} */
+  img;
+
+  /** @type {string} */
+  color;
+
   /** Each card gets the given info and a random unique identifier. */
-  constructor(year, info, img) {
+  constructor(year, info, img, color) {
     this.id = crypto.randomUUID();
     
     this.date = new Date();
@@ -97,6 +99,7 @@ class Card {
 
     this.info = info;
     this.img = img;
+    this.color = color;
   }
   
   // PRIVATE METHODS
@@ -175,9 +178,11 @@ class Card {
     // accidentally
     card.setAttribute("data-noselect", "noselect");
 
-    // Only clues can be dragged
+
     if (mode === ANSWER) {
+      // Only clues can be dragged
       this.#makeDropTarget(card, state);
+      setColor(card, this.color);
     } else {
       this.#makeDraggable(card);
     }
@@ -274,6 +279,17 @@ class FactList extends Array {
     this.sort((c1, c2) => { return c1.date - c2.date });
   }
 
+  setColors(spectrum) {
+    this.sortByDate();
+    let cardMax = this.length;
+    let colorMax = spectrum.length;
+    let interval = Math.floor(colorMax / cardMax);
+    for (let iCard = 0, iColor = 0; 
+      iCard < cardMax && iColor < colorMax; 
+      ++iCard, iColor +=interval) {
+      this[iCard].color = spectrum[iColor];
+    }
+  }
   /**
    * Procedure: Add event to array and then resort by date.
    */
@@ -282,6 +298,7 @@ class FactList extends Array {
     this.sortByDate();
   }
 }
+
 //}}}2
 //{{{2 Game class
 /**
@@ -295,14 +312,17 @@ class FactList extends Array {
  * @param {number} score
  */
 class Game {
-  clues;    /** @type FactList */
-  timeline; /** @type FactList */
-  score;    /** @type number */
+  /** @type FactList */
+  clues;    
+
+  /** @type FactList */
+  timeline; 
+
+  /** @type number */
+  score;    
 
   constructor(clues, timeline, score) {
     this.clues = clues;
-    this.clues.shuffle();
-
     this.timeline = timeline;
     this.score = score;
   }
@@ -348,7 +368,6 @@ class Game {
   }
 
   /** Create a div.timeline DOM element with the current answer list.
-   * Set the colors of the answer list.
    * @returns {element} - div.timeline
    */
   timelineToHtml() {
@@ -359,7 +378,6 @@ class Game {
       timelineNode.appendChild(fact.toHtmlAnswer(this));
     });
 
-    setCardColors(timelineNode, SPECTRUM);
     return timelineNode;
   }
 
@@ -744,8 +762,9 @@ class RgbColorMix {
  * @returns {array} array of RgbColorMix instances
  */
 function colorSpectrum(max, min, white) {
-  let reds, blues, greens;
-  reds = blues = greens = [];
+  let reds = [];
+  let blues = [];
+  let greens = []
 
   // Increase red value relative to others to go red -> orange
   for (let i = 0; i < max; ++i) {
@@ -774,9 +793,6 @@ const SPECTRUM = colorSpectrum(256, 0, 50);
 /** Right-most, final color of spectrum. */
 const VIOLET = SPECTRUM.at(-1);
 
-/** Left-most color. */
-const RED = SPECTRUM[0];
-
 /**
  * Procedure: Set an element's inline style to the given RgbColorMix.
  * @param {element} el - DOM element
@@ -784,39 +800,6 @@ const RED = SPECTRUM[0];
  */
 function setColor(el, color) {
   el.style.backgroundColor = color.toCss();
-}
-
-/** Procedure: Set the colors of a set of cards (timeline) to equidistant
- * points on the color spectrum, ROYGBIV order. The rightmost card was already
- * set during initialization, so we skip it.
- *
- * @param {element} timeline - div.timeline DOM element with div.card children
- * @param {array} spectrum - Array of RgbColorMix instances
- */
-function setCardColors(timeline, spectrum) {
-  let cards = timeline.querySelectorAll("div.card");
-  let cardMax = cards.length;
-  let colorMax = spectrum.length;
-  let interval = Math.floor(colorMax / cardMax);
-
-  // Rightmost card is always violet
-  setColor(cards[cardMax - 1], VIOLET);
-
-  // Leftmost card is always red
-  if (cardMax > 1) {
-    setColor(cards[0], RED);
-  } 
-
-  // The rest are evenly spaced on a spectrum
-  if (cardMax > 1) {
-    let thisCard = cardMax - 2;
-    let thisColor = colorMax - 1 - interval;
-    while (thisCard > 0 && thisColor > 0) {
-      setColor(cards[thisCard], spectrum[thisColor]);
-      --thisCard;
-      thisColor = thisColor - interval;
-    }
-  }
 }
 //}}}2
 //}}}1
@@ -894,7 +877,6 @@ async function loadTimeline(url) {
 const NOW_IMAGE_URL = "https://images.pexels.com/photos/17139860/pexels-photo-17139860/free-photo-of-hourglass-with-sand.jpeg";
 
 /** The first card in the timeline, with current year */
-const NOW_CARD = new Card(new Date().getFullYear(), "Now", NOW_IMAGE_URL);
 
 /**
  * Procedure: Initialize game. Given the URL of a JSON input, process the
@@ -907,7 +889,16 @@ function playGame(url) {
   loadTimeline(url).then((cards) => {
     if (cards) {
       let clues = new FactList(...cards);
-      let timeline = new FactList(NOW_CARD);
+      clues.setColors(SPECTRUM);
+      clues.shuffle();
+
+      let now = new Card(
+        new Date().getFullYear(), 
+        "Now", 
+        NOW_IMAGE_URL, 
+        VIOLET);
+      let timeline = new FactList(now);
+
       let state = new Game(clues, timeline, 0);
 
       updateClues(state);
