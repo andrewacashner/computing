@@ -1,4 +1,4 @@
-//{{{1 description
+//{{{1 DESCRIPTION
 /** 
  * @filedescription Timeline Game
  * @author Andrew A. Cashner
@@ -446,8 +446,9 @@ function dragstartHandler(event) {
 // and shift them back when the user leaves the area
 
 /** CSS value for card's normal left margin when shifted right */
-const CARD_LEFT_MARGIN = "var(--card-margin)";
+const CARD_LEFT_MARGIN_DEFAULT = "var(--card-margin)";
 
+const CARD_LEFT_MARGIN_EXTRA = `calc(5 * ${CARD_LEFT_MARGIN_DEFAULT})`;
 /**
  * Procedure: Set the given card's left margin to the given value.
  * @param {element} cardNode - div.card DOM element (not Card instance)
@@ -462,7 +463,7 @@ function setCardLeftMargin(cardNode, val) {
  * @param {element} cardNode - div.card DOM element in timeline
  */
 function insertTimelineGap(cardNode) {
-  setCardLeftMargin(cardNode, `calc(5 * ${CARD_LEFT_MARGIN})`);
+  setCardLeftMargin(cardNode, CARD_LEFT_MARGIN_EXTRA);
 }
 
 /**
@@ -471,7 +472,7 @@ function insertTimelineGap(cardNode) {
  * @param {element} cardNode - div.card DOM element in timeline
  */
 function removeTimelineGap(cardNode) {
-  setCardLeftMargin(cardNode, CARD_LEFT_MARGIN);
+  setCardLeftMargin(cardNode, CARD_LEFT_MARGIN_DEFAULT);
 }
 
 // Functions to test the clue card's location when dragged
@@ -623,11 +624,23 @@ function replaceElement(selector, el) {
 }
 
 /**
+ * Procedure: Reset the width of the div holding the timeline
+ * (div.timelineBar) to the width of the current timeline.
+ * TODO this still doesn't interact with CSS quite as desired.
+ */
+function updateTimelineWidth(state) {
+  let width = `calc(${state.timeline.length} * (var(--card-width) + var(--card-margin)) + 4 * ${CARD_LEFT_MARGIN_EXTRA})`;
+  let timelineBar = document.querySelector("div.timelineBar");
+  timelineBar.style.width = width;
+}
+
+/**
  * Procedure: Update the current timeline and score (replace those HTML
  * elements with new ones according to the game state).
  * @param {Game} state
  */
 function updateDisplay(state) {
+  updateTimelineWidth(state);
   replaceElement("div.timeline", state.timelineToHtml());
   replaceElement("span.score", state.scoreToHtml());
 }
@@ -900,7 +913,7 @@ function playGame(url) {
       let timeline = new FactList(now);
 
       let state = new Game(clues, timeline, 0);
-
+      
       updateClues(state);
       updateDisplay(state);
     } else {

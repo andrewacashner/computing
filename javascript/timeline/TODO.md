@@ -14,10 +14,9 @@
 - image layout different on timeline vs. clues (min-width problem?)
 - timeline rule should always extend to full width as it expands
 
-## Drag/drop
-- Consistency and predictability of drag target
-- Dragover/dragleave on guess card vs. dropping to left of guess card
-- Shift left also?
+- Now we adjust width when updating timeline to fix above problems, but the
+  mobile layout is awkward and maybe unplayable? Need to be able to scroll the
+  timeline while it is centered below the card.
 
-## Documentation
-- Fix Jsdoc errors
+## Drag/drop
+- Shift left also?
