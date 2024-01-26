@@ -551,7 +551,7 @@ function findFirstCardToRight(event) {
   console.log(`Card dropped with pointer at (${event.clientX}, ${event.clientY})`);
 
   // Search along the timeline bar regardless of where the drop was vertically
-  let timelineBar = document.querySelector("div.timelineBar hr");
+  let timelineBar = document.querySelector("div.scrollingTimeline hr");
   let y = timelineBar.getBoundingClientRect().top;
 
   console.log("Looking for nearest card to timeline drop point");
