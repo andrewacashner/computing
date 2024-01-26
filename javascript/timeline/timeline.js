@@ -816,8 +816,11 @@ function setColor(el, color) {
 function restart() {
   console.log("Restart");
   let input = document.getElementById("fileInput");
+  input.files = null;
+
   let form = document.getElementById("inputForm");
   form.reset();
+
   location.reload();
 }
 
@@ -881,8 +884,6 @@ async function loadTimeline(url) {
 /** URL of image to use on the "Now" card (used in first setup) */
 const NOW_IMAGE_URL = "https://images.pexels.com/photos/17139860/pexels-photo-17139860/free-photo-of-hourglass-with-sand.jpeg";
 
-/** The first card in the timeline, with current year */
-
 /**
  * Procedure: Initialize game. Given the URL of a JSON input, process the
  * input and set up a new game state.
@@ -916,11 +917,26 @@ function playGame(url) {
   });
 }
 
-/**
- * On page load, set up the timeline, initialize game state, and draw and
- * display the first clue.
+/** Get the URL of the user's uploaded file or a local file in the input
+ * directory (the file name is the value of the selected option).
+ * @returns {string} url
  */
-document.addEventListener("DOMContentLoaded", function (event) {
+function getInputUrl() {
+  let input = document.getElementById("fileInput");
+  let select = document.getElementById("source");
+  let url;
+  if (select.value) {
+    if (input.files.length > 0) {
+      url = userUploadUrl(input);
+    } else {
+      url = `input/${select.value}.json`;
+    }
+  }
+  return url;
+}
+
+/** Hide the timeline-chooser menu and load the selected file. */
+function setupGame() {
   let source = document.getElementById("source");
   source.addEventListener("change", () => {
     let chooser = document.getElementById("file");
@@ -928,24 +944,20 @@ document.addEventListener("DOMContentLoaded", function (event) {
   });
 
   let playButton = document.getElementById("playbutton");
-  playButton.addEventListener("click", function () {
-    let input = document.getElementById("fileInput");
-    let select = document.getElementById("source");
-    let url;
-    if (select.value) {
-      if (input.files.length > 0) {
-        url = userUploadUrl(input);
-      } else {
-        url = `input/${select.value}.json`;
-      }
-
+  playButton.addEventListener("click", () => {
+    let url = getInputUrl();
+    if (url) {
       console.log(`Loading file ${url}`);
       playGame(url);
     } else {
-      console.log("No input source selected");
+      console.err("Invalid input, cannot play game.");
     }
   });
-});
+}
+
+/** On page load, set up the game. */
+document.addEventListener("DOMContentLoaded", setupGame);
+
 //}}}1
 //{{{1 TESTING
 /** 
