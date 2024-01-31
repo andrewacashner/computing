@@ -1,81 +1,88 @@
-const KEY = "Much that is hidden shall be revealed"
+"use strict";
 
-const LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
-const UPPERCASE = LOWERCASE.toUpperCase();
+const KEY = "Much that is hidden shall be revealed";
 
-const caesar = {
-  base: (alphabet, shift, c) => {
+class CaesarCipher {
+  shift;
+  plaintext;
+  encoded;
+
+  constructor(shift, msg) {
+    this.shift = shift;
+    this.plaintext = msg;
+    this.encoded = this.#encodeStr();
+  }
+
+  static lowercase = "abcdefghijklmnopqrstuvwxyz";
+  static uppercase = this.lowercase.toUpperCase();
+
+  #base(c, alphabet) {
     let newC = null;
     if (alphabet.includes(c)) {
-      let index = alphabet.indexOf(c);
-      let newIndex = index + shift;
-      if (newIndex < 0 || newIndex > alphabet.length - 1) {
-        newIndex -= Math.sign(newIndex) * alphabet.length
+      let index = alphabet.indexOf(c) + this.shift;
+      if (index < 0 || index > alphabet.length - 1) {
+        index -= Math.sign(index) * alphabet.length
       }
-      newC = alphabet.at(newIndex);
+      newC = alphabet.at(index);
     } 
     return newC;
-  },
-  lower: (shift, c) => caesar.base(LOWERCASE, shift, c),
-  upper: (shift, c) => caesar.base(UPPERCASE, shift, c),
-  encode: (shift, c) => caesar.lower(shift, c) ?? caesar.upper(shift, c) ?? c
+  }
+
+  #lower = (c) => this.#base(c, CaesarCipher.lowercase);
+  #upper = (c) => this.#base(c, CaesarCipher.uppercase);
+
+  #encodeChar = (c) => this.#lower(c) ?? this.#upper(c) ?? c;
+
+  #encodeStr = () => this.plaintext.split("").map(this.#encodeChar).join("");
 }
 
-function toCaesar(shift, s) {
-  let chars = s.split("");
-  let encodedChars = chars.map(c => caesar.encode(shift, c));
-  let encodedStr = encodedChars.join("");
-  return encodedStr;
-}
-
-function rand(max) {
-  return Math.floor(Math.random() * max);
-}
-function randWord(text) {
-  let words = text.split(" ");
-  return words.at(rand(words.length));
-}
-
-function bookKey(shift, text) {
-  let key = randWord(text);
-  let encodedKey = toCaesar(shift, key);
-  let words = text.split(" ");
-  let position = words.indexOf(key);
-  return `${position} ${encodedKey}`;
-}
-
-function bookShift(text) {
-  return rand(text.split(" ").length);
+const random = {
+  n: (max) => Math.floor(Math.random() * max),
+  wordIndex: (text) => random.n(text.split(" ").length),
+  word: (text) => {
+    let words = text.split(" ");
+    return words.at(random.n(words.length));
+  }
 }
 
 function encode(book, msg) {
-  let shift = bookShift(book);
-  console.log(shift);
+  
+  function bookKey(shift, text) {
+    let key = random.word(text);
+    let encodedKey = new CaesarCipher(shift, key).encoded;
+    let position = text.split(" ").indexOf(key);
+    return `${position} ${encodedKey}`;
+  }
+
+  let shift = random.wordIndex(book);
   let encodedKey = bookKey(shift, book);
-  let encodedMsg = toCaesar(shift, msg);
+  let encodedMsg = (new CaesarCipher(shift, msg)).encoded;
   return `${encodedKey} ${encodedMsg}`;
 }
 
-function letterDiff(c1, c2) {
-  function letterValue(c) {
-    return LOWERCASE.indexOf(c.toLowerCase());
-  }
-  return letterValue(c1) - letterValue(c2);
-}
-
 function decode(book, msg) {
+  
+  function letterDiff(c1, c2) {
+    function letterValue(c) {
+      return CaesarCipher.lowercase.indexOf(c.toLowerCase());
+    }
+    return letterValue(c1) - letterValue(c2);
+  }
+
   let words = msg.split(" ");
   let index = Number(words[0]);
   let encodedKey = words[1];
+
   let sourceKey = book.split(" ").at(index);
   let shift = letterDiff(encodedKey[0], sourceKey[0]);
+
   let body = words.slice(2).join(" ");
-  return toCaesar(-shift, body);
+  return new CaesarCipher(-shift, body).encoded;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  msg = prompt("Enter the message to encode");
-  answer = encode(KEY, msg);
+  let msg = prompt("Enter the message to encode");
+  let answer = encode(KEY, msg);
   let encoded = document.querySelector("p.encode");
   encoded.textContent = answer;
 
@@ -85,3 +92,5 @@ document.addEventListener("DOMContentLoaded", () => {
     decoded.textContent = decode(KEY, answer);
   });
 });
+
+
