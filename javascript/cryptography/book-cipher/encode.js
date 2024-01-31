@@ -16,20 +16,22 @@ class CaesarCipher {
   static lowercase = "abcdefghijklmnopqrstuvwxyz";
   static uppercase = this.lowercase.toUpperCase();
 
-  #base(c, alphabet) {
-    let newC = null;
-    if (alphabet.includes(c)) {
-      let index = alphabet.indexOf(c) + this.shift;
-      if (index < 0 || index > alphabet.length - 1) {
-        index -= Math.sign(index) * alphabet.length
-      }
-      newC = alphabet.at(index);
-    } 
-    return newC;
+  #base(alphabet) {
+    return function (c) {
+      let newC = null;
+      if (alphabet.includes(c)) {
+        let index = alphabet.indexOf(c) + this.shift;
+        if (index < 0 || index > alphabet.length - 1) {
+          index -= Math.sign(index) * alphabet.length
+        }
+        newC = alphabet.at(index);
+      } 
+      return newC;
+    }.bind(this);
   }
 
-  #lower = (c) => this.#base(c, CaesarCipher.lowercase);
-  #upper = (c) => this.#base(c, CaesarCipher.uppercase);
+  #lower = this.#base(CaesarCipher.lowercase);
+  #upper = this.#base(CaesarCipher.uppercase);
 
   #encodeChar = (c) => this.#lower(c) ?? this.#upper(c) ?? c;
 
