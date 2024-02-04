@@ -60,7 +60,25 @@ const scm = {
   },
 
   eval: function (str) {
+    let expr = parenString(str);
+    if (!expr) throw "Syntax error";
+    let words = expr.split(" ");
+    let fn = words.shift();
+    let args = [];
+    for (let word of words.slice(1)) {
+      if (!word.startsWith("(")) {
+        args.push(words.shift());
+      } else {
+    //    let next = parenString(words /* rest */
+      }
+    }
+
+
+    return scm[fn](...args);
   }
+}
+
+// TODO need to process args as a stack
 
 //
 //    let expr = str;
@@ -104,30 +122,58 @@ const scm = {
 //  }
 }
 
-// Return an array of substrings within the given delimiters, balanced, at
-// each level up to the depth specified
-// "(Hello (world (!))) => [ 'Hello (world (!))', 'world (1)', '!' ]
-// But this fails on something like "(Hello) (world)" (gives "['Hello)
-// (world']")
-function balancedDelimSubstring(str, open, close, depth = 1, matches = []) {
-  if (!str || depth < 0) {
-    return matches;
-  } else {
-    let inner;
-    let start = str.indexOf(open);
-    let nextParen = str.substring(start).indexOf(open
-    let end = str.lastIndexOf(close);
-    if (start >= 0 && end >= 0) {
-      let inner = str.slice(start + 1, end);
-      let newMatches = inner ? [...matches, inner] : [...matches];
-      return balancedDelimSubstring(inner, open, close, depth - 1, newMatches);
+// // Return an array of substrings within the given delimiters, balanced, at
+// // each level up to the depth specified
+// // "(Hello (world (!))) => [ 'Hello (world (!))', 'world (1)', '!' ]
+// // But this fails on something like "(Hello) (world)" (gives "['Hello)
+// // (world']")
+// function balancedDelimSubstring(str, open, close, depth = 1, matches = []) {
+//   if (!str || depth < 0) {
+//     return matches;
+//   } else {
+//     let inner;
+//     let start = str.indexOf(open);
+//     let nextParen = str.substring(start).indexOf(open);
+//     let end = str.lastIndexOf(close);
+//     if (start >= 0 && end >= 0) {
+//       let inner = str.slice(start + 1, end);
+//       let newMatches = inner ? [...matches, inner] : [...matches];
+//       return balancedDelimSubstring(inner, open, close, depth - 1, newMatches);
+//     } 
+//   }
+// }
+
+function stringBetweenBalanced(open, close, str) {
+  let inner, start, stop;
+
+  for (let level = 0, i = 0; i < str.length; ++i) {
+    if (str[i] === open) {
+        ++level;
+        if (!start) {
+          start = i + 1;
+        } 
+    } else if (str[i] === close && start) {
+      --level;
+      if (level === 0) {
+        stop = i;
+        break;
+      } 
     } 
   }
+
+  if (stop) {
+    inner = str.substring(start, stop);
+  } 
+  return inner;
+}
+
+function parenString(str) { 
+  return stringBetweenBalanced("(", ")", str); 
 }
 
 // let pair = scm.cons("a", "b");
 // console.log(`pair: ${pair}`);
-// 
+//  
 // let ls = scm.list("a", "b", "c");
 // console.log(`ls: ${ls}`);
 // 
@@ -143,9 +189,9 @@ function balancedDelimSubstring(str, open, close, depth = 1, matches = []) {
 // let nums = scm.list(1, 2, 3);
 // let newNums = scm.map(nums, x => x + 1);
 // console.log(`map +1 ls: ${newNums}`);
-// 
-// let newPair = scm.eval("(cons 1 2)");
-// console.log(`newPair: ${newPair}`);
+ 
+let newPair = scm.eval("(cons 1 2)");
+console.log(`newPair: ${newPair}`);
 //  
 // let newList = scm.eval("(list 1 2 3)");
 // console.log(`newList: ${newList}`);
@@ -161,11 +207,16 @@ function balancedDelimSubstring(str, open, close, depth = 1, matches = []) {
 // // TODO this should produce an error
 // // let error = scm.eval("(list 0 (cons 1 2) (cons 3 (cons 4 5))");
 // 
-console.log(balancedDelimSubstring("(Hello)", "(", ")"));
-console.log(balancedDelimSubstring("(Hello (world))", "(", ")"));
-console.log(balancedDelimSubstring("(Hello (world (!)))", "(", ")", 2));
-console.log(balancedDelimSubstring("Hello (world (!))", "(", ")", 2));
-console.log(balancedDelimSubstring("Hello (world", "(", ")"));
-console.log(balancedDelimSubstring("(Hello) (world)", "(", ")"));
-console.log(balancedDelimSubstring("(Hello (or goodbye)) (world)", "(", ")"));
+// console.log(balancedDelimSubstring("(Hello)", "(", ")"));
+// console.log(balancedDelimSubstring("(Hello (world))", "(", ")"));
+// console.log(balancedDelimSubstring("(Hello (world (!)))", "(", ")", 2));
+// console.log(balancedDelimSubstring("Hello (world (!))", "(", ")", 2));
+// console.log(balancedDelimSubstring("Hello (world", "(", ")"));
+// console.log(balancedDelimSubstring("(Hello) (world)", "(", ")"));
+// console.log(balancedDelimSubstring("(Hello (or goodbye)) (world)", "(", ")"));
+console.log(parenString("Oh (Hello (cruel) (old (world)))"));
+console.log(parenString("O) no!(it's (alive)"));
+console.log(parenString("fish"));
+console.log(parenString("()"));
+
 
