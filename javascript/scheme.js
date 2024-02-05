@@ -22,7 +22,27 @@ class ListItem {
   }
 }
 
-const scm = {
+class Outline {
+
+  constructor(level = 0, start = this.#unset, end = this.#unset) {
+    this.level = level;
+    this.start = start;
+    this.end = end;
+  }
+
+  #unset = -1;
+
+  isStartSet() { return this.start !== this.#unset; }
+  isEndSet() { return this.end !== this.#unset; }
+
+  isComplete() { return this.isStartSet() && this.isEndSet(); }
+
+  within(str) {
+    return str.slice(this.start, this.end + 1);
+  }
+}
+
+const Scheme = {
   cons: (a, b) => new ListItem(a, b),
 
   head: item => item.data,
@@ -32,7 +52,7 @@ const scm = {
   list: function (...items) {
     let head = null;
     if (items.length > 0) {
-      head = scm.cons(items[0], scm.list(...items.slice(1)));
+      head = Scheme.cons(items[0], Scheme.list(...items.slice(1)));
     }
     return head;
   },
@@ -42,7 +62,7 @@ const scm = {
       if (!oldLs) {
         return newLs;
       } else {
-        return reverseDo(scm.tail(oldLs), scm.cons(scm.head(oldLs), newLs));
+        return reverseDo(Scheme.tail(oldLs), Scheme.cons(Scheme.head(oldLs), newLs));
       }
     }
     return reverseDo(ls, null);
@@ -51,161 +71,128 @@ const scm = {
   map: function (ls, fn) {
     function mapDo(oldLs, newLs) {
       if (!oldLs) {
-        return scm.reverse(newLs);
+        return Scheme.reverse(newLs);
       } else {
-        return mapDo(scm.tail(oldLs), scm.cons(fn(scm.head(oldLs)), newLs));
+        return mapDo(Scheme.tail(oldLs), Scheme.cons(fn(Scheme.head(oldLs)), newLs));
       }
     }
     return mapDo(ls, null);
   },
 
   eval: function (str) {
-    let expr = parenString(str);
-    if (!expr) throw "Syntax error";
-    let words = expr.split(" ");
-    let fn = words.shift();
-    let args = [];
-    for (let word of words.slice(1)) {
-      if (!word.startsWith("(")) {
-        args.push(words.shift());
-      } else {
-    //    let next = parenString(words /* rest */
-      }
+//      if (!(sexpr.startsWith("(") && sexpr.endsWith(")"))) {
+//        throw "Syntax error";
+//      }
+    
+    let outlines = analyzeExpr(str);
+    console.log(outlines);
+
+    let values = "";
+    for (let outline of outlines) {
+      let sexpr = outline.within(str);
+     
+      let args = sexpr.slice(1, sexpr.length - 1).split(" ");
+      let fn = args.shift();
+      
+      let value = Scheme[fn](...args);
+      console.log(value);
+      values += value;
     }
-
-
-    return scm[fn](...args);
+    return values;
   }
 }
 
-// TODO need to process args as a stack
+// TODO you need to account for normal arguments, not just sexpressions, and
+// how to plug value of sexpr back into stream of arguments?
 
-//
-//    let expr = str;
-//    if (expr[0] === "(") {
-//      if (expr.at(-1) !== ")") {
-//        throw "Syntax error";
-//        // TODO replace with function that actually checks balanced
-//        // parentheses
-//      } else {
-//        expr = expr.substring(expr.indexOf("(") + 1, expr.lastIndexOf(")"));
-//        let words = expr.split(" ");
-//
-//        let fn = words[0];
-//        let args = [];
-//
-//        // Grab arguments; if one starts with open parenthesis, join the
-//        // remainder of the string and look for the close parenthesis and eval
-//        // that expression, then continue after the end of the expression
-//        for (let i = 1; i < words.length; ++i) {
-//          if (words[i].includes("(")) {
-//            let nestedEval;
-//            for (let j = i; j < words.length; ++j) {
-//              if (words[j].includes(")")) {
-//                let rest = words.slice(i, j + 1).join(" ");
-//                nestedEval = scm.eval(rest);
-//                args.push(nestedEval);
-//                i = j + 1;
-//                break;
-//              } 
-//            } 
-//            if (!nestedEval) throw "Syntax error";
-//          } else {
-//            args.push(words[i]);
-//          }
-//        }
-//        return scm[fn](...args);
-//      } 
-//    } else {
-//      return expr;
-//    }
-//  }
-}
-
-// // Return an array of substrings within the given delimiters, balanced, at
-// // each level up to the depth specified
-// // "(Hello (world (!))) => [ 'Hello (world (!))', 'world (1)', '!' ]
-// // But this fails on something like "(Hello) (world)" (gives "['Hello)
-// // (world']")
-// function balancedDelimSubstring(str, open, close, depth = 1, matches = []) {
-//   if (!str || depth < 0) {
-//     return matches;
-//   } else {
-//     let inner;
-//     let start = str.indexOf(open);
-//     let nextParen = str.substring(start).indexOf(open);
-//     let end = str.lastIndexOf(close);
-//     if (start >= 0 && end >= 0) {
-//       let inner = str.slice(start + 1, end);
-//       let newMatches = inner ? [...matches, inner] : [...matches];
-//       return balancedDelimSubstring(inner, open, close, depth - 1, newMatches);
-//     } 
-//   }
-// }
-
-function stringBetweenBalanced(open, close, str) {
-  let inner, start, stop;
+function analyzeExpr(str) {
+  let args = [];
+  let outlines = [];
+  let [open, close] = "()";
 
   for (let level = 0, i = 0; i < str.length; ++i) {
     if (str[i] === open) {
-        ++level;
-        if (!start) {
-          start = i + 1;
-        } 
-    } else if (str[i] === close && start) {
+      let outline = new Outline(level, i);
+      outlines.push(outline);
+      ++level;
+    } else if (str[i] === close) {
       --level;
-      if (level === 0) {
-        stop = i;
-        break;
-      } 
-    } 
+      let outline = outlines.pop();
+      if (!(outline.isEndSet() && outline.level === level)) {
+        outline.end = i;
+        args.push(outline);
+      }
+    }
   }
 
-  if (stop) {
-    inner = str.substring(start, stop);
-  } 
-  return inner;
+  return args;
 }
 
-function parenString(str) { 
-  return stringBetweenBalanced("(", ")", str); 
-}
+// let input = "(cons 1 2)";
+let input = "(cons (cons 1 2) 3)";
+console.log(Scheme.eval(input));
 
-// let pair = scm.cons("a", "b");
+// let outlines = sexpr(input);
+// console.log(outlines);
+
+// let input = "list 1 2 3";
+// console.log(getArgs(input));
+// 
+// input = "(list 1) 2 3";
+// console.log(getArgs(input));
+// 
+// let input = "(list 1 2 3)";
+// console.log(input);
+// console.log(getArgs(input));
+// 
+// input = "(list (list 1 2) 3)";
+// console.log(getArgs(input));
+// 
+// input = "(list (cons 1 2) \'() 3)";
+// console.log(input);
+// console.log(getArgs(input));
+
+//input = "(list (cons 1 (list \'a \"string\" 2) 4) '() (cons 2 3))";
+// let input = "(list (cons 1 (list \'a \"string\" 2) 4) '())";
+// console.log(input);
+// console.log(getArgs(input));
+
+
+// let pair = Scheme.cons("a", "b");
 // console.log(`pair: ${pair}`);
 //  
-// let ls = scm.list("a", "b", "c");
+// let ls = Scheme.list("a", "b", "c");
 // console.log(`ls: ${ls}`);
 // 
-// let first = scm.head(ls);
+// let first = Scheme.head(ls);
 // console.log(`first ls: ${first}`);
 // 
-// let rest = scm.tail(ls);
+// let rest = Scheme.tail(ls);
 // console.log(`rest ls: ${rest}`);
 // 
-// let sl = scm.reverse(ls);
+// let sl = Scheme.reverse(ls);
 // console.log(`reverse ls: ${sl}`);
 // 
-// let nums = scm.list(1, 2, 3);
-// let newNums = scm.map(nums, x => x + 1);
+// let nums = Scheme.list(1, 2, 3);
+// let newNums = Scheme.map(nums, x => x + 1);
 // console.log(`map +1 ls: ${newNums}`);
- 
-let newPair = scm.eval("(cons 1 2)");
-console.log(`newPair: ${newPair}`);
 //  
-// let newList = scm.eval("(list 1 2 3)");
+// let newPair = Scheme.eval("(cons 1 2)");
+// console.log(`newPair: ${newPair}`);
+//  
+// let newList = Scheme.eval("(list 1 2 3)");
 // console.log(`newList: ${newList}`);
 // 
-// let nested = scm.eval("(cons 1 (cons 2 3))");
+// let nested = Scheme.eval("(cons 1 (cons 2 3))");
 // console.log(`nested ${nested}`);
 // 
-// let nested2 = scm.eval("(list 0 (cons 1 2) (cons 3 (cons 4 5)))");
+// let nested2 = Scheme.eval("(list 0 (cons 1 2) (cons 3 (cons 4 5)))");
 // console.log(`nested2 ${nested2}`);
 // 
-// // let error2 = scm.eval("(list 0 (cons 1 2 (cons 3 (cons 4 5)))");
+// // let error2 = Scheme.eval("(list 0 (cons 1 2 (cons 3 (cons 4 5)))");
 // 
 // // TODO this should produce an error
-// // let error = scm.eval("(list 0 (cons 1 2) (cons 3 (cons 4 5))");
+// // let error = Scheme.eval("(list 0 (cons 1 2) (cons 3 (cons 4 5))");
 // 
 // console.log(balancedDelimSubstring("(Hello)", "(", ")"));
 // console.log(balancedDelimSubstring("(Hello (world))", "(", ")"));
@@ -214,9 +201,9 @@ console.log(`newPair: ${newPair}`);
 // console.log(balancedDelimSubstring("Hello (world", "(", ")"));
 // console.log(balancedDelimSubstring("(Hello) (world)", "(", ")"));
 // console.log(balancedDelimSubstring("(Hello (or goodbye)) (world)", "(", ")"));
-console.log(parenString("Oh (Hello (cruel) (old (world)))"));
-console.log(parenString("O) no!(it's (alive)"));
-console.log(parenString("fish"));
-console.log(parenString("()"));
+// console.log(parenString("Oh (Hello (cruel) (old (world)))"));
+// console.log(parenString("O) no!(it's (alive)"));
+// console.log(parenString("fish"));
+// console.log(parenString("()"));
 
 
