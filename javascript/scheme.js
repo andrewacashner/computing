@@ -116,6 +116,7 @@ class Scheme {
       if (str.startsWith("(") && str.endsWith(")")) {
         let inner = str.slice(1, str.length - 1);
         let argStrings = args(inner);
+//        console.log(argStrings);
 
         let parsed = argStrings.map((arg) => {
           if (arg.includes("(") && arg.includes(")")) {
@@ -176,30 +177,85 @@ function test(fn, expr) {
   return result;
 }
 
-let ls = Scheme.list(1, 2, 3);
+// let ls = Scheme.list(1, 2, 3);
 
 let inputs = [
-  [Scheme.cons, ["a", "b"]],
-  [Scheme.car, ls],
-  [Scheme.cdr, ls],
-  [Scheme.reverse, ls],
-  [Scheme.list, ["a", "b", "c"]],
+//  [Scheme.cons, ["a", "b"]],
+//  [Scheme.car, ls],
+//  [Scheme.cdr, ls],
+//  [Scheme.reverse, ls],
+//  [Scheme.list, ["a", "b", "c"]],
   [Scheme.eval, "(cons 1 2)"],
   [Scheme.eval, "(cons (cons 1 2) 3)"],
-  [Scheme.eval, "(list 1 2 3)"],
-  [Scheme.eval, "(cons 1 (cons 2 3))"],
-  [Scheme.eval, "(list 1 2"],
-  [Scheme.eval, "(list 0 (cons 1 2) (cons 3 (cons 4 5)))"], //TODO wrong
-  [Scheme.eval, "(list 0 (cons 1 2)"], // TODO wrong
-  [Scheme.eval, "(append (cons 1 2) (list 3 4))"]
+//  [Scheme.eval, "(list 1 2 3)"],
+//  [Scheme.eval, "(cons 1 (cons 2 3))"],
+//  [Scheme.eval, "(list 1 2"],
+//  [Scheme.eval, "(list 0 (cons 1 2) (cons 3 (cons 4 5)))"], //TODO wrong
+//  [Scheme.eval, "(list 0 (cons 1 2)"], // TODO wrong
+//  [Scheme.eval, "(append (cons 1 2) (list 3 4))"]
 ];
 
 for (let [fn, arg] of inputs) {
   test(fn, arg);
 }
 
-let newNums = Scheme.map(ls, x => x + 1);
-console.log(`map +1 ${ls} => ${newNums}`);
+// let newNums = Scheme.map(ls, x => x + 1);
+// console.log(`map +1 ${ls} => ${newNums}`);
 
-
- 
+// TODO didn't work
+// function args(str, argList = [], thisArg = "", 
+//   state = { inWord: false, inExpr: false, exprLevel: 0}) {
+//  
+//   const isWhitespace = (c) => /\s/.test(c);
+//   
+//   const exprOpen = "(";
+//   const exprClose = ")";
+// 
+//   const isExprStart = (c) => c === exprOpen && !state.inWord;
+// 
+//   const isExprEnd = (c) => c === ")" && state.inExpr;
+// 
+// //  console.log(`str '${str}', argList '${argList}'`);
+// 
+//   if (!str) {
+//     if (thisArg) {
+//       argList = [...argList, thisArg];
+//     } 
+//     return argList;
+//   } else {
+//     let current = str[0];
+//     if (isWhitespace(current)) {
+//       if (state.inExpr) {
+//         return args(str.slice(1), argList, thisArg + current, state);
+//       } else if (state.inWord) {
+//         return args(str.slice(1), [...argList, thisArg], "", 
+//           {inWord: false, ...state});
+//       }
+//     } else if (isExprStart(current)) {
+//       return args(str.slice(1), argList, thisArg + current,
+//         { inWord: false, 
+//           inExpr: true,
+//           exprLevel: state.exprLevel + 1
+//         });
+//     } else if (isExprEnd(current)) {
+//       if (state.exprLevel === 0) {
+//         return args(str.slice(1), [...argList, thisArg], "", {
+//           inWord: false,
+//           inExpr: false,
+//           exprLevel: state.exprLevel - 1
+//         });
+//       } else {
+//         return args(str.slice(1), argList, thisArg + current, 
+//           { exprLevel: state.exprLevel - 1, 
+//             inWord: false, 
+//             ...state});
+//       }
+//       return args(str.slice(1), argList, thisArg, state);
+//     } else {
+//       if (!state.inWord && !state.inExpr) {
+//         state.inWord = true;
+//       }
+//       return args(str.slice(1), argList, thisArg + current, state);
+//     }
+//   }
+// }
