@@ -84,63 +84,69 @@ class Scheme {
     // parentheses;
     // Return an array of strings containing either the words or the
     // parenthetical expressions; do not parse within the parentheses.
-    function args(str) {
-      let thisArg = "";
-      let inWord = false;
-      let inExpr = false;
-      let exprLevel = 0;
-      let count = 0;
+    function args(str, thisArg = "", tree = null, 
+      state = {
+        inWord: false, 
+        inExpr: false, 
+        exprLevel: 0, 
+        count: 0 }) {
 
       if (!str) {
-        return null;
-      } else {
-        for (let c of str) {
-//          console.log(`test ${c} of str ${str}`);
-          if (/\s/.test(c)) {
-            if (inExpr) {
-              thisArg += c;
-            } else if (inWord) {
-              ++count;
-              tree = addToTree(tree, new Node(thisArg), count);
-              inWord = false;
-              thisArg = "";
-            } else {
-              continue;
-            }
-          } else if (c === "(" && !inWord) {
-            inExpr = true;
-            inWord = false;
-            thisArg += c;
-            ++exprLevel;
-          } else if (c === ")" && inExpr) {
-            --exprLevel;
-            inWord = false;
-            thisArg += c;
-            if (exprLevel === 0) {
-              ++count;
-              let inner = thisArg.slice(1, thisArg.length - 1);
-              let node = args(inner);
-              console.log(`node for nested arg: \n${node}`);
-              if (!node) {
-                node = new Node(thisArg);
-              }
-              tree = addToTree(tree, node, count);
-              // TODO nodes are getting added to tree in wrong places
-              inExpr = false;
-              thisArg = "";
-            }
-          } else {
-            if (!inWord && !inExpr) {
-              inWord = true;
-            }
-            thisArg += c;
-          }
-        }
         if (thisArg) {
-          ++count;
-          tree = addToTree(tree, new Node(thisArg), count);
+          let node = new Node(thisArg);
+          tree = addToTree(tree, node, state.count);
         }
         return tree;
+      } else {
+        let c = str[0];
+        if (/\s/.test(c)) {
+          if (state.inExpr) {
+            return args(str.slice(1), thisArg + c, tree, state);
+          } else if (state.inWord) {
+            let count = state.count + 1;
+            let node = new Node(thisArg);
+            tree = addToTree(tree, node, count);
+            return args(str.slice(1), "", tree, 
+              { inWord: false, 
+                count: count,
+                ...state});
+          } else {
+            return args(str.slice(1), thisArg, tree, state);
+          }
+        } else if (c === "(" && !state.inWord) {
+          return args(str.slice(1), thisArg + c, tree, 
+            { inWord: false,
+              inExpr: true,
+              exprLevel: state.exprLevel + 1,
+              ...state});
+        } else if (c === ")" && state.inExpr) {
+          if (state.exprLevel > 1) {
+            return args(str.slice(1), thisArg + c, tree, 
+              { inWord: false,
+                exprLevel: state.exprLevel - 1,
+                ...state});
+          } else {
+            let count = state.count + 1;
+            let inner = thisArg.slice(1, thisArg.length - 1);
+            let node = args(inner);
+            if (!node) {
+              node = new Node(thisArg);
+            }
+            tree = addToTree(tree, node, count);
+
+            return args(str.slice(1), "", tree, 
+              { inWord: false,
+                inExpr: false,
+                exprLevel: state.exprLevel - 1,
+                count: count,
+                ...state});
+          }
+        } else {
+          if (!state.inWord && !state.inExpr) {
+            state.inWord = true;
+          }
+          return args(str.slice(1), thisArg + c, tree, state);
+        }
       }
     }
 

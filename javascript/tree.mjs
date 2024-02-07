@@ -8,16 +8,16 @@ class Node {
     this.sibling = sibling;
   }
 
-  lastChild() {
-    return (this.child.child) ? this.child.lastChild() : this.child;
+  lastDescendant() {
+    return (this.child) ? this.lastChild() : null;
   }
 
   lastSibling() {
-    return (this.sibling.sibling) ? this.sibling.lastSibling() : this.sibling;
+    return (this.sibling) ? this.sibling.lastSibling() : null;
   }
-
-  lastNextGen() {
-    return this.child.lastSibling();
+  
+  lastChild() {
+    return (this.child) ? this.child.lastSibling() : null;
   }
 
   appendChild(node) {
