@@ -1,8 +1,6 @@
 // LCRS binary tree
 // Andrew Cashner, 2024/02/07
 
-"use strict";
-
 class Node {
   constructor(data, child = null, sibling = null) {
     this.data = data;
@@ -65,6 +63,9 @@ class Node {
   }
 }
 
+export default Node;
+
+/* TEST
 let andrew = new Node("Andrew");
 let matt = new Node("Matt", andrew, null);
 let ben = new Node("Ben");
@@ -109,3 +110,4 @@ let tests = [
   lynn.lastNextGen()
 ];
 tests.forEach(fn => console.log(fn));
+*/
