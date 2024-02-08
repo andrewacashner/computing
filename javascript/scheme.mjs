@@ -22,23 +22,23 @@ class ListItem {
   }
 }
 
-class Scheme {
+const Scheme = {
 
-  static cons = (a, b) => new ListItem(a, b);
+  cons: (a, b) => new ListItem(a, b),
 
-  static car = item => item.data;
+  car: item => item.data,
 
-  static cdr = item => item.next;
+  cdr: item => item.next,
 
-  static list = function (...items) {
+  list: function (...items) {
     let head = null;
     if (items.length > 0) {
       head = Scheme.cons(items[0], Scheme.list(...items.slice(1)));
     }
     return head;
-  }
+  },
 
-  static reverse = function (ls) {
+  reverse: function (ls) {
     function reverseDo(oldLs, newLs) {
       if (!oldLs) {
         return newLs;
@@ -47,9 +47,9 @@ class Scheme {
       }
     }
     return reverseDo(ls, null);
-  }
+  },
 
-  static map = function (ls, fn) {
+  map: function (ls, fn) {
     function mapDo(oldLs, newLs) {
       if (!oldLs) {
         return Scheme.reverse(newLs);
@@ -58,113 +58,92 @@ class Scheme {
       }
     }
     return mapDo(ls, null);
-  }
+  },
 
-  static #parse = function(str) {
+  parse: function(str) {
+    let tree;
 
-    function addToTree(tree, node, count) {
+    function addToTree(tree, node) {
       if (!tree) {
-        console.log(`New tree with node ${node}`);
         tree = node;
-      } else if (count === 1) {
-        console.log(`${tree}`);
-        console.log(`Append node ${node} as sibling`);
-        tree.appendSibling(node);
       } else {
-        console.log(`Append node ${node} as child`);
         tree.appendChild(node);
       }
       return tree;
     }
 
-    let tree;
+    const SyntaxMode = {
+      WORD: 1,
+      EXPR: 2,
+      OUTER: 3
+    }
+
+    const isWhiteSpace = c => /\s/.test(c);
+    const OPEN = "(";
+    const CLOSE = ")";
 
     // Split a string into arguments;
     // Arguments can be space-delimited words OR s-expressions delimited with
     // parentheses;
     // Return an array of strings containing either the words or the
     // parenthetical expressions; do not parse within the parentheses.
-    function args(str, thisArg = "", tree = null, 
-      state = {
-        inWord: false, 
-        inExpr: false, 
-        exprLevel: 0, 
-        count: 0 }) {
+    function args(str, thisArg = "", tree = null, mode = SyntaxMode.OUTER, exprLevel = 0) {
 
       if (!str) {
         if (thisArg) {
           let node = new Node(thisArg);
-          tree = addToTree(tree, node, state.count);
+          tree = addToTree(tree, node);
         }
         return tree;
       } else {
         let c = str[0];
-        if (/\s/.test(c)) {
-          if (state.inExpr) {
-            return args(str.slice(1), thisArg + c, tree, state);
-          } else if (state.inWord) {
-            let count = state.count + 1;
-            let node = new Node(thisArg);
-            tree = addToTree(tree, node, count);
-            return args(str.slice(1), "", tree, 
-              { inWord: false, 
-                count: count,
-                ...state});
-          } else {
-            return args(str.slice(1), thisArg, tree, state);
-          }
-        } else if (c === "(" && !state.inWord) {
-          return args(str.slice(1), thisArg + c, tree, 
-            { inWord: false,
-              inExpr: true,
-              exprLevel: state.exprLevel + 1,
-              ...state});
-        } else if (c === ")" && state.inExpr) {
-          if (state.exprLevel > 1) {
-            return args(str.slice(1), thisArg + c, tree, 
-              { inWord: false,
-                exprLevel: state.exprLevel - 1,
-                ...state});
-          } else {
-            let count = state.count + 1;
-            let inner = thisArg.slice(1, thisArg.length - 1);
-            let node = args(inner);
-            if (!node) {
-              node = new Node(thisArg);
-            }
-            tree = addToTree(tree, node, count);
+        
+        const advanceStr = str.slice(1);
+        const addCharToArg = thisArg + c;
+        const skipChar = thisArg;
+        const resetWord = "";
+        const addNode = (node) => addToTree(tree, node);
+        const copyAndContinue = () => args(advanceStr, addCharToArg, tree, mode, exprLevel);
+        const copyAndContinueInMode = (newMode) => args(advanceStr, addCharToArg, tree, newMode, exprLevel);
 
-            return args(str.slice(1), "", tree, 
-              { inWord: false,
-                inExpr: false,
-                exprLevel: state.exprLevel - 1,
-                count: count,
-                ...state});
-          }
+        if (isWhiteSpace(c)) {
+          if (mode == SyntaxMode.EXPR) {
+            return copyAndContinueInMode(SyntaxMode.EXPR);
+
+          } else if (mode == SyntaxMode.WORD) {
+            let node = new Node(thisArg);
+            return args(advanceStr, resetWord, addNode(node), SyntaxMode.OUTER, exprLevel);
+
+          } else return copyAndContinueInMode(SyntaxMode.OUTER);
+
+        } else if (c === OPEN && mode === SyntaxMode.OUTER) {
+            return args(advanceStr, addCharToArg, tree, SyntaxMode.EXPR, ++exprLevel);
+
+        } else if (c === CLOSE && mode === SyntaxMode.EXPR) {
+            if (exprLevel > 1) {
+              return args(advanceStr, addCharToArg, tree, SyntaxMode.EXPR, --exprLevel);
+
+            } else {
+              let node = args(thisArg.slice(1, -1)); // remove parens
+              node = node ?? new Node(thisArg);
+              return args(advanceStr, resetWord, addNode(node), SyntaxMode.OUTER, --exprLevel);
+            }
+
         } else {
-          if (!state.inWord && !state.inExpr) {
-            state.inWord = true;
-          }
-          return args(str.slice(1), thisArg + c, tree, state);
+          if (mode === SyntaxMode.OUTER) {
+            return copyAndContinueInMode(SyntaxMode.WORD);
+
+          } else return copyAndContinue();
         }
       }
     }
 
     try {
       if (str.startsWith("(") && str.endsWith(")")) {
-        let inner = str.slice(1, str.length - 1);
+        let inner = str.slice(1, -1);
         let argTree = args(inner);
         console.log(argTree);
-        throw "That's all for now";
-
-        let parsed = argStrings.map((arg) => {
-          if (arg.includes("(") && arg.includes(")")) {
-            return Scheme.#parse(arg);
-          } else {
-            return arg; 
-          }
-        });
-        return parsed;
+        return argTree;
       } else {
         throw "Syntax error";
       }
@@ -172,38 +151,40 @@ class Scheme {
       console.error(e);
       return undefined;
     }
-  }
+  },
 
-  static eval = function (str) {
+  eval: function (str) {
     
-    function applyFn(elements) {
+    function applyFn(node) {
+      let fn = "";
+      let args = [];
       let value;
-      if (elements.length > 1) {
-        let fn = elements[0];
-        let args = elements.slice(1);
-        try {
-          if (fn in Scheme) {
-            value = Scheme[fn](...args);
-          } else throw `Unknown function '${fn}'`;
-        } catch(e) {
-          console.error(e);
+      if (node && node.child) {
+        fn = node.data;
+
+        for (let child = node.child; child != null; child = child.sibling) {
+          if (node.child.child) {
+            let arg = applyFn(node.child);
+            args.push(arg);
+          } else {
+            args.push(child.data);
+          }
         }
-      } else {
-        value = elements;
       }
+      try {
+        if (fn in Scheme) {
+          value = Scheme[fn](...args);
+        } else throw `Unknown function '${fn}'`;
+      } catch(e) {
+        console.error(e);
+      } 
       return value;
     }
 
     try {
-      let elements = Scheme.#parse(str);
-      if (elements) {
-        let args = [];
-        for (let el of elements) {
-          let newArg = (el instanceof Array) ? applyFn(el) : el;
-          args.push(newArg);
-        }
-        return applyFn(args);
-      }
+      let tree = Scheme.parse(str);
+      console.log(`${tree}`);
+      return applyFn(tree);
     } catch(e) {
       console.error(e);
     }
@@ -241,60 +222,4 @@ for (let [fn, arg] of inputs) {
 // let newNums = Scheme.map(ls, x => x + 1);
 // console.log(`map +1 ${ls} => ${newNums}`);
 
-// TODO didn't work
-// function args(str, argList = [], thisArg = "", 
-//   state = { inWord: false, inExpr: false, exprLevel: 0}) {
-//  
-//   const isWhitespace = (c) => /\s/.test(c);
-//   
-//   const exprOpen = "(";
-//   const exprClose = ")";
-// 
-//   const isExprStart = (c) => c === exprOpen && !state.inWord;
-// 
-//   const isExprEnd = (c) => c === ")" && state.inExpr;
-// 
-// //  console.log(`str '${str}', argList '${argList}'`);
-// 
-//   if (!str) {
-//     if (thisArg) {
-//       argList = [...argList, thisArg];
-//     } 
-//     return argList;
-//   } else {
-//     let current = str[0];
-//     if (isWhitespace(current)) {
-//       if (state.inExpr) {
-//         return args(str.slice(1), argList, thisArg + current, state);
-//       } else if (state.inWord) {
-//         return args(str.slice(1), [...argList, thisArg], "", 
-//           {inWord: false, ...state});
-//       }
-//     } else if (isExprStart(current)) {
-//       return args(str.slice(1), argList, thisArg + current,
-//         { inWord: false, 
-//           inExpr: true,
-//           exprLevel: state.exprLevel + 1
-//         });
-//     } else if (isExprEnd(current)) {
-//       if (state.exprLevel === 0) {
-//         return args(str.slice(1), [...argList, thisArg], "", {
-//           inWord: false,
-//           inExpr: false,
-//           exprLevel: state.exprLevel - 1
-//         });
-//       } else {
-//         return args(str.slice(1), argList, thisArg + current, 
-//           { exprLevel: state.exprLevel - 1, 
-//             inWord: false, 
-//             ...state});
-//       }
-//       return args(str.slice(1), argList, thisArg, state);
-//     } else {
-//       if (!state.inWord && !state.inExpr) {
-//         state.inWord = true;
-//       }
-//       return args(str.slice(1), argList, thisArg + current, state);
-//     }
-//   }
-// }
+

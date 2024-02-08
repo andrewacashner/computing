@@ -1,0 +1,105 @@
+/*  1: c is whitespace
+ *    1b: in expression
+ *    1c: in word
+ *    1d: neither
+ *  2: c is open parens, not in word
+ *  3: c is close parens, in expression
+ *    3b: exprLevel > 1
+ *    3c: exprLevel <= 1
+ *  4: default
+ *    4b: not in word or expression
+ *
+ *  1: c is whitespace, in expression
+ *  2: c is whitespace, in word, not expression
+ *  3: c is whitespace, not word or expression
+ *  4: c is open parens, not in word
+ *  5: c is close parens, in expression, exprLevel > 1
+ *  6: c is close parens, in expression, exprLevel <= 1
+ *  7: c is not whitespace, open or close parens, not in word or expression
+ *  8: (all other) c is not whitespace, open or close parens, is in either word or expression
+
+in expression (in word or not)
+  1 c is whitespace
+  5 c is close parens, exprLevel > 1
+  6 c is close parens, exprLevel <= 1
+
+in expression, not in word
+  4 c is open parens
+  8 c is not whitespace, open or close parens
+
+in word, not expression
+  2 c is whitespace
+  8 c is not whitespace, open or close parens
+
+not in word or expression
+  3: c is whitespace
+  4: c is open parens
+  7: c is not whitespace, open or close parens
+
+(cons 1 (cons 2 3)), strip outer parens 
+cons 1 (cons 2 3)
+
+c: (7) not word or expr, not open or close parens => in word, copy
+o: (8) in word, not expr, not open or close parens => copy
+n: (8) => copy
+s: (8) => copy
+_: (2) in word, not expr, is whitespace 
+  => not in word, save word (count = 1), skip space
+(: (4) not in word, not in expr, open parens 
+  => in expr, skip this (, exprLevel = 1
+c: (8) not in word, in expr, default => copy, (still not in word)
+o, n, s: (8) => copy
+_: (8) not in word, in expr, is whitespace => copy
+1, _, 2: (8) => copy
+): (6) not in word, in expr, close parens
+  => exprLevel = 0, not in expr, RECURSE process saved word "cons 2 3", 
+    count = 2
+
+    cons 2 3
+
+    c: (7) => copy
+    o, n, s: (8) => copy
+    _: (2) => save word, count = 1, skip space
+    2: (7) => copy
+    _: (2) => save word, count = 2, skip space
+    3: (7) => copy
+    EOF: (0) empty string, save word, count = 3, return tree
+
+EOF: (0) empty string => return tree
+
+3 syntax states: word, expr, outer
+4 character states: whitespace, open parens, close parens, normal
+
+expr
+  1 whitespace
+  4 open
+  5 close, exprLevel > 1
+  6 close parens, exprLevel <= 1
+  8 normal
+
+word
+  2 whitespace
+  8 normal
+
+outer
+  3: whitespace
+  4: open
+  7: normal
+
+--- flip ------
+whitespace
+  1 expr
+  2 word
+  3 outer
+
+open
+  4 outer
+  8 expr or word
+
+close
+  5,6 expr
+  8 expr or word
+
+normal
+  expr or word 8
+  outer 7
