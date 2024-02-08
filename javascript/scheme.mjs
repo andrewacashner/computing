@@ -61,8 +61,6 @@ const Scheme = {
   },
 
   parse: function(str) {
-    let tree;
-
     function addToTree(tree, node) {
       if (!tree) {
         tree = node;
@@ -87,9 +85,14 @@ const Scheme = {
     // parentheses;
     // Return an array of strings containing either the words or the
     // parenthetical expressions; do not parse within the parentheses.
+    //
+    // TODO this is omitting the last arg in a nested expr
     function args(str, thisArg = "", tree = null, mode = SyntaxMode.OUTER, exprLevel = 0) {
 
       if (!str) {
+        if (exprLevel !== 0) {
+          throw "Syntax error: Unbalanced parentheses"
+        }
         if (thisArg) {
           let node = new Node(thisArg);
           tree = addToTree(tree, node);
@@ -107,10 +110,10 @@ const Scheme = {
         const copyAndContinueInMode = (newMode) => args(advanceStr, addCharToArg, tree, newMode, exprLevel);
 
         if (isWhiteSpace(c)) {
-          if (mode == SyntaxMode.EXPR) {
+          if (mode === SyntaxMode.EXPR) {
             return copyAndContinueInMode(SyntaxMode.EXPR);
 
-          } else if (mode == SyntaxMode.WORD) {
+          } else if (mode === SyntaxMode.WORD) {
             let node = new Node(thisArg);
             return args(advanceStr, resetWord, addNode(node), SyntaxMode.OUTER, exprLevel);
 
@@ -124,8 +127,7 @@ const Scheme = {
               return args(advanceStr, addCharToArg, tree, SyntaxMode.EXPR, --exprLevel);
 
             } else {
-              let node = args(thisArg.slice(1, -1)); // remove parens
-              node = node ?? new Node(thisArg);
+              let node = Scheme.parse(addCharToArg); 
               return args(advanceStr, resetWord, addNode(node), SyntaxMode.OUTER, --exprLevel);
             }
 
@@ -137,42 +139,42 @@ const Scheme = {
         }
       }
     }
-
     try {
       if (str.startsWith("(") && str.endsWith(")")) {
-        let inner = str.slice(1, -1);
-        let argTree = args(inner);
-        console.log(argTree);
-        return argTree;
-      } else {
-        throw "Syntax error";
-      }
+        str = str.slice(1, -1);
+        let tree = args(str);
+        return tree;
+      } else throw "Syntax error: Expression must be in parentheses";
     } catch(e) {
       console.error(e);
-      return undefined;
     }
   },
 
   eval: function (str) {
     
     function applyFn(node) {
-      let fn = "";
+      let fn, value;
       let args = [];
-      let value;
-      if (node && node.child) {
-        fn = node.data;
 
-        for (let child = node.child; child != null; child = child.sibling) {
-          if (node.child.child) {
-            let arg = applyFn(node.child);
-            args.push(arg);
-          } else {
-            args.push(child.data);
-          }
-        }
-      }
       try {
-        if (fn in Scheme) {
+        /* For a tree fragment, the head node is the function, and the head
+         * node's immediate children are the args (i.e., the siblings of its
+         * first child). Sequentially put the child args into an array.
+         *
+         * If one of its children has children of its own, process the tree
+         * fragment starting at that child and put the resulting value into
+         * the array instead of the child.
+         */
+        if (node && node.child) {
+          fn = node.data;
+
+          for (let child = node.child; child != null; child = child.sibling) {
+            let arg = (child.child) ? applyFn(child) : child.data;
+            args.push(arg);
+          }
+        } else throw "Invalid expression";
+
+        if (fn && fn in Scheme) {
           value = Scheme[fn](...args);
         } else throw `Unknown function '${fn}'`;
       } catch(e) {
@@ -197,7 +199,10 @@ function test(fn, expr) {
   return result;
 }
 
+
 // let ls = Scheme.list(1, 2, 3);
+// let newNums = Scheme.map(ls, x => x + 1);
+// console.log(`map +1 ${ls} => ${newNums}`);
 
 let inputs = [
 //  [Scheme.cons, ["a", "b"]],
@@ -207,19 +212,16 @@ let inputs = [
 //  [Scheme.list, ["a", "b", "c"]],
   [Scheme.eval, "(cons 1 2)"],
   [Scheme.eval, "(cons (cons 1 2) 3)"],
-//  [Scheme.eval, "(list 1 2 3)"],
+  [Scheme.eval, "(list 1 2 3)"],
 //  [Scheme.eval, "(cons 1 (cons 2 3))"],
-//  [Scheme.eval, "(list 1 2"],
-//  [Scheme.eval, "(list 0 (cons 1 2) (cons 3 (cons 4 5)))"], //TODO wrong
-//  [Scheme.eval, "(list 0 (cons 1 2)"], // TODO wrong
-//  [Scheme.eval, "(append (cons 1 2) (list 3 4))"]
+//  [Scheme.eval, "(append (cons 1 2) (list 3 4))"], // should throw error
+//  [Scheme.eval, "(list 0 (cons 1 2)"], // should throw error
+  [Scheme.eval, "(list 0 (cons 1 2) (cons 3 (cons 4 5)))"] //TODO should not throw error
 ];
 
 for (let [fn, arg] of inputs) {
   test(fn, arg);
 }
 
-// let newNums = Scheme.map(ls, x => x + 1);
-// console.log(`map +1 ${ls} => ${newNums}`);
 
 
