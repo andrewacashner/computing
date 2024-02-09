@@ -2,13 +2,30 @@
 // Scheme interpreter in Javascript
 // Andrew A. Cashner 2024/02/01
 
+/* TODO (12/9)
+ * - Make sure implementation of cons, list, and '() is correct.
+ *    - In particular, is '() = ListItem { data: null, next: null }, or is '()
+ *    = null?
+ *    - Is a cons pair one where the next item is data instead of another
+ *    ListItem?
+ *    - Is a list a series of cons pairs where the last one has '() as its
+ *    next? (and see question about '() above)
+ * - We won't process starting expression unless enclosed in parens, but Guile
+ *   will just (evaluate and) return the argument; if more than one, Guile
+ *   returns the last.
+ * - Deal with quoted arguments and expressions. ('a -> a, '(1 2 3) -> (list 1
+ *   2 3), etc.)
+ * - Deal with trailing unbalanced parens: (cons 1 2)) should return error
+ */
+
 import Node from "./tree.mjs";
 import * as readline from "node:readline/promises";
 import { spawn } from "node:child_process";
 
-const DEBUG = false;
-const TEST = false;
-const GUILE = true;
+const DEBUG = false;  /* Display diagnostic messages with debug() */
+const TEST = false;    /* Run tests instead of running REPL */
+const GUILE = false;   /* Show comparison with Guile output */
+const NATIVE = false; /* Log native value of result, not toString() */
 
 function debug(msg) {
   if (DEBUG) {
@@ -20,7 +37,7 @@ class ListItem {
   data;
   next;
 
-  constructor(data, next = null) {
+  constructor(data = null, next = null) {
     this.data = data;
     this.next = next;
   }
@@ -28,16 +45,20 @@ class ListItem {
   toString() {
     
     function inner(node) {
-      let str = node.data;
+      if (!node.data && !node.next) {
+        return "()";
+      } else {
+        let str = node.data;
 
-      if (node.next) {
-        if (Scheme._isList(node)) {
-          str += " " + inner(node.next);
-        } else {
-          str += " . " + node.next;
+        if (node.next) {
+          if (node.next instanceof ListItem) {
+            str += " " + inner(node.next);
+          } else {
+            str += " . " + node.next;
+          } 
         } 
-      } 
-      return str;
+        return str;
+      }
     }
 
     let sexpr = inner(this);
@@ -78,7 +99,7 @@ const Scheme = {
 
   _bool: (test) => (test) ? Scheme._true : Scheme._false,
 
-  _isPair: (obj) => !(obj.next instanceof ListItem),
+  _isPair: (obj) => obj instanceof ListItem && obj.next,
 
   _isList: (obj) => Scheme._last(obj) instanceof ListItem,
 
@@ -282,6 +303,7 @@ async function evalLine(io, line, count) {
       io.setPrompt(`\$${++count} = `);
       io.prompt();
       console.log(output);
+      if (NATIVE) console.log(value);
     } 
   } catch(e) {
     console.error(e);
@@ -326,14 +348,11 @@ if (TEST) {
     [Scheme.eval, "(cons 1 (cons 2 (cons 3 (cons 4 '()))))"], 
     [Scheme.eval, "(list 1 2 3)"],
     [Scheme.eval, "(cons 1 (cons 2 3))"],
-    [Scheme.eval, "(append (cons 1 2) (list 3 4))"], 
-    // should throw error: no function 'append'
-    [Scheme.eval, "cons 1 2"], 
-    // should throw error: no parens
-    [Scheme.eval, "(cons 1 2"], // should throw error: no parens
-    [Scheme.eval, "cons 1 (2)"], // should throw error: no parens
-    [Scheme.eval, "(list 0 (cons 1 2)"], 
-    // should throw error: unbalanced parens
+    [Scheme.eval, "(append (cons 1 2) (list 3 4))"], // throw error: no function 'append'
+    [Scheme.eval, "cons 1 2"], // throw error: no parens
+    [Scheme.eval, "(cons 1 2"], // throw error: no parens
+    [Scheme.eval, "cons 1 (2)"], // throw error: no parens
+    [Scheme.eval, "(list 0 (cons 1 2)"], // throw error: unbalanced parens
     [Scheme.eval, "(cons 1 2)"],
     [Scheme.eval, "(cons 'a '())"],
     [Scheme.eval, "(cons 1 (cons 2 '()))"],
@@ -349,9 +368,14 @@ if (TEST) {
     [Scheme.eval, "(pair? (cons 1 '()))"],
     [Scheme.eval, "(cons 1 2)"],
     [Scheme.eval, "(cons 1 (cons 2 (cons 3 4)))"], 
-    // TODO Guile output is (1 2 3 . 4)
     [Scheme.eval, "(list 0 (cons 1 2) (cons 3 (cons 4 5)))"],
-    // TODO Guile output is (0 (1 . 2) (3 4 . 5))
+    [Scheme.eval, "(cons '() '())"],
+    [Scheme.eval, "(list '())"],
+    [Scheme.eval, "(list 'a '())"],
+    [Scheme.eval, "1"], // TODO should return argument
+    [Scheme.eval, "'a"], // TODO should return argument without quote
+    [Scheme.eval, "'()"], // Should return "()"
+    [Scheme.eval, "(cons 1 2))"] // TODO should return error
   ];
 
   function test(fn, expr) {
@@ -367,6 +391,7 @@ if (TEST) {
   for (let [fn, arg] of inputs) {
     let result = test(fn, arg);
     console.log(`${fn.name} ${arg} => ${result}`);
+    if (NATIVE) console.log(result);
     if (fn === Scheme.eval && result) {
       await compareGuile(arg, result.toString());
     }
