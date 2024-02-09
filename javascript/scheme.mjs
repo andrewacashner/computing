@@ -3,8 +3,12 @@
 // Andrew A. Cashner 2024/02/01
 
 import Node from "./tree.mjs";
+import * as readline from "node:readline/promises";
+import { spawn } from "node:child_process";
 
 const DEBUG = false;
+const TEST = false;
+const GUILE = true;
 
 function debug(msg) {
   if (DEBUG) {
@@ -253,64 +257,122 @@ const Scheme = {
   }
 }
 
-
-let ls = Scheme.list(1, 2, 3);
-// let newNums = Scheme.map(ls, x => x + 1);
-// console.log(`map +1 ${ls} => ${newNums}`);
-
-let inputs = [
-  [Scheme.cons, ["a", "b"]],
-  [Scheme.car, ls],
-  [Scheme.cdr, ls],
-  [Scheme.reverse, ls],
-  [Scheme.list, ["a", "b", "c"]],
-  [Scheme.eval, "(cons 1 2)"],
-  [Scheme.eval, "(cons (cons 1 2) 3)"],
-  [Scheme.eval, "(cons 1 (cons 2 (cons 3 (cons 4 '()))))"], 
-  [Scheme.eval, "(list 1 2 3)"],
-  [Scheme.eval, "(cons 1 (cons 2 3))"],
-  [Scheme.eval, "(append (cons 1 2) (list 3 4))"], 
-    // should throw error: no function 'append'
-  [Scheme.eval, "cons 1 2"], 
-    // should throw error: no parens
-  [Scheme.eval, "(cons 1 2"], // should throw error: no parens
-  [Scheme.eval, "cons 1 (2)"], // should throw error: no parens
-  [Scheme.eval, "(list 0 (cons 1 2)"], 
-    // should throw error: unbalanced parens
-  [Scheme.eval, "(cons 1 2)"],
-  [Scheme.eval, "(cons 'a '())"],
-  [Scheme.eval, "(cons 1 (cons 2 '()))"],
-  [Scheme.eval, "(list 1 2)"],
-  [Scheme.eval, "(list? ls)"],
-  [Scheme.eval, "(pair? (list 1 2))"],
-  [Scheme.eval, "(list? (list 1 2))"],
-  [Scheme.eval, "(list 1 2)"],
-  [Scheme.eval, "(list? (cons 1 2))"],
-  [Scheme.eval, "(pair? (cons 1 2))"],
-  [Scheme.eval, "(cons 1 '())"],
-  [Scheme.eval, "(list? (cons 1 '()))"],
-  [Scheme.eval, "(pair? (cons 1 '()))"],
-  [Scheme.eval, "(cons 1 2)"],
-  [Scheme.eval, "(cons 1 (cons 2 (cons 3 4)))"], 
-  // TODO Guile output is (1 2 3 . 4)
-  [Scheme.eval, "(list 0 (cons 1 2) (cons 3 (cons 4 5)))"],
-    // TODO Guile output is (0 (1 . 2) (3 4 . 5))
-];
-
-function test(fn, expr) {
-  let result;
-  if (expr instanceof Array) {
-    result = fn.apply(null, expr);
-  } else {
-    result = fn.call(null, expr);
+async function compareGuile(input, jsOutput) {
+  if (GUILE) {
+    const guile = spawn("guile", ["-c", `(display ${input})`]);
+    let msg;
+    for await (let chunk of guile.stdout) {
+      let guileOutput = chunk.toString();
+      let guileStatus = (guileOutput === jsOutput) ? "OK" : guileOutput;
+      console.debug(`[Guile: ${guileStatus}]`);
+    }
+    for await (let chunk of guile.stderr) {
+      console.debug(`[Guile error: ${chunk.toString()}]`);
+    }
   }
-  console.log(`${fn.name} ${expr} => ${result}`);
-  return result;
 }
 
-for (let [fn, arg] of inputs) {
-  test(fn, arg);
+async function evalLine(io, line, count) {
+  let inputPrompt = io.getPrompt();
+  let output = "";
+  let value = Scheme.eval(line);
+  try {
+    if (value) {
+      output = value.toString();
+      io.setPrompt(`\$${++count} = `);
+      io.prompt();
+      console.log(output);
+    } 
+  } catch(e) {
+    console.error(e);
+  } finally {
+    compareGuile(line, output).then(() => {
+      io.setPrompt(inputPrompt);
+      io.prompt();
+    });
+  }
 }
+
+async function main() {
+  let count = 0;
+
+  const rl = readline.createInterface({ 
+    input: process.stdin, 
+    output: process.stdout,
+    prompt: "scheme> "
+  });
+
+  rl.prompt();
+  rl.on("line", (line) => {
+    if (line === ",q") {
+      rl.close();
+    } else evalLine(rl, line, count);
+  });
+}
+
+if (TEST) {
+  let ls = Scheme.list(1, 2, 3);
+  // let newNums = Scheme.map(ls, x => x + 1);
+  // console.log(`map +1 ${ls} => ${newNums}`);
+
+  let inputs = [
+    [Scheme.cons, ["a", "b"]],
+    [Scheme.car, ls],
+    [Scheme.cdr, ls],
+    [Scheme.reverse, ls],
+    [Scheme.list, ["a", "b", "c"]],
+    [Scheme.eval, "(cons 1 2)"],
+    [Scheme.eval, "(cons (cons 1 2) 3)"],
+    [Scheme.eval, "(cons 1 (cons 2 (cons 3 (cons 4 '()))))"], 
+    [Scheme.eval, "(list 1 2 3)"],
+    [Scheme.eval, "(cons 1 (cons 2 3))"],
+    [Scheme.eval, "(append (cons 1 2) (list 3 4))"], 
+    // should throw error: no function 'append'
+    [Scheme.eval, "cons 1 2"], 
+    // should throw error: no parens
+    [Scheme.eval, "(cons 1 2"], // should throw error: no parens
+    [Scheme.eval, "cons 1 (2)"], // should throw error: no parens
+    [Scheme.eval, "(list 0 (cons 1 2)"], 
+    // should throw error: unbalanced parens
+    [Scheme.eval, "(cons 1 2)"],
+    [Scheme.eval, "(cons 'a '())"],
+    [Scheme.eval, "(cons 1 (cons 2 '()))"],
+    [Scheme.eval, "(list 1 2)"],
+    [Scheme.eval, "(list? ls)"],
+    [Scheme.eval, "(pair? (list 1 2))"],
+    [Scheme.eval, "(list? (list 1 2))"],
+    [Scheme.eval, "(list 1 2)"],
+    [Scheme.eval, "(list? (cons 1 2))"],
+    [Scheme.eval, "(pair? (cons 1 2))"],
+    [Scheme.eval, "(cons 1 '())"],
+    [Scheme.eval, "(list? (cons 1 '()))"],
+    [Scheme.eval, "(pair? (cons 1 '()))"],
+    [Scheme.eval, "(cons 1 2)"],
+    [Scheme.eval, "(cons 1 (cons 2 (cons 3 4)))"], 
+    // TODO Guile output is (1 2 3 . 4)
+    [Scheme.eval, "(list 0 (cons 1 2) (cons 3 (cons 4 5)))"],
+    // TODO Guile output is (0 (1 . 2) (3 4 . 5))
+  ];
+
+  function test(fn, expr) {
+    let result;
+    if (expr instanceof Array) {
+      result = fn.apply(null, expr);
+    } else {
+      result = fn.call(null, expr);
+    }
+    return result;
+  }
+
+  for (let [fn, arg] of inputs) {
+    let result = test(fn, arg);
+    console.log(`${fn.name} ${arg} => ${result}`);
+    if (fn === Scheme.eval && result) {
+      await compareGuile(arg, result.toString());
+    }
+  }
+} else main();
+
 
 
 
