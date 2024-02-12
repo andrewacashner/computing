@@ -2,27 +2,25 @@
 // Andrew A. Cashner 2024/02/01
 
 /* TODO (12/9)
- * - Make sure implementation of cons, list, and '() is correct. (RESOLVED)
+ * - Make sure implementation of cons, list, and '() is correct.
  *    - In particular, is '() = ListItem { data: null, next: null }, or is '()
- *    = null? (RESOLVED: It's the first. (??))
+ *    = null?
  *    - Is a cons pair one where the next item is data instead of another
- *    ListItem? (RESOLVED: Yes. (??))
+ *    ListItem?
  *    - Is a list a series of cons pairs where the last one has '() as its
  *    next? (and see question about '() above)
  * - We won't process starting expression unless enclosed in parens, but Guile
  *   will just (evaluate and) return the argument; if more than one, Guile
- *   returns the last. (RESOLVED, though we're also not evaluating any but the
- *   last)
+ *   returns the last.
  * - Deal with quoted arguments and expressions. ('a -> a, '(1 2 3) -> (list 1
  *   2 3), etc.)
- *    - Better handling of '() everywhere
  * - Deal with trailing unbalanced parens: (cons 1 2)) should return error
  */
 
 import Node from "./tree.mjs";
 import { spawn } from "node:child_process";
 
-const DEBUG = false;  /* Display diagnostic messages with debug() */
+const DEBUG = true;  /* Display diagnostic messages with debug() */
 
 function debug(msg) {
   if (DEBUG) {
@@ -42,12 +40,12 @@ class ListItem {
   toString() {
     
     function inner(node) {
-      let str = "";
-      if (!Scheme._isNull(node)) {
-        str = "";
-        str = node.data;
+      if (!node.data && !node.next) {
+        return "()";
+      } else {
+        let str = node.data;
 
-        if (node.next && !Scheme._isNull(node.next)) {
+        if (node.next) {
           if (node.next instanceof ListItem) {
             str += " " + inner(node.next);
           } else {
@@ -58,62 +56,12 @@ class ListItem {
       }
     }
 
-    if (Scheme._isNull(this)) {
-      return "()";
-    } else {
-      let sexpr = inner(this);
-      return `(${sexpr})`;
-    }
-  }
-}
-
-class Ratio {
-  constructor(numerator, denominator) {
-    let num = Number(numerator);
-    let denom = Number(denominator);
-    if (Number.isInteger(num) && Number.isInteger(denom)) {
-      this.numerator = numerator;
-      this.denominator = denominator;
-    } else throw "Invalid ratio";
-  }
-
-  static parse(str) {
-    let value;
-    let test = str.match(/^(?<numerator>[0-9]*)\/(?<denominator>[0-9]*)$/);
-    if (test) {
-      value = new Ratio(test.groups.numerator, test.groups.denominator);
-    }
-    return value;
-  }
-
-  toFloat() {
-    return this.numerator / this.denominator;
-  }
-
-  valueOf() {
-    return this.toFloat();
-  }
-
-  toString() {
-    return `${this.numerator}/${this.denominator}`;
+    let sexpr = inner(this);
+    return `(${sexpr})`;
   }
 }
 
 const Scheme = {
-
-  "'()": new ListItem(),
-
-  _isNull: obj => (obj instanceof ListItem && !obj.data && !obj.next),
-
-  "null?": obj => Scheme._bool(Scheme._isNull(obj)),
-
-  _number: str => {
-    let value = Number(str);
-    if (isNaN(value)) {
-      value = Ratio.parse(str);
-    }
-    return value;
-  },
 
   cons: (a, b) => new ListItem(a, b),
 
@@ -123,7 +71,7 @@ const Scheme = {
 
   list: function(...items) {
     let cell = null;
-    let next = Scheme["'()"];
+    let next = null;
     for (let i = items.length - 1; i >= 0; --i) {
       cell = Scheme.cons(items[i], next);
       next = cell;
@@ -153,6 +101,10 @@ const Scheme = {
   "pair?": (obj) => Scheme._bool(Scheme._isPair(obj)),
 
   "list?": (obj) => Scheme._bool(Scheme._isList(obj)),
+
+  _nil: null, 
+
+  "'()": () => Scheme._nil,
 
   reverse: function (ls) {
     function reverseDo(oldLs, newLs) {
@@ -187,14 +139,17 @@ const Scheme = {
     }
 
     const SyntaxMode = {
-      WORD: Symbol("word"),
-      EXPR: Symbol("expr"),
-      OUTER: Symbol("outer") 
+      OUTER:      Symbol("outer"),
+      WORD:       Symbol("word"),
+      EXPR:       Symbol("expr"),
+      QUOTATION:  Symbol("quote"),
+      QUOTEDEXPR: Symbol("quotedExpr")
     }
 
     const isWhiteSpace = c => /\s/.test(c);
-    const OPEN = "(";
+    const OPEN  = "(";
     const CLOSE = ")";
+    const QUOTE = "'";
 
     // Split a string into arguments;
     // Arguments can be space-delimited words OR s-expressions delimited with
@@ -205,16 +160,22 @@ const Scheme = {
 
       if (!str) {
         if (exprLevel !== 0) {
+          // We got to the end of the input string but the parentheses were
+          // not balanced.
           throw `Syntax error: Unbalanced parentheses (level ${exprLevel})`;
         }
         if (thisArg) {
+          // We got to the end and we still have an argument we found that we
+          // haven't added yet
           let node = new Node(thisArg);
           tree = addToTree(tree, node);
         }
         return tree;
       } else {
         let c = str[0];
-        
+       
+        // Shorthands for handling input, short-term memory, and output for
+        // use in the different parsing situations
         const advanceStr = str.slice(1);
         const addCharToArg = thisArg + c;
         const skipChar = thisArg;
@@ -230,34 +191,74 @@ const Scheme = {
         const copyAndContinueInMode = (newMode) => args(advanceStr, 
           addCharToArg, tree, newMode, exprLevel);
 
+        const skipAndContinueInMode = (newMode) => args(advanceStr, 
+          thisArg, tree, newMode, exprLevel);
         
         if (isWhiteSpace(c)) {
-          if (mode === SyntaxMode.EXPR) {
+          if (mode === SyntaxMode.EXPR || SyntaxMode.QUOTEDEXPR) {
+            // Copy whitespace in EXPR mode
             return copyAndContinueInMode(SyntaxMode.EXPR);
 
-          } else if (mode === SyntaxMode.WORD) {
+          } else if (mode === SyntaxMode.WORD || SyntaxMode.QUOTATION) {
+            // First whitespace in WORD or QUOTATION mode signals end of the
+            // argument; copy the argument and continue processing in OUTER
+            // mode
             let node = new Node(thisArg);
             return args(advanceStr, resetWord, addNode(node), 
               SyntaxMode.OUTER, exprLevel);
 
-          } else return skipAndContinue();
+          } else return skipAndContinue(); // Otherwise skip whitespace
 
         } else if (c === OPEN) {
+          // Open paren signals start of sexpr; increment level to track balanced parens
+          if (mode === SyntaxMode.QUOTATION) {
+            return args(advanceStr, addCharToArg, tree, 
+              SyntaxMode.QUOTEDEXPR, ++exprLevel);
+          } else {
             return args(advanceStr, addCharToArg, tree, 
               SyntaxMode.EXPR, ++exprLevel);
+          }
 
-        } else if (c === CLOSE && mode === SyntaxMode.EXPR) {
-            if (exprLevel > 1) {
-              return args(advanceStr, addCharToArg, tree, 
-                SyntaxMode.EXPR, --exprLevel);
+        } else if (c === CLOSE 
+                  && (mode === SyntaxMode.EXPR || SyntaxMode.QUOTEDEXPR)) {
+          // Close paren signals end of sexpr when in expression mode;
+          // decrement level to track balanced parens; keep copying unless we
+          // are back at start level; in that case the current argument is a
+          // complete expression. If in "quoted expression" mode, save the
+          // whole expression.  If in normal expression mode, and the string
+          // within parentheses contains a parenthetical expression, recurse
+          // to parse the expression and then add the result to the tree.
+          if (exprLevel > 1) {
+            return args(advanceStr, addCharToArg, tree, 
+              SyntaxMode.EXPR, --exprLevel);
 
+          } else {
+            thisArg = addCharToArg;
+            let node;
+            let inner = thisArg.slice(1, -1);
+            if ((inner.search("/\s\([^\)]*\)/") >= 0)
+                && mode !== SyntaxMode.QUOTEDEXPR) {
+                debug(`Parse inner expression: ${inner}`);
+                node = Scheme._parse(inner);
             } else {
-              let node = Scheme._parse(addCharToArg); 
-              return args(advanceStr, resetWord, addNode(node), 
-                SyntaxMode.OUTER, --exprLevel);
+              debug("Capture whole expression");
+              node = new Node(thisArg);
+              debug(node);
             }
+            debug("Process expression");
+            return args(advanceStr, resetWord, addNode(node),
+              SyntaxMode.OUTER, --exprLevel);
+          } 
+
+        } else if (c === QUOTE && mode === SyntaxMode.OUTER) {
+          // First quote character signals quotation mode (don't copy the
+          // quote character)
+          return skipAndContinueInMode(SyntaxMode.QUOTATION);
 
         } else {
+          // First normal char (not whitespace, paren or quote) in outer mode
+          // signals the start of a word. Once in word mode, just keep
+          // copying.
           if (mode === SyntaxMode.OUTER) {
             return copyAndContinueInMode(SyntaxMode.WORD);
 
@@ -267,16 +268,10 @@ const Scheme = {
     }
     try {
       debug(`Parse str '${str}'`);
-      if (str.startsWith("(") && str.endsWith(")")) {
-        str = str.slice(1, -1);
+      //if (str.startsWith("(") && str.endsWith(")")) {
+      //  str = str.slice(1, -1);
         return args(str);
-      } else {
-        let atoms = str.split(" ");
-        let tree = new Node(atoms.at(-1));
-        debug(tree);
-        return tree;
-      }
-      //  throw "Syntax error: Expression must be in parentheses";
+      //} else throw "Syntax error: Expression must be in parentheses";
     } catch(e) {
       console.error(e);
     }
@@ -296,45 +291,28 @@ const Scheme = {
        * fragment starting at that child and put the resulting value into
        * the array instead of the child.
        */
-      if (node) {
+      if (node && node.child) {
         fn = node.data;
 
-        if (node.child) {
-          for (let child = node.child; child != null; child = child.sibling) {
-            let arg;
-            if (child.child) {
-              arg = applyFn(child);
-            } else if (child.data === "_nil") {
-              arg = Scheme["'()"];
-            } else arg = child.data;
-
-            if (arg) {
-              args.push(arg);
-            }
+        for (let child = node.child; child != null; child = child.sibling) {
+          let arg = (child.child) ? applyFn(child) : child.data;
+          if (child.data === "nil") {
+            arg = Scheme.nil;
           }
-        } 
-      }
+          args.push(arg);
+        }
+      } 
 
-      if (fn) {
-        if (fn in Scheme) {
-          debug(`Apply fn ${fn} to args ${args}`);
-          value = Scheme[fn](...args);
-        } else if (fn.startsWith("'")) {
-          value = fn.slice(1);
-        } else if (fn === "_nil") {
-          value = Scheme["'()"];
-        } else if (Scheme._number(fn)) {
-          value = Scheme._number(fn);
-          debug(value.toString());
-        } else throw `Unbound variable: #{${fn}}#`;
-      } else throw "Nothing to process";
+      if (fn && fn in Scheme) {
+        value = Scheme[fn](...args);
+      } else throw `Unknown function '${fn}'`;
       return value;
     }
 
     try {
       // Replace '() with nil, otherwise our paren parsing doesn't work
       // TODO deal with quoted expressions generally
-      let cleaned = str.replace(/'\(\)/u, "_nil");
+      let cleaned = str.replace(/'\(\)/u, "nil");
       let tree = Scheme._parse(cleaned);
       if (tree) {
         debug(`${tree}`);
