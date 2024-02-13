@@ -2,7 +2,7 @@
 // Scheme REPL
 // Andrew Cashner, 2024/02/12
 
-import { Scheme, compareGuile } from "./scheme.mjs";
+import * as scm from "./scheme.mjs";
 import * as readline from "node:readline/promises";
 
 const GUILE = true;   /* Show comparison with Guile output */
@@ -10,7 +10,7 @@ const GUILE = true;   /* Show comparison with Guile output */
 async function evalLine(io, line, count) {
   let inputPrompt = io.getPrompt();
   let output = "";
-  let value = Scheme.eval(line);
+  let value = scm.read(line);
   try {
     if (value) {
       output = value.toString();
@@ -22,7 +22,7 @@ async function evalLine(io, line, count) {
     console.error(e);
   } finally {
     if (GUILE) {
-      await compareGuile(line, output);
+      await scm.compareGuile(line, output);
     }
   }
   io.setPrompt(inputPrompt);
