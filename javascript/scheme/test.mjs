@@ -51,7 +51,12 @@ let inputs = [
   [scm.read, "1"], // TODO should return argument
   [scm.read, "'a"], // TODO should return argument without quote
   [scm.read, "'()"], // Should return "()"
-  [scm.read, "(cons 1 2))"] // TODO should return error
+  [scm.read, "(cons 1 2))"], // TODO should return error
+  [scm.read, "(if #t 1 2)"],
+  [scm.read, "(if #f 1 2)"],
+  [scm.read, "(or #f 1)"],
+  [scm.read, "(and 1 2)"],
+  [scm.read, "(if (and (or #f #f) (and #t #f)) 1 2)"],
 ];
 
 function test(fn, expr) {

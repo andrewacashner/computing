@@ -268,12 +268,15 @@ function read(str) {
         value = fn.slice(1);
       } else if (fn === "_nil") {
         value = Scheme["'()"];
+      } else if (fn === "#t" || fn === "#f") {
+        value = scmBool(fn);
       } else if (scmNumber(fn)) {
         value = scmNumber(fn);
         debug(value.toString());
       } else throw `Unbound variable: #{${fn}}#`;
     } else throw "Nothing to process";
     return value;
+    // TODO need to process arguments the same way, to filter '(), #t, #f
   }
 
   try {
@@ -288,6 +291,18 @@ function read(str) {
   } catch(e) {
     console.error(e);
   }
+}
+
+function maybeBool(s) {
+  return (s === true || s === false) ? Scheme[s] : s; 
+}
+
+function scmBool(s) {
+  if (s === "#t") {
+    return true;
+  } else if (s === "#f") {
+    return false;
+  } else return s;
 }
 
 const Scheme = { 
@@ -341,6 +356,13 @@ const Scheme = {
     }
   },
 
+  // TODO account for Scheme-specific concept of truthiness/falsiness
+  // Handle IO better with #t and #f
+  if: (test, ifTrue, ifFalse) => scmBool(test) ? ifTrue : ifFalse,
+
+  or: (a, b) => maybeBool(scmBool(a) || scmBool(b)),
+
+  and: (a, b) => maybeBool(scmBool(a) && scmBool(b)),
 }
 
 async function compareGuile(input, jsOutput) {
