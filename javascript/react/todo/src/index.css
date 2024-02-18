@@ -1,0 +1,63 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+div.todoList {
+  border: 2px solid black;
+  border-radius: 5px;
+  background: LightYellow;
+  width: 30em;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+div.todoList form {
+  text-align: left;
+  padding-left: 2em;
+  padding-bottom: 1em;
+}
+
+div.todoList label {
+  padding-right: 1em;
+}
+
+div.todoList input {
+  margin-bottom: 1ex;
+}
+
+ol.todo {
+  list-style-type: "\2610";
+  text-align: left;
+}
+
+ol.todo li {
+  padding-left: 1ex;
+}
+
+ol.todo li.done {
+  list-style-type: "\2611"; 
+  color: gray;
+}
+
+ol.todo li.notDone {
+  list-style-type: "\2610";
+}
+
+.hide {
+  visibility: hidden;
+}
+
+.show {
+  visibility: show;
+}
