@@ -6,7 +6,7 @@ class ToDoItem {
   deadline;
   isDone;
 
-  constructor(task, deadline = null, isDone = false) {
+  constructor({task, deadline = null, isDone = false}) {
     this.task = task;
     this.deadline = deadline;
     this.isDone = isDone;
@@ -16,24 +16,17 @@ class ToDoItem {
     return (this.isDone) ? "done" : "notDone";
   }
 
-  toggleDoneStatus(): void {
+  toggleDoneStatus() {
     this.isDone = !this.isDone;
   }
 
 }
 
-const listItems = [
-  new ToDoItem("Make a to-do list"),
-  new ToDoItem("Check off items on list")
-];
-
 function ListItem(item) {
   const [itemDone, setItemDone] = useState(false);
   item.isDone = itemDone;
 
-  function toggleDoneStatus(event) {
-    setItemDone(!itemDone);
-  }
+  const toggleDoneStatus = (event) => setItemDone(!itemDone);
 
   return (
     <li key={item.task.substring(0, 10)} 
@@ -46,17 +39,16 @@ function NewTaskForm() {
   const [deadlineVisible, setDeadlineVisible] = useState(false);
   const deadlineVisibility = (deadlineVisible) ? "show" : "hide";
 
-  function showDeadline() {
-    setDeadlineVisible(true);
-  }
+  const showDeadline = () => setDeadlineVisible(true);
 
-  const [inputItem, setInputItem] = useState(new ToDoItem(""));
+//  const [inputItem, setInputItem] = useState(new ToDoItem(""));
 
   function addNewTask(event) {
     event.preventDefault();
 // TODO how to add the new info to a task and add the task to the list?
-    setInputItem(new ToDoItem("raccoon"));
-    console.log(inputItem); // TODO doesn't work.
+//    setInputItem(new ToDoItem("raccoon"));
+    let newItem = new ToDoItem("raccoon");
+    console.log(newItem); // TODO doesn't work.
   }
 
   return(
@@ -72,10 +64,8 @@ function NewTaskForm() {
   );
 }
 
-function TodoList(props) {
-   // const [items, setItems] = useState([]);
-   // setItems(props.children);
 
+function TodoList(props) {
   return(
     <div className="todoList">
       <h1>To Do</h1>
@@ -88,9 +78,16 @@ function TodoList(props) {
 }
 
 function App() {
+  const todo = [
+    { task: "Make a to-do list" },
+    { task: "Check off items on list" }
+  ];
+  const todoItems = todo.map(i => new ToDoItem(i));
+
   return (
-    <TodoList>{listItems}</TodoList>
+    <TodoList>{todoItems}</TodoList>
   );
 }
+
 
 export default App;
