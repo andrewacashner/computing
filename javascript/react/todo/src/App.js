@@ -25,6 +25,7 @@ class ToDoItem {
     this.task = task;
     this.deadline = deadline;
     this.isDone = isDone;
+    this.id = crypto.randomUUID();
   }
 
   get doneStatus() {
@@ -42,11 +43,13 @@ class ToDoItem {
 }
 
 function MakeNewTaskForm(items, setItems) {
-  const [deadlineVisible, setDeadlineVisible] = useState(false);
+//  const [deadlineVisible, setDeadlineVisible] = useState(false);
 
   return function() {
-    const deadlineVisibility = (deadlineVisible) ? "show" : "hide";
-    const showDeadline = () => setDeadlineVisible(true);
+//    const deadlineVisibility = (deadlineVisible) ? "show" : "hide";
+//    const showDeadline = () => setDeadlineVisible(true);
+    const deadlineVisibility = "show";
+    const showDeadline = () => {};
 
     function addNewTask (event) {
       event.preventDefault();
@@ -62,9 +65,14 @@ function MakeNewTaskForm(items, setItems) {
     }
 
     return(
-      <form className="newItem" onSubmit={addNewTask} autoComplete="off">
+      <form className="newItem" 
+            onSubmit={addNewTask} 
+            autoComplete="off">
         <label htmlFor="newTask">New task:</label>
-        <input type="text" name="task" id="newTask" onChange={showDeadline}/>
+        <input type="text" 
+               name="task" 
+               id="newTask" 
+               onChange={showDeadline} />
         <div className={deadlineVisibility} id="deadline">
           <label htmlFor="newDeadline">Deadline (optional):</label>
           <input type="text" name="deadline" id="newDeadline" />
@@ -75,7 +83,49 @@ function MakeNewTaskForm(items, setItems) {
   }
 }
 
-function MakeListItems(items) {
+function dragListItem(event) {
+  event.dataTransfer.setData("text/uuid", event.target.id);
+}
+
+function dragoverListItem(event) {
+  event.preventDefault();
+}
+
+function moveWithinArray(items, fromID, toID) {
+  
+  function insertBefore(array, matchFn, item) {
+    let insertPoint = array.findIndex(matchFn);
+    let before = array.slice(0, insertPoint);
+    let after = array.slice(insertPoint);
+    return [...before, item, ...after];
+  }
+
+  let itemToMove = items.find(i => i.id === fromID);
+  let rest = items.filter(i => i !== itemToMove);
+
+  let newItems = [];
+  if (items.length === 2) {
+    newItems = items.toReversed();
+  } else {
+    newItems = insertBefore(rest, (i => i.id === toID), itemToMove);
+  }
+  return newItems;
+}
+
+function makeDropListItem(items, setItems) {
+  return function(event) {
+    event.preventDefault()
+
+    if (items.length > 1) {
+      let fromID = event.dataTransfer.getData("text/uuid");
+      let toID = event.target.id;
+      let newItems = moveWithinArray(items, fromID, toID);
+      setItems(newItems);
+    }
+  }
+}
+
+function MakeListItems(items, setItems) {
 
   function ListItem(item) {
     const [itemDone, setItemDone] = useState(false);
@@ -84,15 +134,21 @@ function MakeListItems(items) {
     const toggleDoneStatus = (event) => setItemDone(!itemDone);
 
     return (
-      <li key={item.task.substring(0, 10)} 
-      className={item.doneStatus}
-      onClick={toggleDoneStatus}>{`${item}`}</li>
+      <li key={item.id}
+          id={item.id}
+          className={item.doneStatus}
+          onClick={toggleDoneStatus}
+          draggable="true"
+          onDragStart={dragListItem}>{`${item}`}</li>
     );
   }
+  let dropListItem = makeDropListItem(items, setItems);
 
   return function() {
     return(
-      <ol className="todo">
+      <ol className="todo"
+          onDragOver={dragoverListItem}
+          onDrop={dropListItem}>
         {items.map(ListItem)}
       </ol>
     );
@@ -102,7 +158,7 @@ function MakeListItems(items) {
 function ToDoList() {
   let [items, setItems] = useState([]);
   
-  let ListItems = MakeListItems(items);
+  let ListItems = MakeListItems(items, setItems);
   let NewTaskForm = MakeNewTaskForm(items, setItems);
 
   return(
