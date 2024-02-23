@@ -16,24 +16,11 @@ div.todoList {
   border: 2px solid black;
   border-radius: 5px;
   background: LightYellow;
-  width: 30em;
+  width: 50%;
   margin-left: auto;
   margin-right: auto;
   text-align: center;
-}
-
-div.todoList form {
-  text-align: left;
-  padding-left: 2em;
-  padding-bottom: 1em;
-}
-
-div.todoList label {
-  padding-right: 1em;
-}
-
-div.todoList input {
-  margin-bottom: 1ex;
+  padding: 1em;
 }
 
 ol.todo {
@@ -60,4 +47,23 @@ ol.todo li.notDone {
 
 .show {
   visibility: show;
+}
+
+form.newItem {
+  width: 50%;
+  border: 1px solid black;
+  border-radius: 5px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 2em;
+  text-align: center;
+  padding: 1em;
+}
+
+form.newItem label {
+  padding-right: 1em;
+}
+
+form.newItem input {
+  margin-bottom: 1ex;
 }

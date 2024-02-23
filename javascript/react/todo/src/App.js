@@ -1,3 +1,18 @@
+// To Do list
+// Andrew Cashner
+// 2024/02/23
+//
+// TODO possibilities
+// Only show Deadline input after new task is entered
+// Editing entries
+// Rearranging entries
+// Use Date for deadline
+// Show completed items in separate list (move when completed)
+// Sort by deadline
+// Nested lists
+// Log in and save lists
+// Multiple named lists
+
 import "./App.css";
 import { useState } from "react";
 
@@ -20,74 +35,89 @@ class ToDoItem {
     this.isDone = !this.isDone;
   }
 
+  toString() {
+    let deadline = (this.deadline) ? ` (${this.deadline})` : "";
+    return this.task + deadline;
+  }
 }
 
-function ListItem(item) {
-  const [itemDone, setItemDone] = useState(false);
-  item.isDone = itemDone;
-
-  const toggleDoneStatus = (event) => setItemDone(!itemDone);
-
-  return (
-    <li key={item.task.substring(0, 10)} 
-        className={item.doneStatus}
-        onClick={toggleDoneStatus}>{item.task}</li>
-  );
-}
-
-function NewTaskForm() {
+function MakeNewTaskForm(items, setItems) {
   const [deadlineVisible, setDeadlineVisible] = useState(false);
-  const deadlineVisibility = (deadlineVisible) ? "show" : "hide";
 
-  const showDeadline = () => setDeadlineVisible(true);
+  return function() {
+    const deadlineVisibility = (deadlineVisible) ? "show" : "hide";
+    const showDeadline = () => setDeadlineVisible(true);
 
-//  const [inputItem, setInputItem] = useState(new ToDoItem(""));
+    function addNewTask (event) {
+      event.preventDefault();
 
-  function addNewTask(event) {
-    event.preventDefault();
-// TODO how to add the new info to a task and add the task to the list?
-//    setInputItem(new ToDoItem("raccoon"));
-    let newItem = new ToDoItem("raccoon");
-    console.log(newItem); // TODO doesn't work.
+      let newTask = new ToDoItem({
+        task: event.target.task.value, 
+        deadline: event.target.deadline.value
+      });
+      console.log(`Add new task '${newTask.task}'`);
+
+      setItems([...items, newTask]);
+      event.target.reset();
+    }
+
+    return(
+      <form className="newItem" onSubmit={addNewTask} autoComplete="off">
+        <label htmlFor="newTask">New task:</label>
+        <input type="text" name="task" id="newTask" onChange={showDeadline}/>
+        <div className={deadlineVisibility} id="deadline">
+          <label htmlFor="newDeadline">Deadline (optional):</label>
+          <input type="text" name="deadline" id="newDeadline" />
+        </div>
+        <button action="submit">Add task</button>
+      </form>
+    );
+  }
+}
+
+function MakeListItems(items) {
+
+  function ListItem(item) {
+    const [itemDone, setItemDone] = useState(false);
+    item.isDone = itemDone;
+
+    const toggleDoneStatus = (event) => setItemDone(!itemDone);
+
+    return (
+      <li key={item.task.substring(0, 10)} 
+      className={item.doneStatus}
+      onClick={toggleDoneStatus}>{`${item}`}</li>
+    );
   }
 
-  return(
-    <form id="newItem" onSubmit={addNewTask}>
-      <label htmlFor="newTask">New task:</label>
-      <input type="text" id="newTask" onChange={showDeadline}/>
-      <div className={deadlineVisibility} id="deadline">
-        <label htmlFor="newDeadline">Deadline (optional):</label>
-        <input type="text" id="newDeadline" />
-      </div>
-      <button action="submit">Add task</button>
-    </form>
-  );
+  return function() {
+    return(
+      <ol className="todo">
+        {items.map(ListItem)}
+      </ol>
+    );
+  }
 }
 
+function ToDoList() {
+  let [items, setItems] = useState([]);
+  
+  let ListItems = MakeListItems(items);
+  let NewTaskForm = MakeNewTaskForm(items, setItems);
 
-function TodoList(props) {
   return(
-    <div className="todoList">
-      <h1>To Do</h1>
-      <ol className="todo">
-        {props.children.map(ListItem)}
-      </ol>
+    <section id="todo">
+      <div className="todoList">
+        <h1>To Do</h1>
+        <ListItems />
+      </div>
       <NewTaskForm />
-    </div>
+    </section>
   );
 }
 
 function App() {
-  const todo = [
-    { task: "Make a to-do list" },
-    { task: "Check off items on list" }
-  ];
-  const todoItems = todo.map(i => new ToDoItem(i));
-
-  return (
-    <TodoList>{todoItems}</TodoList>
-  );
+  return(<ToDoList />);
 }
-
 
 export default App;
