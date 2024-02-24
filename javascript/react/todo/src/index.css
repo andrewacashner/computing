@@ -32,13 +32,26 @@ ol.todo li {
   padding-left: 1ex;
 }
 
+ol.todo li.gapAbove {
+  padding-top: 1ex;
+}
+
 ol.todo li.done {
   list-style-type: "\2611"; 
   color: gray;
 }
 
-ol.todo li.notDone {
-  list-style-type: "\2610";
+ol.todo li:hover::marker {
+  content: "\2195 \2610"; /* Show up-down arrow before */
+}
+
+ol.todo li.done:hover::marker {
+  content: "\2195 \2611"; 
+}
+
+ol.todo  {
+  /* Leave extra space below as a target for moving items to bottom of the list */
+  padding-bottom: 1em;
 }
 
 .hide {
@@ -56,14 +69,26 @@ form.newItem {
   margin-left: auto;
   margin-right: auto;
   margin-top: 2em;
-  text-align: center;
-  padding: 1em;
+  background: Lavender;
 }
 
-form.newItem label {
-  padding-right: 1em;
+form.newItem div {
+  width: 100%;
+  margin: 1em;
+
 }
 
-form.newItem input {
-  margin-bottom: 1ex;
+form.newItem div label {
+  width: 40%;
+  display: inline-block;
+}
+
+form.newItem div input {
+  width: 50%;
+  display: inline-block;
+}
+
+form.newItem button {
+  margin-left: 80%;
+  margin-bottom: 1em;
 }

@@ -54,13 +54,17 @@ function MakeNewTaskForm(items, setItems) {
     function addNewTask (event) {
       event.preventDefault();
 
-      let newTask = new ToDoItem({
-        task: event.target.task.value, 
-        deadline: event.target.deadline.value
-      });
-      console.log(`Add new task '${newTask.task}'`);
+      let task = event.target.task.value;
 
-      setItems([...items, newTask]);
+      if (task) {
+        let newTask = new ToDoItem({
+          task: event.target.task.value, 
+          deadline: event.target.deadline.value
+        });
+        console.log(`Add new task '${newTask.task}'`);
+
+        setItems([...items, newTask]);
+      }
       event.target.reset();
     }
 
@@ -68,11 +72,13 @@ function MakeNewTaskForm(items, setItems) {
       <form className="newItem" 
             onSubmit={addNewTask} 
             autoComplete="off">
-        <label htmlFor="newTask">New task:</label>
-        <input type="text" 
-               name="task" 
-               id="newTask" 
-               onChange={showDeadline} />
+        <div className="newTaskInput">
+          <label htmlFor="newTask">New task:</label>
+          <input type="text" 
+                name="task" 
+                id="newTask" 
+                onChange={showDeadline} />
+        </div>
         <div className={deadlineVisibility} id="deadline">
           <label htmlFor="newDeadline">Deadline (optional):</label>
           <input type="text" name="deadline" id="newDeadline" />
@@ -89,10 +95,18 @@ function dragListItem(event) {
 
 function dragoverListItem(event) {
   event.preventDefault();
+  if (event.target.tagName === "LI") {
+    event.target.classList.add("gapAbove");
+  }
+}
+
+function dragleaveListItem(event) {
+  event.target.classList.remove("gapAbove");
 }
 
 function moveWithinArray(items, fromID, toID) {
-  
+ 
+  console.log(`Move from item ${fromID} to item ${toID}`);
   function insertBefore(array, matchFn, item) {
     let insertPoint = array.findIndex(matchFn);
     let before = array.slice(0, insertPoint);
@@ -104,8 +118,8 @@ function moveWithinArray(items, fromID, toID) {
   let rest = items.filter(i => i !== itemToMove);
 
   let newItems = [];
-  if (items.length === 2) {
-    newItems = items.toReversed();
+  if (toID === "bottom") {
+    newItems = [...rest, itemToMove];
   } else {
     newItems = insertBefore(rest, (i => i.id === toID), itemToMove);
   }
@@ -118,9 +132,17 @@ function makeDropListItem(items, setItems) {
 
     if (items.length > 1) {
       let fromID = event.dataTransfer.getData("text/uuid");
-      let toID = event.target.id;
-      let newItems = moveWithinArray(items, fromID, toID);
-      setItems(newItems);
+
+      // Check if item was dropped below the list items, in the extra space we
+      // leave at bottom of the ol.todo
+      console.log(event.target.className);
+      let toID = (event.target.className === "todo") 
+                  ? "bottom" : event.target.id;
+
+      if (fromID !== toID) {
+        let newItems = moveWithinArray(items, fromID, toID);
+        setItems(newItems);
+      }
     }
   }
 }
@@ -148,6 +170,7 @@ function MakeListItems(items, setItems) {
     return(
       <ol className="todo"
           onDragOver={dragoverListItem}
+          onDragLeave={dragleaveListItem}
           onDrop={dropListItem}>
         {items.map(ListItem)}
       </ol>
