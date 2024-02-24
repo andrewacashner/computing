@@ -38,7 +38,6 @@ ol.todo li.gapAbove {
 
 ol.todo li.done {
   list-style-type: "\2611"; 
-  color: gray;
 }
 
 ol.todo li:hover::marker {
@@ -51,7 +50,11 @@ ol.todo li.done:hover::marker {
 
 ol.todo  {
   /* Leave extra space below as a target for moving items to bottom of the list */
-  padding-bottom: 1em;
+  padding-bottom: 1.5em;
+}
+
+div.todoControls button {
+  margin: 1ex;
 }
 
 .hide {
@@ -60,6 +63,13 @@ ol.todo  {
 
 .show {
   visibility: show;
+}
+
+.active {
+}
+
+.inactive {
+  color: gray;
 }
 
 form.newItem {
