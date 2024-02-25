@@ -7,9 +7,10 @@
 // (done) Rearranging entries
 // (done) Button to mark all complete or incomplete
 // (done) Button to clear all
+// (done) Use Date for deadline
+// (done) Put date in span for custom format (e.g. red if past due)
 // Type new item directly into list instead of form
 // Editing entries in-list
-// Use Date for deadline
 // Show completed items in separate list (move when completed)
 // Sort by deadline
 // Nested lists
@@ -49,6 +50,8 @@ function makeNewTaskForm(items, setItems) {
         <div className="deadlineInput">
           <label htmlFor="newDeadline">Deadline (optional):</label>
           <input type="text" name="deadline" id="newDeadline" />
+          <p className="instructions">Dates in natural language will be converted if possible<br />
+          (Examples: <q>Tomorrow at 1pm,</q> <q>A week from Thursday,</q> <q>3/5 at 7am</q>)</p>
         </div>
         <button action="submit">Add task</button>
       </form>
@@ -149,6 +152,7 @@ function makeListItems(items, setItems) {
   function ListItem(item) {
     if (item) {
       let toggleDoneStatus = updateItemsWithToggledItem(items, item);
+      let ToDoSpan = item.Span();
 
       return (
         <li key={item.id}
@@ -157,7 +161,9 @@ function makeListItems(items, setItems) {
             onClick={toggleDoneStatus}
             draggable="true"
             onDragStart={dragListItem}
-            onDragLeave={dragleaveListItem}>{`${item}`}</li>
+            onDragLeave={dragleaveListItem}>
+          <ToDoSpan />
+        </li>
       );
     }
   }

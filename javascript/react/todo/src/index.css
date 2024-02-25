@@ -52,6 +52,17 @@ ol.todo  {
   padding-bottom: 1.5em;
 }
 
+ol.todo li span.todoItem {
+}
+
+ol.todo li span.todoItem span.todoDeadline {
+  padding-left: 1em;
+}
+
+.pastDue {
+  color: red;
+}
+
 button {
   margin: 1ex;
   margin-bottom: 2ex;
