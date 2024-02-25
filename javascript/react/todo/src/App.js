@@ -18,44 +18,7 @@
 
 import "./App.css";
 import { useState } from "react";
-
-class ToDoItem {
-  task;
-  deadline;
-  isDone;
-
-  constructor({task, deadline = null, isDone = false}) {
-    this.task = task;
-    this.deadline = deadline;
-    this.isDone = isDone;
-    this.id = crypto.randomUUID();
-  }
-
-  static doneOrNot(isDone) {
-    return (isDone) ? "done" : "notDone";
-  }
-
-  static activeOrNot(isDone) {
-    return (isDone) ? "inactive" : "active";
-  }
-
-  get doneStatus() {
-    return ToDoItem.doneOrNot(this.isDone);
-  }
-
-  get activeStatus() {
-    return ToDoItem.activeOrNot(this.isDone);
-  }
-
-  static toggled(item) {
-    return new ToDoItem({...item, isDone: !item.isDone});
-  }
-
-  toString() {
-    let deadline = (this.deadline) ? ` (${this.deadline})` : "";
-    return this.task + deadline;
-  }
-}
+import ToDoItem from "./components/ToDoItem";
 
 function makeNewTaskForm(items, setItems) {
 
@@ -78,14 +41,10 @@ function makeNewTaskForm(items, setItems) {
     }
 
     return(
-      <form className="newItem" 
-            onSubmit={addNewTask} 
-            autoComplete="off">
+      <form className="newItem" onSubmit={addNewTask} autoComplete="off">
         <div className="newTaskInput">
           <label htmlFor="newTask">New task:</label>
-          <input type="text" 
-                name="task" 
-                id="newTask" />
+          <input type="text" name="task" id="newTask" />
         </div>
         <div className="deadlineInput">
           <label htmlFor="newDeadline">Deadline (optional):</label>
@@ -193,13 +152,12 @@ function makeListItems(items, setItems) {
 
       return (
         <li key={item.id}
-        id={item.id}
-        className={`${item.doneStatus} ${item.activeStatus}`}
-        onClick={toggleDoneStatus}
-        draggable="true"
-        onDragStart={dragListItem}
-        onDragLeave={dragleaveListItem}>{`${item}`}
-        </li>
+            id={item.id}
+            className={`${item.doneStatus} ${item.activeStatus}`}
+            onClick={toggleDoneStatus}
+            draggable="true"
+            onDragStart={dragListItem}
+            onDragLeave={dragleaveListItem}>{`${item}`}</li>
       );
     }
   }
@@ -254,8 +212,6 @@ function makeCheckAllButton(items, setItems) {
   }
 }
 
-
-
 function ToDoList() {
   let [items, setItems] = useState([]);
   
@@ -267,6 +223,7 @@ function ToDoList() {
     <section id="todo">
       <div className="todoList">
         <h1>To Do</h1>
+        <p className="instructions">Add a new task using the form below. Drag to rearrange tasks.</p>
         <ListItems />
         <CheckAllButton />
       </div>

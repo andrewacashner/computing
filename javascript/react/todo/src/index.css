@@ -16,11 +16,10 @@ div.todoList {
   border: 2px solid black;
   border-radius: 5px;
   background: LightYellow;
-  width: 50%;
+  width: 30em;
   margin-left: auto;
   margin-right: auto;
   text-align: center;
-  padding: 1em;
 }
 
 ol.todo {
@@ -53,8 +52,9 @@ ol.todo  {
   padding-bottom: 1.5em;
 }
 
-div.todoControls button {
+button {
   margin: 1ex;
+  margin-bottom: 2ex;
 }
 
 .hide {
@@ -73,7 +73,7 @@ div.todoControls button {
 }
 
 form.newItem {
-  width: 50%;
+  width: 30em;
   border: 1px solid black;
   border-radius: 5px;
   margin-left: auto;
@@ -101,4 +101,10 @@ form.newItem div input {
 form.newItem button {
   margin-left: 80%;
   margin-bottom: 1em;
+}
+
+p.instructions {
+  font-size: 80%;
+  font-style: italic;
+  color: gray;
 }
