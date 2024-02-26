@@ -22,20 +22,25 @@ div.todoList {
   text-align: center;
 }
 
-ol.todo {
+ol {
   list-style-type: "\2610";
   text-align: left;
 }
 
-ol.todo li {
+ol.todoDone li span {
+  color: gray;
+  text-decoration: line-through;
+}
+
+ol li {
   padding-left: 1ex;
 }
 
-ol.todo li.gapAbove {
+ol li.gapAbove {
   padding-top: 1ex;
 }
 
-ol.todo li.done {
+ol li.done {
   list-style-type: "\2611"; 
 }
 
@@ -47,15 +52,15 @@ ol.todo li.done:hover::marker {
   content: "\2195 \2611"; 
 }
 
-ol.todo  {
+ol {
   /* Leave extra space below as a target for moving items to bottom of the list */
   padding-bottom: 1.5em;
 }
 
-ol.todo li span.todoItem {
+ol li span.todoItem {
 }
 
-ol.todo li span.todoItem span.todoDeadline {
+ol li span.todoItem span.todoDeadline {
   padding-left: 1em;
 }
 

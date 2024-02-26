@@ -1,6 +1,7 @@
 import Sugar from "sugar-date";
+import Utilities from "./Utilities";
 
-export default class ToDoItem {
+class ToDoItem {
   task;
   deadline;
   deadlineDate;
@@ -20,8 +21,20 @@ export default class ToDoItem {
     if (deadline) {
       test = Sugar.Date.create(deadline);
       date = (new Sugar.Date(test).isValid().valueOf()) ? test : null;
+    } else {
+      date = null;
     }
     return date;
+  }
+
+  get deadlineString() {
+    if (this.deadlineDate) {
+      return `(${Sugar.Date.format(this.deadlineDate, "%c")})`;
+    } else if (this.deadline) {
+      return `(${this.deadline})`;
+    } else {
+      return "";
+    }
   }
 
   static doneOrNot(isDone) {
@@ -44,17 +57,6 @@ export default class ToDoItem {
     return new ToDoItem({...item, isDone: !item.isDone});
   }
 
-  get deadlineString() {
-    let deadline = "";
-    if (this.deadlineDate) {
-      let dateString = Sugar.Date.format(this.deadlineDate, "%c");
-      deadline = `(${dateString})`;
-    } else if (this.deadline) {
-      deadline = `(${this.deadline})`;
-    }
-    return deadline;
-  }
-  
   Span() {
     return function() {
       let deadlineClassList = "todoDeadline";
@@ -73,3 +75,42 @@ export default class ToDoItem {
     }.bind(this);
   }
 }
+
+class ToDoList extends Array {
+  toSortedByDate() {
+    let [deadlines, noDeadlines] = Utilities.partition(this,
+      (i => i.deadline !== null));
+
+    let [dates, noDates] = Utilities.partition(deadlines,
+      (i => i.deadlineDate !== null));
+
+    let datesSorted = dates.toSorted(
+      (a, b) => a.deadlineDate - b.deadlineDate);
+
+    function stringCompareFn(a, b) {
+      [a, b] = [a, b].map(i => i.toLowerCase());
+      if (a < b) return -1;
+      else if (a > b) return 1;
+      else return 0;
+    }
+
+    let noDatesSorted = noDates.sort(
+      (a, b) => stringCompareFn(a.deadline, b.deadline));
+
+    let noDeadlinesSorted = noDeadlines.sort(
+      (a, b) => stringCompareFn(a.task, b.task));
+
+    return [...noDeadlinesSorted, ...noDatesSorted, ...datesSorted];
+  }
+
+  isSorted() {
+    // TODO doesn't work
+//    let sorted = this.toSortedByDate();
+//    let compared = this.forEach((item, index) => item === sorted[index]);
+//    let tested = compared.every(i => i === true);
+//    return tested;
+    return true;
+  }
+}
+
+export { ToDoItem, ToDoList };

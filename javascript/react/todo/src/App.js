@@ -9,32 +9,39 @@
 // (done) Button to clear all
 // (done) Use Date for deadline
 // (done) Put date in span for custom format (e.g. red if past due)
+// (done) Show completed items in separate list (move when completed)
+// (done) Sort by deadline
 // Type new item directly into list instead of form
+// Better layout of entries & dates
 // Editing entries in-list
-// Show completed items in separate list (move when completed)
-// Sort by deadline
 // Nested lists
 // Log in and save lists
 // Multiple named lists
 
 import "./App.css";
 import { useState } from "react";
-import ToDoItem from "./components/ToDoItem";
+import { ToDoItem, ToDoList } from "./components/ToDoItem";
+import Utilities from "./components/Utilities";
 
 function makeNewTaskForm(items, setItems) {
 
-  return function() {
+  return function() { 
     function addNewTask (event) {
       event.preventDefault();
 
       let task = event.target.task.value;
 
+      let deadline = event.target.deadline.value;
+      if (deadline === "") {
+        deadline = null;
+      }
+
       if (task) {
         let newTask = new ToDoItem({
-          task: event.target.task.value, 
-          deadline: event.target.deadline.value
+          task: task,
+          deadline: deadline
         });
-        console.log(`Add new task '${newTask.task}'`);
+        console.log(`Add new task '${newTask.task}' with deadline '${newTask.deadline}'`);
 
         setItems([...items, newTask]);
       }
@@ -171,18 +178,34 @@ function makeListItems(items, setItems) {
   let dropListItem = makeDropListItem(items, setItems);
   let dragoverListItem = makeDragoverListItem(items);
 
+ 
+  let [done, notDone] = Utilities.partition(items, (i => i.isDone));
+
+  function ItemsDone() {
+    return(done.map(ListItem));
+  }
+
+  function ItemsNotDone() {
+    return(notDone.map(ListItem));
+  }
+
   return function() {
     return(
-      <ol className="todo"
-          onDragOver={dragoverListItem}
-          onDrop={dropListItem}>
-        {items.map(ListItem)}
-      </ol>
+      <section id="lists">
+        <ol className="todo"
+            onDragOver={dragoverListItem}
+            onDrop={dropListItem}>
+          <ItemsNotDone />
+        </ol>
+        <ol className="todoDone">
+          <ItemsDone />
+        </ol>
+      </section>
     );
   }
 }
 
-function makeCheckAllButton(items, setItems) {
+function makeCheckAllButton(items, setItems, listSortStatus, setListSortStatus) {
 
   function setAllItemStatus(isDone) {
     let newItems = items.map(item => new ToDoItem({...item, isDone: isDone}));
@@ -199,8 +222,16 @@ function makeCheckAllButton(items, setItems) {
     setItems([]);
   }
 
+  function sortItemsByDate() { 
+    let sorted = items.toSortedByDate();
+    setItems(sorted);
+    setListSortStatus(true);
+  }
+
+
   return function() {
     if (items.length > 0) {
+      setListSortStatus(items.isSorted());
       return(
         <div className="todoControls">
           <button type="button" 
@@ -211,6 +242,10 @@ function makeCheckAllButton(items, setItems) {
                   onClick={uncheckAll}
                   className={ToDoItem.activeOrNot(!uncheckAllStatus)}
           >Mark all as unfinished</button>
+          <button type="button" 
+                  onClick={sortItemsByDate}
+                  className={ToDoItem.activeOrNot(listSortStatus)}
+          >Sort by date</button>
           <button type="button" onClick={clearAll}>Clear all</button>
         </div>
       );
@@ -218,12 +253,14 @@ function makeCheckAllButton(items, setItems) {
   }
 }
 
-function ToDoList() {
-  let [items, setItems] = useState([]);
+function TaskList() {
+  let [items, setItems] = useState(new ToDoList());
+  let [listSortStatus, setListSortStatus] = useState(false);
+  const updateItems = (newItems) => setItems(new ToDoList(...newItems));
   
-  let ListItems = makeListItems(items, setItems);
-  let NewTaskForm = makeNewTaskForm(items, setItems);
-  let CheckAllButton = makeCheckAllButton(items, setItems);
+  let ListItems = makeListItems(items, updateItems);
+  let NewTaskForm = makeNewTaskForm(items, updateItems);
+  let CheckAllButton = makeCheckAllButton(items, updateItems, listSortStatus, setListSortStatus);
 
   return(
     <section id="todo">
@@ -239,7 +276,7 @@ function ToDoList() {
 }
 
 function App() {
-  return(<ToDoList />);
+  return(<TaskList />);
 }
 
 export default App;
