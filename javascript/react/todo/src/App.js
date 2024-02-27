@@ -11,6 +11,7 @@
 // (done) Put date in span for custom format (e.g. red if past due)
 // (done) Show completed items in separate list (move when completed)
 // (done) Sort by deadline
+// Make sort button inactive when list is already sorted
 // Type new item directly into list instead of form
 // Better layout of entries & dates
 // Editing entries in-list
@@ -205,7 +206,7 @@ function makeListItems(items, setItems) {
   }
 }
 
-function makeCheckAllButton(items, setItems, listSortStatus, setListSortStatus) {
+function makeCheckAllButton(items, setItems) {
 
   function setAllItemStatus(isDone) {
     let newItems = items.map(item => new ToDoItem({...item, isDone: isDone}));
@@ -223,15 +224,12 @@ function makeCheckAllButton(items, setItems, listSortStatus, setListSortStatus) 
   }
 
   function sortItemsByDate() { 
-    let sorted = items.toSortedByDate();
-    setItems(sorted);
-    setListSortStatus(true);
+    setItems(items.toSortedByDate());
   }
 
 
   return function() {
     if (items.length > 0) {
-      setListSortStatus(items.isSorted());
       return(
         <div className="todoControls">
           <button type="button" 
@@ -244,7 +242,6 @@ function makeCheckAllButton(items, setItems, listSortStatus, setListSortStatus) 
           >Mark all as unfinished</button>
           <button type="button" 
                   onClick={sortItemsByDate}
-                  className={ToDoItem.activeOrNot(listSortStatus)}
           >Sort by date</button>
           <button type="button" onClick={clearAll}>Clear all</button>
         </div>
@@ -255,22 +252,21 @@ function makeCheckAllButton(items, setItems, listSortStatus, setListSortStatus) 
 
 function TaskList() {
   let [items, setItems] = useState(new ToDoList());
-  let [listSortStatus, setListSortStatus] = useState(false);
   const updateItems = (newItems) => setItems(new ToDoList(...newItems));
-  
+
   let ListItems = makeListItems(items, updateItems);
   let NewTaskForm = makeNewTaskForm(items, updateItems);
-  let CheckAllButton = makeCheckAllButton(items, updateItems, listSortStatus, setListSortStatus);
+  let CheckAllButton = makeCheckAllButton(items, updateItems);
 
   return(
     <section id="todo">
-      <div className="todoList">
-        <h1>To Do</h1>
-        <p className="instructions">Add a new task using the form below. Drag to rearrange tasks.</p>
-        <ListItems />
-        <CheckAllButton />
-      </div>
-      <NewTaskForm />
+    <div className="todoList">
+    <h1>To Do</h1>
+    <p className="instructions">Add a new task using the form below. Drag to rearrange tasks.</p>
+    <ListItems />
+    <CheckAllButton />
+    </div>
+    <NewTaskForm />
     </section>
   );
 }
