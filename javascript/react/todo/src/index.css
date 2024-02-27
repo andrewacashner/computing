@@ -52,6 +52,12 @@ ol.todo li.done:hover::marker {
   content: "\2195 \2611"; 
 }
 
+ol li button {
+  border: none;
+  background: none;
+  height: 1ex;
+}
+
 ol {
   /* Leave extra space below as a target for moving items to bottom of the list */
   padding-bottom: 1.5em;

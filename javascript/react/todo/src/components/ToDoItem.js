@@ -94,22 +94,20 @@ class ToDoList extends Array {
       else return 0;
     }
 
-    let noDatesSorted = noDates.sort(
+    let noDatesSorted = noDates.toSorted(
       (a, b) => stringCompareFn(a.deadline, b.deadline));
 
-    let noDeadlinesSorted = noDeadlines.sort(
+    let noDeadlinesSorted = noDeadlines.toSorted(
       (a, b) => stringCompareFn(a.task, b.task));
 
     return [...noDeadlinesSorted, ...noDatesSorted, ...datesSorted];
   }
 
   isSorted() {
-    // TODO doesn't work
-//    let sorted = this.toSortedByDate();
-//    let compared = this.forEach((item, index) => item === sorted[index]);
-//    let tested = compared.every(i => i === true);
-//    return tested;
-    return true;
+    let sorted = this.toSortedByDate();
+    let compared = this.map((item, index) => item === sorted[index]);
+    let tested = compared.every(i => i === true);
+    return tested;
   }
 }
 

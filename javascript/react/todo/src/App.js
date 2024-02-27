@@ -11,7 +11,9 @@
 // (done) Put date in span for custom format (e.g. red if past due)
 // (done) Show completed items in separate list (move when completed)
 // (done) Sort by deadline
-// Make sort button inactive when list is already sorted
+// (done) Make sort button inactive when list is already sorted
+// (done) Add delete button for each item (shown on hover)
+// Add edit button for each item
 // Type new item directly into list instead of form
 // Better layout of entries & dates
 // Editing entries in-list
@@ -157,11 +159,31 @@ function makeListItems(items, setItems) {
     }
   }
 
+  
+
   function ListItem(item) {
+    let [isDeleteShown, setIsDeleteShown] = useState(false);
+    let deleteButtonVisibility = (isDeleteShown) ? "show" : "hide";
+
+    function showDeleteButton() {
+      setIsDeleteShown(true);
+    }
+
+    function hideDeleteButton() {
+      setIsDeleteShown(false);
+    }
+
+    function deleteItem(event) {
+      setItems(items.filter(i => i !== item));
+      console.log(`Deleting item (task: ${item.task})`);
+      event.stopPropagation();
+    }
+
     if (item) {
       let toggleDoneStatus = updateItemsWithToggledItem(items, item);
       let ToDoSpan = item.Span();
 
+      // Cancellation X is U+1F5D9
       return (
         <li key={item.id}
             id={item.id}
@@ -169,8 +191,12 @@ function makeListItems(items, setItems) {
             onClick={toggleDoneStatus}
             draggable="true"
             onDragStart={dragListItem}
-            onDragLeave={dragleaveListItem}>
+            onDragLeave={dragleaveListItem}
+            onMouseEnter={showDeleteButton}
+            onMouseLeave={hideDeleteButton}>
           <ToDoSpan />
+          <button type="button" className={deleteButtonVisibility} 
+                  onClick={deleteItem}>🗙</button>
         </li>
       );
     }
@@ -242,6 +268,7 @@ function makeCheckAllButton(items, setItems) {
           >Mark all as unfinished</button>
           <button type="button" 
                   onClick={sortItemsByDate}
+                  className={ToDoItem.activeOrNot(items.isSorted())}
           >Sort by date</button>
           <button type="button" onClick={clearAll}>Clear all</button>
         </div>
