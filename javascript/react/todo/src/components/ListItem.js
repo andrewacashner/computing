@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import ToDoContext from "../store/ToDoContext";
-import { ToDoItem, ToDoList } from "../classes/ToDoItem";
+import { ToDoList } from "../classes/ToDoItem";
 
 function ListItem(props) {
   let item = props.children;
