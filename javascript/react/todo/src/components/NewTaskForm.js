@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import ToDoContext from "../store/ToDoContext";
-import { ToDoItem, ToDoList } from "../classes/ToDoItem";
+import ToDoItem from "../classes/ToDoItem";
+import ToDoList from "../classes/ToDoList";
 
 function NewTaskForm() {
   let context = useContext(ToDoContext);
@@ -21,7 +22,7 @@ function NewTaskForm() {
     if (task) {
       let newTask = new ToDoItem({task: task, deadline: deadline});
       console.log(`Add new task '${newTask.task}' with deadline '${newTask.deadline}'`);
-      setItems(prevItems => ToDoList.append(prevItems, newTask));
+      setItems(prevItems => prevItems.append(newTask));
     }
     context.form.reset();
     event.target.reset();

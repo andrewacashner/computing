@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import ToDoContext from "../store/ToDoContext";
-import { ToDoItem, ToDoList } from "../classes/ToDoItem";
+import ToDoItem from "../classes/ToDoItem";
+import ToDoList from "../classes/ToDoList";
 
 function CheckAllButton(props) {
   let context = useContext(ToDoContext);
@@ -8,19 +9,22 @@ function CheckAllButton(props) {
   let setItems = context.items.set;
 
   function setAllItemStatus(isDone) {
-    setItems(prevItems => ToDoList.setAllItemStatus(prevItems, isDone));
+    setItems(prevItems => prevItems.setAllItemStatus(isDone));
   }
 
-  const checkAll = () => setAllItemStatus(true);
   const uncheckAll = () => setAllItemStatus(false);
+  const checkAll = () => setAllItemStatus(true);
  
-  let checkAllStatus = ToDoList.areAnyLeftToDo(items);
-  let uncheckAllStatus = ToDoList.areAnyDone(items);
+  let uncheckAllStatus = items.areAnyDone();
+  let checkAllStatus = items.areAnyLeftToDo();
 
-  const sortItemsByDate = () => setItems(ToDoList.toSortedByDate);
-  const clearAll = () => setItems([]);
+  function sortItemsByDate(items) {
+    setItems(prevItems => prevItems.toSortedByDate());
+  }
 
-  if (items.length > 0) {
+  const clearAll = () => setItems(new ToDoList());
+
+  if (items.list.length > 0) {
     return(
       <div className="todoControls">
         <button type="button" 
@@ -33,7 +37,7 @@ function CheckAllButton(props) {
         >Mark all as unfinished</button>
         <button type="button" 
                 onClick={sortItemsByDate}
-                className={ToDoItem.activeOrNot(ToDoList.isSorted(items))}
+                className={ToDoItem.activeOrNot(items.isSorted())}
         >Sort by date</button>
         <button type="button" onClick={clearAll}>Clear all</button>
       </div>

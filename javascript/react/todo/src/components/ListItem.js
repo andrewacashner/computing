@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import ToDoContext from "../store/ToDoContext";
-import { ToDoList } from "../classes/ToDoItem";
+import ToDoList from "../classes/ToDoList";
 
 function ListItem(props) {
   let item = props.children;
@@ -10,7 +10,7 @@ function ListItem(props) {
   let setFormDefaults = context.form.set;
 
   function toggleDoneStatus() {
-    setItems(prevItems => ToDoList.toggleDoneStatus(prevItems, item));
+    setItems(prevItems => prevItems.toggleDoneStatus(item));
   }
 
   function dragListItem(event) {
@@ -34,7 +34,7 @@ function ListItem(props) {
         task: item.task,
         deadline: item.deadline
       });
-      setItems(prevItems => ToDoList.removeItem(prevItems, item));
+      setItems(prevItems => prevItems.removeItem(item));
       event.stopPropagation();
     }
 
@@ -47,7 +47,7 @@ function ListItem(props) {
 
   function DeleteButton() {
     function deleteItem(event) {
-      setItems(prevItems => ToDoList.removeItem(prevItems, item));
+      setItems(prevItems => prevItems.removeItem(item));
       console.log(`Deleting item (task: ${item.task})`);
       event.stopPropagation();
     }

@@ -1,7 +1,6 @@
 import Sugar from "sugar-date";
-import Utilities from "./Utilities";
 
-class ToDoItem {
+export default class ToDoItem {
   task;
   deadline;
   deadlineDate;
@@ -53,8 +52,8 @@ class ToDoItem {
     return ToDoItem.activeOrNot(this.isDone);
   }
 
-  static toggled(item) {
-    return new ToDoItem({...item, isDone: !item.isDone});
+  toggled() {
+    return new ToDoItem({...this, isDone: !this.isDone});
   }
 
   Span() {
@@ -76,92 +75,3 @@ class ToDoItem {
   }
 }
 
-class ToDoList extends Array {
-  static toSortedByDate(items) {
-    let [deadlines, noDeadlines] = Utilities.partition(items,
-      (i => i.deadline !== null));
-
-    let [dates, noDates] = Utilities.partition(deadlines,
-      (i => i.deadlineDate !== null));
-
-    let datesSorted = dates.toSorted(
-      (a, b) => a.deadlineDate - b.deadlineDate);
-
-    function stringCompareFn(a, b) {
-      [a, b] = [a, b].map(i => i.toLowerCase());
-      if (a < b) return -1;
-      else if (a > b) return 1;
-      else return 0;
-    }
-
-    let noDatesSorted = noDates.toSorted(
-      (a, b) => stringCompareFn(a.deadline, b.deadline));
-
-    let noDeadlinesSorted = noDeadlines.toSorted(
-      (a, b) => stringCompareFn(a.task, b.task));
-
-    return [...noDeadlinesSorted, ...noDatesSorted, ...datesSorted];
-  }
-
-  static isSorted(items) {
-    let sorted = ToDoList.toSortedByDate(items);
-    let compared = items.map((item, index) => item === sorted[index]);
-    let tested = compared.every(i => i === true);
-    return tested;
-  }
-
-  static append(items, item) {
-    return [...items, item];
-  }
-
-  static moveWithinArray(items, fromID, toID) {
-    console.log(`Move from item ${fromID} to item ${toID}`);
-    function insertBefore(array, matchFn, item) {
-      let insertPoint = array.findIndex(matchFn);
-      let before = array.slice(0, insertPoint);
-      let after = array.slice(insertPoint);
-      return [...before, item, ...after];
-    }
-
-    let itemToMove = items.find(i => i.id === fromID);
-    let rest = items.filter(i => i !== itemToMove);
-
-    let newItems = [];
-    if (toID === "bottom") {
-      console.log("Move item to bottom");
-      newItems = [...rest, itemToMove];
-    } else {
-      console.log("Insert item");
-      newItems = insertBefore(rest, (i => i.id === toID), itemToMove);
-    }
-    return newItems;
-  }
-
-  static toggleDoneStatus(items, item) {
-    let toggledItem = ToDoItem.toggled(item);
-    console.log(`Marking item as ${toggledItem.doneStatus}`);
-
-    let split = items.indexOf(item);
-    let before = items.slice(0, split);
-    let after = items.slice(split + 1);
-    return [...before, toggledItem, ...after];
-  }
-
-  static removeItem(items, item) { 
-    return items.filter(i => i !== item);
-  }
-  
-  static setAllItemStatus(items, isDone) {
-    return items.map(i => new ToDoItem({...i, isDone: isDone}));
-  }
-
-  static areAnyLeftToDo(items) {
-    return items.some(i => i.isDone === false);
-  }
-  
-  static areAnyDone(items) {
-    return items.some(i => i.isDone === true);
-  }
-}
-
-export { ToDoItem, ToDoList };
