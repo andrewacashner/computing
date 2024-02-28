@@ -1,30 +1,10 @@
+import { useContext } from "react";
+import ToDoContext from "../store/ToDoContext";
 import Utilities from "../classes/Utilities";
+import { ToDoList } from "../classes/ToDoItem";
 import ListItem from "./ListItem";
 
 // Drag and drop functions
-function moveWithinArray(items, fromID, toID) {
-  console.log(`Move from item ${fromID} to item ${toID}`);
-  function insertBefore(array, matchFn, item) {
-    let insertPoint = array.findIndex(matchFn);
-    let before = array.slice(0, insertPoint);
-    let after = array.slice(insertPoint);
-    return [...before, item, ...after];
-  }
-
-  let itemToMove = items.find(i => i.id === fromID);
-  let rest = items.filter(i => i !== itemToMove);
-
-  let newItems = [];
-  if (toID === "bottom") {
-    console.log("Move item to bottom");
-    newItems = [...rest, itemToMove];
-  } else {
-    console.log("Insert item");
-    newItems = insertBefore(rest, (i => i.id === toID), itemToMove);
-  }
-  return newItems;
-}
-
 function isDraggedOverSelf(event) {
   return event.target.id === event.dataTransfer.getData("text/uuid");
 }
@@ -36,8 +16,10 @@ function isDraggedOverNext(event, items) {
   return getIndex(current) - getIndex(dragged) === 1;
 }
 
-function TaskList(props) {
-  let [items, setItems] = props.items;
+function TaskList() {
+  let context = useContext(ToDoContext);
+  let items = context.items.get;
+  let setItems = context.items.set;
 
   function dropListItem(event) {
     event.preventDefault()
@@ -51,7 +33,7 @@ function TaskList(props) {
         ? "bottom" : event.target.id;
 
       if (fromID !== toID && !isDraggedOverNext(event, items)) {
-        setItems(prevItems => moveWithinArray(prevItems, fromID, toID));
+        setItems(prevItems => ToDoList.moveWithinArray(prevItems, fromID, toID));
       }
     }
   }
@@ -67,7 +49,7 @@ function TaskList(props) {
  
   function makeListItem(item) {
     return(
-      <ListItem key={item.id} {...props}>{item}</ListItem>
+      <ListItem key={item.id}>{item}</ListItem>
     );
   }
 

@@ -109,6 +109,59 @@ class ToDoList extends Array {
     let tested = compared.every(i => i === true);
     return tested;
   }
+
+  static append(items, item) {
+    return [...items, item];
+  }
+
+  static moveWithinArray(items, fromID, toID) {
+    console.log(`Move from item ${fromID} to item ${toID}`);
+    function insertBefore(array, matchFn, item) {
+      let insertPoint = array.findIndex(matchFn);
+      let before = array.slice(0, insertPoint);
+      let after = array.slice(insertPoint);
+      return [...before, item, ...after];
+    }
+
+    let itemToMove = items.find(i => i.id === fromID);
+    let rest = items.filter(i => i !== itemToMove);
+
+    let newItems = [];
+    if (toID === "bottom") {
+      console.log("Move item to bottom");
+      newItems = [...rest, itemToMove];
+    } else {
+      console.log("Insert item");
+      newItems = insertBefore(rest, (i => i.id === toID), itemToMove);
+    }
+    return newItems;
+  }
+
+  static toggleDoneStatus(items, item) {
+    let toggledItem = ToDoItem.toggled(item);
+    console.log(`Marking item as ${toggledItem.doneStatus}`);
+
+    let split = items.indexOf(item);
+    let before = items.slice(0, split);
+    let after = items.slice(split + 1);
+    return [...before, toggledItem, ...after];
+  }
+
+  static removeItem(items, item) { 
+    return items.filter(i => i !== item);
+  }
+  
+  static setAllItemStatus(items, isDone) {
+    return items.map(i => new ToDoItem({...i, isDone: isDone}));
+  }
+
+  static areAnyLeftToDo(items) {
+    return items.some(i => i.isDone === false);
+  }
+  
+  static areAnyDone(items) {
+    return items.some(i => i.isDone === true);
+  }
 }
 
 export { ToDoItem, ToDoList };

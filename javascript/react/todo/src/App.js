@@ -16,6 +16,9 @@
 // (done) Add edit button for each item
 // (done) Break up into separate class and component files
 // (done) Use props consistently for components to pass state
+// (done) Use Context instead to pass state even better
+// Work with ToDoList objects rather than applying ToDoList static methods to
+//  arrays
 // Type new item directly into list instead of form
 // Better layout of entries & dates
 // Editing entries in-list
@@ -26,24 +29,41 @@
 import "./App.css";
 import { useState } from "react";
 import { ToDoList } from "./classes/ToDoItem";
+import ToDoContext from "./store/ToDoContext";
 import TaskList from "./components/TaskList";
 import CheckAllButton from "./components/CheckAllButton";
 import NewTaskForm from "./components/NewTaskForm";
 
 function App() {
-  let itemState = useState(new ToDoList());
-  let formState = useState({ task: "", deadline: "" });
+  let [items, setItems] = useState(new ToDoList());
+  
+  const emptyTask = {task: "", deadline: ""};
+  let [defaults, setDefaults] = useState(emptyTask);
+
+  let toDoContextValue = {
+    items: {
+      get: items,
+      set: setItems
+    },
+    form: {
+      get: defaults,
+      set: setDefaults,
+      reset: () => setDefaults(emptyTask)
+    }
+  }
 
   return(
-    <section id="todo">
-      <div className="todoList">
-        <h1>To Do</h1>
-        <p className="instructions">Add a new task using the form below. Drag to rearrange tasks.</p>
-        <TaskList items={itemState} form={formState} />
-        <CheckAllButton items={itemState} />
-      </div>
-      <NewTaskForm items={itemState} form={formState} />
-    </section>
+    <ToDoContext.Provider value={toDoContextValue}>
+      <section id="todo">
+        <div className="todoList">
+          <h1>To Do</h1>
+          <p className="instructions">Add a new task using the form below. Drag to rearrange tasks.</p>
+          <TaskList />
+          <CheckAllButton />
+        </div>
+          <NewTaskForm />
+      </section>
+    </ToDoContext.Provider>
   );
 }
 

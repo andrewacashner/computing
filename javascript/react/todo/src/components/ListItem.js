@@ -1,22 +1,16 @@
-import { useState } from "react";
-import { ToDoItem } from "../classes/ToDoItem";
+import { useContext, useState } from "react";
+import ToDoContext from "../store/ToDoContext";
+import { ToDoItem, ToDoList } from "../classes/ToDoItem";
 
 function ListItem(props) {
-  let setItems = props.items[1];
-  let setFormDefaults = props.form[1];
   let item = props.children;
+  
+  let context = useContext(ToDoContext);
+  let setItems = context.items.set;
+  let setFormDefaults = context.form.set;
 
   function toggleDoneStatus() {
-    function doToggle(items) {
-      let toggledItem = ToDoItem.toggled(item);
-      console.log(`Marking item as ${toggledItem.doneStatus}`);
-
-      let split = items.indexOf(item);
-      let before = items.slice(0, split);
-      let after = items.slice(split + 1);
-      return [...before, toggledItem, ...after];
-    }
-    setItems(doToggle);
+    setItems(prevItems => ToDoList.toggleDoneStatus(prevItems, item));
   }
 
   function dragListItem(event) {
@@ -33,8 +27,6 @@ function ListItem(props) {
 
   const showButton = () => setIsButtonShown(true);
   const hideButton = () => setIsButtonShown(false);
-      
-  const removeItem = items => items.filter(i => i !== item);
   
   function EditButton() {
     function editItem(event) {
@@ -42,7 +34,7 @@ function ListItem(props) {
         task: item.task,
         deadline: item.deadline
       });
-      setItems(removeItem);
+      setItems(prevItems => ToDoList.removeItem(prevItems, item));
       event.stopPropagation();
     }
 
@@ -55,7 +47,7 @@ function ListItem(props) {
 
   function DeleteButton() {
     function deleteItem(event) {
-      setItems(removeItem);
+      setItems(prevItems => ToDoList.removeItem(prevItems, item));
       console.log(`Deleting item (task: ${item.task})`);
       event.stopPropagation();
     }

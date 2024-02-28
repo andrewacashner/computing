@@ -1,19 +1,21 @@
+import { useContext } from "react";
+import ToDoContext from "../store/ToDoContext";
 import { ToDoItem, ToDoList } from "../classes/ToDoItem";
 
 function CheckAllButton(props) {
-  let [items, setItems] = props.items;
+  let context = useContext(ToDoContext);
+  let items = context.items.get
+  let setItems = context.items.set;
 
   function setAllItemStatus(isDone) {
-    let newItems = (prevItems) => prevItems.map(
-      i => new ToDoItem({...i, isDone: isDone}));
-    setItems(newItems);
+    setItems(prevItems => ToDoList.setAllItemStatus(prevItems, isDone));
   }
 
   const checkAll = () => setAllItemStatus(true);
   const uncheckAll = () => setAllItemStatus(false);
  
-  let checkAllStatus = items.some(i => i.isDone === false);
-  let uncheckAllStatus = items.some(i => i.isDone === true);
+  let checkAllStatus = ToDoList.areAnyLeftToDo(items);
+  let uncheckAllStatus = ToDoList.areAnyDone(items);
 
   const sortItemsByDate = () => setItems(ToDoList.toSortedByDate);
   const clearAll = () => setItems([]);
