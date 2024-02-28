@@ -1,10 +1,8 @@
 import { ToDoItem } from "../classes/ToDoItem";
 
 function NewTaskForm(props) {
-  let items = props.itemState.obj;
-  let setItems = props.itemState.fn;
-  let formDefaults = props.formState.obj;
-  let setFormDefaults = props.formState.fn;
+  let setItems = props.items[1];
+  let [formDefaults, setFormDefaults] = props.form;
 
   function addNewTask(event) {
     event.preventDefault();
@@ -17,13 +15,9 @@ function NewTaskForm(props) {
     }
 
     if (task) {
-      let newTask = new ToDoItem({
-        task: task,
-        deadline: deadline
-      });
+      let newTask = new ToDoItem({task: task, deadline: deadline});
       console.log(`Add new task '${newTask.task}' with deadline '${newTask.deadline}'`);
-
-      setItems([...items, newTask]);
+      setItems(prevItems => [...prevItems, newTask]);
     }
     setFormDefaults({task: "", deadline: ""});
     event.target.reset();

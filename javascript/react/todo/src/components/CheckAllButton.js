@@ -1,11 +1,11 @@
-import { ToDoItem } from "../classes/ToDoItem";
+import { ToDoItem, ToDoList } from "../classes/ToDoItem";
 
 function CheckAllButton(props) {
-  let items = props.itemState.obj;
-  let setItems = props.itemState.fn;
+  let [items, setItems] = props.items;
 
   function setAllItemStatus(isDone) {
-    let newItems = items.map(i => new ToDoItem({...i, isDone: isDone}));
+    let newItems = (prevItems) => prevItems.map(
+      i => new ToDoItem({...i, isDone: isDone}));
     setItems(newItems);
   }
 
@@ -15,7 +15,7 @@ function CheckAllButton(props) {
   let checkAllStatus = items.some(i => i.isDone === false);
   let uncheckAllStatus = items.some(i => i.isDone === true);
 
-  const sortItemsByDate = () => setItems(items.toSortedByDate());
+  const sortItemsByDate = () => setItems(ToDoList.toSortedByDate);
   const clearAll = () => setItems([]);
 
   if (items.length > 0) {
@@ -31,7 +31,7 @@ function CheckAllButton(props) {
         >Mark all as unfinished</button>
         <button type="button" 
                 onClick={sortItemsByDate}
-                className={ToDoItem.activeOrNot(items.isSorted())}
+                className={ToDoItem.activeOrNot(ToDoList.isSorted(items))}
         >Sort by date</button>
         <button type="button" onClick={clearAll}>Clear all</button>
       </div>

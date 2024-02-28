@@ -37,11 +37,7 @@ function isDraggedOverNext(event, items) {
 }
 
 function TaskList(props) {
-  let itemState = props.itemState;
-  let items = itemState.obj;
-  let setItems = itemState.fn;
-
-  let formState = props.formState;
+  let [items, setItems] = props.items;
 
   function dropListItem(event) {
     event.preventDefault()
@@ -55,8 +51,7 @@ function TaskList(props) {
         ? "bottom" : event.target.id;
 
       if (fromID !== toID && !isDraggedOverNext(event, items)) {
-        let newItems = moveWithinArray(items, fromID, toID);
-        setItems(newItems);
+        setItems(prevItems => moveWithinArray(prevItems, fromID, toID));
       }
     }
   }
@@ -72,11 +67,7 @@ function TaskList(props) {
  
   function makeListItem(item) {
     return(
-      <ListItem key={item.id} 
-                itemState={itemState} 
-                formState={formState}>
-        {item}
-      </ListItem>
+      <ListItem key={item.id} {...props}>{item}</ListItem>
     );
   }
 

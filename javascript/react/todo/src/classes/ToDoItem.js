@@ -77,8 +77,8 @@ class ToDoItem {
 }
 
 class ToDoList extends Array {
-  toSortedByDate() {
-    let [deadlines, noDeadlines] = Utilities.partition(this,
+  static toSortedByDate(items) {
+    let [deadlines, noDeadlines] = Utilities.partition(items,
       (i => i.deadline !== null));
 
     let [dates, noDates] = Utilities.partition(deadlines,
@@ -103,9 +103,9 @@ class ToDoList extends Array {
     return [...noDeadlinesSorted, ...noDatesSorted, ...datesSorted];
   }
 
-  isSorted() {
-    let sorted = this.toSortedByDate();
-    let compared = this.map((item, index) => item === sorted[index]);
+  static isSorted(items) {
+    let sorted = ToDoList.toSortedByDate(items);
+    let compared = items.map((item, index) => item === sorted[index]);
     let tested = compared.every(i => i === true);
     return tested;
   }

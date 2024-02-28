@@ -2,20 +2,21 @@ import { useState } from "react";
 import { ToDoItem } from "../classes/ToDoItem";
 
 function ListItem(props) {
-  let items = props.itemState.obj;
-  let setItems = props.itemState.fn;
-  let setFormDefaults = props.formState.fn;
+  let setItems = props.items[1];
+  let setFormDefaults = props.form[1];
   let item = props.children;
 
   function toggleDoneStatus() {
-    let toggledItem = ToDoItem.toggled(item);
-    console.log(`Marking item as ${toggledItem.doneStatus}`);
+    function doToggle(items) {
+      let toggledItem = ToDoItem.toggled(item);
+      console.log(`Marking item as ${toggledItem.doneStatus}`);
 
-    let split = items.indexOf(item);
-    let before = items.slice(0, split);
-    let after = items.slice(split + 1);
-    let newItems = [...before, toggledItem, ...after]
-    setItems(newItems);
+      let split = items.indexOf(item);
+      let before = items.slice(0, split);
+      let after = items.slice(split + 1);
+      return [...before, toggledItem, ...after];
+    }
+    setItems(doToggle);
   }
 
   function dragListItem(event) {
@@ -32,14 +33,16 @@ function ListItem(props) {
 
   const showButton = () => setIsButtonShown(true);
   const hideButton = () => setIsButtonShown(false);
-
+      
+  const removeItem = items => items.filter(i => i !== item);
+  
   function EditButton() {
     function editItem(event) {
       setFormDefaults({
         task: item.task,
         deadline: item.deadline
       });
-      setItems(items.filter(i => i !== item));
+      setItems(removeItem);
       event.stopPropagation();
     }
 
@@ -52,7 +55,7 @@ function ListItem(props) {
 
   function DeleteButton() {
     function deleteItem(event) {
-      setItems(items.filter(i => i !== item));
+      setItems(removeItem);
       console.log(`Deleting item (task: ${item.task})`);
       event.stopPropagation();
     }

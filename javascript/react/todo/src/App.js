@@ -31,24 +31,18 @@ import CheckAllButton from "./components/CheckAllButton";
 import NewTaskForm from "./components/NewTaskForm";
 
 function App() {
-  let [items, setItems] = useState(new ToDoList());
-  let updateItems = (newItems) => setItems(new ToDoList(...newItems));
-
-  let [formDefaults, setFormDefaults] = useState({ task: "", deadline: "" });
-
-  let itemState = {obj: items, fn: updateItems};
-  let formState = {obj: formDefaults, fn: setFormDefaults};
-  let fullState = {itemState: itemState, formState: formState};
+  let itemState = useState(new ToDoList());
+  let formState = useState({ task: "", deadline: "" });
 
   return(
     <section id="todo">
       <div className="todoList">
         <h1>To Do</h1>
         <p className="instructions">Add a new task using the form below. Drag to rearrange tasks.</p>
-        <TaskList {...fullState}  />
-        <CheckAllButton itemState={itemState} />
+        <TaskList items={itemState} form={formState} />
+        <CheckAllButton items={itemState} />
       </div>
-      <NewTaskForm {...fullState} />
+      <NewTaskForm items={itemState} form={formState} />
     </section>
   );
 }
