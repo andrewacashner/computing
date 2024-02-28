@@ -13,7 +13,7 @@
 // (done) Sort by deadline
 // (done) Make sort button inactive when list is already sorted
 // (done) Add delete button for each item (shown on hover)
-// Add edit button for each item
+// (done) Add edit button for each item
 // Type new item directly into list instead of form
 // Better layout of entries & dates
 // Editing entries in-list
@@ -26,7 +26,7 @@ import { useState } from "react";
 import { ToDoItem, ToDoList } from "./components/ToDoItem";
 import Utilities from "./components/Utilities";
 
-function makeNewTaskForm(items, setItems) {
+function makeNewTaskForm(items, setItems, formDefaults, setFormDefaults) {
 
   return function() { 
     function addNewTask (event) {
@@ -48,6 +48,7 @@ function makeNewTaskForm(items, setItems) {
 
         setItems([...items, newTask]);
       }
+      setFormDefaults({task: "", deadline: ""});
       event.target.reset();
     }
 
@@ -55,11 +56,17 @@ function makeNewTaskForm(items, setItems) {
       <form className="newItem" onSubmit={addNewTask} autoComplete="off">
         <div className="newTaskInput">
           <label htmlFor="newTask">New task:</label>
-          <input type="text" name="task" id="newTask" />
+          <input type="text" 
+                 name="task" 
+                 id="newTask" 
+                 defaultValue={formDefaults.task} />
         </div>
         <div className="deadlineInput">
           <label htmlFor="newDeadline">Deadline (optional):</label>
-          <input type="text" name="deadline" id="newDeadline" />
+          <input type="text" 
+                 name="deadline" 
+                 id="newDeadline" 
+                 defaultValue={formDefaults.deadline} />
           <p className="instructions">Dates in natural language will be converted if possible<br />
           (Examples: <q>Tomorrow at 1pm,</q> <q>A week from Thursday,</q> <q>3/5 at 7am</q>)</p>
         </div>
@@ -144,7 +151,7 @@ function makeDropListItem(items, setItems) {
   }
 }
 
-function makeListItems(items, setItems) {
+function makeListItems(items, setItems, setFormDefaults) {
 
   function updateItemsWithToggledItem(items, item) {
     return function() {
@@ -162,15 +169,15 @@ function makeListItems(items, setItems) {
   
 
   function ListItem(item) {
-    let [isDeleteShown, setIsDeleteShown] = useState(false);
-    let deleteButtonVisibility = (isDeleteShown) ? "show" : "hide";
+    let [isButtonShown, setIsButtonShown] = useState(false);
+    let listButtonVisibility = (isButtonShown) ? "show" : "hide";
 
-    function showDeleteButton() {
-      setIsDeleteShown(true);
+    function showButton() {
+      setIsButtonShown(true);
     }
 
-    function hideDeleteButton() {
-      setIsDeleteShown(false);
+    function hideButton() {
+      setIsButtonShown(false);
     }
 
     function deleteItem(event) {
@@ -179,11 +186,21 @@ function makeListItems(items, setItems) {
       event.stopPropagation();
     }
 
+    function editItem(event) {
+      setFormDefaults({
+        task: item.task,
+        deadline: item.deadline
+      });
+      setItems(items.filter(i => i !== item));
+      event.stopPropagation();
+    }
+
     if (item) {
       let toggleDoneStatus = updateItemsWithToggledItem(items, item);
       let ToDoSpan = item.Span();
 
       // Cancellation X is U+1F5D9
+      // Edit pencil is U+1F589
       return (
         <li key={item.id}
             id={item.id}
@@ -192,10 +209,12 @@ function makeListItems(items, setItems) {
             draggable="true"
             onDragStart={dragListItem}
             onDragLeave={dragleaveListItem}
-            onMouseEnter={showDeleteButton}
-            onMouseLeave={hideDeleteButton}>
+            onMouseEnter={showButton}
+            onMouseLeave={hideButton}>
           <ToDoSpan />
-          <button type="button" className={deleteButtonVisibility} 
+          <button type="button" className={listButtonVisibility}
+                  onClick={editItem}>🖉</button>
+          <button type="button" className={listButtonVisibility} 
                   onClick={deleteItem}>🗙</button>
         </li>
       );
@@ -279,21 +298,23 @@ function makeCheckAllButton(items, setItems) {
 
 function TaskList() {
   let [items, setItems] = useState(new ToDoList());
-  const updateItems = (newItems) => setItems(new ToDoList(...newItems));
+  let updateItems = (newItems) => setItems(new ToDoList(...newItems));
 
-  let ListItems = makeListItems(items, updateItems);
-  let NewTaskForm = makeNewTaskForm(items, updateItems);
+  let [formDefaults, setFormDefaults] = useState({ task: "", deadline: "" });
+
+  let ListItems = makeListItems(items, updateItems, setFormDefaults);
+  let NewTaskForm = makeNewTaskForm(items, updateItems, formDefaults, setFormDefaults);
   let CheckAllButton = makeCheckAllButton(items, updateItems);
 
   return(
     <section id="todo">
-    <div className="todoList">
-    <h1>To Do</h1>
-    <p className="instructions">Add a new task using the form below. Drag to rearrange tasks.</p>
-    <ListItems />
-    <CheckAllButton />
-    </div>
-    <NewTaskForm />
+      <div className="todoList">
+        <h1>To Do</h1>
+        <p className="instructions">Add a new task using the form below. Drag to rearrange tasks.</p>
+        <ListItems />
+        <CheckAllButton />
+      </div>
+      <NewTaskForm />
     </section>
   );
 }

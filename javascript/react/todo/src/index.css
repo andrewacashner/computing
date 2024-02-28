@@ -5,6 +5,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 120%;
 }
 
 code {
@@ -15,11 +16,16 @@ code {
 div.todoList {
   border: 2px solid black;
   border-radius: 5px;
-  background: LightYellow;
+  background: #fffaa0;
   width: 30em;
   margin-left: auto;
   margin-right: auto;
   text-align: center;
+}
+
+div.todoList h1 {
+  font-size: 200%;
+
 }
 
 ol {
@@ -101,7 +107,7 @@ form.newItem {
   margin-left: auto;
   margin-right: auto;
   margin-top: 2em;
-  background: Lavender;
+  background: #ccccff;
 }
 
 form.newItem div {
