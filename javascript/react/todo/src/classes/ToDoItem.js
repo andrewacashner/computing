@@ -7,12 +7,16 @@ export default class ToDoItem {
   isDone;
   id;
 
-  constructor({task, deadline = null, isDone = false}) {
+  constructor({task = "", deadline = null, isDone = false} = {}) {
     this.task = task;
     this.deadline = deadline;
     this.deadlineDate = ToDoItem.dateFromString(deadline);
     this.isDone = isDone;
     this.id = crypto.randomUUID();
+  }
+
+  clone() {
+    return new ToDoItem(this);
   }
   
   static dateFromString(deadline) {
@@ -36,20 +40,12 @@ export default class ToDoItem {
     }
   }
 
-  static doneOrNot(isDone) {
-    return (isDone) ? "done" : "notDone";
-  }
-
-  static activeOrNot(isDone) {
-    return (isDone) ? "inactive" : "active";
-  }
-
   get doneStatus() {
-    return ToDoItem.doneOrNot(this.isDone);
+    return (this.isDone) ? "done" : "notDone";
   }
 
   get activeStatus() {
-    return ToDoItem.activeOrNot(this.isDone);
+    return (this.isDone) ? "inactive" : "active";
   }
 
   toggled() {

@@ -1,13 +1,12 @@
 import { useContext, useState } from "react";
 import ToDoContext from "../store/ToDoContext";
-import ToDoList from "../classes/ToDoList";
 
 function ListItem(props) {
   let item = props.children;
   
   let context = useContext(ToDoContext);
   let setItems = context.items.set;
-  let setFormDefaults = context.form.set;
+  let setDraft = context.form.set;
 
   function toggleDoneStatus() {
     setItems(prevItems => prevItems.toggleDoneStatus(item));
@@ -30,10 +29,7 @@ function ListItem(props) {
   
   function EditButton() {
     function editItem(event) {
-      setFormDefaults({
-        task: item.task,
-        deadline: item.deadline
-      });
+      setDraft(prevDraft => item.clone());
       setItems(prevItems => prevItems.removeItem(item));
       event.stopPropagation();
     }

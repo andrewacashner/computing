@@ -13,9 +13,10 @@
 - (done) Use Context instead to pass state even better
 - (done) Work with ToDoList objects rather than applying ToDoList static methods to
 -  arrays
-- Type new item directly into list instead of form
+- (done) Use ToDoItem as the form default when editing an item
+- (postpone) Type new item directly into list instead of form
+- (postpone) Editing entries in-list
 - Better layout of entries & dates
-- Editing entries in-list
 - Nested lists
 - Log in and save lists
 - Multiple named lists

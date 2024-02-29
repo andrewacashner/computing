@@ -40,11 +40,15 @@ export default class ToDoList {
     return new ToDoList(newItems);
   }
 
-  isSorted() {
-    let sorted = this.toSortedByDate();
-    let compared = this.list.map((item, index) => item === sorted[index]);
+  hasIdenticalContents(other) {
+    let compared = this.list.map((item, index) => item === other.list[index]);
     let tested = compared.every(i => i === true);
     return tested;
+  }
+ 
+  isSorted() {
+    let sorted = this.toSortedByDate();
+    return this.hasIdenticalContents(sorted);
   }
 
   append(item) {
@@ -101,5 +105,21 @@ export default class ToDoList {
   
   areAnyDone() {
     return this.list.some(i => i.isDone === true);
+  }
+
+  activeOrNot(test) {
+    return (test) ? "active" : "inactive";
+  }
+
+  checkAllStatus() {
+    return this.activeOrNot(this.areAnyLeftToDo());
+  }
+
+  uncheckAllStatus() {
+    return this.activeOrNot(this.areAnyDone());
+  }
+
+  unsortedStatus() {
+    return this.activeOrNot(!this.isSorted());
   }
 }
