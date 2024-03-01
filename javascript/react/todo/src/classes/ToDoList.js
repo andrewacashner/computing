@@ -2,9 +2,19 @@ import ToDoItem from "./ToDoItem";
 
 export default class ToDoList {
   list;
+  draftEntry;
 
-  constructor(list = []) {
+  constructor(list = [], draft = new ToDoItem()) {
     this.list = [...list];
+    this.draftEntry = draft;
+  }
+
+  cloneWithDraft(draft) {
+    return new ToDoList(this.list, draft);
+  }
+
+  moveItemToDraft(item) {
+    return this.removeItem(item).cloneWithDraft(item);
   }
 
   partition(testFn) {

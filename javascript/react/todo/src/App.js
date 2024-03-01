@@ -5,10 +5,7 @@
 import "./App.css";
 import { useState } from "react";
 import ToDoContext from "./store/ToDoContext";
-
-import ToDoItem from "./classes/ToDoItem";
 import ToDoList from "./classes/ToDoList";
-
 import TaskList from "./components/TaskList";
 import CheckAllButton from "./components/CheckAllButton";
 import NewTaskForm from "./components/NewTaskForm";
@@ -16,21 +13,11 @@ import NewTaskForm from "./components/NewTaskForm";
 function App() {
   const emptyList = new ToDoList();
   let [items, setItems] = useState(emptyList);
-  
-  const emptyTask = new ToDoItem();
-  let [draft, setDraft] = useState(emptyTask);
 
   let toDoContextValue = {
-    items: {
-      get: items,
-      set: setItems,
-      reset: () => setItems(emptyList)
-    },
-    form: {
-      get: draft,
-      set: setDraft,
-      reset: () => setDraft(emptyTask)
-    }
+    get: items,
+    set: setItems,
+    reset: () => setItems(emptyList)
   }
 
   return(

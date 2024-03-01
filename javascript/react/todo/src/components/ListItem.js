@@ -5,8 +5,7 @@ function ListItem(props) {
   let item = props.children;
   
   let context = useContext(ToDoContext);
-  let setItems = context.items.set;
-  let setDraft = context.form.set;
+  let setItems = context.set;
 
   function toggleDoneStatus() {
     setItems(prevItems => prevItems.toggleDoneStatus(item));
@@ -29,8 +28,7 @@ function ListItem(props) {
   
   function EditButton() {
     function editItem(event) {
-      setDraft(prevDraft => item.clone());
-      setItems(prevItems => prevItems.removeItem(item));
+      setItems(prevItems => prevItems.moveItemToDraft(item));
       event.stopPropagation();
     }
 

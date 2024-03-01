@@ -4,8 +4,9 @@ import ToDoItem from "../classes/ToDoItem";
 
 function NewTaskForm() {
   let context = useContext(ToDoContext);
-  let setItems = context.items.set;
-  let draft = context.form.get;
+  let items = context.get;
+  let setItems = context.set;
+  let draft = items.draftEntry;
 
   function addNewTask(event) {
     event.preventDefault();
@@ -22,7 +23,6 @@ function NewTaskForm() {
       console.log(`Add new task '${newTask.task}' with deadline '${newTask.deadline}'`);
       setItems(prevItems => prevItems.append(newTask));
     }
-    context.form.reset();
     event.target.reset();
   }
 

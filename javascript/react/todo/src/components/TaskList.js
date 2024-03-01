@@ -16,8 +16,8 @@ function isDraggedOverNext(event, items) {
 
 function TaskList() {
   let context = useContext(ToDoContext);
-  let items = context.items.get;
-  let setItems = context.items.set;
+  let items = context.get;
+  let setItems = context.set;
 
   function dropListItem(event) {
     event.preventDefault()

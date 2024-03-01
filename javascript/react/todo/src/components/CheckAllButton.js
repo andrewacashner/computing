@@ -3,9 +3,9 @@ import ToDoContext from "../store/ToDoContext";
 
 function CheckAllButton(props) {
   let context = useContext(ToDoContext);
-  let items = context.items.get
-  let setItems = context.items.set;
-  let clearAll = context.items.reset;
+  let items = context.get
+  let setItems = context.set;
+  let clearAll = context.reset;
 
   function setAllItemStatus(isDone) {
     setItems(prevItems => prevItems.setAllItemStatus(isDone));

@@ -14,10 +14,10 @@
 - (done) Work with ToDoList objects rather than applying ToDoList static methods to
 -  arrays
 - (done) Use ToDoItem as the form default when editing an item
-- (postpone) Type new item directly into list instead of form
-- (postpone) Editing entries in-list
+- (rejected) Type new item directly into list instead of form
+- (rejected) Editing entries in-list
+- (rejected) Nested lists
 - Better layout of entries & dates
-- Nested lists
 - Log in and save lists
 - Multiple named lists
 
