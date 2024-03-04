@@ -1,3 +1,5 @@
+# Fake DB to learn python
+# Andrew Cashner, 2024/03/04
 import uuid
 
 class Person:
