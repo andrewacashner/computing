@@ -11,31 +11,27 @@ class Person:
         self.firstName = firstName
         self.birthdate = birthdate
 
-# TODO doesn't work 
     def __str__(self):
-        return f"{self.firstName} {self.lastName} ({self.birthdate})"
+        return f"{self.firstName}\t{self.lastName}\t({self.birthdate})"
 
 
 class PersonDB:
     people = []
 
     def __init__(self, people):
-        self.people = map(lambda p: Person(*p) if isinstance(p, Person) else
-                          p, people)
+        # Input can be a list of Person instances or a list of tuples [or
+        # arrays] with the arguments to initialize Person instances
+        def ensurePerson(p):
+            return p if isinstance(p, Person) else Person(*p)
 
-# TODO doesn't work 
+        self.people = [ensurePerson(p) for p in people]
+
     def __str__(self):
-        result = "["
-        for person in self.people:
-            result += f"{person}, "
+        return "\n".join([str(p) for p in self.people])
 
-        result += "]"
-
-        return result
-
-#    def queryBy(self, field):
-#        if field == id return self.find(lambda d: d.id == id)
-
+    def queryBy(self, field, data):
+        matches = [p for p in self.people if getattr(p, field) == data]
+        return PersonDB(matches)
 
 data = [("Cashner", "Ann", "1983-03-24"),
         ("Cashner", "Andrew", "1981-04-11"),
@@ -43,7 +39,11 @@ data = [("Cashner", "Ann", "1983-03-24"),
         ("Cashner", "Joy", "2014-03-10")]
 
 db = PersonDB(data)
-print(str(db))
+print(db)
 
+andrew = db.queryBy("firstName", "Andrew")
+print(andrew)
+
+print(db.queryBy("firstName", "Ben"))
 
 
