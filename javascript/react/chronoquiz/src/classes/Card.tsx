@@ -7,12 +7,12 @@ export default class Card {
   #safe: boolean;
 
   // Each card gets the given info and a random unique identifier.
-  constructor({
-    isClue:boolean = true, // Is this a clue (true) or answer?
-    date: number,          // Four-digit year of event
-    info: string,          // Brief description of event
-    img: string,           // Full URL of image
-    color: string          // CSS color to be used in timeline
+  constructor({ isClue = true, date, info, img, color }: {
+    isClue?: boolean, // Is this a clue (true) or answer?
+    date?: number,    // Four-digit year of event
+    info?: string,    // Brief description of event
+    img?: string,     // Full URL of image
+    color?: string    // CSS color to be used in timeline
   }) {
     this.isClue = isClue;
     this.id = crypto.randomUUID();
@@ -44,13 +44,13 @@ export default class Card {
    * Returns {Card} - Card with validated content (with safe property set to
    * true), or null if the input was invalid
    */
-  static async newSafeCard({
-    isClue: boolean, 
-    date: number, 
-    info: string, 
-    img: string, 
-    color: color
-  }) {
+  static async newSafeCard({ isClue, date, info, img, color }: {
+    isClue?: boolean, 
+    date?: number, 
+    info?: string, 
+    img?: string, 
+    color?: color
+  }): Card {
     try {
       let cleanDate = Card.#sanitizeDate(date);
       let cleanInfo = Card.#sanitizeInfo(info);
@@ -69,7 +69,6 @@ export default class Card {
         return card;
       } else {
         throw new Error(`Could not sanitize card input with date '${date}', info '${info}'`);
-        return null;
       }
     } catch(e) {
       console.error(e);
@@ -89,8 +88,7 @@ export default class Card {
         date.setFullYear(numTest);
         return date;
       } else {
-        throw `Bad date input ${raw}`;
-        return null;
+        throw new Error(`Bad date input ${raw}`);
       }
     } catch(e) { 
       console.error(e);
@@ -119,8 +117,7 @@ export default class Card {
       if (imgTest === true) {
         return url;
       } else {
-        throw `Image not found at url '${url}'`;
-        return null;
+        throw new Error(`Image not found at url '${url}'`);
       }
     } 
   }
