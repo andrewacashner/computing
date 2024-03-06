@@ -7,7 +7,6 @@ def square(s):
     def spread(s):
         return ' '.join(list(s))
 
-    forward = spread(s)
     reverse = spread(s[::-1]) # reverse
     
     gap = ' ' * (len(forward) - 2)
@@ -19,5 +18,6 @@ def square(s):
 
 
 
-
+def rect(s):
+    reverse = reverse(list(s))
 

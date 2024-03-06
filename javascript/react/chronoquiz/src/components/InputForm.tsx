@@ -1,22 +1,47 @@
-import { useContext, useEffect } from "react";
+import { useState, useContext, useEffect } from "react";
 import TimelineContext from "../store/TimelineContext";
-import useTimelineSelection from "../hooks/useTimelineSelection";
+// import useTimelineSelection from "../hooks/useTimelineSelection";
 
 export default function InputForm() {
 
   let context = useContext(TimelineContext);
   let setGame = context.set;
 
-  // TODO doesn't work (infinite loop of re-renders)
-  let loadTimeline = useTimelineSelection(null, setGame);
-  useEffect(() => loadTimeline());
+  //  // TODO doesn't work (infinite loop of re-renders)
+  //  let loadTimeline = useTimelineSelection(null, setGame);
+  //  useEffect(() => loadTimeline());
+  //
+  //  function setupTimeline(event: React.FormEvent<HTMLFormElement>): void {
+  //    loadTimeline(event, setGame);
+  //  }
 
-  function setupTimeline(event: React.FormEvent<HTMLFormElement>): void {
-    loadTimeline(event, setGame);
+  let [url, setUrl] = useState("../input/music.json");
+
+  function getUrl(event: React.FormEvent<HTMLFormElement>): void {
+    let files = event.currentTarget.fileInput.files;
+    let source = event.currentTarget.source.value;
+    if (source) {
+      if (files.length > 0) { 
+        setUrl(URL.createObjectURL(files[0]));
+      } else {
+        setUrl(`../input/${source}.json`);
+      }
+    } 
   }
 
+  let [json, setJson] = useState("{ 'status': 'placeholder' }");
+
+  useEffect(() => {
+    console.log(`Loading file '${url}'`);
+    fetch(url)
+    .then(data => data.json())
+    .then(result => setJson(result))
+    .catch(console.error)
+  }, [url]);
+
   return(
-    <form id="inputForm" onSubmit={setupTimeline}>
+    <>
+    <form id="inputForm" onSubmit={getUrl}>
       <label htmlFor="source">Choose a timeline:</label>
       <select name="source" id="source" required defaultValue="music">
         <option value="music">Music</option>
@@ -29,6 +54,8 @@ export default function InputForm() {
       </div>
       <button type="submit" id="playbutton">Play!</button>
     </form>
+    <pre>{json}</pre>
+  </>
   );
 }
 
