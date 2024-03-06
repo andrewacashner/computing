@@ -7,18 +7,15 @@ def square(s):
     def spread(s):
         return ' '.join(list(s))
 
-    top = spread(s)
-    bottom = spread(s[::-1]) # reverse
+    forward = spread(s)
+    reverse = spread(s[::-1]) # reverse
     
-    def row(i):
-        gap = ' ' * (len(top) - 2)
-        left = s[-(i + 1)] # bottom up
-        right = s[i]       # top down
-        return left + gap + right
+    gap = ' ' * (len(forward) - 2)
+   
+    middle = [left + gap + right 
+              for left, right in zip(reverse, forward)]
 
-    middle = [row(i) for i, c in enumerate(s)]
-
-    return '\n'.join([top, *middle, bottom])
+    return '\n'.join([forward, *middle, reverse])
 
 
 
