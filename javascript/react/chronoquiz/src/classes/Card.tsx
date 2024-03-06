@@ -1,5 +1,6 @@
 export default class Card {
   isClue: boolean;
+  id: string;
   date: Date;
   info: string;
   img: string;

@@ -5,7 +5,9 @@ export default function Clues() {
   let context = useContext(TimelineContext);
   console.log(context.get);
   let clues = context.get.clues;
-  let cards = clues.map(clue => <p>{clue.fact}</p>);
+  console.log("Found clues");
+  console.log(clues);
+  let cards = clues.map(clue => <p key={clue.id}>{clue.fact}</p>);
 
   return(
     <div className="clue">{cards}</div>

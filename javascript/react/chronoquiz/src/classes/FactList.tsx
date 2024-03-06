@@ -4,5 +4,9 @@ export default class FactList extends Array {
   constructor(...cards: Array<Card>) {
     super(...cards);
   }
+
+  isEmpty() {
+    return this.length === 0;
+  }
 }
 

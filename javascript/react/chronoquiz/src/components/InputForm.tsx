@@ -1,6 +1,5 @@
 import { useContext, useEffect } from "react";
 import TimelineContext from "../store/TimelineContext";
-import Game from "../classes/Game";
 import useTimelineSelection from "../hooks/useTimelineSelection";
 
 export default function InputForm() {
@@ -9,12 +8,11 @@ export default function InputForm() {
   let setGame = context.set;
 
   // TODO doesn't work (infinite loop of re-renders)
-  let loadTimeline = useTimelineSelection();
+  let loadTimeline = useTimelineSelection(null, setGame);
   useEffect(() => loadTimeline());
 
   function setupTimeline(event: React.FormEvent<HTMLFormElement>): void {
-    let newCards = loadTimeline(event);
-    setGame(prev => new Game(newCards));
+    loadTimeline(event, setGame);
   }
 
   return(

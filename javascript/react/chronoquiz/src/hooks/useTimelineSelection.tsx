@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Card from "../classes/Card";
 import FactList from "../classes/FactList";
+import Game from "../classes/Game";
 
 function userUploadUrl(files: FileList): string {
   return URL.createObjectURL(files[0]);
@@ -35,42 +36,57 @@ async function cardArrayFromJson(json: Array<{date, info}>): Array<Card> {
   return cards;
 }
 
-async function loadTimeline(event: React.FormEvent<HTMLFormElement> = null): FactList {
+function useUrl(
+  event: React.FormEvent<HTMLFormElement> = null,
+  setGameFn: (Game) => void
+): void {
 
-  let files = event.currentTarget.fileInput.files as FileList;
-  let source = event.currentTarget.source.value as string;
-  let url = getInputUrl(source, files);
+  let [cards, setCards] = useState([]);
 
-  if (url) {
+  if (event) {
+    let files = event.currentTarget.fileInput.files as FileList;
+    let source = event.currentTarget.source.value as string;
+    let url = getInputUrl(source, files);
+
     console.log(`Loading file ${url}`);
-    let cards = [];
+    useEffect(function () {
+      fetch(url).then(
+        function (response) {
+          let json = response.json();
+          let cardArray = cardArrayFromJson(json);
+          setCards(prev => cardArray);
+        }).catch(e => {
+          console.error(e)
+          throw new Error("Could not create cards from JSON input");
+        })
+    }, [cards]);
 
-    let response = await fetch(url).catch(e => {
-      console.error(e);
-      return cards;
-    });
-
-    let data = await response.json().catch(e => {
-      console.error(e);
-      return cards;
-    });
-
-    cards = await cardArrayFromJson(data).catch(e => {
-      console.error(e);
-      throw new Error("Could not create cards from JSON input");
-    });
-
-    return new FactList(cards);
+    if (cards) {
+      let cardList = new FactList(cards);
+      setGameFn(prev => new Game(cardList));
+    }
   }
 }
 
 // TODO doesn't work
 // TODO return type
-function useTimelineSelection(event: React.FormEvent<HTMLFormElement>) {
-  let setClues = useState(new FactList())[1];
-  let cards = useEffect(() => loadTimeline(event), [event]);
-  setClues(prev => cards);
-  return loadTimeline;
+function useTimelineSelection(event: React.FormEvent<HTMLFormElement>,
+setGameFn: (Game) => void): 
+  (event: React.FormEvent<HTMLFormElement>, setGameFn: (Game) => void) => void {
+
+  useEffect(() => {
+    async function load() {
+      useUrl(event, setGameFn).catch(e => console.log(e));
+    }
+    load();
+  }, [event, setGameFn]);
+
+  return (event, setGameFn) => {
+    async function load() {
+      useUrl(event, setGameFn).catch(e => console.log(e));
+    }
+    load();
+  }
 }
 
 export default useTimelineSelection;
