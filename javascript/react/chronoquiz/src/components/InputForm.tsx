@@ -4,7 +4,40 @@ import Card from "../classes/Card";
 import FactList from "../classes/FactList";
 import Game from "../classes/Game";
 
+import RestartButton from "./RestartButton";
+
 import TimelineContext from "../store/TimelineContext";
+
+function isInputValid(json: any): boolean {
+  return typeof json === "object"
+  && Array.isArray(json) 
+  && json.length > 0 
+  && json.every(fact => ("date" in fact) && ("info" in fact));
+}
+
+async function clueListFromJson(json: object): FactList { 
+  let cards = [];
+  try {
+    if (json && json.length > 0) {
+      for (let entry of json) {
+        try {
+          let card = await Card.newSafeCard(entry);
+          if (card && card.isSafe) {
+            cards.push(card);
+          } else {
+            throw new Error(`Faulty card input {date: '${entry.date}', info: '${entry.info.slice(0, 15)}...'}; skipping`);
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      }
+    }
+  } catch(e) {
+    console.error(e);
+  }
+  return new FactList(cards);
+}
+
 
 export default function InputForm() {
 
@@ -14,9 +47,12 @@ export default function InputForm() {
   let [url, setUrl] = useState("");
   let [json, setJson] = useState(null);
   let [uploadVisible, setUploadVisible] = useState(false);
+  let [isGameActive, setIsGameActive] = useState(false);
 
   function getUrl(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
+    setIsGameActive(true); 
+
     let source = event.target.source.value;
     let files = event.target.fileInput.files;
     let newUrl = (files.length > 0) 
@@ -24,7 +60,7 @@ export default function InputForm() {
                   : `./input/${source}.json`;
     setUrl(newUrl);
   }
-
+  
   useEffect(() => {
     async function fetchUrl(): void {
       if (url) {
@@ -33,18 +69,19 @@ export default function InputForm() {
         try {
           let response = await fetch(url);
 
+          let newJson;
           let contentType = response.headers.get("content-type");
-          let json;
+          
           if (contentType && contentType.includes("application/json")) {
-            json = await response.json();
+            newJson = await response.json();
           } else {
             throw new Error(`No JSON input: ${response}`);
           }
 
-          if (json) {
-            setJson(json);
+          if (isInputValid(newJson)) {
+            setJson(newJson);
           } else {
-            throw new Error(`Unusable JSON input: ${newJson}`);
+            throw new Error("Unusable JSON input"); 
           }
         } catch(e) { 
           console.error(e); 
@@ -55,19 +92,21 @@ export default function InputForm() {
   }, [url]);
 
   useEffect(() => {
-    if (json && json.length > 0) {
-      let cards = [];
-      for (let entry of json) {
-        let card = new Card({isClue: true, ...entry});
-        cards.push(card);
+    async function loadClues(json) {
+      try {
+        let newClues = await clueListFromJson(json);
+        newClues.setupClues();
+        setGame(prevGame => new Game({ 
+          clues: newClues,
+          timeline: prevGame.timeline,
+          score: prevGame.score
+        }));
+      } catch(e) {
+        console.error(e);
       }
-      let newClues = new FactList(cards);
-      setGame(prev => new Game({
-        clues: newClues,
-        timeline: prev.timeline,
-        score: prev.score
-      }));
     }
+
+    loadClues(json);
   }, [json, setGame])
 
 
@@ -80,22 +119,52 @@ export default function InputForm() {
     return (isVisible) ? "show" : "hide";
   }
 
-  return(
-    <form id="inputForm" onSubmit={getUrl}>
-      <label htmlFor="source">Choose a timeline:</label>
-      <select name="source" id="source" 
-        onChange={showUploadButton}
-        required defaultValue="music">
-        <option value="music">Music</option>
-        <option value="wars">Wars</option>
-        <option value="upload">Upload a custom timeline...</option>
-      </select>
-      <div id="file" className={visibility(uploadVisible)}>
+
+  function SelectTimeline() {
+    return(
+      <div className={visibility(!isGameActive)}>
+        <label htmlFor="source">Choose a timeline:</label>
+        <select name="source" id="source" 
+          onChange={showUploadButton}
+          required defaultValue="music">
+          <option value="music">Music</option>
+          <option value="wars">Wars</option>
+          <option value="upload">Upload a custom timeline...</option>
+        </select>
+      </div>
+    );
+  }
+
+  function FileInput() {
+    return(
+      <div id="file" className={visibility(!isGameActive && uploadVisible)}>
         <label htmlFor="fileInput">Upload JSON timeline file (<a href="about.html">?</a>)</label>
         <input id="fileInput" type="file" accept=".json" />
       </div>
-      <button type="submit" id="playbutton">Play!</button>
-    </form>
+    );
+  }
+
+  // TODO "Play again" doesn't work
+  function PlayButton() {
+
+    function playMsg(isGameActive: boolean): string {
+      return (isGameActive) ? "Play again!" : "Play!";
+    }
+
+    return(
+      <button type="submit" id="playbutton">{playMsg(isGameActive)}</button>
+    );
+  }
+
+  return(
+    <>
+      <form id="inputForm" onSubmit={getUrl}>
+        <SelectTimeline />
+        <FileInput />
+        <PlayButton />
+      </form>
+      {isGameActive ? <RestartButton /> : null }
+    </>
   );
 }
 

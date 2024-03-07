@@ -1,37 +1,124 @@
+interface CardInput  {
+  isClue: boolean;      // Is this a clue (true) or answer?
+  date: Date | number;  // Date object or numeric year of event
+  info: string;         // Brief description of event
+  img: string;          // Full URL of image
+  color: string         // CSS color to be used in timeline
+}
+
 export default class Card {
   isClue: boolean;
   id: string;
-  date: Date;
+  date: Date; 
   info: string;
   img: string;
   color: string;
   #safe: boolean;
 
   // Each card gets the given info and a random unique identifier.
-  constructor({ isClue = true, date, info, img, color }: {
-    isClue?: boolean, // Is this a clue (true) or answer?
-    date?: number,    // Four-digit year of event
-    info?: string,    // Brief description of event
-    img?: string,     // Full URL of image
-    color?: string    // CSS color to be used in timeline
-  }) {
+  constructor({ isClue = true, date, info, img, color }: CardInput) {
     this.isClue = isClue;
     this.id = crypto.randomUUID();
-    this.date = new Date();
-    this.date.setFullYear(date);
+    this.date = date;
     this.info = info;
     this.img = img;
     this.color = color;
     this.#safe = false; // Has this card been sanitized?
   }
 
-  #markSafe(): Card {
+  markSafe(): Card {
     this.#safe = true;
     return this;
   }
 
+  // PUBLIC METHODS
+
   get isSafe(): boolean {
     return this.#safe;
+  }
+
+  /** Creat a new card with sanitized input.
+   * - The date must be an integer string <= the current year (including
+   *   negative numbers).
+   * - The info is converted to plain text using textContent.
+   * - The image, if present, is downloaded and cached.
+   *
+   * The parameters are the same as for new Card().
+   *
+   * Returns: Card with validated content (with safe property set to true), or
+   * null if the input was invalid.
+   */
+  static async newSafeCard({ isClue, date, info, img, color }: 
+                           CardInput): Card | null {
+    let card = null;
+    try {
+      let cleanDate = Card.#sanitizeDate(date);
+      let cleanInfo = info; // React already sanitizes (?)
+      let cleanImg = await Card.#sanitizeImg(img).catch(console.error);
+
+      // The date is the only dealbreaker. We just skip a bad image link.
+      if (cleanDate) {
+        card = new Card({
+          isClue: isClue, 
+          date: cleanDate, 
+          info: cleanInfo, 
+          img: cleanImg, 
+          color: color});
+          card.markSafe();
+          return card;
+      } else {
+        throw new Error(`Could not sanitize card input with date '${date}', info '${info}'`);
+      }
+    } catch(e) {
+      console.error(e);
+    }
+    return card;
+  }
+
+  // PRIVATE METHODS
+  // Sanitize input 
+  static #sanitizeDate(rawDate: any): Date | null {
+    let date = null;
+    try {
+      let numTest = Number(rawDate);
+      if (!isNaN(numTest) 
+          && Number.isInteger(numTest) 
+          && numTest <= new Date().getFullYear()) {
+            
+            date = new Date();
+            date.setFullYear(numTest);
+        } else {
+          throw new Error(`Bad date input ${rawDate}`);
+        }
+    } catch(e) { 
+      console.error(e);
+    }
+    return date;
+  }
+
+  static async #sanitizeImg(url: string): string | null {
+    function getImageIfExists(url: string): Promise { 
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = url;
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+      });
+    }
+    let testedUrl = null;
+    try {
+      if (url) {
+        let imgTest = await getImageIfExists(url).catch(console.log);
+        if (imgTest === true) {
+          testedUrl = url;
+        } else {
+          throw new Error(`Image not found at url '${url}'`);
+        }
+      } 
+    } catch(e) {
+      console.error(e);
+    }
+    return testedUrl;
   }
 
   /**
@@ -58,16 +145,8 @@ export default class Card {
       return displayYear;
     }
   }
-  
-  // PUBLIC METHODS
 
   // Return the date as YYYY year string.
   get year(): string { return this.date.getFullYear(); }
- 
-  set year(YYYY: string): void { 
-    if (YYYY) {
-      this.date.setFullYear(YYYY); 
-    } 
-  }
 
 }

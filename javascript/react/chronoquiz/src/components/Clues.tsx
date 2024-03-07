@@ -13,7 +13,7 @@ export default function Clues() {
     return stubs.map(card => <Stub key={card.id} />);
   }
 
-  if (game.isActive) {
+  if (clues) {
     return(
       <div className="clueDeck">
         <Stubs />

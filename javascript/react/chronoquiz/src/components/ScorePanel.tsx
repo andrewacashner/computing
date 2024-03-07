@@ -1,6 +1,5 @@
 import { useContext } from "react";
 import TimelineContext from "../store/TimelineContext";
-import RestartButton from "./RestartButton";
 
 export default function ScorePanel() {
   let context = useContext(TimelineContext);
@@ -9,12 +8,9 @@ export default function ScorePanel() {
 
   if (game.isActive) {
     return(
-      <>
-        <div id="score">
-          <p>Score: <span className="score">{score}</span></p>
-        </div>
-        <RestartButton />
-      </>
+      <div id="score">
+        <p>Score: <span className="score">{score}</span></p>
+      </div>
     );
   }
 }

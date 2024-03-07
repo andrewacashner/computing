@@ -5,6 +5,6 @@ export default function RestartButton() {
   }
 
   return(
-    <button type="button" id="restart" onClick={restart}>Start Over</button>
+    <button type="button" id="restart" onClick={restart}>Choose Another Timeline</button>
   );
 }
