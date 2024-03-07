@@ -1,46 +1,40 @@
 import { useState, useContext, useEffect } from "react";
 import TimelineContext from "../store/TimelineContext";
-// import useTimelineSelection from "../hooks/useTimelineSelection";
+import useTimelineSelection from "../hooks/useTimelineSelection";
+
+async function fetchTimeline(url) {
+  let response = await fetch(url);
+  let json = await response.json();
+  return json;
+}
 
 export default function InputForm() {
 
   let context = useContext(TimelineContext);
   let setGame = context.set;
 
-  //  // TODO doesn't work (infinite loop of re-renders)
-  //  let loadTimeline = useTimelineSelection(null, setGame);
-  //  useEffect(() => loadTimeline());
-  //
-  //  function setupTimeline(event: React.FormEvent<HTMLFormElement>): void {
-  //    loadTimeline(event, setGame);
-  //  }
-
-  let [url, setUrl] = useState("../input/music.json");
+  let [url, setUrl] = useState("./input/music.json");
 
   function getUrl(event: React.FormEvent<HTMLFormElement>): void {
-    let files = event.currentTarget.fileInput.files;
-    let source = event.currentTarget.source.value;
-    if (source) {
-      if (files.length > 0) { 
-        setUrl(URL.createObjectURL(files[0]));
-      } else {
-        setUrl(`../input/${source}.json`);
-      }
-    } 
+    let source = event.target.source.value;
+    let files = event.target.fileInput.files;
+    if (files.length > 0) { 
+      setUrl(URL.createObjectURL(files[0]));
+    } else {
+      setUrl(`./input/${source}.json`);
+    }
   }
 
   let [json, setJson] = useState("{ 'status': 'placeholder' }");
-
+  
   useEffect(() => {
     console.log(`Loading file '${url}'`);
-    fetch(url)
-    .then(data => data.json())
-    .then(result => setJson(result))
-    .catch(console.error)
+    fetchTimeline("./input/music.json")
+    .then(response => setJson(response))
+    .catch(console.error);
   }, [url]);
 
   return(
-    <>
     <form id="inputForm" onSubmit={getUrl}>
       <label htmlFor="source">Choose a timeline:</label>
       <select name="source" id="source" required defaultValue="music">
@@ -54,8 +48,6 @@ export default function InputForm() {
       </div>
       <button type="submit" id="playbutton">Play!</button>
     </form>
-    <pre>{json}</pre>
-  </>
   );
 }
 
