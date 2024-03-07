@@ -1,15 +1,24 @@
 import { useContext } from "react";
 import TimelineContext from "../store/TimelineContext";
+import Card from "./Card";
 
 export default function Clues() {
   let context = useContext(TimelineContext);
-  console.log(context.get);
-  let clues = context.get.clues;
-  console.log("Found clues");
-  console.log(clues);
-  let cards = clues.map(clue => <p key={clue.id}>{clue.fact}</p>);
+  let game = context.get;
+  let clues = game.clues;
 
-  return(
-    <div className="clue">{cards}</div>
-  );
+  function Stubs(): Array<React.ReactElement> {
+    const Stub = (key) => <div key={key} className="cardStub" />;
+    let stubs = clues.allButLast();
+    return stubs.map(card => <Stub key={card.id} />);
+  }
+
+  if (game.isActive) {
+    return(
+      <div className="clueDeck">
+        <Stubs />
+        <Card>{clues.last()}</Card>
+      </div>
+    );
+  }
 }

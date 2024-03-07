@@ -14,7 +14,7 @@ import Timeline from "./components/Timeline";
 import TimelineContext from "./store/TimelineContext";
 
 function App() {
-  let [game, setGame] = useState(new Game());
+  let [game, setGame] = useState(Game.startingGame());
   let gameContext = { get: game, set: setGame };
 
   return (

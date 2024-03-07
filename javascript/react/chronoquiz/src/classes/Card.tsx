@@ -17,7 +17,8 @@ export default class Card {
   }) {
     this.isClue = isClue;
     this.id = crypto.randomUUID();
-    this.date = date;
+    this.date = new Date();
+    this.date.setFullYear(date);
     this.info = info;
     this.img = img;
     this.color = color;
@@ -33,95 +34,40 @@ export default class Card {
     return this.#safe;
   }
 
-  /** Create a new card with sanitized input.
+  /**
+   * Return the year if positive or year BC if negative. (Deals with the year
+   * only.) 
    *
-   * - The date must be an integer string <= the current year (including
-   *   negative numbers).
-   * - The info is converted to plain text using textContent.
-   * - The image, if present, is downloaded and cached.
+   * Technically BC should be offset by one year but we told users to use
+   * negative numbers as years BC.
    *
-   * The parameters are the same as for new Card().
-   *
-   * Returns {Card} - Card with validated content (with safe property set to
-   * true), or null if the input was invalid
+   * Returns: Formatted string for year, with BC if the year was
+   * negative
    */
-  static async newSafeCard({ isClue, date, info, img, color }: {
-    isClue?: boolean, 
-    date?: number, 
-    info?: string, 
-    img?: string, 
-    color?: color
-  }): Card {
-    try {
-      let cleanDate = Card.#sanitizeDate(date);
-      let cleanInfo = Card.#sanitizeInfo(info);
-      let cleanImg = await Card.#sanitizeImg(img).catch(e => console.error(e));
-
-      // The date is the only dealbreaker. We just skip a bad image link.
-      if (cleanDate) {
-        let card = new Card({
-          isClue: isClue, 
-          date: cleanDate, 
-          info: cleanInfo, 
-          img: cleanImg, 
-          color: color
-        });
-        card.#markSafe();
-        return card;
-      } else {
-        throw new Error(`Could not sanitize card input with date '${date}', info '${info}'`);
-      }
-    } catch(e) {
-      console.error(e);
-    }
-  }
-
-  // PRIVATE METHODS
-  // Sanitize input 
-  static #sanitizeDate(raw: string | number | Date): Date | null {
-    try {
-      let numTest = Number(raw);
-      if (!isNaN(numTest) 
-        && Number.isInteger(numTest) 
-        && numTest <= new Date().getFullYear()) {
-
-        let date = new Date();
-        date.setFullYear(numTest);
-        return date;
-      } else {
-        throw new Error(`Bad date input ${raw}`);
-      }
-    } catch(e) { 
-      console.error(e);
-    }
-  }
-
-  static #sanitizeInfo(raw: string): string {
-    let node = document.createElement("span");
-    node.textContent = raw;
-    return node.textContent;
-  }
-
-  static async #sanitizeImg(url: string): string | null {
-    function doesImageExist(url: string): boolean { 
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = url;
-        img.onload = () => resolve(true);
-        img.onerror = () => resolve(false);
-      });
-    }
-    if (!url) {
-      return null;
+  dateToString(): string { 
+    if (this.isClue) {
+      return "Clue";
     } else {
-      let imgTest = await doesImageExist(url).catch(e => console.log(err));
-      if (imgTest === true) {
-        return url;
-      } else {
-        throw new Error(`Image not found at url '${url}'`);
-      }
+      let yearZero = new Date();
+      yearZero.setFullYear(0);
+
+      let displayYear = this.year;
+      if (this.date < yearZero) {
+        displayYear = `${-displayYear} bce`; 
+      } 
+      return displayYear;
+    }
+  }
+  
+  // PUBLIC METHODS
+
+  // Return the date as YYYY year string.
+  get year(): string { return this.date.getFullYear(); }
+ 
+  set year(YYYY: string): void { 
+    if (YYYY) {
+      this.date.setFullYear(YYYY); 
     } 
   }
-
 
 }

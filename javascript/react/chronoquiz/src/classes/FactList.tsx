@@ -1,12 +1,22 @@
 import Card from "Card";
 
-export default class FactList extends Array {
-  constructor(...cards: Array<Card>) {
-    super(...cards);
+export default class FactList {
+  items: Array<Card>;
+
+  constructor(cards: Array<Card> = []) {
+    this.items = cards;
   }
 
   isEmpty() {
-    return this.length === 0;
+    return this.items.length === 0;
+  }
+
+  allButLast() {
+    return this.items.slice(0, -1);
+  }
+
+  last() {
+    return this.items.at(-1);
   }
 }
 
