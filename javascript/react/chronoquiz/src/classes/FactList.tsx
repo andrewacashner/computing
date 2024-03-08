@@ -1,4 +1,4 @@
-import Card from "Card";
+import Card from "./Card";
 import { default as Color } from "./RgbColorMix";
 
 export default class FactList {
@@ -10,16 +10,10 @@ export default class FactList {
 
   // PRIVATE METHODS
   
-  // Sort the array by the date field, ascending.
-  #sortByDate(): FactList {
-    this.items.sort((c1, c2) => { return c1.date - c2.date });
-    return this;
-  }
-  
   // Set the colors of the cards in this list, in chronological order, to
   // evenly spaced intervals along the spectrum.
   #setColors(): FactList {
-    this.#sortByDate();
+    this.sortByDate();
     let items = this.items;
 
     items.forEach((card, index) => {
@@ -48,6 +42,22 @@ export default class FactList {
   }
 
   // PUBLIC METHODS
+
+  clone(): FactList {
+    return new FactList([...this.items]);
+  }
+
+  // Sort the array by the date field, ascending.
+  sortByDate(): FactList {
+    this.items.sort((c1, c2) => { return c1.date - c2.date });
+    return this;
+  }
+
+  sortedByDate(): FactList {
+    return this.clone().sortByDate();
+  }
+  
+
   setupClues() {
     this.#setColors();
     this.#shuffle();
@@ -57,7 +67,7 @@ export default class FactList {
     return this.items.length === 0;
   }
 
-  allButLast(): Array<Card> {
+  allButLastItems(): Array<Card> {
     return this.items.slice(0, -1);
   }
 
@@ -70,11 +80,41 @@ export default class FactList {
     return card;
   }
 
+  dropLast(): FactList {
+    this.pop();
+    return this;
+  }
+
+  dropLastCopy(): FactList {
+    return new FactList(this.items.slice(0, -1));
+  }
+
+  prepend(item): FactList {
+    this.items.unshift(item);
+    return this;
+  }
+  
+  prependCopy(item): FactList {
+    return new FactList([item, ...this.items]);
+  }
+
   // Add event to array and then resort by date.
   addFact(card) {
     this.items.push(card);
-    this.#sortByDate();
+    this.sortByDate();
   }
 
+  resetMargins(): FactList {
+    let resetItems = [];
+    for (let i of this.items) {
+      let card = new Card({...i, expand: false});
+      resetItems.push(card);
+    }
+    return new FactList(resetItems);
+  }
+
+  addAnswer(answer): FactList {
+    return this.prependCopy(answer).sortedByDate().resetMargins();
+  }
 }
 

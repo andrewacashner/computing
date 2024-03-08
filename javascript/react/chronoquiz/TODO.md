@@ -6,13 +6,29 @@
     - (DONE) add "now" card
     - (DONE) shuffle clues
 - (DONE) Add colors
-- Add actual game logic
+- (DONE) Add actual game logic
     - Drag/drop attributes
     - Drag/drop handlers
     - Update timeline width with new cards
     - Game over display
 - Improve error handling
 - Routing: add About page
+
+- Remove unused code
+- Class methods: mutate or return copy?
+- FactList is a leaky abstraction: Make sure never need to reference items
+  member outside of class
+
+# CSS
+
+- Replace hacky timeline bar display
+
+# Bugs
+
+- Margin doesn't reset after wrong guess
+- "Play again" button doesn't work
+- Date comparison is wrong for cards with current year, because they
+  include exact time if created after Now card?
 
 ## Next stage
 

@@ -102,6 +102,10 @@ div.card {
   overflow: scroll;
 }
 
+div.card[data-expand] {
+  margin-left: calc(5 * var(--card-margin));
+}
+
 div.card span.date {
   font-weight: bold;
   font-size: 200%;
@@ -227,3 +231,16 @@ div.card[data-noselect="noselect"] img {
   pointer-events: none;
   user-select: none;
 }
+
+.flash {
+  animation-name: flash_bg;
+  animation-duration: .15s;
+  animation-iteration-count: 2;
+}
+
+@keyframes flash_bg {
+  to {
+    background-color: red;
+  }
+}
+

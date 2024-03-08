@@ -1,9 +1,31 @@
 function color(card) {
-  let color = null;
-  if (!card.isClue) {
-    color = { style: { backgroundColor: card.color.css } };
+  const bg = card => ({ style: { backgroundColor: card.color.css } });
+  return (card.isClue) ? null : bg(card);
+}
+
+function dragstartHandler(event) {
+  event.dataTransfer.setData("id", event.target.id);
+  event.dataTransfer.effectAllowed = "move";
+}
+
+function draggable(card) {
+  const dragSettings = { 
+    draggable : true,
+    onDragStart: dragstartHandler
+  };
+  return (card.isClue) ? dragSettings : null;
+}
+
+function expand(card) {
+  return (card.expand) ? { "data-expand": true } : null;
+}
+
+function classList(card) {
+  let classes = ["card"];
+  if (card.flash) {
+    classes.push("flash");
   }
-  return color;
+  return classes.join(" ");
 }
 
 export default function Card(props) {
@@ -12,11 +34,13 @@ export default function Card(props) {
   if (card) {
     return(
       <div key={card.id}
-        className="card" 
+        className={classList(card)}
         id={card.id}
-        data-when={card.date}
+        data-when={card.date.getFullYear()}
         data-noselect="noselect"
-        {...color(card)}>
+        {...expand(card)}
+        {...color(card)}
+        {...draggable(card)}>
         <span className="date">{card.dateToString()}</span>
         <img alt="Clue" src={card.img} />
         <span className="info">{card.info}</span>

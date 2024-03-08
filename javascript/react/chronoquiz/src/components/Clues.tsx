@@ -9,7 +9,7 @@ export default function Clues() {
 
   function Stubs(): Array<React.ReactElement> {
     const Stub = (key) => <div key={key} className="cardStub" />;
-    let stubs = clues.allButLast();
+    let stubs = clues.allButLastItems();
     return stubs.map(card => <Stub key={card.id} />);
   }
 

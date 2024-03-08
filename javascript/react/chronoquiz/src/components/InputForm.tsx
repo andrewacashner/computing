@@ -81,7 +81,9 @@ export default function InputForm() {
           if (isInputValid(newJson)) {
             setJson(newJson);
           } else {
-            throw new Error("Unusable JSON input"); 
+            alert(`Could not create a timeline from JSON file at ${url}`);
+            window.location.reload();
+            throw new Error("Unusable JSON input; restarting");
           }
         } catch(e) { 
           console.error(e); 
@@ -99,7 +101,8 @@ export default function InputForm() {
         setGame(prevGame => new Game({ 
           clues: newClues,
           timeline: prevGame.timeline,
-          score: prevGame.score
+          score: prevGame.score,
+          isActive: isGameActive
         }));
       } catch(e) {
         console.error(e);
@@ -107,7 +110,7 @@ export default function InputForm() {
     }
 
     loadClues(json);
-  }, [json, setGame])
+  }, [json, setGame, isGameActive])
 
 
   function showUploadButton(event: React.FormEvent<HTMLFormElement>): void {

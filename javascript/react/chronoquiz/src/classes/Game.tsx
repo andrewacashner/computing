@@ -12,11 +12,15 @@ export default class Game {
   clues: FactList;
   timeline: FactList;
   score: number;
+  isActive: boolean;
+  isGameOver: boolean;
 
-  constructor({ clues, timeline, score = 0 }: GameInput) {
+  constructor({ clues, timeline, score = 0, isActive = false, isGameOver = false }: GameInput) {
     this.clues = clues;
     this.timeline = timeline;
     this.score = score;
+    this.isActive = isActive;
+    this.isGameOver = isGameOver;
   }
   // PRIVATE METHODS
   
@@ -24,10 +28,27 @@ export default class Game {
    * (Note: The timeline list will then shuffle itself in chronological
    * order.)
    */
-  #moveCurrentClueToTimeline() {
+  moveCurrentClueToTimeline(): Game {
     let answer = this.clues.pop();
     answer.isClue = false;
     this.timeline.addFact(answer);
+    return this;
+  }
+
+  copyWithNextClue(): Game {
+    let answer = this.clues.last().copyAsAnswer();
+    let newTimeline = this.timeline.addAnswer(answer);
+    
+    let newClues = this.clues.dropLastCopy();
+    let gameOver = newClues.isEmpty();
+
+    return new Game({
+      clues: newClues,
+      timeline: newTimeline,
+      score: this.score,
+      isActive: this.isActive,
+      isGameOver: gameOver
+    });
   }
 
   // PUBLIC METHODS
@@ -51,10 +72,6 @@ export default class Game {
     });
   }
 
-  get isActive(): boolean {
-    return this.clues && !this.clues.isEmpty();
-  }
-
   incrementScore(): Game {
     ++this.score;
     return this;
@@ -63,19 +80,6 @@ export default class Game {
   // Subtract one from score; don't go below zero
   decrementScore(): Game {
     this.score  = Math.max(0, this.score - 1);
-    return this;
-  }
-
-  // Check for end of game, otherwise pull up the next clue.
-  nextClue(): Game {
-    this.#moveCurrentClueToTimeline();
-    if (!this.clues.isEmpty()) {
-      updateClues(this);
-    } else {
-      // TODO
-      this.isActive = false;
-      //      displayGameOver(this.score);
-    }
     return this;
   }
 

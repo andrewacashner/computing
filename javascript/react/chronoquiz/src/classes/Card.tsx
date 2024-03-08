@@ -3,7 +3,6 @@ interface CardInput  {
   date: Date | number;  // Date object or numeric year of event
   info: string;         // Brief description of event
   img: string;          // Full URL of image
-  color: string         // CSS color to be used in timeline
 }
 
 export default class Card {
@@ -12,17 +11,21 @@ export default class Card {
   date: Date; 
   info: string;
   img: string;
-  color: string;
-  #safe: boolean;
+  color: string;    // CSS color to be used in timeline
+  expand: boolean;  // Add margin because a card is being dragged over?
+  flash: boolean;   // Should this card flash an alert? (For wrong guess)
+  #safe: boolean;   // Has this card been sanitized?
 
   // Each card gets the given info and a random unique identifier.
-  constructor({ isClue = true, date, info, img, color }: CardInput) {
+  constructor({ isClue = true, date, info, img, color = null, expand = false, flash = false }: CardInput) {
     this.isClue = isClue;
     this.id = crypto.randomUUID();
     this.date = date;
     this.info = info;
     this.img = img;
     this.color = color;
+    this.expand = expand;
+    this.flash = flash;
     this.#safe = false; // Has this card been sanitized?
   }
 
@@ -48,7 +51,7 @@ export default class Card {
    * Returns: Card with validated content (with safe property set to true), or
    * null if the input was invalid.
    */
-  static async newSafeCard({ isClue, date, info, img, color }: 
+  static async newSafeCard({ isClue, date, info, img }: 
                            CardInput): Card | null {
     let card = null;
     try {
@@ -62,10 +65,10 @@ export default class Card {
           isClue: isClue, 
           date: cleanDate, 
           info: cleanInfo, 
-          img: cleanImg, 
-          color: color});
-          card.markSafe();
-          return card;
+          img: cleanImg
+        });
+        card.markSafe();
+        return card;
       } else {
         throw new Error(`Could not sanitize card input with date '${date}', info '${info}'`);
       }
@@ -84,7 +87,9 @@ export default class Card {
       if (!isNaN(numTest) 
           && Number.isInteger(numTest) 
           && numTest <= new Date().getFullYear()) {
-            
+
+            // TODO date comparison bad for cards with current year, because
+            // they include exact time if created after Now card?
             date = new Date();
             date.setFullYear(numTest);
         } else {
@@ -149,4 +154,12 @@ export default class Card {
   // Return the date as YYYY year string.
   get year(): string { return this.date.getFullYear(); }
 
+  copyAsAnswer(): Card {
+    return new Card({ ...this, isClue: false});
+  }
+
+  flash(): Card {
+    this.flash = true;
+    return this;
+  }
 }

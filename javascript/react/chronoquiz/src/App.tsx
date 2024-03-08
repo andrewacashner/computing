@@ -10,6 +10,7 @@ import InputForm from "./components/InputForm";
 import ScorePanel from "./components/ScorePanel";
 import Clues from "./components/Clues";
 import Timeline from "./components/Timeline";
+import GameOver from "./components/GameOver";
 
 import TimelineContext from "./store/TimelineContext";
 
@@ -24,10 +25,10 @@ function App() {
           <h1>Chronoquiz</h1>
           <Instructions />
           <InputForm  />
-          <ScorePanel />
+          { game.isGameOver ? null : <ScorePanel /> }
         </header>
         <main>
-          <Clues />
+          { game.isGameOver ? <GameOver /> : <Clues /> }
           <Timeline />
         </main>
       </div>
