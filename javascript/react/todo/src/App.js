@@ -1,38 +1,33 @@
-// To Do list
-// Andrew Cashner
-// 2024/02/23
-
 import "./App.css";
-import { useState } from "react";
-import ToDoContext from "./store/ToDoContext";
-import ToDoList from "./classes/ToDoList";
-import TaskList from "./components/TaskList";
-import CheckAllButton from "./components/CheckAllButton";
-import NewTaskForm from "./components/NewTaskForm";
+import { 
+  createBrowserRouter, 
+  createRoutesFromElements,
+  Route,
+  RouterProvider 
+} from "react-router-dom";
+
+import Layout from "./components/shared/Layout";
+
+import About from "./routes/About";
+import ToDo, { loader as toDoLoader} from "./routes/ToDo";
+import LogIn from "./routes/LogIn";
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route path="/" element={<Layout />}>
+      <Route path="/about" element={<About />} />
+      <Route path="/todo" element={<ToDo />} loader={toDoLoader} />
+      <Route path="/login" element={<LogIn />} />
+    </Route>
+  )
+);
 
 function App() {
-  const emptyList = new ToDoList();
-  let [items, setItems] = useState(emptyList);
-
-  let toDoContextValue = {
-    get: items,
-    set: setItems,
-    reset: () => setItems(emptyList)
-  }
-
   return(
-    <ToDoContext.Provider value={toDoContextValue}>
-      <section id="todo">
-        <div className="todoList">
-          <h1>To Do</h1>
-          <p className="instructions">Add a new task using the form below. Drag to rearrange tasks.</p>
-          <TaskList />
-          <CheckAllButton />
-        </div>
-          <NewTaskForm />
-      </section>
-    </ToDoContext.Provider>
+    <RouterProvider router={router} />
   );
 }
 
 export default App;
+
+
