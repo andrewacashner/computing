@@ -75,7 +75,7 @@ export default function Clues() {
       console.log("In range");
       let cardUnderDrag = cardAtCoord(event.clientX, event.clientY);
       if (cardUnderDrag) {
-        let match = timeline.items.find(c => c.id === cardUnderDrag.id);
+        let match = timeline.findById(cardUnderDrag.id);
         match.expand = true;
         setGame(prevGame => new Game({ timeline: timeline, ...prevGame }));
       }
@@ -86,7 +86,7 @@ export default function Clues() {
   function dragleaveHandler(event: React.DragEvent<HTMLElement>): void {
     let el = event.target;
     if (isCardElement(el)) {
-      let match = timeline.items.find(c => c.id === el.id);
+      let match = timeline.findById(el.id);
       match.expand = false;
       setGame(prevGame => new Game({ timeline: timeline.resetMargins(), 
                                    ...prevGame }));
@@ -125,12 +125,12 @@ export default function Clues() {
     let clue = clues.last();
     let guessElement = findFirstCardToRight(event);
     let guessID = guessElement?.id;
-    let guessIndex = timeline.items.findIndex(c => c.id === guessID);
+    let guessIndex = timeline.findIndexById(guessID);
 
     if (guessID && guessIndex !== -1) {
-      let guess = timeline.items[guessIndex];
+      let guess = timeline.at(guessIndex);
       // TODO put this logic in "isClueBetweenDates"
-      let beforeGuess = (guessIndex >= 0) ? timeline.items[guessIndex - 1] : null;
+      let beforeGuess = (guessIndex > 0) ? timeline.at(guessIndex - 1) : null;
 
       if (isClueBetweenDates(clue, guess, beforeGuess)) {
         console.log("Correct: ++Score");
@@ -159,7 +159,7 @@ export default function Clues() {
 
   const timelineWidth = {
     style: { width: 
-      `calc(${timeline.items.length} * (var(--card-width) + var(--card-margin)) + 4 * var(--card-margin)`
+      `calc(${timeline.length} * (var(--card-width) + var(--card-margin)) + 4 * var(--card-margin)`
     }
   }
   const windowWidth = document.documentElement.clientWidth;
@@ -172,7 +172,7 @@ export default function Clues() {
         <div className="timelineBar" {...timelineWidth} >
           <hr {...ruleWidth} />
           <div className="timeline" {...dragDropInterface}>
-            {timeline.items.map(card => <Card key={card.id}>{card}</Card>)}
+            {timeline.map(card => <Card key={card.id}>{card}</Card>)}
           </div>
         </div>
       </div>

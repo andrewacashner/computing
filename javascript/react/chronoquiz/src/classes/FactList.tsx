@@ -2,10 +2,10 @@ import Card from "./Card";
 import { default as Color } from "./RgbColorMix";
 
 export default class FactList {
-  items: Array<Card>;
+  #items: Array<Card>;
 
   constructor(cards: Array<Card> = []) {
-    this.items = cards;
+    this.#items = cards;
   }
 
   // PRIVATE METHODS
@@ -14,7 +14,7 @@ export default class FactList {
   // evenly spaced intervals along the spectrum.
   #setColors(): FactList {
     this.sortByDate();
-    let items = this.items;
+    let items = this.#items;
 
     items.forEach((card, index) => {
       items[index].color = Color.colorAtIndex(index, items.length, 
@@ -31,7 +31,7 @@ export default class FactList {
       return Math.floor(Math.random() * max);
     } 
 
-    let items = this.items;
+    let items = this.#items;
 
     for (let i = items.length - 1; i > 0; --i) {
       let j = randomInt(i);
@@ -44,12 +44,12 @@ export default class FactList {
   // PUBLIC METHODS
 
   clone(): FactList {
-    return new FactList([...this.items]);
+    return new FactList([...this.#items]);
   }
 
   // Sort the array by the date field, ascending.
   sortByDate(): FactList {
-    this.items.sort((c1, c2) => { return c1.date - c2.date });
+    this.#items.sort((c1, c2) => { return c1.date - c2.date });
     return this;
   }
 
@@ -63,20 +63,24 @@ export default class FactList {
     this.#shuffle();
   }
 
+  get length(): number {
+    return this.#items.length;
+  }
+
   isEmpty(): boolean {
-    return this.items.length === 0;
+    return this.length === 0;
   }
 
   allButLastItems(): Array<Card> {
-    return this.items.slice(0, -1);
+    return this.#items.slice(0, -1);
   }
 
   last(): Card {
-    return this.items.at(-1);
+    return this.#items.at(-1);
   }
 
   pop(): Card {
-    let card = this.items.pop();
+    let card = this.#items.pop();
     return card;
   }
 
@@ -86,27 +90,27 @@ export default class FactList {
   }
 
   dropLastCopy(): FactList {
-    return new FactList(this.items.slice(0, -1));
+    return new FactList(this.#items.slice(0, -1));
   }
 
   prepend(item): FactList {
-    this.items.unshift(item);
+    this.#items.unshift(item);
     return this;
   }
   
   prependCopy(item): FactList {
-    return new FactList([item, ...this.items]);
+    return new FactList([item, ...this.#items]);
   }
 
   // Add event to array and then resort by date.
   addFact(card) {
-    this.items.push(card);
+    this.#items.push(card);
     this.sortByDate();
   }
 
   resetMargins(): FactList {
     let resetItems = [];
-    for (let i of this.items) {
+    for (let i of this.#items) {
       let card = new Card({...i, expand: false});
       resetItems.push(card);
     }
@@ -116,5 +120,22 @@ export default class FactList {
   addAnswer(answer): FactList {
     return this.prependCopy(answer).sortedByDate().resetMargins();
   }
+
+  findById(id: string): Card {
+    return this.#items.find(c => c.id === id);
+  }
+
+  findIndexById(id: string): Card {
+    return this.#items.findIndex(c => c.id === id);
+  }
+
+  at(index: number): Card {
+    return this.#items.at(index);
+  }
+
+  map(fn: (Card) => Card): FactList {
+    return this.#items.map(fn);
+  }
+
 }
 

@@ -16,7 +16,7 @@
 
 - Remove unused code
 - Class methods: mutate or return copy?
-- FactList is a leaky abstraction: Make sure never need to reference items
+- (DONE) FactList is a leaky abstraction: Make sure never need to reference items
   member outside of class
 
 # CSS
