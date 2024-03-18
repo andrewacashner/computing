@@ -15,3 +15,9 @@ def todo(request):
     response = HttpResponse(jsonItems)
     response["Content-Type"] = "text/plain"
     return response
+
+def front(request):
+    context = {}
+    return render(request, "index.html", context)
+
+
