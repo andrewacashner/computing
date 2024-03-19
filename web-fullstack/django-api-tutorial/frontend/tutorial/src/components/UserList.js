@@ -1,6 +1,6 @@
 function displayUserData(user) {
   return(
-    <tr>
+    <tr key={user.username}>
       <td>{user.username}</td>
       <td>{user.email}</td>
     </tr>

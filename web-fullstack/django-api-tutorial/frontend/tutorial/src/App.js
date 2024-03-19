@@ -7,19 +7,37 @@ function App() {
   let [users, setUsers] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/users/")
-    .then(result => result.json())
-    .then(json => {
-      setUsers(json);
-      console.log(users);
-    })
-    .catch(console.error)
-  });
+    async function getUsers() {
+      try {
+        let response = await fetch("http://127.0.0.1:8000/users/");
+        console.debug(response);
+
+        let json = response.ok ? await response.json() : null;
+        console.debug(json);
+
+        if (json) {
+          setUsers(json.results);
+          console.debug(users);
+        } else {
+          throw new Error("Empty JSON");
+        }
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    getUsers();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="App">
-      <UserList users={users} />
-    </div>
+    <main>
+      <section>
+        <h1>Users</h1>
+        <div className="App">
+          <UserList users={users} />
+        </div>
+      </section>
+    </main>
   );
 }
 
