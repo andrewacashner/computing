@@ -7,6 +7,28 @@ const BACKEND_SERVER = "http://127.0.0.1:8000";
 
 function App() {
   let [users, setUsers] = useState([]);
+  console.debug("users");
+  console.debug(users);
+
+  class User {
+    constructor(username = "", email = "") {
+      this.username = username;
+      this.email = email;
+    }
+  }
+
+
+  const emptyUser = () => new User();
+
+  let [newUser, setNewUser] = useState(emptyUser());
+  console.debug(newUser);
+
+  function addUser(event) {
+    event.preventDefault(); // TODO how to enable return-to-enter?
+    let target = event.target;
+    let nextUser = new User(target.username.value, target.email.value);
+    setNewUser(nextUser);
+  }
 
   useEffect(() => {
     async function getUsers() {
@@ -18,8 +40,15 @@ function App() {
         console.debug(json);
 
         if (json) {
-          setUsers(json.results);
-          console.debug(users);
+          let data = JSON.parse(json);
+          console.debug(data);
+          let currentUsers = data.map(item => new User(
+            item.fields.username, item.fields.email));
+
+          console.debug("currentUsers:"); 
+          console.debug(currentUsers);
+
+          setUsers(currentUsers);
         } else {
           throw new Error("Empty JSON");
         }
@@ -28,27 +57,6 @@ function App() {
       }
     }
 
-    getUsers();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  class User {
-    constructor(username = "", email = "") {
-      this.username = username;
-      this.email = email;
-    }
-  }
-
-  const emptyUser = () => new User();
-
-  let [newUser, setNewUser] = useState(emptyUser());
-
-  function addUser(event) {
-    let target = event.target;
-    let nextUser = new User(target.username.value, target.email.value);
-    setNewUser(nextUser);
-  }
-
-  useEffect(() => {
     async function registerUser(user) {
       try {
         let response = await fetch(`${BACKEND_SERVER}/users/`, {
@@ -67,17 +75,23 @@ function App() {
         console.error(e);
       }
     }
+    
+
     if (newUser.username) {
       registerUser(newUser);
     }
-  }, [newUser]);
+    getUsers();
+
+  }, [newUser]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
 
   return (
     <main>
       <section>
         <h1>Users</h1>
         <div className="App">
-          <UserList users={users} />
+          { users ? <UserList users={users} /> : null }
         </div>
       </section>
       <section>
