@@ -2,6 +2,7 @@ import json
 from django.core import serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 
 class AllUsers(APIView):
@@ -19,11 +20,15 @@ class AllUsers(APIView):
         return Response(f"Added user {data} to database")
 
 class Login(APIView):
+    permission_classes = (IsAuthenticated,)
+
     def post(self, request):
         data = json.loads(request.body)
         return Response(f"Logged in user {data['username']}")
 
 class Logout(APIView):
+    permission_classes = (IsAuthenticated,)
+
     def post(self, request):
         data = json.loads(request.body)
         return Response(f"Logged out user {data['username']}")

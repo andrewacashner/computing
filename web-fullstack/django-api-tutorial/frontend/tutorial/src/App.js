@@ -23,12 +23,12 @@ function App() {
 
 
   class User {
-    constructor(username = "", email = "") {
+    constructor(username = "", password = "") {
       this.username = username;
-      this.email = email;
+      this.password = password;
     }
     get isEmpty() {
-      return this.username === "" && this.email === "";
+      return this.username === "" && this.password === "";
     }
     static blank() {
       return new User();
@@ -55,7 +55,7 @@ function App() {
   function addUser(event) {
     event.preventDefault(); // TODO how to enable return-to-enter?
     let target = event.target;
-    let nextUser = new User(target.username.value, target.email.value);
+    let nextUser = new User(target.username.value, target.password.value);
     setNewUser(nextUser);
   }
 
@@ -64,7 +64,8 @@ function App() {
     console.debug("Log out");
   }
 
-  function postRequest(action, user) {
+  function postRequest(action, user, token = null) {
+    let authorization = token ? { "Authorization": token } : null;
     let request = {
       url: `${BACKEND_SERVER}/auth/${action}/`, 
       msg: {
@@ -72,6 +73,8 @@ function App() {
         headers: new Headers({
           "Accept": "application/json",
           "Content-Type": "application/json",
+//          "Authorization": "Token f199d9f631f65e0a6b682de7817828d76c579a91",
+          ...authorization,
         }),
         body: JSON.stringify(user),
       },
@@ -80,17 +83,28 @@ function App() {
     return request;
   }
 
+  let [userToken, setUserToken] = useState();
+
   useEffect(() => {
     async function authenticate() {
       try {
-        let request = postRequest("login", currentUser);
-        let response = await fetch(request.url, request.msg);
-        debug(response);
-        if (response.ok) {
-          setAuthenticated(true);
-          console.debug(`Authentication status change: authenticated? = ${authenticated}`);
+        let tokenRequest = postRequest("api-token-auth", currentUser);
+        console.debug(tokenRequest);
+        let tokenResponse = await fetch(tokenRequest.url, tokenRequest.msg);
+        if (tokenResponse.ok) {
+          setUserToken(tokenResponse.token);
+
+          let request = postRequest("login", currentUser, userToken);
+          let response = await fetch(request.url, request.msg);
+          debug(response);
+          if (response.ok) {
+            setAuthenticated(true);
+            console.debug(`Authentication status change: authenticated? = ${authenticated}`);
+          } else {
+            throw new Error(request.error(response));
+          }
         } else {
-          throw new Error(request.error(response));
+          throw new Error(tokenRequest.error(tokenResponse));
         }
       } catch(e) {
         console.error(e);
@@ -137,7 +151,7 @@ function App() {
           let data = JSON.parse(json);
           debug(data);
           let currentUsers = data.map(item => new User(
-            item.fields.username, item.fields.email));
+            item.fields.username, item.fields.password));
 
           debug("currentUsers:"); 
           debug(currentUsers);
@@ -227,8 +241,8 @@ function App() {
             <label htmlFor="username">Username</label>
             <input type="text" name="username" />
 
-            <label htmlFor="email">Email</label>
-            <input type="text" name="email" />
+            <label htmlFor="password">Email</label>
+            <input type="text" name="password" />
 
             <button type="submit">Submit</button>
           </form>
