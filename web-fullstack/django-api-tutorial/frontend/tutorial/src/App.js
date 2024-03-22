@@ -2,7 +2,6 @@ import './App.css';
 
 import { useState, useEffect } from "react";
 import UserList from "./components/UserList";
-import Cookies from "js-cookie";
 
 const BACKEND_SERVER = "http://127.0.0.1:8000";
 
@@ -65,7 +64,7 @@ function App() {
     console.debug("Log out");
   }
 
-  function postRequest(action, user, csrfToken) {
+  function postRequest(action, user) {
     let request = {
       url: `${BACKEND_SERVER}/auth/${action}/`, 
       msg: {
@@ -73,9 +72,6 @@ function App() {
         headers: new Headers({
           "Accept": "application/json",
           "Content-Type": "application/json",
-          "X-CSRFToken": csrfToken,
-          mode: "cors",
-          credentials: "include",
         }),
         body: JSON.stringify(user),
       },
@@ -87,8 +83,7 @@ function App() {
   useEffect(() => {
     async function authenticate() {
       try {
-        let csrfToken = Cookies.get("csrftoken");
-        let request = postRequest("login", currentUser, csrfToken);
+        let request = postRequest("login", currentUser);
         let response = await fetch(request.url, request.msg);
         debug(response);
         if (response.ok) {
