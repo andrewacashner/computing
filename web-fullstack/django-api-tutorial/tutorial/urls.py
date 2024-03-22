@@ -20,14 +20,14 @@ from rest_framework import routers
 from tutorial.quickstart import views
 
 router = routers.DefaultRouter()
-router.register(r'secure', views.UserViewSet)
+router.register('users', views.UserViewSet, basename='user')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('users/', views.AllUsers.as_view()),
-    path('admin/login/', views.LogIn.as_view()),
-    path('api-auth/', include('rest_framework.urls',
-                              namespace='rest_framework')),
+    # path('users/', views.AllUsers.as_view()),
+    # path('admin/login/', views.LoginView.as_view()),
+    path('admin/logout/', views.LogoutView.as_view()),
+    path('auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
 
 

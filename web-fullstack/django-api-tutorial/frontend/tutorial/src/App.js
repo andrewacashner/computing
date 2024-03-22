@@ -2,6 +2,7 @@ import './App.css';
 
 import { useState, useEffect } from "react";
 import UserList from "./components/UserList";
+import Cookies from "js-cookie";
 
 const BACKEND_SERVER = "http://127.0.0.1:8000";
 
@@ -41,12 +42,15 @@ function App() {
   let [newUser, setNewUser] = useState(User.blank());
   debug(newUser);
 
-  function authenticate(event) {
+  let [doLogout, setDoLogout] = useState(false);
+  
+  function login(event) {
     event.preventDefault();
     let username = event.target.username.value;
     let password = event.target.password.value;
     setCurrentUser(new User(username, password));
     debug(currentUser);
+    setDoLogout(false);
   }
 
   function addUser(event) {
@@ -56,31 +60,74 @@ function App() {
     setNewUser(nextUser);
   }
 
+  function logout() {
+    setDoLogout(true);
+    console.debug("Log out");
+  }
+
+  function postRequest(action, user, csrfToken) {
+    let request = {
+      url: `${BACKEND_SERVER}/auth/${action}/`, 
+      msg: {
+        method: "POST",
+        headers: new Headers({
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+          mode: "cors",
+          credentials: "include",
+        }),
+        body: JSON.stringify(user),
+      },
+      error: response => `Authentication problem with ${action}: Response status ${response.status}, ${response.statusText}`,
+    }
+    return request;
+  }
+
   useEffect(() => {
-    async function login() {
+    async function authenticate() {
       try {
-        let response = await fetch(`${BACKEND_SERVER}/admin/login/`, {
-          method: "POST",
-          headers: new Headers({
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-          }),
-          body: JSON.stringify(currentUser),
-        });
+        let csrfToken = Cookies.get("csrftoken");
+        let request = postRequest("login", currentUser, csrfToken);
+        let response = await fetch(request.url, request.msg);
         debug(response);
         if (response.ok) {
           setAuthenticated(true);
+          console.debug(`Authentication status change: authenticated? = ${authenticated}`);
         } else {
-          throw new Error(`Problem logging in: Response status ${response.status}, ${response.statusText}`);
+          throw new Error(request.error(response));
         }
-      } catch (e) {
+      } catch(e) {
         console.error(e);
       }
     }
     if (!authenticated && !currentUser.isEmpty) {
-      login();
+      authenticate();
     }
-  }, [currentUser, authenticated]);
+  }, [currentUser]);
+
+  useEffect(() => {
+    async function deauthenticate() {
+      try {
+        let request = postRequest("logout", currentUser);
+        let response = await fetch(request.url, request.msg);
+        debug(response);
+        if (response.ok) {
+          setAuthenticated(false);
+          setCurrentUser(User.blank());
+          setDoLogout(false);
+          console.debug(`Logged out user ${currentUser.username}`);
+        } else {
+          throw new Error(request.error(response));
+        }
+      } catch(e) {
+        console.error(e);
+      }
+    }
+    if (doLogout) {
+      deauthenticate();
+    }
+  }, [doLogout]);
 
   useEffect(() => {
     async function getUsers() {
@@ -108,7 +155,12 @@ function App() {
         console.error(e);
       }
     }
+    if (authenticated) {
+      getUsers();
+    }
+  }, [authenticated]);
 
+  useEffect(() => {
     async function registerUser(user) {
       try {
         let response = await fetch(`${BACKEND_SERVER}/users/`, {
@@ -128,38 +180,46 @@ function App() {
       }
     }
      
-    if (authenticated) {
-      if (!newUser.isEmpty) {
-        registerUser(newUser);
-      }
-      getUsers();
+    if (authenticated && !newUser.isEmpty) {
+      registerUser(newUser);
     }
-  }, [newUser, authenticated]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [newUser, authenticated]); 
 
-  
 
   function LoginForm() {
-    return(
-      <section>
-        <h1>Log In</h1>
-        <form onSubmit={authenticate}>
-          <label htmlFor="username">Username</label>
-          <input type="text" name="username" />
+    function Form() {
+      return(
+        <section>
+          <h1>Log In</h1>
+          <form onSubmit={login}>
+            <label htmlFor="username">Username</label>
+            <input type="text" name="username" />
 
-          <label htmlFor="password">Password</label>
-          <input type="password" name="password" />
+            <label htmlFor="password">Password</label>
+            <input type="password" name="password" />
 
-          <button type="submit">Submit</button>
-        </form>
-      </section>
-    );
+            <button type="submit">Submit</button>
+          </form>
+        </section>
+      );
+    }
+
+    function LogoutButton() {
+      return(
+        <section>
+          <p>Welcome, <strong>{currentUser.username}</strong>!</p>
+          <button type="button" onClick={logout}>Log Out</button>
+        </section>
+      );
+    }
+
+    return(authenticated ? <LogoutButton /> : <Form />);
   }
 
   function UserAdmin() {
     return(
       <section>
         <h1>User Admin</h1>
-        <p>Welcome, <strong>{currentUser.username}</strong>!</p>
         <section>
           <h1>Users</h1>
           <div className="App">
@@ -184,7 +244,8 @@ function App() {
 
   return (
     <main>
-      { authenticated ? <UserAdmin /> : <LoginForm /> }
+      <LoginForm />
+      { authenticated ? <UserAdmin /> : null }
     </main>
   );
 }
