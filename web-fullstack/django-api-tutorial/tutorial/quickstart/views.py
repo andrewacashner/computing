@@ -18,3 +18,20 @@ class AllUsers(APIView):
                 email=data["email"])
         return Response(f"Added user {data} to database")
 
+class LogIn(APIView):
+    def post(self, request):
+        data = json.loads(request.body)
+        return Response(
+        f"Received request to authenticate user {data['username']}")
+
+from rest_framework import permissions, viewsets
+from tutorial.quickstart.serializers import UserSerializer
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+
+
