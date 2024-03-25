@@ -6,7 +6,6 @@ export default function Navigation() {
       <ul>
         <li><NavLink to="/">Home</NavLink></li>
         <li><NavLink to="/about">About</NavLink></li>
-        <li><NavLink to="/todo">Make a list without logging in</NavLink></li>
         <li><NavLink to="/login">Log In</NavLink></li>
       </ul>
     </nav>

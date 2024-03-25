@@ -24,5 +24,9 @@
 # LOG IN, USER ACCOUNTS
 
 - Allow users to create new login (create new users for themselves)
-- After log in redirect to /todo with user todo list(s) loaded
-    - Move currentUser, token, etc. state up a level?
+- After log in redirect to /todo 
+    - (DONE) Move currentUser, token, etc. state up a level?
+- Redirect with user todo list(s) loaded
+- Redirect back to login with login form shown after logout
+- Better conditional route switching?
+- 
