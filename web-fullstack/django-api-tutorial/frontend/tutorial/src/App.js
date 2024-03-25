@@ -65,7 +65,7 @@ function App() {
   }
 
   function postRequest(action, user, token = null) {
-    let authorization = token ? { "Authorization": token } : null;
+    let authorization = token ? { "Authorization": `Token ${token}` } : null;
     let request = {
       url: `${BACKEND_SERVER}/auth/${action}/`, 
       msg: {
@@ -73,7 +73,6 @@ function App() {
         headers: new Headers({
           "Accept": "application/json",
           "Content-Type": "application/json",
-//          "Authorization": "Token f199d9f631f65e0a6b682de7817828d76c579a91",
           ...authorization,
         }),
         body: JSON.stringify(user),
@@ -86,39 +85,60 @@ function App() {
   let [userToken, setUserToken] = useState();
 
   useEffect(() => {
+    async function requestToken() {
+      let token = null;
+      try {
+        let tokenRequest = postRequest("api_token_auth", currentUser);
+        console.debug(tokenRequest);
+
+        let tokenResponse = await fetch(tokenRequest.url, tokenRequest.msg);
+        console.debug("Got token response");
+        console.debug(tokenResponse);
+
+        if (tokenResponse.ok) {
+          console.debug("Token response OK");
+          let tokenResponseJson = await tokenResponse.json();
+          console.debug(tokenResponseJson);
+
+          let token = tokenResponseJson.token;
+          console.debug(token);
+          setUserToken(token);
+          console.debug(`Set user token to ${token}`);
+        } else {
+          throw new Error(tokenRequest.error(tokenResponse));
+        }
+        return token;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     async function authenticate() {
       try {
-        let tokenRequest = postRequest("api-token-auth", currentUser);
-        console.debug(tokenRequest);
-        let tokenResponse = await fetch(tokenRequest.url, tokenRequest.msg);
-        if (tokenResponse.ok) {
-          setUserToken(tokenResponse.token);
+        let request = postRequest("login", currentUser, userToken);
 
-          let request = postRequest("login", currentUser, userToken);
-          let response = await fetch(request.url, request.msg);
-          debug(response);
-          if (response.ok) {
+        let response = await fetch(request.url, request.msg);
+        debug(response);
+        if (response.ok) {
             setAuthenticated(true);
             console.debug(`Authentication status change: authenticated? = ${authenticated}`);
           } else {
             throw new Error(request.error(response));
           }
-        } else {
-          throw new Error(tokenRequest.error(tokenResponse));
-        }
       } catch(e) {
         console.error(e);
       }
     }
     if (!authenticated && !currentUser.isEmpty) {
+      requestToken();
       authenticate();
     }
-  }, [currentUser]);
+  }, [currentUser, userToken]);
 
   useEffect(() => {
     async function deauthenticate() {
       try {
-        let request = postRequest("logout", currentUser);
+        let request = postRequest("logout", currentUser, userToken);
         let response = await fetch(request.url, request.msg);
         debug(response);
         if (response.ok) {

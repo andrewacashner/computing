@@ -21,7 +21,7 @@ from tutorial.quickstart import views
 
 urlpatterns = [
     path('users/', views.AllUsers.as_view(), name='users'),
-    path('auth/api-token-auth/', obtain_auth_token, name='api_token_auth'),
+    path('auth/api_token_auth/', obtain_auth_token, name='api_token_auth'),
     path('auth/login/', views.Login.as_view(), name='login'),
     path('auth/logout/', views.Logout.as_view(), name='logout'),
 ]
