@@ -2,7 +2,7 @@ function displayUserData(user) {
   return(
     <tr key={user.username}>
       <td>{user.username}</td>
-      <td>{user.email}</td>
+      <td>{user.password}</td>
     </tr>
   );
 }
@@ -13,7 +13,7 @@ export default function UserList({ users }) {
       <thead>
         <tr>
           <th>Username</th>
-          <th>Email</th>
+          <th>Password</th>
         </tr>
       </thead>
       <tbody>

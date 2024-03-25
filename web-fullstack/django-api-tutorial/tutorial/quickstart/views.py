@@ -14,9 +14,9 @@ class AllUsers(APIView):
 
     def post(self, request):
         data = json.loads(request.body)
-        User.objects.get_or_create(
+        User.objects.create_user(
                 username=data["username"], 
-                email=data["email"])
+                password=data["password"])
         return Response(f"Added user {data} to database")
 
 class Login(APIView):

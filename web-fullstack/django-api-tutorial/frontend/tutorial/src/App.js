@@ -145,6 +145,7 @@ function App() {
           setAuthenticated(false);
           setCurrentUser(User.blank());
           setDoLogout(false);
+          setUserToken("");
           console.debug(`Logged out user ${currentUser.username}`);
         } else {
           throw new Error(request.error(response));
@@ -261,8 +262,8 @@ function App() {
             <label htmlFor="username">Username</label>
             <input type="text" name="username" />
 
-            <label htmlFor="password">Email</label>
-            <input type="text" name="password" />
+            <label htmlFor="password">Password</label>
+            <input type="password" name="password" />
 
             <button type="submit">Submit</button>
           </form>
