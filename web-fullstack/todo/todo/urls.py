@@ -22,5 +22,6 @@ urlpatterns = [
     path('api_token_auth/', obtain_auth_token, name='api_token_auth'),
     path('login/', views.Login.as_view(), name='login'),
     path('logout/', views.Logout.as_view(), name='logout'),
-    path('users/', views.Users.as_view(), name='users')
+    path('users/', views.Users.as_view(), name='user'),
+    path('todo/', views.ToDoList.as_view(), name='todo'),
 ]

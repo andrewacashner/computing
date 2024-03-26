@@ -68,28 +68,43 @@ function ToDo() {
       </main>
     );
   } else {
-    setAuthenticated(false);
     navigate("/login");
   }
 }
 
 export default ToDo;
 
-export async function loader() {
-  try {
-    let response = await fetch("./cashner.json");
-    if (!response.ok) {
-      throw new Error("Could not access user data");
+const BACKEND_SERVER = "http://127.0.0.1:8000";
+
+export async function loader(user, token) {
+  let todo = null;
+  if (!user.empty && token) {
+    try {
+      let response = await fetch(`${BACKEND_SERVER}/todo/`, {
+        method: "GET",
+        headers: new Headers({
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": `Token ${token}`,
+        }),
+      });
+      if (response.ok) {
+        let json = await response.json();
+        console.debug("Received todolist data");
+
+        let items = json.map(i => new ToDoItem({
+          task: i.task, 
+          deadline: i.deadline, 
+          isDone: i.is_done
+        }));
+        todo = new ToDoList(items);
+      } else {
+        throw new Error(`Could not access data for user ${user.username}`);
+      }
+    } catch (e) { 
+      console.error(e);
     }
-
-    let json = await response.json();
-
-    let items = json.map(i => new ToDoItem(i));
-    let todo = new ToDoList(items);
-    return todo;
-
-  } catch(e) {
-    console.error(e);
-    return null;
   }
+
+  return todo;
 }

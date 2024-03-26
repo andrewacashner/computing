@@ -3,7 +3,10 @@ import json
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+
 from django.contrib.auth.models import User
+from .models import ToDoItem
+from .serializers import ToDoSerializer
 
 class Users(APIView):
     permission_classes = (IsAuthenticated,)
@@ -36,3 +39,12 @@ class Logout(APIView):
         data = json.loads(request.body)
         return Response(f"Logged out user {data['username']}")
 
+class ToDoList(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        items = ToDoItem.objects.filter(user=request.user)
+        response = ToDoSerializer(items, 
+                                  many=True,
+                                  context={'request': request})
+        return Response(response.data)

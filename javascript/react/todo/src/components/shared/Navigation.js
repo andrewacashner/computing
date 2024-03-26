@@ -7,6 +7,7 @@ export default function Navigation() {
         <li><NavLink to="/">Home</NavLink></li>
         <li><NavLink to="/about">About</NavLink></li>
         <li><NavLink to="/login">Log In</NavLink></li>
+        <li><NavLink to="/todo">Your To Do List</NavLink></li>
       </ul>
     </nav>
   );

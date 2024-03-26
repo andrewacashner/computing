@@ -123,12 +123,13 @@ function App() {
     }
   }, [doLogout, currentUser, userToken]);
 
+  const loader = () => toDoLoader(currentUser, userToken);
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route path="/" element={<Layout />}>
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<LogIn />} />
-        <Route path="/todo" element={<ToDo />} loader={toDoLoader} />
+        <Route path="/todo" element={<ToDo />} loader={loader} />
       </Route>
     )
   );
