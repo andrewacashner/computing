@@ -8,6 +8,7 @@ import { useNavigate, useLoaderData } from "react-router-dom";
 import UserContext from "../store/UserContext";
 import ToDoContext from "../store/ToDoContext";
 
+import HttpRequest from "../classes/HttpRequest";
 import ToDoItem from "../classes/ToDoItem";
 import ToDoList from "../classes/ToDoList";
 
@@ -74,20 +75,18 @@ function ToDo() {
 
 export default ToDo;
 
-const BACKEND_SERVER = "http://127.0.0.1:8000";
-
 export async function loader(user, token) {
   let todo = null;
   if (!user.empty && token) {
     try {
-      let response = await fetch(`${BACKEND_SERVER}/todo/`, {
+      let request = new HttpRequest({
         method: "GET",
-        headers: new Headers({
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          "Authorization": `Token ${token}`,
-        }),
+        url: "todo/",
+        errorMsg: `Problem loading data from user ${user.username}`,
+        authToken: token
       });
+      let response = await request.send();
+
       if (response.ok) {
         let json = await response.json();
         console.debug("Received todolist data");
@@ -99,7 +98,7 @@ export async function loader(user, token) {
         }));
         todo = new ToDoList(items);
       } else {
-        throw new Error(`Could not access data for user ${user.username}`);
+        throw new Error(request.error(response));
       }
     } catch (e) { 
       console.error(e);

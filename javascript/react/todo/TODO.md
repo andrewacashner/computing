@@ -29,4 +29,4 @@
 - Redirect with user todo list(s) loaded
 - Redirect back to login with login form shown after logout
 - Better conditional route switching?
-- 
+- Conditional nav menu

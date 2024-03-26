@@ -13,11 +13,10 @@ import About from "./routes/About";
 import ToDo, { loader as toDoLoader} from "./routes/ToDo";
 import LogIn from "./routes/LogIn";
 
+import HttpRequest from "./classes/HttpRequest";
 import User from "./classes/User";
 
 import UserContext from "./store/UserContext";
-
-const BACKEND_SERVER = "http://127.0.0.1:8000";
 
 function App() {
   let [authenticated, setAuthenticated] = useState(false);
@@ -32,32 +31,19 @@ function App() {
     doLogout: [doLogout, setDoLogout]
   };
 
-  function postRequest(action, user, token = null) {
-    let authorization = token ? { "Authorization" : `Token ${token}` } : null;
-    let request = {
-      url: `${BACKEND_SERVER}/${action}/`,
-      msg: {
-        method: "POST",
-        headers: new Headers({
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          ...authorization,
-        }),
-        body: JSON.stringify(user),
-      },
-      error: response => `Authentication problem with ${action}: Response status ${response.stauts}, ${response.statusText}`,
-    }
-    return request;
-  }
-
   useEffect(() => {
     async function requestToken() {
       try {
-        let request = postRequest("api_token_auth", currentUser);
-        let response = await fetch(request.url, request.msg);
+        let request = new HttpRequest({
+          method: "POST",
+          url: "api_token_auth/", 
+          errorMsg: `Problem requesting token for user ${currentUser.username}`,
+          bodyObject: currentUser
+        });
+        let response = await request.send();
+
         if (response.ok) {
           let json = await response.json();
-          console.debug(json);
           let token = json.token;
           setUserToken(token);
           console.debug(`Set token to ${token}`);
@@ -70,11 +56,17 @@ function App() {
       }
     }
 
-
     async function authenticate() {
       try {
-        let request = postRequest("login", currentUser, userToken);
-        let response = await fetch(request.url, request.msg);
+        let request = new HttpRequest({
+          method: "POST",
+          url: "login/",
+          errorMsg: `Could not log in user ${currentUser.username} with those credentials`,
+          bodyObject: currentUser,
+          authToken: userToken
+        });
+        let response = await request.send();
+
         if (response.ok) {
           setAuthenticated(true);
           console.debug("User logged in");
@@ -103,8 +95,15 @@ function App() {
   useEffect(() => {
     async function deauthenticate() {
       try {
-        let request = postRequest("logout", currentUser, userToken);
-        let response = await fetch(request.url, request.msg);
+        let request = new HttpRequest({
+          method: "POST",
+          url: "logout/",
+          errorMsg: `Problem logging out user ${currentUser.username}`,
+          bodyObject: currentUser,
+          authToken: userToken
+        });
+        let response = await request.send();
+          
         if (response.ok) {
           setAuthenticated(false);
           setCurrentUser(User.blank());
