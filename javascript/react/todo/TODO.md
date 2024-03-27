@@ -26,7 +26,25 @@
 - Allow users to create new login (create new users for themselves)
 - After log in redirect to /todo 
     - (DONE) Move currentUser, token, etc. state up a level?
-- Redirect with user todo list(s) loaded
-- Redirect back to login with login form shown after logout
-- Better conditional route switching?
-- Conditional nav menu
+- (DONE) Redirect with user todo list(s) loaded
+- (DONE) Redirect back to login with login form shown after logout
+- (DONE?) Better conditional route switching?
+    - (DONE) Conditional nav menu
+
+# DB integration
+
+- (DONE) Add entries
+- (DONE) Delete entries
+- (DONE) Edit entries
+    - (YES) Preserve ID when going to edit draft?
+- (DONE) Mark entries done/not done    
+    - individually
+    - all
+- (DONE) Clear all entries
+- Sort entries manually (drag)
+- Sort entries by date
+- Ensure display is always synced to DB
+    - Coordinate setItems client state vs. load data from fetch in routes/ToDo
+
+# BUGS
+- Drag and drop doesn't work anymore

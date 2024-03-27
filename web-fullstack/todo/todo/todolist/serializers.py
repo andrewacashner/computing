@@ -10,4 +10,5 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 class ToDoSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ToDoItem
-        fields = ['web_id', 'task', 'deadline', 'is_done', 'user_order']
+        fields = ['uuid', 'task', 'deadline', 'deadlineDate', 'isDone',
+                  'userOrder']

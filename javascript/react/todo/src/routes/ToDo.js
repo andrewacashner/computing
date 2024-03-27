@@ -91,12 +91,7 @@ export async function loader(user, token) {
         let json = await response.json();
         console.debug("Received todolist data");
 
-        let items = json.map(i => new ToDoItem({
-          id: i.web_id,
-          task: i.task, 
-          deadline: i.deadline, 
-          isDone: i.is_done
-        }));
+        let items = json.map(i => new ToDoItem({ id: i.uuid, ...i}));
         todo = new ToDoList(items);
       } else {
         throw new Error(request.error(response));

@@ -26,4 +26,8 @@ urlpatterns = [
     path('todo/', views.ToDoList.as_view(), name='todo'),
     path('todo/add/', views.AddToDoItem.as_view(), name='todo-add'),
     path('todo/delete/', views.DeleteToDoItem.as_view(), name='todo-delete'),
+    path('todo/toggle/', views.ToggleDoneStatus.as_view(), name='todo-toggle'),
+    path('todo/set_all_status/', views.SetAllDoneStatus.as_view(),
+         name='todo-set_all_status'),
+    path('todo/delete_all/', views.DeleteAll.as_view(), name='todo-delete_all'),
 ]

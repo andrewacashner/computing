@@ -74,7 +74,7 @@ export default class ToDoList {
       return [...before, item, ...after];
     }
 
-    let itemToMove = this.list.find(i => i.id === fromID);
+    let itemToMove = this.list.find(i => i.uuid === fromID);
     let rest = this.list.filter(i => i !== itemToMove);
 
     let newItems = [];
@@ -83,7 +83,7 @@ export default class ToDoList {
       newItems = [...rest, itemToMove];
     } else {
       console.log("Insert item");
-      newItems = insertBefore(rest, (i => i.id === toID), itemToMove);
+      newItems = insertBefore(rest, (i => i.uuid === toID), itemToMove);
     }
     return new ToDoList(newItems);
   }

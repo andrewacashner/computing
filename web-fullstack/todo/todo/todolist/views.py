@@ -56,25 +56,64 @@ class AddToDoItem(APIView):
         new_item = json.loads(request.body)
         new_db_entry, created = ToDoItem.objects.update_or_create(
                 user = request.user,
-                web_id = new_item['id'],
-                task = new_item['task'],
-                deadline = new_item['deadlineDate'],
-                is_done = new_item['isDone'])
-#                user_order = new_item['user_order'])
+                uuid = new_item['id'],
+                defaults = {
+                    'task': new_item['task'],
+                    'deadline': new_item['deadline'],
+                    'deadlineDate': new_item['deadlineDate'],
+                    'isDone': new_item['isDone']
+                })
+                #                userOrder = new_item['userOder'])
         new_db_entry.save()
+       
         didAction = "Added new" if created else "Updated"
-        return Response(f"{didAction} item 'task: {new_item['task']}' to database");
+        msg = f"{didAction} item 'task: {new_item['task']}' to database"
+        print(msg)
+        return Response(msg)
 
 class DeleteToDoItem(APIView):
     permission_classes = (IsAuthenticated,)
 
+    # TODO send only id?
     def post(self, request):
         item = json.loads(request.body)
         this_id = item['id']
-        print(this_id)
-        match = ToDoItem.objects.get(web_id=this_id)
+        match = ToDoItem.objects.get(uuid=this_id)
         match.delete()
-        return Response(f"Deleted item with id {this_id} from database")
 
+        msg = f"Deleted item with id {this_id}"
+        print(msg)
+        return Response(msg)
 
+class ToggleDoneStatus(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        data = json.loads(request.body)
+        match = ToDoItem.objects.get(user=request.user, uuid = data['id'])
+        match.isDone = not match.isDone
+        match.save()
+
+        msg = f"Toggled done status to {match.isDone} for item {data['id']}"
+        print(msg)
+        return Response(msg)
+
+class SetAllDoneStatus(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        data = json.loads(request.body)
+        ToDoItem.objects.update(isDone=data['status'])
+        msg = f"Set done status to {data['status']} for all items"
+        print(msg)
+        return Response(msg)
+
+class DeleteAll(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        ToDoItem.objects.all().delete()
+        msg = f"Deleted all items"
+        print(msg)
+        return Response(msg)
 

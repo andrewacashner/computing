@@ -29,7 +29,13 @@ function NewTaskForm() {
     }
 
     if (task) {
-      let newTask = new ToDoItem({task, deadline});
+      let newTask = new ToDoItem({
+        // Transfer id from draftEntry in case we are editing, so that it will update the DB entry on the backend instead of making a new entry
+        id: items.draftEntry.id,         
+        task: task,
+        deadline: deadline
+      });
+
       console.log(`Add new task '${newTask.task}' with deadline '${newTask.deadline}'`);
       setItems(prevItems => prevItems.append(newTask));
       setNewItem(newTask);
@@ -49,14 +55,10 @@ function NewTaskForm() {
           bodyObject: item,
           authToken: token 
         });
-        console.debug(item);
-        console.debug(request.body());
         let response = await request.send();
         if (response.ok) {
           let json = await response.json();
-          console.debug(json);
-          //          let updatedItems = json.body;
-          //          console.debug(updatedItems);
+          console.log(json);
         } else {
           throw new Error(request.error(response));
         }

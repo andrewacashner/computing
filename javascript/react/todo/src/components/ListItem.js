@@ -12,10 +12,40 @@ function ListItem(props) {
 
   let todoContext = useContext(ToDoContext);
   let setItems = todoContext.set;
+ 
+  let [toggleItem, setToggleItem] = useState();
 
   function toggleDoneStatus() {
-    setItems(prevItems => prevItems.toggleDoneStatus(item));
+    setToggleItem(item);
   }
+
+  useEffect(() => {
+    async function toggleStatus(thisItem, token) {
+      try {
+        let request = new HttpRequest({
+          method: "POST",
+          url: "todo/toggle/",
+          errorMsg: `Problem toggling done status for item ${item.id}`,
+          bodyObject: thisItem,
+          authToken: token 
+        });
+        let response = await request.send();
+        if (response.ok) {
+          let json = await response.json();
+          console.log(json);
+          setItems(prevItems => prevItems.toggleDoneStatus(item));
+        } else {
+          throw new Error(request.error(response));
+        }
+      } catch(e) {
+        console.error(e);
+      }
+    }
+    if (toggleItem === item) {
+      toggleStatus(item, userToken);
+    }
+  }, [toggleItem, item, setItems, userToken]);
+
 
   function dragListItem(event) {
     event.dataTransfer.setData("text/uuid", event.target.id);
@@ -31,11 +61,10 @@ function ListItem(props) {
 
   const showButton = () => setIsButtonShown(true);
   const hideButton = () => setIsButtonShown(false);
-  
+
   function EditButton() {
     function editItem(event) {
       setItems(prevItems => prevItems.moveItemToDraft(item));
-      // TODO update db
       event.stopPropagation();
     }
 
@@ -46,15 +75,13 @@ function ListItem(props) {
     );
   }
 
-
-
   function DeleteButton() {
+    
     let [itemToDelete, setItemToDelete] = useState();
 
     function deleteItem(event) {
       setItemToDelete(item);
       console.log(`Deleting item (task: ${item.task})`);
-      console.debug(`Item to delete: ${itemToDelete?.id}`);
       event.stopPropagation();
     }
 
@@ -67,17 +94,17 @@ function ListItem(props) {
           bodyObject: thisItem,
           authToken: token
         });
+
         let response = await request.send();
         if (response.ok) {
-          // TODO use response (.json()) body as msg instead?
-          console.debug("Successful delete request");
+          let json = await response.json();
+          console.debug(json);
           setItems(prevItems => prevItems.removeItem(item));
         } else {
           throw new Error(request.error(response));
         }
       }
-      console.debug(`(useEffect) This Item : ${item?.id}`);
-      console.debug(`(useEffect) Item to delete: ${itemToDelete?.id}`);
+      
       if (itemToDelete === item) {
         sendDeleteRequest(itemToDelete, userToken);
       }
