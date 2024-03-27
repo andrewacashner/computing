@@ -24,4 +24,6 @@ urlpatterns = [
     path('logout/', views.Logout.as_view(), name='logout'),
     path('users/', views.Users.as_view(), name='user'),
     path('todo/', views.ToDoList.as_view(), name='todo'),
+    path('todo/add/', views.AddToDoItem.as_view(), name='todo-add'),
+    path('todo/delete/', views.DeleteToDoItem.as_view(), name='todo-delete'),
 ]

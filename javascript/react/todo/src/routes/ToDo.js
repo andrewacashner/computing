@@ -92,6 +92,7 @@ export async function loader(user, token) {
         console.debug("Received todolist data");
 
         let items = json.map(i => new ToDoItem({
+          id: i.web_id,
           task: i.task, 
           deadline: i.deadline, 
           isDone: i.is_done

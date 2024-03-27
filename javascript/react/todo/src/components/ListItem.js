@@ -1,11 +1,17 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
+import UserContext from "../store/UserContext";
 import ToDoContext from "../store/ToDoContext";
+
+import HttpRequest from "../classes/HttpRequest";
 
 function ListItem(props) {
   let item = props.children;
-  
-  let context = useContext(ToDoContext);
-  let setItems = context.set;
+ 
+  let userContext = useContext(UserContext);
+  let userToken = userContext.userToken[0];
+
+  let todoContext = useContext(ToDoContext);
+  let setItems = todoContext.set;
 
   function toggleDoneStatus() {
     setItems(prevItems => prevItems.toggleDoneStatus(item));
@@ -29,6 +35,7 @@ function ListItem(props) {
   function EditButton() {
     function editItem(event) {
       setItems(prevItems => prevItems.moveItemToDraft(item));
+      // TODO update db
       event.stopPropagation();
     }
 
@@ -39,12 +46,42 @@ function ListItem(props) {
     );
   }
 
+
+
   function DeleteButton() {
+    let [itemToDelete, setItemToDelete] = useState();
+
     function deleteItem(event) {
-      setItems(prevItems => prevItems.removeItem(item));
+      setItemToDelete(item);
       console.log(`Deleting item (task: ${item.task})`);
+      console.debug(`Item to delete: ${itemToDelete?.id}`);
       event.stopPropagation();
     }
+
+    useEffect(() => {
+      async function sendDeleteRequest(thisItem, token) {
+        let request = new HttpRequest({
+          method: "POST",
+          url: "todo/delete/",
+          errorMsg: `Could not delete item with id ${thisItem.id}`,
+          bodyObject: thisItem,
+          authToken: token
+        });
+        let response = await request.send();
+        if (response.ok) {
+          // TODO use response (.json()) body as msg instead?
+          console.debug("Successful delete request");
+          setItems(prevItems => prevItems.removeItem(item));
+        } else {
+          throw new Error(request.error(response));
+        }
+      }
+      console.debug(`(useEffect) This Item : ${item?.id}`);
+      console.debug(`(useEffect) Item to delete: ${itemToDelete?.id}`);
+      if (itemToDelete === item) {
+        sendDeleteRequest(itemToDelete, userToken);
+      }
+    }, [itemToDelete]);
 
     return(
       <button type="button" 

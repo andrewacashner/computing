@@ -7,12 +7,12 @@ export default class ToDoItem {
   isDone;
   id;
 
-  constructor({task = "", deadline = null, isDone = false} = {}) {
+  constructor({id = crypto.randomUUID(), task = "", deadline = null, isDone = false} = {}) {
+    this.id = id;
     this.task = task;
     this.deadline = deadline;
     this.deadlineDate = ToDoItem.dateFromString(deadline);
     this.isDone = isDone;
-    this.id = crypto.randomUUID();
   }
 
   clone() {

@@ -48,3 +48,33 @@ class ToDoList(APIView):
                                   many=True,
                                   context={'request': request})
         return Response(response.data)
+
+class AddToDoItem(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        new_item = json.loads(request.body)
+        new_db_entry, created = ToDoItem.objects.update_or_create(
+                user = request.user,
+                web_id = new_item['id'],
+                task = new_item['task'],
+                deadline = new_item['deadlineDate'],
+                is_done = new_item['isDone'])
+#                user_order = new_item['user_order'])
+        new_db_entry.save()
+        didAction = "Added new" if created else "Updated"
+        return Response(f"{didAction} item 'task: {new_item['task']}' to database");
+
+class DeleteToDoItem(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        item = json.loads(request.body)
+        this_id = item['id']
+        print(this_id)
+        match = ToDoItem.objects.get(web_id=this_id)
+        match.delete()
+        return Response(f"Deleted item with id {this_id} from database")
+
+
+
