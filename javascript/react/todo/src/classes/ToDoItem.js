@@ -1,18 +1,26 @@
 import Sugar from "sugar-date";
 
 export default class ToDoItem {
+  id;
   task;
   deadline;
   deadlineDate;
   isDone;
-  id;
+  userOrder;
 
-  constructor({id = crypto.randomUUID(), task = "", deadline = null, isDone = false} = {}) {
+  constructor({
+    id = crypto.randomUUID(), 
+    task = "", 
+    deadline = null, 
+    isDone = false,
+    userOrder = -1
+  } = {}) {
     this.id = id;
     this.task = task;
     this.deadline = deadline;
     this.deadlineDate = ToDoItem.dateFromString(deadline);
     this.isDone = isDone;
+    this.userOrder = userOrder;
   }
 
   clone() {
@@ -52,22 +60,5 @@ export default class ToDoItem {
     return new ToDoItem({...this, isDone: !this.isDone});
   }
 
-  Span() {
-    return function() {
-      let deadlineClassList = "todoDeadline";
-
-      let test = new Sugar.Date(this.deadlineDate);
-      if (this.deadlineDate && test.isPast().valueOf()) {
-        deadlineClassList += " pastDue";
-      }
-
-      return(
-        <span className="todoItem">
-          {this.task}
-          <span className={deadlineClassList}>{this.deadlineString}</span>
-        </span>
-      );
-    }.bind(this);
-  }
 }
 

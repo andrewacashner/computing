@@ -1,8 +1,11 @@
 import { useContext, useState, useEffect } from "react";
+
 import UserContext from "../store/UserContext";
 import ToDoContext from "../store/ToDoContext";
 
 import HttpRequest from "../classes/HttpRequest";
+
+import ToDoItemSpan from "./ToDoItemSpan";
 
 function ListItem(props) {
   let item = props.children;
@@ -118,8 +121,6 @@ function ListItem(props) {
   }
   
   if (item) {
-    let ToDoSpan = item.Span();
-
     // Cancellation X is U+1F5D9
     // Edit pencil is U+1F589
     return (
@@ -132,7 +133,7 @@ function ListItem(props) {
           onDragLeave={dragleaveListItem}
           onMouseEnter={showButton}
           onMouseLeave={hideButton}>
-        <ToDoSpan />
+        <ToDoItemSpan>{item}</ToDoItemSpan>
         <EditButton />
         <DeleteButton />
       </li>
