@@ -13,40 +13,10 @@ function CheckAllButton(props) {
   let items = todoContext.get
   let setItems = todoContext.set;
 
-  let [newStatus, setNewStatus] = useState(null);
-
   function setAllItemStatus(isDone) {
-    setNewStatus(isDone);
+    console.log(`Set done status of all items to ${isDone}`);
+    setItems(prevItems => prevItems.setAllItemStatus(isDone));
   }
-
-  useEffect(() => {
-    async function doSetStatus(isDone, token) {
-      try {
-        let request = new HttpRequest({
-          method: "POST",
-          url: "todo/set_all_status/",
-          errorMsg: `Problem setting done status of all items to ${isDone}`,
-          bodyObject: { status: isDone },
-          authToken: token
-        });
-        let response = await request.send();
-        if (response.ok) {
-          let json = await response.json();
-          console.log(json);
-          setItems(prevItems => prevItems.setAllItemStatus(isDone));
-          setNewStatus(null);
-        } else {
-          throw new Error(request.error(response));
-        }
-      } catch(e) {
-        console.error(e);
-      }
-    }
-    if (newStatus !== null) {
-      doSetStatus(newStatus, userToken);
-    }
-  }, [newStatus, userToken, setItems])
-
 
   const uncheckAll = () => setAllItemStatus(false);
   const checkAll = () => setAllItemStatus(true);
@@ -88,41 +58,10 @@ function CheckAllButton(props) {
     }
   }, [clear, userToken, todoContext])
 
-
  
-  let [doSort, setDoSort] = useState(false);
-
   function sortItemsByDate(items) {
-    setDoSort(true);
-  }
-
-  useEffect(() => {
-    async function backendSort(theseItems, token) {
-      try {
-        let request = new HttpRequest({
-          method: "POST",
-          url: "todo/sort_by_date/",
-          errorMsg: "Problem sorting all items by date",
-          bodyObject: theseItems,
-          authToken: token
-        });
-        let response = await request.send();
-        if (response.ok) {
-          let json = await response.json();
-          console.log(json);
           setItems(prevItems => prevItems.toSortedByDate());
-          setDoSort(false);
-        } else {
-          throw new Error(request.error(response));
-        }
-      } catch(e) {
-        console.error(e);
-      }
-    }
-    if (doSort) {
-      backendSort(items, userToken);
-    }
-  }, [doSort, setItems, items, userToken]);
+  }
 
   if (items.list.length > 0) {
     return(

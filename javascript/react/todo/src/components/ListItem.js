@@ -9,46 +9,17 @@ import ToDoItemSpan from "./ToDoItemSpan";
 
 function ListItem(props) {
   let item = props.children;
- 
+  
   let userContext = useContext(UserContext);
   let userToken = userContext.userToken[0];
-
+ 
   let todoContext = useContext(ToDoContext);
   let setItems = todoContext.set;
+
  
-  let [toggleItem, setToggleItem] = useState();
-
   function toggleDoneStatus() {
-    setToggleItem(item);
+    setItems(prevItems => prevItems.toggleDoneStatus(item));
   }
-
-  useEffect(() => {
-    async function toggleStatus(thisItem, token) {
-      try {
-        let request = new HttpRequest({
-          method: "POST",
-          url: "todo/toggle/",
-          errorMsg: `Problem toggling done status for item ${item.id}`,
-          bodyObject: thisItem,
-          authToken: token 
-        });
-        let response = await request.send();
-        if (response.ok) {
-          let json = await response.json();
-          console.log(json);
-          setItems(prevItems => prevItems.toggleDoneStatus(item));
-        } else {
-          throw new Error(request.error(response));
-        }
-      } catch(e) {
-        console.error(e);
-      }
-    }
-    if (toggleItem === item) {
-      toggleStatus(item, userToken);
-    }
-  }, [toggleItem, item, setItems, userToken]);
-
 
   function dragListItem(event) {
     event.dataTransfer.setData("text/uuid", event.target.id);
@@ -67,6 +38,7 @@ function ListItem(props) {
 
   function EditButton() {
     function editItem(event) {
+      console.log(`Edit item with id ${item.id}`);
       setItems(prevItems => prevItems.moveItemToDraft(item));
       event.stopPropagation();
     }

@@ -48,14 +48,14 @@ class ToDoList(APIView):
                                   many=True,
                                   context={'request': request})
         return Response(response.data)
-"""
+
     def post(self, request):
         data = json.loads(request.body)
-        client_items = data.get('list', None);
-        if client_items and client_items.length > 0:
+        client_items = data.get('list', None) if data else None
+        if client_items and len(client_items) > 0:
             itemsCreated = 0
             itemsUpdated = 0
-            for new_item in data:
+            for new_item in client_items:
                 new_entry, created = ToDoItem.objects.update_or_create(
                         user = request.user,
                         uuid = new_item['id'],
@@ -74,41 +74,39 @@ class ToDoList(APIView):
                     itemsUpdated += 1
 
             msg = f"Created {itemsCreated} and updated {itemsUpdated} items in database"
-
-            items = ToDoItem.objects.filter(user=request.user).order_by('userOrder').values()
-            response = ToDoSerializer(items, 
-                                      many=True,
-                                      context={'request': request})
-            print(msg)
-            return Response(response.data)
         else:
-            print("Database is empty");
-            return Response(None);
-"""
-
-
-
-class AddToDoItem(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    def post(self, request):
-        new_item = json.loads(request.body)
-        new_db_entry, created = ToDoItem.objects.update_or_create(
-            user = request.user,
-            uuid = new_item['id'],
-            defaults = {
-                'task': new_item['task'],
-                'deadline': new_item['deadline'],
-                'deadlineDate': new_item['deadlineDate'],
-                'isDone': new_item['isDone'],
-                'userOrder': new_item['userOrder'],
-            })
-        new_db_entry.save()
-       
-        didAction = "Added new" if created else "Updated"
-        msg = f"{didAction} item 'task: {new_item['task']}' to database"
+            msg = "Received no data from client"
+        
+        items = ToDoItem.objects.filter(user=request.user).order_by('userOrder').values()
+        response = ToDoSerializer(items, many=True, context={'request': request})
+ 
         print(msg)
-        return Response(msg)
+        return Response(response.data)
+
+
+
+# TODO remove unused
+# class AddToDoItem(APIView):
+#     permission_classes = (IsAuthenticated,)
+# 
+#     def post(self, request):
+#         new_item = json.loads(request.body)
+#         new_db_entry, created = ToDoItem.objects.update_or_create(
+#             user = request.user,
+#             uuid = new_item['id'],
+#             defaults = {
+#                 'task': new_item['task'],
+#                 'deadline': new_item['deadline'],
+#                 'deadlineDate': new_item['deadlineDate'],
+#                 'isDone': new_item['isDone'],
+#                 'userOrder': new_item['userOrder'],
+#             })
+#         new_db_entry.save()
+#        
+#         didAction = "Added new" if created else "Updated"
+#         msg = f"{didAction} item 'task: {new_item['task']}' to database"
+#         print(msg)
+#         return Response(msg)
 
 class DeleteToDoItem(APIView):
     permission_classes = (IsAuthenticated,)
@@ -124,28 +122,29 @@ class DeleteToDoItem(APIView):
         print(msg)
         return Response(msg)
 
-class ToggleDoneStatus(APIView):
-    permission_classes = (IsAuthenticated,)
+# class ToggleDoneStatus(APIView):
+#     permission_classes = (IsAuthenticated,)
+# 
+#     def post(self, request):
+#         data = json.loads(request.body)
+#         match = ToDoItem.objects.get(user=request.user, uuid = data['id'])
+#         match.isDone = not match.isDone
+#         match.save()
+# 
+#         msg = f"Toggled done status to {match.isDone} for item {data['id']}"
+#         print(msg)
+#         return Response(msg)
 
-    def post(self, request):
-        data = json.loads(request.body)
-        match = ToDoItem.objects.get(user=request.user, uuid = data['id'])
-        match.isDone = not match.isDone
-        match.save()
-
-        msg = f"Toggled done status to {match.isDone} for item {data['id']}"
-        print(msg)
-        return Response(msg)
-
-class SetAllDoneStatus(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    def post(self, request):
-        data = json.loads(request.body)
-        ToDoItem.objects.update(isDone=data['status'])
-        msg = f"Set done status to {data['status']} for all items"
-        print(msg)
-        return Response(msg)
+# TODO but would this be faster/better?
+# class SetAllDoneStatus(APIView):
+#     permission_classes = (IsAuthenticated,)
+# 
+#     def post(self, request):
+#         data = json.loads(request.body)
+#         ToDoItem.objects.update(isDone=data['status'])
+#         msg = f"Set done status to {data['status']} for all items"
+#         print(msg)
+#         return Response(msg)
 
 class DeleteAll(APIView):
     permission_classes = (IsAuthenticated,)
@@ -156,24 +155,24 @@ class DeleteAll(APIView):
         print(msg)
         return Response(msg)
 
-class SortByDate(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    def post(self, request):
-        data = json.loads(request.body)
-
-        # let client side sort by date and set userOrder for now; 
-        # just update userOrder 
-        ##  ordered = ToDoItem.objects.all().order_by('deadlineDate').values()
-
-        for web_item in data['list']:
-            db_item = ToDoItem.objects.get(uuid=web_item['id'])
-            db_item.userOrder = web_item['userOrder']
-            db_item.save()
-
-        msg = "Set user order for all items"
-        print(msg)
-        return Response(msg)
+# class SortByDate(APIView):
+#     permission_classes = (IsAuthenticated,)
+# 
+#     def post(self, request):
+#         data = json.loads(request.body)
+# 
+#         # let client side sort by date and set userOrder for now; 
+#         # just update userOrder 
+#         ##  ordered = ToDoItem.objects.all().order_by('deadlineDate').values()
+# 
+#         for web_item in data['list']:
+#             db_item = ToDoItem.objects.get(uuid=web_item['id'])
+#             db_item.userOrder = web_item['userOrder']
+#             db_item.save()
+# 
+#         msg = "Set user order for all items"
+#         print(msg)
+#         return Response(msg)
 
 
 

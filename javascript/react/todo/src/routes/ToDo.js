@@ -2,7 +2,7 @@
 // Andrew Cashner
 // 2024/02/23
 
-import { useState, useContext } from "react";
+import { useContext, useEffect } from "react";
 import { useNavigate, useLoaderData } from "react-router-dom";
 
 import UserContext from "../store/UserContext";
@@ -22,6 +22,9 @@ function ToDo() {
   let currentUser = userContext.currentUser[0];
   let setDoLogout = userContext.doLogout[1];
 
+  let todoContext = useContext(ToDoContext);
+  let setItems = todoContext.set;
+
   function Welcome() {
     return(
       <section>
@@ -35,19 +38,14 @@ function ToDo() {
     setDoLogout(true);
     console.debug("Log out");
   }
-  
+ 
   const userList = useLoaderData();
-
-  const emptyList = () => new ToDoList();
-  const startList = userList || emptyList();
-
-  let [items, setItems] = useState(startList);
-
-  let toDoContextValue = {
-    get: items,
-    set: setItems,
-    reset: () => setItems(emptyList())
-  }
+  
+  useEffect(() => {
+    if (userList) {
+      setItems(userList);
+    }
+  }, [setItems]);
 
   const navigate = useNavigate();
   
@@ -55,41 +53,40 @@ function ToDo() {
     return(
       <main>
         <Welcome />
-        <ToDoContext.Provider value={toDoContextValue}>
-          <section id="todo">
-            <div className="todoList">
-              <h1>Tasks</h1>
-              <p className="instructions">Add a new task using the form below. Drag to rearrange tasks.</p>
-              <TaskList />
-              <CheckAllButton />
-            </div>
-              <NewTaskForm />
-          </section>
-        </ToDoContext.Provider>
+        <section id="todo">
+          <div className="todoList">
+            <h1>Tasks</h1>
+            <p className="instructions">Add a new task using the form below. Drag to rearrange tasks.</p>
+            <TaskList />
+            <CheckAllButton />
+          </div>
+          <NewTaskForm />
+        </section>
       </main>
     );
   } else {
-    navigate("/login");
+    // navigate("/login"); // should use useEffect but how?
   }
 }
 
 export default ToDo;
 
-export async function loader(user, token) {
+export async function loader(user, token, items) {
   let todo = null;
   if (!user.empty && token) {
     try {
       let request = new HttpRequest({
-        method: "GET",
+        method: "POST",
         url: "todo/",
-        errorMsg: `Problem loading data from user ${user.username}`,
+        errorMsg: `Problem syncing data for user ${user.username}`,
+        bodyObject: items,
         authToken: token
       });
       let response = await request.send();
 
       if (response.ok) {
         let json = await response.json();
-        console.debug("Received todolist data");
+        console.debug("Synced todolist data");
 
         let items = json.map(i => new ToDoItem({ id: i.uuid, ...i}));
         todo = new ToDoList(items);

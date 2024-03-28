@@ -1,18 +1,9 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext } from "react";
 import ToDoContext from "../store/ToDoContext";
-import UserContext from "../store/UserContext";
 
 import ToDoItem from "../classes/ToDoItem";
-import HttpRequest from "../classes/HttpRequest";
 
 function NewTaskForm() {
-
-  let [newItem, setNewItem] = useState();
-
-  let userContext = useContext(UserContext);
-  let currentUser = userContext.currentUser[0];
-  let userToken = userContext.userToken[0];
-
   let todoContext = useContext(ToDoContext);
   let items = todoContext.get;
   let setItems = todoContext.set;
@@ -37,40 +28,11 @@ function NewTaskForm() {
         userOrder: items.list.length
       });
 
-      console.log(`Add new task '${newTask.task}' with deadline '${newTask.deadline}' (userOrder ${newTask.userOrder})`);
+       console.log(`Add new task '${newTask.task}' with deadline '${newTask.deadline}' (userOrder ${newTask.userOrder})`);
       setItems(prevItems => prevItems.append(newTask));
-      setNewItem(newTask);
-
     }
     event.target.reset();
   }
-
-  useEffect(() => {
-    // Send new item to backend
-    async function saveNewItem(item, token) {
-      try {
-        let request = new HttpRequest({
-          method: "POST",
-          url: "todo/add/",
-          errorMsg: `Could not add new task for user ${currentUser.username}`,
-          bodyObject: item,
-          authToken: token 
-        });
-        let response = await request.send();
-        if (response.ok) {
-          let json = await response.json();
-          console.log(json);
-        } else {
-          throw new Error(request.error(response));
-        }
-      } catch(e) {
-        console.error(e);
-      }
-    }
-    if (newItem) {
-      saveNewItem(newItem, userToken);
-    }
-  }, [newItem, currentUser, userToken]);
 
   return(
     <form className="newItem" onSubmit={addNewTask} autoComplete="off">

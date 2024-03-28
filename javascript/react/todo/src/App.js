@@ -15,8 +15,10 @@ import LogIn from "./routes/LogIn";
 
 import HttpRequest from "./classes/HttpRequest";
 import User from "./classes/User";
+import ToDoList from "./classes/ToDoList";
 
 import UserContext from "./store/UserContext";
+import ToDoContext from "./store/ToDoContext";
 
 function App() {
   let [authenticated, setAuthenticated] = useState(false);
@@ -30,6 +32,15 @@ function App() {
     userToken: [userToken, setUserToken],
     doLogout: [doLogout, setDoLogout]
   };
+
+  const emptyList = () => new ToDoList();
+  let [items, setItems] = useState(emptyList());
+
+  let toDoContextValue = {
+    get: items,
+    set: setItems,
+    reset: () => setItems(emptyList())
+  }
 
   useEffect(() => {
     async function requestToken() {
@@ -122,7 +133,7 @@ function App() {
     }
   }, [doLogout, currentUser, userToken]);
 
-  const loader = () => toDoLoader(currentUser, userToken);
+  const loader = () => toDoLoader(currentUser, userToken, items);
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route path="/" element={<Layout />}>
@@ -136,7 +147,9 @@ function App() {
 
   return(
     <UserContext.Provider value={startingContext}>
-      <RouterProvider router={router} />
+      <ToDoContext.Provider value={toDoContextValue}>
+        <RouterProvider router={router} />
+      </ToDoContext.Provider>
     </UserContext.Provider>
   );
 }

@@ -45,8 +45,10 @@
     - Reorder userOrder on drop and update DB
 - (DONE) Sort entries by date
 - Ensure display is always synced to DB
-    - Coordinate setItems client state vs. load data from fetch in routes/ToDo
-
+    - (DONE)  Coordinate setItems client state vs. load data from fetch in routes/ToDo
 
 # BUGS
 - Drag and drop doesn't work anymore
+- "DB Locked" error when editing item 
+    - (too many updates to items?)
+- User order lost when editing and adding item
