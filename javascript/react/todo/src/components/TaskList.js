@@ -28,7 +28,7 @@ function TaskList() {
       // Check if item was dropped below the list items, in the extra space we
       // leave at bottom of the ol.todo
       let toID = (event.target.className === "todo") 
-        ? "bottom" : event.target.id;
+        ? "bottom" : event.target.closest("li").id;
 
       if (fromID !== toID && !isDraggedOverNext(event, items)) {
         setItems(prevItems => prevItems.moveWithinArray(fromID, toID));

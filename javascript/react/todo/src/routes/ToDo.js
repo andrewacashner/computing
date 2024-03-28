@@ -3,7 +3,7 @@
 // 2024/02/23
 
 import { useContext, useEffect } from "react";
-import { useNavigate, useLoaderData } from "react-router-dom";
+import { useLoaderData } from "react-router-dom";
 
 import UserContext from "../store/UserContext";
 import ToDoContext from "../store/ToDoContext";
@@ -45,10 +45,8 @@ function ToDo() {
     if (userList) {
       setItems(userList);
     }
-  }, [setItems]);
+  }, [userList, setItems]);
 
-  const navigate = useNavigate();
-  
   if (authenticated) {
     return(
       <main>
@@ -64,9 +62,7 @@ function ToDo() {
         </section>
       </main>
     );
-  } else {
-    // navigate("/login"); // should use useEffect but how?
-  }
+  } 
 }
 
 export default ToDo;

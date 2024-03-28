@@ -24,13 +24,15 @@ function App() {
   let [authenticated, setAuthenticated] = useState(false);
   let [currentUser, setCurrentUser] = useState(User.blank());
   let [userToken, setUserToken] = useState("");
+  let [registerNew, setRegisterNew] = useState(false);
   let [doLogout, setDoLogout] = useState(false);
 
   let startingContext = {
     authenticated: [authenticated, setAuthenticated],
     currentUser: [currentUser, setCurrentUser],
     userToken: [userToken, setUserToken],
-    doLogout: [doLogout, setDoLogout]
+    doLogout: [doLogout, setDoLogout],
+    registerNew: [registerNew, setRegisterNew]
   };
 
   const emptyList = () => new ToDoList();
@@ -90,18 +92,43 @@ function App() {
       }
     }
 
-    console.debug("Ready to request user token");
-    if (!authenticated && !currentUser.isEmpty) {
-      console.debug(`Requesting token for user ${currentUser.username}`)
-      requestToken();
-
-      console.debug("Ready to authenticate");
-      if (userToken && !authenticated && !currentUser.isEmpty) {
-        console.debug(`Authenticating user ${currentUser.username}`)
-        authenticate();
+    async function register() {
+      try {
+        let request = new HttpRequest({
+          method: "POST",
+          url: "register/",
+          errorMsg: `Could not register new user ${currentUser.username}`,
+          bodyObject: currentUser
+        });
+        let response = await request.send();
+        if (response.ok) {
+          alert(`Welcome, ${currentUser.username}! Please log in with your new password.`);
+          setRegisterNew(false);
+        } else {
+          throw new Error(request.error(response));
+        }
+      } catch (e) {
+        console.error(e);
       }
     }
-  }, [currentUser, userToken, doLogout]);
+
+    console.debug("Ready to request user token");
+    if (!authenticated && !currentUser.isEmpty) {
+      if (registerNew) {
+        console.debug(`Registering new user ${currentUser.username}`)
+        register();
+      } else {
+        console.debug(`Requesting token for user ${currentUser.username}`)
+        requestToken();
+
+        console.debug("Ready to authenticate");
+        if (userToken) {
+          console.debug(`Authenticating user ${currentUser.username}`)
+          authenticate();
+        } 
+      }
+    }
+  }, [authenticated, currentUser, userToken, doLogout, registerNew]);
 
   useEffect(() => {
     async function deauthenticate() {

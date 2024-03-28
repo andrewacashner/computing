@@ -30,6 +30,7 @@
 - (DONE) Redirect back to login with login form shown after logout
 - (DONE?) Better conditional route switching?
     - (DONE) Conditional nav menu
+- (NO) Use custom URLs per user?
 
 # DB integration
 
@@ -41,14 +42,18 @@
     - individually
     - all
 - (DONE) Clear all entries
-- Sort entries manually (drag)
-    - Reorder userOrder on drop and update DB
+- (DONE) Sort entries manually (drag)
+    - (DONE) Reorder userOrder on drop and update DB
 - (DONE) Sort entries by date
 - Ensure display is always synced to DB
     - (DONE)  Coordinate setItems client state vs. load data from fetch in routes/ToDo
 
 # BUGS
-- Drag and drop doesn't work anymore
-- "DB Locked" error when editing item 
+- (DONE) Drag and drop doesn't work anymore (stray "uuid" instead of "id"
+  field)
+- **"DB Locked" error when editing item**
     - (too many updates to items?)
-- User order lost when editing and adding item
+- (DONE - BY DESIGN) User order lost when editing and adding item 
+    - Consider different edit interface?
+- **When logging in, re-render loop on loading items**
+    - Problem with update_or_create matching uuid when blank?

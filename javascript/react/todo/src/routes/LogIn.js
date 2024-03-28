@@ -8,6 +8,8 @@ export default function LogIn() {
   let authenticated = context.authenticated[0];
   let setCurrentUser = context.currentUser[1];
   let setDoLogout = context.doLogout[1];
+  let setRegisterNew = context.registerNew[1];
+
 
   function login(event) {
     event.preventDefault();
@@ -16,6 +18,11 @@ export default function LogIn() {
     setCurrentUser(new User(username, password));
     setDoLogout(false);
     console.debug("Log in");
+  }
+
+  function register(event) {
+    setRegisterNew(true);
+    console.debug("Ready to register new user");
   }
 
    //                pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,16}$"
@@ -33,6 +40,7 @@ export default function LogIn() {
           <input type="password" name="password" required minLength="8" />
         </div>
         <button type="submit">Log In</button>
+        <button type="submit" onClick={register}>Register New User</button>
       </form>
     );
   }

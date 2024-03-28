@@ -2,32 +2,25 @@ import json
 # from django.core import serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from django.contrib.auth.models import User
 from .models import ToDoItem
 from .serializers import ToDoSerializer
 
-class Users(APIView):
-    permission_classes = (IsAuthenticated,)
-
+# class Users(APIView):
+#     permission_classes = (IsAuthenticated,)
+# 
 #     queryset = User.objects.all().order_by('-date_joined')
 # 
 #     def get(self, request):
 #         response = serializers.serialize("json", self.queryset.all())
 #         return Response(response)
 
-    def post(self, request):
-        data = json.loads(request.body)
-        User.objects.create_user(
-                username=data['username'],
-                password=data['password'])
-        return Response(f"Added user {data} to database")
-
-
+# TODO are Login and Logout views even necessary?
 class Login(APIView):
     permission_classes = (IsAuthenticated,)
-    
+
     def post(self, request):
         data = json.loads(request.body)
         return Response(f"Logged in user {data['username']}")
@@ -38,6 +31,17 @@ class Logout(APIView):
     def post(self, request):
         data = json.loads(request.body)
         return Response(f"Logged out user {data['username']}")
+
+class Register(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        data = json.loads(request.body)
+        User.objects.create_user(
+                username=data['username'],
+                password=data['password'])
+        return Response(f"Added user {data} to database")
+
 
 class ToDoList(APIView):
     permission_classes = (IsAuthenticated,)
