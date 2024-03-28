@@ -48,6 +48,45 @@ class ToDoList(APIView):
                                   many=True,
                                   context={'request': request})
         return Response(response.data)
+"""
+    def post(self, request):
+        data = json.loads(request.body)
+        client_items = data.get('list', None);
+        if client_items and client_items.length > 0:
+            itemsCreated = 0
+            itemsUpdated = 0
+            for new_item in data:
+                new_entry, created = ToDoItem.objects.update_or_create(
+                        user = request.user,
+                        uuid = new_item['id'],
+                        defaults = {
+                            'task': new_item['task'],
+                            'deadline': new_item['deadline'],
+                            'deadlineDate': new_item['deadlineDate'],
+                            'isDone': new_item['isDone'],
+                            'userOrder': new_item['userOrder'],
+                            })
+                new_entry.save()
+
+                if created:
+                    itemsCreated += 1
+                else:
+                    itemsUpdated += 1
+
+            msg = f"Created {itemsCreated} and updated {itemsUpdated} items in database"
+
+            items = ToDoItem.objects.filter(user=request.user).order_by('userOrder').values()
+            response = ToDoSerializer(items, 
+                                      many=True,
+                                      context={'request': request})
+            print(msg)
+            return Response(response.data)
+        else:
+            print("Database is empty");
+            return Response(None);
+"""
+
+
 
 class AddToDoItem(APIView):
     permission_classes = (IsAuthenticated,)
