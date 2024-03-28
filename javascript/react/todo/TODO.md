@@ -42,9 +42,11 @@
     - all
 - (DONE) Clear all entries
 - Sort entries manually (drag)
-- Sort entries by date
+    - Reorder userOrder on drop and update DB
+- (DONE) Sort entries by date
 - Ensure display is always synced to DB
     - Coordinate setItems client state vs. load data from fetch in routes/ToDo
+
 
 # BUGS
 - Drag and drop doesn't work anymore

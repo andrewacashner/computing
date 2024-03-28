@@ -30,4 +30,6 @@ urlpatterns = [
     path('todo/set_all_status/', views.SetAllDoneStatus.as_view(),
          name='todo-set_all_status'),
     path('todo/delete_all/', views.DeleteAll.as_view(), name='todo-delete_all'),
+    path('todo/sort_by_date/', views.SortByDate.as_view(),
+         name='todo-sort_by_date'),
 ]

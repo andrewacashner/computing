@@ -89,13 +89,40 @@ function CheckAllButton(props) {
   }, [clear, userToken, todoContext])
 
 
-
-
-
+ 
+  let [doSort, setDoSort] = useState(false);
 
   function sortItemsByDate(items) {
-    setItems(prevItems => prevItems.toSortedByDate());
+    setDoSort(true);
   }
+
+  useEffect(() => {
+    async function backendSort(theseItems, token) {
+      try {
+        let request = new HttpRequest({
+          method: "POST",
+          url: "todo/sort_by_date/",
+          errorMsg: "Problem sorting all items by date",
+          bodyObject: theseItems,
+          authToken: token
+        });
+        let response = await request.send();
+        if (response.ok) {
+          let json = await response.json();
+          console.log(json);
+          setItems(prevItems => prevItems.toSortedByDate());
+          setDoSort(false);
+        } else {
+          throw new Error(request.error(response));
+        }
+      } catch(e) {
+        console.error(e);
+      }
+    }
+    if (doSort) {
+      backendSort(items, userToken);
+    }
+  }, [doSort, setItems, items, userToken]);
 
   if (items.list.length > 0) {
     return(

@@ -7,10 +7,19 @@ export default class ToDoList {
   constructor(list = [], draft = new ToDoItem()) {
     this.list = [...list];
     this.draftEntry = draft;
+    
+    if (this.list.every(i => i.userOrder === 0)) {
+      this.setUserOrder();
+    }
   }
 
   cloneWithDraft(draft) {
     return new ToDoList(this.list, draft);
+  }
+
+  setUserOrder() {
+    this.list.forEach((item, index) => item.userOrder = index);
+    return this;
   }
 
   moveItemToDraft(item) {
@@ -23,6 +32,11 @@ export default class ToDoList {
       this.list.forEach(i => results[testFn(i)].push(i));
     }
     return [results.true, results.false].map(r => new ToDoList(r));
+  }
+
+  toSortedByUserOrder() {
+    let newItems = this.list.toSorted((a, b) => a.userOrder - b.userOrder);
+    return new ToDoList(newItems);
   }
 
   toSortedByDate() {
@@ -47,7 +61,9 @@ export default class ToDoList {
       (a, b) => stringCompareFn(a.task, b.task));
 
     let newItems = [...noDeadlinesSorted, ...noDatesSorted, ...datesSorted];
-    return new ToDoList(newItems);
+    let newList = new ToDoList(newItems);
+    newList.setUserOrder();
+    return newList;
   }
 
   hasIdenticalContents(other) {

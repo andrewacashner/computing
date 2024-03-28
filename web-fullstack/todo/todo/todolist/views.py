@@ -43,7 +43,7 @@ class ToDoList(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        items = ToDoItem.objects.filter(user=request.user)
+        items = ToDoItem.objects.filter(user=request.user).order_by('userOrder').values()
         response = ToDoSerializer(items, 
                                   many=True,
                                   context={'request': request})
@@ -55,15 +55,15 @@ class AddToDoItem(APIView):
     def post(self, request):
         new_item = json.loads(request.body)
         new_db_entry, created = ToDoItem.objects.update_or_create(
-                user = request.user,
-                uuid = new_item['id'],
-                defaults = {
-                    'task': new_item['task'],
-                    'deadline': new_item['deadline'],
-                    'deadlineDate': new_item['deadlineDate'],
-                    'isDone': new_item['isDone']
-                })
-                #                userOrder = new_item['userOder'])
+            user = request.user,
+            uuid = new_item['id'],
+            defaults = {
+                'task': new_item['task'],
+                'deadline': new_item['deadline'],
+                'deadlineDate': new_item['deadlineDate'],
+                'isDone': new_item['isDone'],
+                'userOrder': new_item['userOrder'],
+            })
         new_db_entry.save()
        
         didAction = "Added new" if created else "Updated"
@@ -116,4 +116,25 @@ class DeleteAll(APIView):
         msg = f"Deleted all items"
         print(msg)
         return Response(msg)
+
+class SortByDate(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        data = json.loads(request.body)
+
+        # let client side sort by date and set userOrder for now; 
+        # just update userOrder 
+        ##  ordered = ToDoItem.objects.all().order_by('deadlineDate').values()
+
+        for web_item in data['list']:
+            db_item = ToDoItem.objects.get(uuid=web_item['id'])
+            db_item.userOrder = web_item['userOrder']
+            db_item.save()
+
+        msg = "Set user order for all items"
+        print(msg)
+        return Response(msg)
+
+
 

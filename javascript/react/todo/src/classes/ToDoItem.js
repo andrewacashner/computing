@@ -13,7 +13,7 @@ export default class ToDoItem {
     task = "", 
     deadline = null, 
     isDone = false,
-    userOrder = -1
+    userOrder = 0
   } = {}) {
     this.id = id;
     this.task = task;

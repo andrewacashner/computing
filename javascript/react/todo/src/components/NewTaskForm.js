@@ -33,10 +33,11 @@ function NewTaskForm() {
         // Transfer id from draftEntry in case we are editing, so that it will update the DB entry on the backend instead of making a new entry
         id: items.draftEntry.id,         
         task: task,
-        deadline: deadline
+        deadline: deadline,
+        userOrder: items.list.length
       });
 
-      console.log(`Add new task '${newTask.task}' with deadline '${newTask.deadline}'`);
+      console.log(`Add new task '${newTask.task}' with deadline '${newTask.deadline}' (userOrder ${newTask.userOrder})`);
       setItems(prevItems => prevItems.append(newTask));
       setNewItem(newTask);
 
