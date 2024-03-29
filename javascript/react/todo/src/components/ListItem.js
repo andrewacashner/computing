@@ -11,7 +11,7 @@ function ListItem(props) {
   let item = props.children;
   
   let userContext = useContext(UserContext);
-  let userToken = userContext.userToken[0];
+  let userToken = userContext.currentUser[0].token;
  
   let todoContext = useContext(ToDoContext);
   let setItems = todoContext.set;

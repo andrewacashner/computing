@@ -13,9 +13,10 @@ export default function LogIn() {
 
   function login(event) {
     event.preventDefault();
-    let username = event.target.username.value;
-    let password = event.target.password.value;
-    setCurrentUser(new User(username, password));
+    setCurrentUser(prev => new User({ 
+      username: event.target.username.value,
+      password: event.target.password.value
+    }));
     setDoLogout(false);
     console.debug("Log in");
   }

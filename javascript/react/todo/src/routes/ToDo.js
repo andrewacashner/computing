@@ -67,16 +67,16 @@ function ToDo() {
 
 export default ToDo;
 
-export async function loader(user, token, items) {
+export async function loader(user, items) {
   let todo = null;
-  if (!user.empty && token) {
+  if (user.isComplete) {
     try {
       let request = new HttpRequest({
         method: "POST",
         url: "todo/",
         errorMsg: `Problem syncing data for user ${user.username}`,
         bodyObject: items,
-        authToken: token
+        authToken: user.token
       });
       let response = await request.send();
 

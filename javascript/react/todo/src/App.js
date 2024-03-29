@@ -23,14 +23,12 @@ import ToDoContext from "./store/ToDoContext";
 function App() {
   let [authenticated, setAuthenticated] = useState(false);
   let [currentUser, setCurrentUser] = useState(User.blank());
-  let [userToken, setUserToken] = useState("");
   let [registerNew, setRegisterNew] = useState(false);
   let [doLogout, setDoLogout] = useState(false);
 
   let startingContext = {
     authenticated: [authenticated, setAuthenticated],
     currentUser: [currentUser, setCurrentUser],
-    userToken: [userToken, setUserToken],
     doLogout: [doLogout, setDoLogout],
     registerNew: [registerNew, setRegisterNew]
   };
@@ -45,122 +43,147 @@ function App() {
   }
 
   useEffect(() => {
-    async function requestToken() {
+    async function register(user) {
+      try {
+        let request = new HttpRequest({
+          method: "POST",
+          url: "register/",
+          errorMsg: `Could not register new user ${currentUser.username}`,
+          bodyObject: user 
+        });
+        let response = await request.send();
+        if (response.ok) {
+          alert(`Welcome, ${currentUser.username}! Please log in with your new password.`);
+        } else {
+          throw new Error(request.error(response));
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setRegisterNew(false);
+      }
+    }
+    if (registerNew && !authenticated && !currentUser.isEmpty) {
+      console.debug(`Registering new user ${currentUser.username}`)
+      register(currentUser);
+    } else {
+      console.debug("Not registering new user");
+    }
+  }, [registerNew, currentUser]);
+
+  useEffect(() => {
+    async function requestToken(user) {
+      let newToken = null;
       try {
         let request = new HttpRequest({
           method: "POST",
           url: "api_token_auth/", 
-          errorMsg: `Problem requesting token for user ${currentUser.username}`,
-          bodyObject: currentUser
+          errorMsg: `Problem requesting token for user ${user.username}`,
+          bodyObject: user 
         });
         let response = await request.send();
 
         if (response.ok) {
           let json = await response.json();
-          let token = json.token;
-          setUserToken(token);
-          console.debug(`Set token to ${token}`);
+          newToken = json.token;
+          setCurrentUser(prev => new User({...prev, token: newToken}));
+          console.debug(`Set token to ${newToken}`);
         } else {
           alert("Unrecognized user");
           throw new Error(request.error(response));
         }
       } catch (e) {
         console.error(e);
+      } finally {
+        return newToken;
       }
     }
 
-    async function authenticate() {
+    async function logIn(user, token) {
+      let result = false;
       try {
         let request = new HttpRequest({
           method: "POST",
           url: "login/",
-          errorMsg: `Could not log in user ${currentUser.username} with those credentials`,
-          bodyObject: currentUser,
-          authToken: userToken
+          errorMsg: `Could not log in user ${user.username} with those credentials`,
+          bodyObject: user,
+          authToken: token 
         });
         let response = await request.send();
 
         if (response.ok) {
           setAuthenticated(true);
           console.debug("User logged in");
+          result = true;
         } else {
           alert("Could not log you in with those credentials");
           throw new Error(request.error(response));
         }
       } catch (e) {
         console.error(e);
+      } finally {
+        return result;
       }
     }
 
-    async function register() {
+    async function authenticate(user) {
+      let result = false;
       try {
-        let request = new HttpRequest({
-          method: "POST",
-          url: "register/",
-          errorMsg: `Could not register new user ${currentUser.username}`,
-          bodyObject: currentUser
-        });
-        let response = await request.send();
-        if (response.ok) {
-          alert(`Welcome, ${currentUser.username}! Please log in with your new password.`);
-          setRegisterNew(false);
+        if (!registerNew && !authenticated && user.username && !user.token) {
+          console.debug(`Requesting token for user ${user.username}`)
+          let token = await requestToken(user);
+          //    if (currentUser.token && !registerNew && !authenticated) {
+          if (token) {
+            console.debug(`Authenticating user ${currentUser.username}`)
+            result = await logIn(user, token);
+          } else {
+            console.debug("Not authenticating");
+          }
         } else {
-          throw new Error(request.error(response));
+          console.debug("Not requesting token");
         }
-      } catch (e) {
+      } catch(e) {
         console.error(e);
+      } finally {
+        return result;
       }
     }
 
-    console.debug("Ready to request user token");
-    if (!authenticated && !currentUser.isEmpty) {
-      if (registerNew) {
-        console.debug(`Registering new user ${currentUser.username}`)
-        register();
-      } else {
-        console.debug(`Requesting token for user ${currentUser.username}`)
-        requestToken();
+    authenticate(currentUser);
 
-        console.debug("Ready to authenticate");
-        if (userToken) {
-          console.debug(`Authenticating user ${currentUser.username}`)
-          authenticate();
-        } 
-      }
-    }
-  }, [authenticated, currentUser, userToken, doLogout, registerNew]);
+  }, [currentUser.username]);
 
   useEffect(() => {
-    async function deauthenticate() {
+    async function deauthenticate(user) {
       try {
         let request = new HttpRequest({
           method: "POST",
           url: "logout/",
-          errorMsg: `Problem logging out user ${currentUser.username}`,
-          bodyObject: currentUser,
-          authToken: userToken
+          errorMsg: `Problem logging out user ${user.username}`,
+          bodyObject: user,
+          authToken: user.token
         });
         let response = await request.send();
           
         if (response.ok) {
-          setAuthenticated(false);
-          setCurrentUser(User.blank());
-          setDoLogout(false);
-          setUserToken(null);
           console.debug(`Logged out user ${currentUser.username}`);
         } else {
           throw new Error(request.error(response));
         } 
       } catch (e) {
         console.error(e);
+      } finally {
+        setDoLogout(false);
+        setCurrentUser(User.blank())
+        setAuthenticated(false);
       }
     }
     if (doLogout) {
-      deauthenticate();
+      deauthenticate(currentUser);
     }
-  }, [doLogout, currentUser, userToken]);
+  }, [doLogout, currentUser]);
 
-  const loader = () => toDoLoader(currentUser, userToken, items);
+  const loader = () => toDoLoader(currentUser, items);
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route path="/" element={<Layout />}>
