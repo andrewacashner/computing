@@ -10,11 +10,12 @@ import {
 import Layout from "./components/shared/Layout";
 
 import About from "./routes/About";
-import ToDo, { loader as toDoLoader} from "./routes/ToDo";
+import ToDo from "./routes/ToDo";
 import LogIn from "./routes/LogIn";
 
 import HttpRequest from "./classes/HttpRequest";
 import User from "./classes/User";
+import ToDoItem from "./classes/ToDoItem";
 import ToDoList from "./classes/ToDoList";
 
 import UserContext from "./store/UserContext";
@@ -69,7 +70,7 @@ function App() {
     } else {
       console.debug("Not registering new user");
     }
-  }, [registerNew, currentUser]);
+  }, [authenticated, registerNew, currentUser]);
 
   useEffect(() => {
     async function requestToken(user) {
@@ -151,7 +152,7 @@ function App() {
 
     authenticate(currentUser);
 
-  }, [currentUser.username]);
+  }, [currentUser.username, registerNew]);
 
   useEffect(() => {
     async function deauthenticate(user) {
@@ -183,17 +184,81 @@ function App() {
     }
   }, [doLogout, currentUser]);
 
-  const loader = () => toDoLoader(currentUser, items);
+  let [updatedDB, setUpdatedDB] = useState(false);
+
+  useEffect(() => {
+    async function updateDB(user) {
+      let todo = null;
+        try {
+          if (authenticated) {
+            let request = new HttpRequest({
+              method: "POST",
+              url: "todo/",
+              errorMsg: `Problem syncing data for user ${user.username}`,
+              bodyObject: items,
+              authToken: user.token
+            });
+            let response = await request.send();
+
+            if (response.ok) {
+              let json = await response.json();
+              console.debug(json);
+              setUpdatedDB(true);
+            } else {
+              throw new Error(request.error(response));
+            }
+          } 
+        } catch (e) { 
+          console.error(e);
+        } 
+    }
+    updateDB(currentUser);
+  }, [items, authenticated, currentUser]);
+
+  useEffect(() => {
+    async function sync(user) {
+      let todo = null;
+        try {
+          if (authenticated) {
+            let request = new HttpRequest({
+              method: "GET",
+              url: "todo/",
+              errorMsg: `Problem syncing data for user ${user.username}`,
+              authToken: user.token
+            });
+            let response = await request.send();
+
+            if (response.ok) {
+              let json = await response.json();
+              console.debug("Synced todolist data");
+
+              let items = json.map(i => new ToDoItem({ id: i.uuid, ...i}));
+              todo = new ToDoList(items);
+              setItems(todo);
+            } else {
+              throw new Error(request.error(response));
+            }
+          } else {
+            setItems(emptyList());
+          }
+        } catch (e) { 
+          console.error(e);
+        } 
+    }
+    sync(currentUser);
+  }, [authenticated, currentUser, updatedDB]);
+  
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route path="/" element={<Layout />}>
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<LogIn />} />
-        <Route path="/todo" element={<ToDo />} loader={loader} />
+        <Route path="/todo" element={<ToDo />} />
       </Route>
     )
   );
 
+        // <Route path="/todo" element={<ToDo />} loader={loader} />
 
   return(
     <UserContext.Provider value={startingContext}>

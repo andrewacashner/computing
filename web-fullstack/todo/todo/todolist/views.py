@@ -80,12 +80,9 @@ class ToDoList(APIView):
             msg = f"Created {itemsCreated} and updated {itemsUpdated} items in database"
         else:
             msg = "Received no data from client"
-        
-        items = ToDoItem.objects.filter(user=request.user).order_by('userOrder').values()
-        response = ToDoSerializer(items, many=True, context={'request': request})
  
         print(msg)
-        return Response(response.data)
+        return Response(msg)
 
 
 
