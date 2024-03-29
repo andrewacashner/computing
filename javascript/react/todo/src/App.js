@@ -1,8 +1,8 @@
 import "./App.css";
 import { useState, useEffect } from "react";
 import { 
-  createBrowserRouter, 
-  createRoutesFromElements,
+  BrowserRouter,
+  Routes,
   Route,
   RouterProvider 
 } from "react-router-dom";
@@ -10,13 +10,14 @@ import {
 import Layout from "./components/shared/Layout";
 
 import About from "./routes/About";
-import ToDo from "./routes/ToDo";
-import LogIn from "./routes/LogIn";
 
 import HttpRequest from "./classes/HttpRequest";
 import User from "./classes/User";
 import ToDoItem from "./classes/ToDoItem";
 import ToDoList from "./classes/ToDoList";
+
+import LogIn from "./components/LogIn";
+import ToDo from "./components/ToDo";
 
 import UserContext from "./store/UserContext";
 import ToDoContext from "./store/ToDoContext";
@@ -62,6 +63,7 @@ function App() {
         console.error(e);
       } finally {
         setRegisterNew(false);
+        window.location.reload();
       }
     }
     if (registerNew && !authenticated && !currentUser.isEmpty) {
@@ -128,15 +130,13 @@ function App() {
     }
 
     async function authenticate(user) {
-      let result = false;
       try {
         if (!registerNew && !authenticated && user.username && !user.token) {
           console.debug(`Requesting token for user ${user.username}`)
           let token = await requestToken(user);
-          //    if (currentUser.token && !registerNew && !authenticated) {
           if (token) {
             console.debug(`Authenticating user ${currentUser.username}`)
-            result = await logIn(user, token);
+            await logIn(user, token);
           } else {
             console.debug("Not authenticating");
           }
@@ -145,14 +145,12 @@ function App() {
         }
       } catch(e) {
         console.error(e);
-      } finally {
-        return result;
-      }
+      } 
     }
 
     authenticate(currentUser);
 
-  }, [currentUser.username, registerNew]);
+  }, [currentUser]);
 
   useEffect(() => {
     async function deauthenticate(user) {
@@ -188,29 +186,28 @@ function App() {
 
   useEffect(() => {
     async function updateDB(user) {
-      let todo = null;
-        try {
-          if (authenticated) {
-            let request = new HttpRequest({
-              method: "POST",
-              url: "todo/",
-              errorMsg: `Problem syncing data for user ${user.username}`,
-              bodyObject: items,
-              authToken: user.token
-            });
-            let response = await request.send();
+      try {
+        if (authenticated) {
+          let request = new HttpRequest({
+            method: "POST",
+            url: "todo/",
+            errorMsg: `Problem syncing data for user ${user.username}`,
+            bodyObject: items,
+            authToken: user.token
+          });
+          let response = await request.send();
 
-            if (response.ok) {
-              let json = await response.json();
-              console.debug(json);
-              setUpdatedDB(true);
-            } else {
-              throw new Error(request.error(response));
-            }
-          } 
-        } catch (e) { 
-          console.error(e);
+          if (response.ok) {
+            let json = await response.json();
+            console.debug(json);
+            setUpdatedDB(true);
+          } else {
+            throw new Error(request.error(response));
+          }
         } 
+      } catch (e) { 
+        console.error(e);
+      } 
     }
     updateDB(currentUser);
   }, [items, authenticated, currentUser]);
@@ -248,22 +245,26 @@ function App() {
     sync(currentUser);
   }, [authenticated, currentUser, updatedDB]);
   
-  const router = createBrowserRouter(
-    createRoutesFromElements(
-      <Route path="/" element={<Layout />}>
-        <Route path="/about" element={<About />} />
-        <Route path="/login" element={<LogIn />} />
-        <Route path="/todo" element={<ToDo />} />
-      </Route>
-    )
-  );
-
-        // <Route path="/todo" element={<ToDo />} loader={loader} />
+  function Panel() {
+    if (authenticated) {
+      return(<ToDo />);
+    } else {
+      return(<LogIn />);
+    }
+  }
 
   return(
     <UserContext.Provider value={startingContext}>
       <ToDoContext.Provider value={toDoContextValue}>
-        <RouterProvider router={router} />
+        <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route path="about" element={<About />} />
+                <Route path="todo" element={<Panel />} />
+                <Route path="login" element={<Panel />} />
+              </Route>
+            </Routes>
+        </BrowserRouter>
       </ToDoContext.Provider>
     </UserContext.Provider>
   );

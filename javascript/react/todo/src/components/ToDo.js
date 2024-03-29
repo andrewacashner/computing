@@ -6,9 +6,9 @@ import { useContext } from "react";
 
 import UserContext from "../store/UserContext";
 
-import TaskList from "../components/TaskList";
-import CheckAllButton from "../components/CheckAllButton";
-import NewTaskForm from "../components/NewTaskForm";
+import TaskList from "./TaskList";
+import CheckAllButton from "./CheckAllButton";
+import NewTaskForm from "./NewTaskForm";
 
 function ToDo() {
   let userContext = useContext(UserContext);

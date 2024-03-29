@@ -18,13 +18,13 @@
 - (rejected) Editing entries in-list
 - (rejected) Nested lists
 - Better layout of entries & dates
-- Log in and save lists
+- (DONE) Log in and save lists
 - Multiple named lists
 
 # LOG IN, USER ACCOUNTS
 
-- Allow users to create new login (create new users for themselves)
-- After log in redirect to /todo 
+- (DONE) Allow users to create new login (create new users for themselves)
+- (DONE) After log in redirect to /todo 
     - (DONE) Move currentUser, token, etc. state up a level?
 - (DONE) Redirect with user todo list(s) loaded
 - (DONE) Redirect back to login with login form shown after logout
@@ -45,15 +45,15 @@
 - (DONE) Sort entries manually (drag)
     - (DONE) Reorder userOrder on drop and update DB
 - (DONE) Sort entries by date
-- Ensure display is always synced to DB
+- (DONE) Ensure display is always synced to DB
     - (DONE)  Coordinate setItems client state vs. load data from fetch in routes/ToDo
 
 # BUGS
 - (DONE) Drag and drop doesn't work anymore (stray "uuid" instead of "id"
   field)
-- **"DB Locked" error when editing item**
+- (DONE) **"DB Locked" error when editing item**
     - (too many updates to items?)
 - (DONE - BY DESIGN) User order lost when editing and adding item 
     - Consider different edit interface?
-- **When logging in, re-render loop on loading items**
+- (DONE) **When logging in, re-render loop on loading items**
     - Problem with update_or_create matching uuid when blank?
