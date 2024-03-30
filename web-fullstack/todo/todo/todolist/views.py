@@ -8,15 +8,6 @@ from django.contrib.auth.models import User
 from .models import ToDoItem
 from .serializers import ToDoSerializer
 
-# class Users(APIView):
-#     permission_classes = (IsAuthenticated,)
-# 
-#     queryset = User.objects.all().order_by('-date_joined')
-# 
-#     def get(self, request):
-#         response = serializers.serialize("json", self.queryset.all())
-#         return Response(response)
-
 # TODO are Login and Logout views even necessary?
 class Login(APIView):
     permission_classes = (IsAuthenticated,)
@@ -84,31 +75,6 @@ class ToDoList(APIView):
         print(msg)
         return Response(msg)
 
-
-
-# TODO remove unused
-# class AddToDoItem(APIView):
-#     permission_classes = (IsAuthenticated,)
-# 
-#     def post(self, request):
-#         new_item = json.loads(request.body)
-#         new_db_entry, created = ToDoItem.objects.update_or_create(
-#             user = request.user,
-#             uuid = new_item['id'],
-#             defaults = {
-#                 'task': new_item['task'],
-#                 'deadline': new_item['deadline'],
-#                 'deadlineDate': new_item['deadlineDate'],
-#                 'isDone': new_item['isDone'],
-#                 'userOrder': new_item['userOrder'],
-#             })
-#         new_db_entry.save()
-#        
-#         didAction = "Added new" if created else "Updated"
-#         msg = f"{didAction} item 'task: {new_item['task']}' to database"
-#         print(msg)
-#         return Response(msg)
-
 class DeleteToDoItem(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -122,19 +88,6 @@ class DeleteToDoItem(APIView):
         msg = f"Deleted item with id {this_id}"
         print(msg)
         return Response(msg)
-
-# class ToggleDoneStatus(APIView):
-#     permission_classes = (IsAuthenticated,)
-# 
-#     def post(self, request):
-#         data = json.loads(request.body)
-#         match = ToDoItem.objects.get(user=request.user, uuid = data['id'])
-#         match.isDone = not match.isDone
-#         match.save()
-# 
-#         msg = f"Toggled done status to {match.isDone} for item {data['id']}"
-#         print(msg)
-#         return Response(msg)
 
 # TODO but would this be faster/better?
 # class SetAllDoneStatus(APIView):

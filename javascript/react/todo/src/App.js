@@ -1,11 +1,6 @@
 import "./App.css";
 import { useState, useEffect } from "react";
-import { 
-  BrowserRouter,
-  Routes,
-  Route,
-  RouterProvider 
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Layout from "./components/shared/Layout";
 
@@ -23,27 +18,47 @@ import UserContext from "./store/UserContext";
 import ToDoContext from "./store/ToDoContext";
 
 function App() {
+  // Has the current user been authenticated with the backend server?
   let [authenticated, setAuthenticated] = useState(false);
+
+  // Current user, set from LogIn form component, includes authorization token
   let [currentUser, setCurrentUser] = useState(User.blank());
+
+  // Do we need to register a new user?
   let [registerNew, setRegisterNew] = useState(false);
+
+  // Should we logout?
   let [doLogout, setDoLogout] = useState(false);
 
-  let startingContext = {
-    authenticated: [authenticated, setAuthenticated],
-    currentUser: [currentUser, setCurrentUser],
-    doLogout: [doLogout, setDoLogout],
-    registerNew: [registerNew, setRegisterNew]
+  // USER CONTEXT (State connected to user authentication)
+  // Access value with (e.g.) userContext.get("authenticated")
+  // Access setter function with userContext.set("authenticated")
+  let userContext = {
+    get: field => userContext[field][0],
+    set: field => userContext[field][1],
+    authenticated:  [authenticated, setAuthenticated],
+    currentUser:    [currentUser,   setCurrentUser],
+    doLogout:       [doLogout,      setDoLogout],
+    registerNew:    [registerNew,   setRegisterNew]
   };
 
+
+  // TODOLIST CONTEXT (State containing user's todo list)
   const emptyList = () => new ToDoList();
   let [items, setItems] = useState(emptyList());
 
-  let toDoContextValue = {
+  let toDoContext = {
     get: items,
     set: setItems,
     reset: () => setItems(emptyList())
   }
 
+  // REGISTER new user 
+  // Trigger: 'currentUser' set and 'registerNew' set to true by LogIn form,
+  // when user sets their login info on the LogIn form and selects "Register"
+  // button 
+  //
+  // Effect: Post user data to server, set 'registerNew' back to false
   useEffect(() => {
     async function register(user) {
       try {
@@ -74,6 +89,14 @@ function App() {
     }
   }, [authenticated, registerNew, currentUser]);
 
+  // REQUEST TOKEN and AUTHENTICATE registered user
+  // Trigger: 'currentUser' set by LogIn form when a user enters their login
+  // info on the form and selects "Log In" 
+  //
+  // Effect: Post user data to server to request a token from the server and
+  // if successful, save the token: set 'currentUser.token'.
+  //
+  // Use the token to log in and set 'authenticated' to true if successful
   useEffect(() => {
     async function requestToken(user) {
       let newToken = null;
@@ -103,7 +126,6 @@ function App() {
     }
 
     async function logIn(user, token) {
-      let result = false;
       try {
         let request = new HttpRequest({
           method: "POST",
@@ -117,16 +139,13 @@ function App() {
         if (response.ok) {
           setAuthenticated(true);
           console.debug("User logged in");
-          result = true;
         } else {
           alert("Could not log you in with those credentials");
           throw new Error(request.error(response));
         }
       } catch (e) {
         console.error(e);
-      } finally {
-        return result;
-      }
+      } 
     }
 
     async function authenticate(user) {
@@ -152,6 +171,14 @@ function App() {
 
   }, [currentUser]);
 
+  // DEAUTHENTICATE user
+  // Trigger: 'doLogout' set to true by ToDo component, when user clicks "Log
+  // Out" button
+  //
+  // Effect: Post logout request to server, reset 'doLogout', 'currentUser',
+  // and 'authenticated' to initial (false/blank) values
+  //
+  // TODO do we even need to contact the server for this?
   useEffect(() => {
     async function deauthenticate(user) {
       try {
@@ -184,6 +211,14 @@ function App() {
 
   let [updatedDB, setUpdatedDB] = useState(false);
 
+  // UPDATE THE BACKEND DATABASE when data changes on the client side
+  // Trigger: When 'items' changes (because the user added a new item, edited
+  // an item, checked it done or not done, deleted an item, or sorted the
+  // list)
+  //
+  // Effect: Post the current client-side list data to the server. Server will
+  // update the database entries to match the client-side data. Set
+  // 'updatedDB' to true.
   useEffect(() => {
     async function updateDB(user) {
       try {
@@ -212,6 +247,15 @@ function App() {
     updateDB(currentUser);
   }, [items, authenticated, currentUser]);
 
+  // UPDATE THE CLIENT-SIDE DATA TO SYNC WITH SERVER-SIDE DATABASE
+  // Trigger: When 'updatedDB' is true, indicating the server was just updated
+  //
+  // Effect: Get current data list from database and set the client side
+  // 'items' to match
+  //
+  // TODO: Wouldn't it be more efficient to combine this with the previous
+  // useEffect, so that the client posts updated data to the server and the
+  // server responds with its updated state?
   useEffect(() => {
     async function sync(user) {
       let todo = null;
@@ -244,7 +288,8 @@ function App() {
     }
     sync(currentUser);
   }, [authenticated, currentUser, updatedDB]);
-  
+ 
+  // TODO Could we do this conditional routing a better way?
   function Panel() {
     if (authenticated) {
       return(<ToDo />);
@@ -254,16 +299,16 @@ function App() {
   }
 
   return(
-    <UserContext.Provider value={startingContext}>
-      <ToDoContext.Provider value={toDoContextValue}>
+    <UserContext.Provider value={userContext}>
+      <ToDoContext.Provider value={toDoContext}>
         <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Layout />}>
-                <Route path="about" element={<About />} />
-                <Route path="todo" element={<Panel />} />
-                <Route path="login" element={<Panel />} />
-              </Route>
-            </Routes>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route path="about" element={<About />} />
+              <Route path="todo" element={<Panel />} />
+              <Route path="login" element={<Panel />} />
+            </Route>
+          </Routes>
         </BrowserRouter>
       </ToDoContext.Provider>
     </UserContext.Provider>

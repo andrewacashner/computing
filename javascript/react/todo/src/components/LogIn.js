@@ -1,14 +1,12 @@
 import { useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import UserContext from "../store/UserContext";
 import User from "../classes/User";
 
 export default function LogIn() {
-  let context = useContext(UserContext);
-  let authenticated = context.authenticated[0];
-  let setCurrentUser = context.currentUser[1];
-  let setDoLogout = context.doLogout[1];
-  let setRegisterNew = context.registerNew[1];
+  let userContext = useContext(UserContext);
+  let setCurrentUser  = userContext.set("currentUser");
+  let setDoLogout     = userContext.set("doLogout");
+  let setRegisterNew  = userContext.set("registerNew");
 
 
   function login(event) {

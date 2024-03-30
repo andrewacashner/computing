@@ -12,9 +12,9 @@ import NewTaskForm from "./NewTaskForm";
 
 function ToDo() {
   let userContext = useContext(UserContext);
-  let authenticated = userContext.authenticated[0];
-  let currentUser = userContext.currentUser[0];
-  let setDoLogout = userContext.doLogout[1];
+  let authenticated = userContext.get("authenticated");
+  let currentUser   = userContext.get("currentUser");
+  let setDoLogout   = userContext.set("doLogout");
 
   function Welcome() {
     return(
