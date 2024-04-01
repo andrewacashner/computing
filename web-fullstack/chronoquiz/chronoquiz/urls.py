@@ -16,13 +16,31 @@ Including another URLconf
 """
 from django.urls import path, include
 from rest_framework.authtoken.views import obtain_auth_token
+from rest_framework.routers import DefaultRouter
 from chronoquiz.game import views
+
+timeline_list = views.TimelineViewSet.as_view({
+    'get': 'list',
+    'post': 'create'
+})
+
+timeline_detail = views.TimelineViewSet.as_view({
+    'get': 'retrieve',
+    'put': 'update',
+    'patch': 'partial_update',
+    'delete': 'destroy'
+})
+
+router = DefaultRouter()
+router.register(r'timelines', views.TimelineViewSet, basename='timeline')
 
 urlpatterns = [
     path('api_token_auth/', obtain_auth_token, name='api_token_auth'),
-    path('api_auth/', include('rest_framework.urls')),
-    #    path('login/', views.Login.as_view(), name='login'),
-    #    path('logout/', views.Logout.as_view(), name='logout'),
-    #    path('register/', views.Register.as_view(), name='register'),
-    path('quizzes/', views.Quizzes.as_view(), name='quizzes')
+    #    path('accounts/', include('django.contrib.auth.urls')),
+    path('', include(router.urls)),
+    path('login/', views.Login.as_view(), name='login'),
+    path('logout/', views.Logout.as_view(), name='logout'),
+    path('register/', views.Register.as_view(), name='register'),
+    # path('quizzes/', views.Quizzes.as_view(), name='quizzes')
+
 ]
