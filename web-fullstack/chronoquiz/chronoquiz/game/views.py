@@ -10,28 +10,42 @@ from rest_framework import status
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 
-class Login(APIView):
-    permission_classes = (IsAuthenticated,)
+# class Login(APIView):
+#     permission_classes = (IsAuthenticated,)
+# 
+#     def post(self, request):
+#         return Response(f"User {request.user.get_username()} logged in",
+#                         status=status.HTTP_200_OK)
+
+# class Logout(APIView):
+#     permission_classes = (IsAuthenticated,)
+# 
+#     def post(self, request):
+#         return Response(f"User {request.user.get_username()} logged out",
+#                         status=status.HTTP_200_OK)
+class UserExists(APIView):
+    permission_classes = (AllowAny,)
 
     def post(self, request):
-        return Response(f"User {request.user.get_username()} logged in",
-                        status=status.HTTP_200_OK)
-
-class Logout(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    def post(self, request):
-        return Response(f"User {request.user.get_username()} loggout out",
-                        status=status.HTTP_200_OK)
+        data = json.loads(request.body)
+        name = data['username']
+        exists = User.objects.filter(username=name).exists()
+        if exists:
+            return Response(f"User {name} exists", status=status.HTTP_200_OK)
+        else:
+            return Response(f"User {name} not found",
+                            status=status.HTTP_404_NOT_FOUND)
 
 class Register(APIView):
-    permission_classes = (AllowAny)
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         data = json.loads(request.body)
         User.objects.create_user(
                 username=data['username'],
+                email=data['email'],
                 password=data['password'])
+        return Response(f"Created user {data['username']}")
 
 # class Quizzes(APIView):
 #     permission_classes = (IsAuthenticated)

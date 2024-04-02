@@ -21,7 +21,7 @@ body {
 }
 
 
-header {
+header, section#frame {
   height: 20%;
   justify-content: center;
 }
@@ -43,11 +43,11 @@ p.instructions {
   margin: 0;
 }
 
-header button {
+section#frame button {
   margin: 1ex;
 }
 
-header form {
+section#frame form {
 }
 
 div#file {
@@ -59,7 +59,7 @@ div#file input {
   margin-left: 1em;
 }
 
-header div#score {
+section#frame div#score {
   width: 50%;
   margin-left: auto;
   margin-right: auto;
@@ -113,7 +113,7 @@ div.card span.date {
   font-family: var(--heading-font);
 }
 
-main {
+section#game {
   height: 80%;
 }
 
@@ -221,11 +221,12 @@ div.gameover {
 div.gameover p {
   margin: 1ex;
 }
-
+/*
 main section {
   text-align: left;
   margin: 1em;
 }
+*/
 
 div.card[data-noselect="noselect"] img {
   pointer-events: none;
@@ -244,3 +245,47 @@ div.card[data-noselect="noselect"] img {
   }
 }
 
+nav ul {
+  list-style: none;
+}
+
+nav ul li {
+  display: inline;
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
+form#login {
+  width: 60%;
+  margin-left: auto;
+  margin-right: auto;
+  justify-content: center;
+}
+
+div.formInputBlock {
+  display: table;
+  width: 100%;
+}
+
+div.formInputBlock div.formItem {
+  display: table-row;
+}
+
+div.formItem label, div.formItem input {
+  display: table-cell;
+  padding-bottom: 1ex;
+}
+
+div.formItem label {
+  text-align: right;
+  width: 20%;
+}
+
+div.formItem input {
+  width: 80%;
+}
+
+
+form#login button {
+  margin-top: 1em;
+}

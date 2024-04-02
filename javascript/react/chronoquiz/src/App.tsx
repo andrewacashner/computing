@@ -1,38 +1,39 @@
-import React from 'react';
-import './App.css';
+import React from "react";
+import "./App.css";
 
 import { useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Game from "./classes/Game";
+import Layout from "./components/shared/Layout";
+import About from "./routes/About";
+import Login from "./routes/Login";
+import Chronoquiz from "./routes/Chronoquiz";
 
-import Instructions from "./components/Instructions";
-import InputForm from "./components/InputForm";
-import ScorePanel from "./components/ScorePanel";
-import Clues from "./components/Clues";
-import Timeline from "./components/Timeline";
-import GameOver from "./components/GameOver";
+import User from "./classes/User";
 
-import TimelineContext from "./store/TimelineContext";
+import UserContext from "./store/UserContext";
 
 function App() {
-  let [game, setGame] = useState(Game.startingGame());
-  let gameContext = { get: game, set: setGame };
+  let userContext = {
+    get: key => userContext[key][0],
+    set: key => userContext[key][1],
+    authenticated: useState(false),
+    currentUser:   useState(new User()),
+    userToken:     useState(null)
+  }
 
   return (
-    <TimelineContext.Provider value={gameContext}>
-      <div className="App">
-        <header>
-          <h1>Chronoquiz</h1>
-          <Instructions />
-          <InputForm  />
-          { game.isGameOver ? null : <ScorePanel /> }
-        </header>
-        <main>
-          { game.isGameOver ? <GameOver /> : <Clues /> }
-          <Timeline />
-        </main>
-      </div>
-    </TimelineContext.Provider>
+    <UserContext.Provider value={userContext}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route path="/about" element={<About />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/chronoquiz" element={<Chronoquiz />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </UserContext.Provider>
   );
 }
 

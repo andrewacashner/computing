@@ -35,12 +35,13 @@ router = DefaultRouter()
 router.register(r'timelines', views.TimelineViewSet, basename='timeline')
 
 urlpatterns = [
-    path('api_token_auth/', obtain_auth_token, name='api_token_auth'),
+    path('login/', obtain_auth_token, name='login'),
+    path('check_user/', views.UserExists.as_view(), name='check_user'),
+    path('register/', views.Register.as_view(), name='register'),
     #    path('accounts/', include('django.contrib.auth.urls')),
     path('', include(router.urls)),
-    path('login/', views.Login.as_view(), name='login'),
-    path('logout/', views.Logout.as_view(), name='logout'),
-    path('register/', views.Register.as_view(), name='register'),
+#    path('login/', views.Login.as_view(), name='login'),
+#    path('logout/', views.Logout.as_view(), name='logout'),
     # path('quizzes/', views.Quizzes.as_view(), name='quizzes')
 
 ]
