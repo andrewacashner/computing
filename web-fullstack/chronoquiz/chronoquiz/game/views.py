@@ -1,7 +1,7 @@
 import json
-from .models import User, TimelineEvent
+from .models import User, Timeline, TimelineEvent
 
-from .serializers import UserSerializer, TimelineSerializer
+from .serializers import UserSerializer, TimelineSerializer,  TimelineEventSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework import viewsets
@@ -10,19 +10,6 @@ from rest_framework import status
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 
-# class Login(APIView):
-#     permission_classes = (IsAuthenticated,)
-# 
-#     def post(self, request):
-#         return Response(f"User {request.user.get_username()} logged in",
-#                         status=status.HTTP_200_OK)
-
-# class Logout(APIView):
-#     permission_classes = (IsAuthenticated,)
-# 
-#     def post(self, request):
-#         return Response(f"User {request.user.get_username()} logged out",
-#                         status=status.HTTP_200_OK)
 class UserExists(APIView):
     permission_classes = (AllowAny,)
 
@@ -63,9 +50,18 @@ class Register(APIView):
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 #     
 
-class TimelineViewSet(viewsets.ModelViewSet):
-    queryset = TimelineEvent.objects.all()
+class Timelines(viewsets.ModelViewSet):
+    queryset = Timeline.objects.all()
     serializer_class = TimelineSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class TimelineEvents(viewsets.ModelViewSet):
+    queryset = TimelineEvent.objects.all()
+    serializer_class = TimelineEventSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):

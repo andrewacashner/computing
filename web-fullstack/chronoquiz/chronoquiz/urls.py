@@ -19,12 +19,12 @@ from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework.routers import DefaultRouter
 from chronoquiz.game import views
 
-timeline_list = views.TimelineViewSet.as_view({
+timeline_list = views.TimelineEvents.as_view({
     'get': 'list',
     'post': 'create'
 })
 
-timeline_detail = views.TimelineViewSet.as_view({
+timeline_detail = views.TimelineEvents.as_view({
     'get': 'retrieve',
     'put': 'update',
     'patch': 'partial_update',
@@ -32,16 +32,14 @@ timeline_detail = views.TimelineViewSet.as_view({
 })
 
 router = DefaultRouter()
-router.register(r'timelines', views.TimelineViewSet, basename='timeline')
+router.register(r'timelines', views.Timelines, basename='timeline')
+router.register(r'events', views.TimelineEvents, basename='events')
 
 urlpatterns = [
     path('login/', obtain_auth_token, name='login'),
     path('check_user/', views.UserExists.as_view(), name='check_user'),
     path('register/', views.Register.as_view(), name='register'),
-    #    path('accounts/', include('django.contrib.auth.urls')),
     path('', include(router.urls)),
-#    path('login/', views.Login.as_view(), name='login'),
-#    path('logout/', views.Logout.as_view(), name='logout'),
     # path('quizzes/', views.Quizzes.as_view(), name='quizzes')
 
 ]
