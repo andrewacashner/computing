@@ -13,9 +13,9 @@ export default function Navigation() {
         <li><NavLink to="/">Home</NavLink></li>
         <li><NavLink to="/about">About</NavLink></li>
         { authenticated 
-          ? <li><NavLink to="/login">Log Out</NavLink></li>
+          ? <li><NavLink to="/login">Your Quizzes</NavLink></li>
           : <li><NavLink to="/login">Log In</NavLink></li> }
-        <li><NavLink to="/chronoquiz">Play</NavLink></li>
+        <li><NavLink to="/game">Play</NavLink></li>
       </ul>
     </nav>
   );

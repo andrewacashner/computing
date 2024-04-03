@@ -1,14 +1,27 @@
-import { useContext, useEffect } from "react";
+import { useContext, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+
 import UserContext from "../store/UserContext";
+// import TimelineContext from "../store/TimelineContext";
+
 import User from "../classes/User";
 
 export default function Login() {
   let userContext       = useContext(UserContext);
   let currentUser       = userContext.get("currentUser");
   let setCurrentUser    = userContext.set("currentUser");
+
+  let userToken         = userContext.get("userToken");
   let setUserToken      = userContext.set("userToken");
+
   let authenticated     = userContext.get("authenticated");
   let setAuthenticated  = userContext.set("authenticated");
+
+  //   let timelineContext   = useContext(TimelineContext);
+  //   let timeline          = timelineContext.get;
+  //   let setTimeline       = timelineContext.set;
+
+  let [timelineList, setTimelineList] = useState([]);
 
   function login(event) {
     event.preventDefault();
@@ -49,6 +62,21 @@ export default function Login() {
 
   }, [currentUser, setUserToken, setAuthenticated]);
 
+  useEffect(() => {
+    async function loadTimelineList(user, token) {
+      let list = await user.loadTimelineList(token);
+      if (list) {
+        setTimelineList(list);
+      }
+    }
+
+    if (authenticated) {
+      loadTimelineList(currentUser, userToken);
+    } else {
+      setTimelineList([]);
+    }
+  }, [authenticated, currentUser, userToken]);
+
   function LoginForm() {
     return(
       <main>
@@ -74,7 +102,23 @@ export default function Login() {
     );
   }
 
-  function LogoutForm() {
+  function AdminPanel() {
+    function timelineLink(item) {
+      return(
+        <li key={item.id}>
+          <Link to={`../game/${item.id}`}>{item.title}</Link>
+        </li>
+      );
+    }
+
+    function Timelines() {
+      return(
+        <ul>
+          {timelineList.map(timelineLink)}
+        </ul>
+      );
+    }
+
     function logout() {
       setCurrentUser(new User());
       setUserToken(null);
@@ -83,14 +127,17 @@ export default function Login() {
 
     return(
       <main>
+        <h1>Your Quizzes</h1>
         <button type="button" onClick={logout}>Log Out</button>
+        <Timelines />
       </main>
     );
   }
 
+
   return(
     <>
-      { authenticated ? <LogoutForm /> : <LoginForm /> }
+      { authenticated ? <AdminPanel/> : <LoginForm /> }
     </>
   );
 }

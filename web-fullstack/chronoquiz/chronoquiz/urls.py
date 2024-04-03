@@ -41,6 +41,11 @@ urlpatterns = [
     path('register/', views.Register.as_view(), name='register'),
     path('timelines/', views.Timelines.as_view(), name='timelines'),
     path('events/', views.TimelineEvents.as_view(), name='events'),
+    path('game/<int:id>/', views.TimelineEvents.as_view(), name='quiz'),
+
+    # TODO could do something like this for user-readable URL
+    # path('game/<str:username>/<str:title>/', views.TimelineEvents.as_view(), name='quiz'),
+
 #    path('', include(router.urls)),
 
 ]

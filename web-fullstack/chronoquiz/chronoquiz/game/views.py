@@ -45,15 +45,24 @@ class Timelines(APIView):
 class TimelineEvents(APIView):
     permission_classes = (AllowAny,)
 
+    def get(self, request, id):
+        quiz = TimelineEvent.objects.filter(timeline_id=id)
+        if len(quiz) > 0:
+            response = TimelineEventSerializer(quiz, many=True)
+            return Response(response.data)
+        else:
+            return Response("Quiz not found",
+                            status=status.HTTP_404_NOT_FOUND)
+
+
     def post(self, request):
         data = json.loads(request.body)
         
-        # do we need this? (do we need this key at all?)
         username = data['username']
         user = User.objects.get(username=username) 
         
         title = data['title']
-        timeline = Timeline.objects.get(title=title) # what if not unique?
+        timeline = Timeline.objects.get(title=title)
        
         events = TimelineEvent.objects.filter(user=user, timeline=timeline)
         response = TimelineEventSerializer(events, many=True)

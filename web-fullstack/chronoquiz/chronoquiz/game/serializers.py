@@ -10,9 +10,10 @@ class UserSerializer(serializers.ModelSerializer):
 class TimelineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Timeline
-        fields = ['title']
+        fields = ['id', 'title']
 
 class TimelineEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimelineEvent
+        # TODO format date as YYYY?
         fields = ['date', 'info', 'img']

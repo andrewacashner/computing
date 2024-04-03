@@ -39,7 +39,7 @@ async function clueListFromJson(json: object): FactList {
 }
 
 
-export default function InputForm() {
+export default function InputForm({ src }) {
 
   let context = useContext(TimelineContext);
   let setGame = context.set;
@@ -52,13 +52,15 @@ export default function InputForm() {
   function getUrl(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     setIsGameActive(true); 
+    setUrl(src);
+    console.debug(`Set URL to ${src}`);
 
-    let source = event.target.source.value;
-    let files = event.target.fileInput.files;
-    let newUrl = (files.length > 0) 
-                  ? URL.createObjectURL(files[0]) 
-                  : `./input/${source}.json`;
-    setUrl(newUrl);
+    //    let source = event.target.source.value;
+    //    let files = event.target.fileInput.files;
+    //    let newUrl = (files.length > 0) 
+    //                  ? URL.createObjectURL(files[0]) 
+    //                  : `./input/${source}.json`;
+    //    setUrl(newUrl);
   }
   
   useEffect(() => {
@@ -159,11 +161,11 @@ export default function InputForm() {
     );
   }
 
+  // <SelectTimeline />
+  // <FileInput />
   return(
     <>
       <form id="inputForm" onSubmit={getUrl}>
-        <SelectTimeline />
-        <FileInput />
         <PlayButton />
       </form>
       {isGameActive ? <RestartButton /> : null }

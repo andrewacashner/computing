@@ -15,7 +15,7 @@ export default class Game {
   isActive: boolean;
   isGameOver: boolean;
 
-  constructor({ clues, timeline, score = 0, isActive = false, isGameOver = false }: GameInput) {
+  constructor({ clues, timeline, score = 0, isActive = false, isGameOver = false }: GameInput = {}) {
     this.clues = clues;
     this.timeline = timeline;
     this.score = score;
@@ -60,7 +60,7 @@ export default class Game {
       isClue: false, 
       date: new Date(),
       info: "Now", 
-      img: "./img/hourglass.jpg",
+      img: "../img/hourglass.jpg",
       color: Color.VIOLET
     });
     NowCard.markSafe();

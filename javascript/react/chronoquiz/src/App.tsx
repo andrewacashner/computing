@@ -10,29 +10,43 @@ import Login from "./routes/Login";
 import Chronoquiz from "./routes/Chronoquiz";
 
 import User from "./classes/User";
+import Game from "./classes/Game";
 
 import UserContext from "./store/UserContext";
+import TimelineContext from "./store/TimelineContext";
 
 function App() {
+
   let userContext = {
-    get: key => userContext[key][0],
-    set: key => userContext[key][1],
+    get:           key => userContext[key][0],
+    set:           key => userContext[key][1],
     authenticated: useState(false),
     currentUser:   useState(new User()),
     userToken:     useState(null)
-  }
+  };
 
+  let timelineContext = {
+    get:      key => timelineContext[key][0],
+    set:      key => timelineContext[key][1],
+    timeline: useState(new Game())
+  };
+
+  // TODO user-readable url like this?
+  // <Route path="/game/:username/:gameTitle" element={<Chronoquiz />} />
+  
   return (
     <UserContext.Provider value={userContext}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route path="/about" element={<About />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/chronoquiz" element={<Chronoquiz />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <TimelineContext.Provider value={timelineContext}>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route path="/about" element={<About />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/game/:gameId" element={<Chronoquiz />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </TimelineContext.Provider>
     </UserContext.Provider>
   );
 }

@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 
 import Game from "../classes/Game";
+import User from "../classes/User";
 
 import Instructions from "../components/Instructions";
 import InputForm from "../components/InputForm";
@@ -15,13 +17,16 @@ export default function Chronoquiz() {
   let [game, setGame] = useState(Game.startingGame());
   let gameContext = { get: game, set: setGame };
 
+  let location = useLocation();
+  let sourceUrl = `${User.SERVER}${location.pathname}/`;
+
   return (
     <TimelineContext.Provider value={gameContext}>
       <main>
         <div className="App">
           <section id="frame">
             <Instructions />
-            <InputForm  />
+            <InputForm src={sourceUrl} />
             { game.isGameOver ? null : <ScorePanel /> }
           </section>
           { game.isGameOver ? <GameOver /> : <Clues /> }

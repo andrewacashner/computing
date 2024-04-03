@@ -289,3 +289,10 @@ div.formItem input {
 form#login button {
   margin-top: 1em;
 }
+
+ul {
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+}

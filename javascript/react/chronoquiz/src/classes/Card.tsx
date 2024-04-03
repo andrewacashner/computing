@@ -1,6 +1,7 @@
 interface CardInput  {
   isClue: boolean;      // Is this a clue (true) or answer?
-  date: Date | number;  // Date object or numeric year of event
+  date: Date | number | string;  // Date object or numeric year of event
+  // TODO return to this, depends on backend server output
   info: string;         // Brief description of event
   img: string;          // Full URL of image
 }
@@ -83,7 +84,10 @@ export default class Card {
   static #sanitizeDate(rawDate: any): Date | null {
     let date = null;
     try {
-      let numTest = Number(rawDate);
+      // TODO bc. server gives format "YYYY-MM-DD"
+      let yyyy = rawDate.slice(0, 4); 
+
+      let numTest = Number(yyyy);
       if (!isNaN(numTest) 
           && Number.isInteger(numTest) 
           && numTest <= new Date().getFullYear()) {
