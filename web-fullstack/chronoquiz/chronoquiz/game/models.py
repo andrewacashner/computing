@@ -11,6 +11,9 @@ class Timeline(models.Model):
                              on_delete=models.CASCADE)
     title = models.CharField(max_length=80)
 
+    def __str__(self):
+        return self.title
+
 class TimelineEvent(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
@@ -22,3 +25,5 @@ class TimelineEvent(models.Model):
     class Meta:
         ordering = ['date']
 
+    def __str__(self):
+        return self.info

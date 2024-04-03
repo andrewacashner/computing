@@ -15,4 +15,4 @@ class TimelineSerializer(serializers.ModelSerializer):
 class TimelineEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimelineEvent
-        fields = ['date', 'fact', 'img']
+        fields = ['date', 'info', 'img']

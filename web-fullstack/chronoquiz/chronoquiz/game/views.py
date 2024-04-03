@@ -34,38 +34,31 @@ class Register(APIView):
                 password=data['password'])
         return Response(f"Created user {data['username']}")
 
-# class Quizzes(APIView):
-#     permission_classes = (IsAuthenticated)
-# 
-#     def get(self, request):
-#         quizzes = TimelineEvent.objects.filter(user=request.user)
-#         serializer = TimelineSerializer(quizzes, many=True)
-#         return Response(serializer.data)
-# 
-#     def post(self, request):
-#         serializer = TimelineSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#     
+class Timelines(APIView):
+    permission_classes = (IsAuthenticated,)
 
-class Timelines(viewsets.ModelViewSet):
-    queryset = Timeline.objects.all()
-    serializer_class = TimelineSerializer
-    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        timelines = Timeline.objects.filter(user=request.user)
+        response = TimelineSerializer(timelines, many=True)
+        return Response(response.data)
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+class TimelineEvents(APIView):
+    permission_classes = (AllowAny,)
 
+    def post(self, request):
+        data = json.loads(request.body)
+        
+        # do we need this? (do we need this key at all?)
+        username = data['username']
+        user = User.objects.get(username=username) 
+        
+        title = data['title']
+        timeline = Timeline.objects.get(title=title) # what if not unique?
+       
+        events = TimelineEvent.objects.filter(user=user, timeline=timeline)
+        response = TimelineEventSerializer(events, many=True)
+        return Response(response.data)
 
-class TimelineEvents(viewsets.ModelViewSet):
-    queryset = TimelineEvent.objects.all()
-    serializer_class = TimelineEventSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
 
 
 

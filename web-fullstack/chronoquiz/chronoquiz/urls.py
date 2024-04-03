@@ -19,27 +19,28 @@ from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework.routers import DefaultRouter
 from chronoquiz.game import views
 
-timeline_list = views.TimelineEvents.as_view({
-    'get': 'list',
-    'post': 'create'
-})
-
-timeline_detail = views.TimelineEvents.as_view({
-    'get': 'retrieve',
-    'put': 'update',
-    'patch': 'partial_update',
-    'delete': 'destroy'
-})
-
-router = DefaultRouter()
-router.register(r'timelines', views.Timelines, basename='timeline')
-router.register(r'events', views.TimelineEvents, basename='events')
+# timeline_list = views.TimelineEvents.as_view({
+#     'get': 'list',
+#     'post': 'create'
+# })
+# 
+# timeline_detail = views.TimelineEvents.as_view({
+#     'get': 'retrieve',
+#     'put': 'update',
+#     'patch': 'partial_update',
+#     'delete': 'destroy'
+# })
+# 
+# router = DefaultRouter()
+# router.register(r'timelines', views.Timelines, basename='timeline')
+# router.register(r'events', views.TimelineEvents, basename='events')
 
 urlpatterns = [
     path('login/', obtain_auth_token, name='login'),
     path('check_user/', views.UserExists.as_view(), name='check_user'),
     path('register/', views.Register.as_view(), name='register'),
-    path('', include(router.urls)),
-    # path('quizzes/', views.Quizzes.as_view(), name='quizzes')
+    path('timelines/', views.Timelines.as_view(), name='timelines'),
+    path('events/', views.TimelineEvents.as_view(), name='events'),
+#    path('', include(router.urls)),
 
 ]
