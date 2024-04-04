@@ -46,21 +46,12 @@ export default function InputForm({ src }) {
 
   let [url, setUrl] = useState("");
   let [json, setJson] = useState(null);
-  let [uploadVisible, setUploadVisible] = useState(false);
   let [isGameActive, setIsGameActive] = useState(false);
 
   function getUrl(event: React.FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
     setIsGameActive(true); 
     setUrl(src);
     console.debug(`Set URL to ${src}`);
-
-    //    let source = event.target.source.value;
-    //    let files = event.target.fileInput.files;
-    //    let newUrl = (files.length > 0) 
-    //                  ? URL.createObjectURL(files[0]) 
-    //                  : `./input/${source}.json`;
-    //    setUrl(newUrl);
   }
   
   useEffect(() => {
@@ -115,60 +106,26 @@ export default function InputForm({ src }) {
   }, [json, setGame, isGameActive])
 
 
-  function showUploadButton(event: React.FormEvent<HTMLFormElement>): void {
-    let value = event.target.value;
-    setUploadVisible(value === "upload");
+  function restart() {
+    window.location.reload();
   }
 
-  function visibility(isVisible: boolean): string {
-    return (isVisible) ? "show" : "hide";
-  }
-
-
-  function SelectTimeline() {
-    return(
-      <div className={visibility(!isGameActive)}>
-        <label htmlFor="source">Choose a timeline:</label>
-        <select name="source" id="source" 
-          onChange={showUploadButton}
-          required defaultValue="music">
-          <option value="music">Music</option>
-          <option value="wars">Wars</option>
-          <option value="upload">Upload a custom timeline...</option>
-        </select>
-      </div>
-    );
-  }
-
-  function FileInput() {
-    return(
-      <div id="file" className={visibility(!isGameActive && uploadVisible)}>
-        <label htmlFor="fileInput">Upload JSON timeline file (<a href="about.html">?</a>)</label>
-        <input id="fileInput" type="file" accept=".json" />
-      </div>
-    );
-  }
-
-  // TODO "Play again" doesn't work
   function PlayButton() {
-
-    function playMsg(isGameActive: boolean): string {
-      return (isGameActive) ? "Play again!" : "Play!";
-    }
-
     return(
-      <button type="submit" id="playbutton">{playMsg(isGameActive)}</button>
+      <button type="button" id="playbutton" onClick={getUrl}>Play!</button>
     );
   }
 
-  // <SelectTimeline />
-  // <FileInput />
+  function PlayAgainButton() {
+    return(
+      <button type="button" id="playbutton" onClick={restart}>Play again!</button>
+    );
+  }
+
   return(
     <>
-      <form id="inputForm" onSubmit={getUrl}>
-        <PlayButton />
-      </form>
-      {isGameActive ? <RestartButton /> : null }
+      { isGameActive ? <PlayAgainButton /> : <PlayButton /> }
+      { isGameActive ? <RestartButton /> : null }
     </>
   );
 }

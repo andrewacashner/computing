@@ -93,7 +93,7 @@ export default class User {
     return token;
   }
 
-  async loadTimelineList(token: string): array<string> {
+  async loadUserTimelineList(token: string = ""): array<string> {
     let list = null;
     let response = await this.request("timelines/", "POST", this, token);
     if (response.ok) {
@@ -101,7 +101,7 @@ export default class User {
       list = json;
       console.debug(`Loaded list of ${json.length} timelines`);
     } else {
-      console.debug(`Problem retrieving quiz list for ${user.username}: server responded ${response.status}, ${response.statusText}`);
+      console.debug(`Problem retrieving quiz list: Server responded ${response.status}, ${response.statusText}`);
     }
     return list;
   }

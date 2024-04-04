@@ -6,7 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Layout from "./components/shared/Layout";
 import About from "./routes/About";
-import Login from "./routes/Login";
+import Admin from "./routes/Admin";
+import Choose from "./routes/Choose";
 import Chronoquiz from "./routes/Chronoquiz";
 
 import User from "./classes/User";
@@ -41,7 +42,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route path="/about" element={<About />} />
-              <Route path="/login" element={<Login />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/game" element={<Choose />} />
               <Route path="/game/:gameId" element={<Chronoquiz />} />
             </Route>
           </Routes>

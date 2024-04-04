@@ -1,33 +1,24 @@
 import { useContext, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 
 import UserContext from "../store/UserContext";
-// import TimelineContext from "../store/TimelineContext";
-
 import User from "../classes/User";
+import TimelineList from "../components/TimelineList";
 
 export default function Login() {
-  let userContext       = useContext(UserContext);
-  let currentUser       = userContext.get("currentUser");
-  let setCurrentUser    = userContext.set("currentUser");
-
-  let userToken         = userContext.get("userToken");
-  let setUserToken      = userContext.set("userToken");
-
-  let authenticated     = userContext.get("authenticated");
-  let setAuthenticated  = userContext.set("authenticated");
-
-  //   let timelineContext   = useContext(TimelineContext);
-  //   let timeline          = timelineContext.get;
-  //   let setTimeline       = timelineContext.set;
+  let userContext = useContext(UserContext);
+  let [currentUser,   setCurrentUser]   = userContext.currentUser;
+  let [userToken,     setUserToken]     = userContext.userToken;
+  let [authenticated, setAuthenticated] = userContext.authenticated;
 
   let [timelineList, setTimelineList] = useState([]);
 
   function login(event) {
     event.preventDefault();
+
     let username = event.target.username.value;
     let email    = event.target.email.value;
     let password = event.target.password.value;
+
     setCurrentUser(new User({
       username: username,
       email: email,
@@ -64,7 +55,7 @@ export default function Login() {
 
   useEffect(() => {
     async function loadTimelineList(user, token) {
-      let list = await user.loadTimelineList(token);
+      let list = await user.loadUserTimelineList(token);
       if (list) {
         setTimelineList(list);
       }
@@ -103,22 +94,6 @@ export default function Login() {
   }
 
   function AdminPanel() {
-    function timelineLink(item) {
-      return(
-        <li key={item.id}>
-          <Link to={`../game/${item.id}`}>{item.title}</Link>
-        </li>
-      );
-    }
-
-    function Timelines() {
-      return(
-        <ul>
-          {timelineList.map(timelineLink)}
-        </ul>
-      );
-    }
-
     function logout() {
       setCurrentUser(new User());
       setUserToken(null);
@@ -129,11 +104,10 @@ export default function Login() {
       <main>
         <h1>Your Quizzes</h1>
         <button type="button" onClick={logout}>Log Out</button>
-        <Timelines />
+        <TimelineList data={timelineList} />
       </main>
     );
   }
-
 
   return(
     <>

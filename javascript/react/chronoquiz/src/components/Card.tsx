@@ -42,7 +42,7 @@ export default function Card(props) {
         {...color(card)}
         {...draggable(card)}>
         <span className="date">{card.dateToString()}</span>
-        <img alt="Clue" src={card.img} />
+        { card.img ? <img alt="Clue" src={card.img} /> : null }
         <span className="info">{card.info}</span>
       </div>
     );

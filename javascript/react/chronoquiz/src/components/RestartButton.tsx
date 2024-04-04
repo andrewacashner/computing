@@ -1,7 +1,10 @@
+import { useNavigate } from "react-router-dom";
 
 export default function RestartButton() {
+  let navigate = useNavigate();
+
   function restart() {
-    window.location.reload();
+    navigate("../game");
   }
 
   return(

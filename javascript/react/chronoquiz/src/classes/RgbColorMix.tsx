@@ -70,7 +70,7 @@ export default class RgbColorMix {
   ): string {
     let color;
     if (length === 1) {
-      color = violet;
+      color = RgbColorMix.VIOLET;
     } else {
       let interval = Math.floor(spectrum.length / length);
       color = spectrum[index * interval];

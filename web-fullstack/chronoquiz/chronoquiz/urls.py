@@ -36,11 +36,11 @@ from chronoquiz.game import views
 # router.register(r'events', views.TimelineEvents, basename='events')
 
 urlpatterns = [
-    path('login/', obtain_auth_token, name='login'),
-    path('check_user/', views.UserExists.as_view(), name='check_user'),
-    path('register/', views.Register.as_view(), name='register'),
-    path('timelines/', views.Timelines.as_view(), name='timelines'),
-    path('events/', views.TimelineEvents.as_view(), name='events'),
+    path('login/',         obtain_auth_token,              name='login'),
+    path('check_user/',    views.UserExists.as_view(),     name='check_user'),
+    path('register/',      views.Register.as_view(),       name='register'),
+    path('timelines/',     views.Timelines.as_view(),      name='timelines'),
+    path('events/',        views.TimelineEvents.as_view(), name='events'),
     path('game/<int:id>/', views.TimelineEvents.as_view(), name='quiz'),
 
     # TODO could do something like this for user-readable URL

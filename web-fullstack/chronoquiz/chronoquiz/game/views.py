@@ -35,12 +35,20 @@ class Register(APIView):
         return Response(f"Created user {data['username']}")
 
 class Timelines(APIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
+    # Return all lists
+    def get(self, request):
+        timelines = Timeline.objects.all().order_by('title')
+        response = TimelineSerializer(timelines, many=True)
+        return Response(response.data)
+
+    # Return only the authenticated user's lists
     def post(self, request):
         timelines = Timeline.objects.filter(user=request.user)
         response = TimelineSerializer(timelines, many=True)
         return Response(response.data)
+
 
 class TimelineEvents(APIView):
     permission_classes = (AllowAny,)

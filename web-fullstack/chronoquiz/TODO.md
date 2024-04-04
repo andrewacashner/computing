@@ -1,0 +1,12 @@
+- date input & output (Just use whole date?)
+- user uploads from csv or json to client, then stored in db
+- user creates new timeline item-by-item (like todo app)
+- "get shareable link" (and/or QR code) in admin panel
+- unauthenticated users see list of all available quizzes?
+- switch to MySQL instead of sqlite
+- add keywords or longer description to timelines DB (not just title)
+- user-readable links (`/user/normalized_title`) instead of using ID nos
+- NavLink active highlighting
+- In game chooser page, show username with title (+ description, keywords?)
+- Is email necessary for login (or registration)?
+- Add email verificaiton to new user registration?
