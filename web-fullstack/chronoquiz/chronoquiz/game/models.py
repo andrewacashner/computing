@@ -18,12 +18,12 @@ class TimelineEvent(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
     timeline = models.ForeignKey(Timeline, on_delete=models.CASCADE)
-    date = models.DateField(default=timezone.now)
+    year = models.IntegerField(default=0,null=True)
     info = models.CharField(max_length=120)
     img = models.CharField(max_length=120, null=True, blank=True)
 
     class Meta:
-        ordering = ['date']
+        ordering = ['year']
 
     def __str__(self):
         return self.info

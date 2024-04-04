@@ -4,7 +4,7 @@ export default function TimelineList({ data }) {
   function link(item) {
     return(
       <li key={item.id}>
-        <Link to={`../game/${item.id}`}>{item.title}</Link>
+        <Link to={`../game/${item.id}`}>{item.title} (<code>{item.username}</code>)</Link>
       </li>
     );
   }

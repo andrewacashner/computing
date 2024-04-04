@@ -12,7 +12,7 @@ function isInputValid(json: any): boolean {
   return typeof json === "object"
   && Array.isArray(json) 
   && json.length > 0 
-  && json.every(fact => ("date" in fact) && ("info" in fact));
+  && json.every(fact => ("year" in fact) && ("info" in fact));
 }
 
 async function clueListFromJson(json: object): FactList { 
@@ -21,11 +21,15 @@ async function clueListFromJson(json: object): FactList {
     if (json && json.length > 0) {
       for (let entry of json) {
         try {
-          let card = await Card.newSafeCard(entry);
+          let card = await Card.newSafeCard({
+            date: entry.year,
+            info: entry.info,
+            img: entry.img
+          });
           if (card && card.isSafe) {
             cards.push(card);
           } else {
-            throw new Error(`Faulty card input {date: '${entry.date}', info: '${entry.info.slice(0, 15)}...'}; skipping`);
+            throw new Error(`Faulty card input {date: '${entry.year}', info: '${entry.info.slice(0, 15)}...'}; skipping`);
           }
         } catch(e) {
           console.error(e);

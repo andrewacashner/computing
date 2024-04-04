@@ -140,10 +140,3 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
 ]
 
-DATE_INPUT_FORMATS = [
-    '%Y',
-]
-
-DATE_FORMAT = [
-    '%Y',
-]

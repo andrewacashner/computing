@@ -1,4 +1,5 @@
-- date input & output (Just use whole date?)
+- (DONE) date input & output (Use string for date in DB, deal with "real"
+  dates on client side)
 - user uploads from csv or json to client, then stored in db
 - user creates new timeline item-by-item (like todo app)
 - "get shareable link" (and/or QR code) in admin panel
@@ -9,4 +10,4 @@
 - NavLink active highlighting
 - In game chooser page, show username with title (+ description, keywords?)
 - Is email necessary for login (or registration)?
-- Add email verificaiton to new user registration?
+- Add email verification to new user registration?

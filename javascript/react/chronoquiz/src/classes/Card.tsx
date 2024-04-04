@@ -84,10 +84,7 @@ export default class Card {
   static #sanitizeDate(rawDate: any): Date | null {
     let date = null;
     try {
-      // TODO bc. server gives format "YYYY-MM-DD"
-      let yyyy = rawDate.slice(0, 4); 
-
-      let numTest = Number(yyyy);
+      let numTest = Number(rawDate);
       if (!isNaN(numTest) 
           && Number.isInteger(numTest) 
           && numTest <= new Date().getFullYear()) {
