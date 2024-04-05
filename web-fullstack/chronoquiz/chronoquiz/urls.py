@@ -42,6 +42,7 @@ urlpatterns = [
     path('timelines/',     views.Timelines.as_view(),      name='timelines'),
     path('events/',        views.TimelineEvents.as_view(), name='events'),
     path('game/<int:id>/', views.TimelineEvents.as_view(), name='quiz'),
+    path('create/',        views.CreateTimeline.as_view(), name='create'),
 
     # TODO could do something like this for user-readable URL
     # path('game/<str:username>/<str:title>/', views.TimelineEvents.as_view(), name='quiz'),

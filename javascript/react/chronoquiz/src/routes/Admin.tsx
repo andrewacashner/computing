@@ -1,4 +1,5 @@
 import { useContext, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 import UserContext from "../store/UserContext";
 import User from "../classes/User";
@@ -100,11 +101,80 @@ export default function Login() {
       setAuthenticated(false);
     }
 
+    let [uploadFile, setUploadFile] = useState({ title: "", file: null });
+
+    function handleUpload(event) {
+      event.preventDefault();
+      let title = event.target.title.value;
+      let infile = event.target.upload.files[0];
+      setUploadFile({ title: title, file: infile });
+    }
+
+    useEffect(() => {
+
+      // TODO remove duplication (this may not be needed when reading from
+      // server)
+      function isInputValid(json) {
+        return Array.isArray(json) && 
+          json.length > 0 &&
+          json.every(i => ("date" in i) && ("info" in i));
+      }
+
+      async function loadUserTimeline(token, title, file) {
+        let text = await file.text();
+        let json = JSON.parse(text);
+        if (isInputValid(json)) {
+          console.debug("Valid input");
+
+          let response = await fetch(`${User.SERVER}/create/`, {
+            method: "POST",
+            headers: new Headers({
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+              "Authorization": `Token ${token}`
+            }),
+            body: JSON.stringify({ 
+              "title": title, 
+              "timeline": json
+            })
+          });
+          if (response.ok) {
+            let responseJson = await response.json();
+            console.debug(responseJson);
+          } else {
+            console.debug("Could not create new timeline");
+          }
+        } else {
+          console.debug("Invalid input");
+        }
+      }
+      if (uploadFile.file) {
+        loadUserTimeline(userToken, uploadFile.title, uploadFile.file);
+      }
+    }, [uploadFile]);
+
     return(
       <main>
         <h1>Your Quizzes</h1>
         <button type="button" onClick={logout}>Log Out</button>
-        <TimelineList data={timelineList} />
+        <TimelineList data={timelineList} hideUser />
+
+        <section id="upload">
+          <h2>Upload a New Quiz</h2>
+          <p>Upload a quiz in JSON format (see <Link to="/about">instructions</Link>)</p>
+
+          <form id="upload-form" onSubmit={handleUpload}>
+            <div>
+              <label htmlFor="title">Title of new timeline</label>
+              <input type="text" name="title" />
+            </div>
+            <div>
+              <input type="file" name="upload" accept=".json" />
+            </div>
+            <button type="submit">Upload</button>
+          </form>
+
+        </section>
       </main>
     );
   }
