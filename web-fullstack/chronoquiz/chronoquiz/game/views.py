@@ -49,6 +49,10 @@ class Timelines(APIView):
         response = TimelineSerializer(timelines, many=True)
         return Response(response.data)
 
+    def delete(self, request, id):
+        target = Timeline.objects.get(user=request.user, id=id)
+        target.delete()
+        return Response(f"Deleted timeline with id {id}")
 
 class TimelineEvents(APIView):
     permission_classes = (AllowAny,)
@@ -82,6 +86,7 @@ class CreateTimeline(APIView):
     def post(self, request):
         user_timeline = json.loads(request.body)
         new_title = user_timeline['title']
+        # TODO validate date with serializer before creating either
         new_timeline = Timeline.objects.create(user=request.user, 
                                                title=new_title)
 

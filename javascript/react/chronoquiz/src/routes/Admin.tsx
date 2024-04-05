@@ -12,6 +12,7 @@ export default function Login() {
   let [authenticated, setAuthenticated] = userContext.authenticated;
 
   let [timelineList, setTimelineList] = useState([]);
+  let [needsUpdate, setNeedsUpdate] = useState(false);
 
   function login(event) {
     event.preventDefault();
@@ -59,6 +60,7 @@ export default function Login() {
       let list = await user.loadUserTimelineList(token);
       if (list) {
         setTimelineList(list);
+        setNeedsUpdate(false);
       }
     }
 
@@ -67,7 +69,7 @@ export default function Login() {
     } else {
       setTimelineList([]);
     }
-  }, [authenticated, currentUser, userToken]);
+  }, [authenticated, currentUser, userToken, needsUpdate]);
 
   function LoginForm() {
     return(
@@ -126,7 +128,7 @@ export default function Login() {
         if (isInputValid(json)) {
           console.debug("Valid input");
 
-          let response = await fetch(`${User.SERVER}/create/`, {
+          let response = await fetch(`${User.SERVER}/timelines/create/`, {
             method: "POST",
             headers: new Headers({
               "Content-Type": "application/json",
@@ -141,8 +143,10 @@ export default function Login() {
           if (response.ok) {
             let responseJson = await response.json();
             console.debug(responseJson);
+            setNeedsUpdate(true);
           } else {
-            console.debug("Could not create new timeline");
+            alert("Could not create new timeline");
+            setNeedsUpdate(false);
           }
         } else {
           console.debug("Invalid input");
@@ -153,12 +157,8 @@ export default function Login() {
       }
     }, [uploadFile]);
 
-    return(
-      <main>
-        <h1>Your Quizzes</h1>
-        <button type="button" onClick={logout}>Log Out</button>
-        <TimelineList data={timelineList} hideUser />
-
+    function UploadForm() {
+      return(
         <section id="upload">
           <h2>Upload a New Quiz</h2>
           <p>Upload a quiz in JSON format (see <Link to="/about">instructions</Link>)</p>
@@ -166,15 +166,23 @@ export default function Login() {
           <form id="upload-form" onSubmit={handleUpload}>
             <div>
               <label htmlFor="title">Title of new timeline</label>
-              <input type="text" name="title" />
+              <input type="text" name="title" required />
             </div>
             <div>
               <input type="file" name="upload" accept=".json" />
             </div>
             <button type="submit">Upload</button>
           </form>
-
         </section>
+      );
+    }
+
+    return(
+      <main>
+        <h1>Your Quizzes</h1>
+        <button type="button" onClick={logout}>Log Out</button>
+        <TimelineList data={timelineList} type="admin" updateFn={setNeedsUpdate} />
+        <UploadForm />
       </main>
     );
   }

@@ -301,6 +301,7 @@ nav ul li {
 
 nav a {
   text-decoration: none;
+  color: DarkBlue;
 }
 
 nav a.active {
@@ -309,4 +310,9 @@ nav a.active {
 
 nav a, form label {
   font-family: var(--mono-font);
+}
+
+ul li button {
+  border: none;
+  background: none;
 }
