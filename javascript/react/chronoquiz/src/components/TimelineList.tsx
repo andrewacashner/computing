@@ -73,7 +73,7 @@ export default function TimelineList({ data, type = "game", updateFn = null }) {
     let href = `../game/${entry.id}`;
     return(
       <li key={entry.id}>
-        <Link to={href}>{entry.title} (<code>{entry.username}</code>)</Link>
+        <Link to={href}>{entry.title} (<code>{entry.user.username}</code>)</Link>
       </li>
     );
   }

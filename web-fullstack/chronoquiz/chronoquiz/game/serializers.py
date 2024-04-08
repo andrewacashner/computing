@@ -8,13 +8,13 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'password']
 
 class TimelineSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username')
-
     class Meta:
         model = Timeline
-        fields = ['id', 'username', 'title']
+        fields = ['id', 'user', 'title']
+        depth = 1
 
 class TimelineEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimelineEvent
-        fields = ['date', 'info', 'img']
+        fields = ['id', 'user', 'timeline', 'date', 'info', 'img']
+        depth = 1

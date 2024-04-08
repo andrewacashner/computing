@@ -8,6 +8,10 @@ export default class FactList {
     this.#items = cards;
   }
 
+  get cards() {
+    return this.#items;
+  }
+
   // PRIVATE METHODS
   
   // Set the colors of the cards in this list, in chronological order, to
@@ -106,6 +110,7 @@ export default class FactList {
   addFact(card) {
     this.#items.push(card);
     this.sortByDate();
+    return this;
   }
 
   resetMargins(): FactList {
@@ -135,6 +140,10 @@ export default class FactList {
 
   map(fn: (Card) => Card): FactList {
     return this.#items.map(fn);
+  }
+
+  appendClone(newCard: Card): FactList {
+    return this.clone().addFact(newCard);
   }
 
 }

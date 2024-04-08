@@ -137,7 +137,7 @@ export default function Login() {
             }),
             body: JSON.stringify({ 
               "title": title, 
-              "timeline": json
+              "events": json
             })
           });
           if (response.ok) {
@@ -182,6 +182,7 @@ export default function Login() {
         <h1>Your Quizzes</h1>
         <button type="button" onClick={logout}>Log Out</button>
         <TimelineList data={timelineList} type="admin" updateFn={setNeedsUpdate} />
+        <Link to="create/">Create a New Timeline</Link>
         <UploadForm />
       </main>
     );

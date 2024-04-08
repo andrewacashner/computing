@@ -17,7 +17,10 @@
 - (DONE) timeline list: user delete individual lists
 - (DONE) In game chooser page, show username with title (+ description,
   keywords?)
-- timeline list creation: validate input before creating
+- (DONE) timeline list creation: validate input before creating
+    - How to handle invalid input on server vs. client:
+        - "baddata.json" unexpected Django validation result
+- Add try/catch so no timeline created if problem in creation process
 - creation: ensure no duplicates
 - user can set timelines to public or private visibility
 - add keywords or longer description to timelines DB (not just title)

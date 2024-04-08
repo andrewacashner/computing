@@ -309,10 +309,38 @@ nav a.active {
 }
 
 nav a, form label {
-  font-family: var(--mono-font);
+  font-family: sans-serif;
 }
 
 ul li button {
   border: none;
   background: none;
 }
+
+form.timelinePanel {
+}
+
+table.timeline {
+  border-top: 2px solid black;
+  border-bottom: 2px solid black;
+  font-family: sans-serif;
+  text-align: left;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 1em;
+}
+
+section#new {
+  border: 2px solid black;
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 1em;
+  padding: 1ex;
+}
+
+table.timeline th, table.timeline td {
+  padding-left: 1ex;
+  padding-right: 1ex;
+}
+

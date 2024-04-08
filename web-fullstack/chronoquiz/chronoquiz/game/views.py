@@ -85,23 +85,24 @@ class CreateTimeline(APIView):
 
     def post(self, request):
         user_timeline = json.loads(request.body)
-        new_title = user_timeline['title']
-        # TODO validate date with serializer before creating either
-        new_timeline = Timeline.objects.create(user=request.user, 
-                                               title=new_title)
+#        new_title = user_timeline['title']
+        
+        new_timeline = TimelineSerializer(data=user_timeline)
+        new_timeline.is_valid(raise_exception=True)
+        this_timeline = new_timeline.save(user=request.user)
 
-        for event in user_timeline['timeline']:
-            new_event = TimelineEvent.objects.create(user=request.user,
-                                                     timeline=new_timeline,
-                                                     date=event['date'],
-                                                     info=event['info'],
-                                                     img=event.get('img'))
+        for event in user_timeline['events']:
+            new_event = TimelineEventSerializer(data={
+                'data': event['date'],
+                'info': event['info'],
+                'img': event.get('img')
+            })
+            new_event.is_valid(raise_exception=True)
+            new_event.save(user=request.user, timeline=this_timeline)
 
         count = TimelineEvent.objects.filter(user=request.user, 
-                                             timeline=new_timeline).count()
+                                             timeline=this_timeline).count()
 
-        return Response(f"Create new timeline '{new_title}' with {count} items")
-
+        return Response(f"Create new timeline '{user_timeline['title']}' with {count} items")
         
-
 
