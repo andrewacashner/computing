@@ -14,7 +14,7 @@ class Timeline(models.Model):
     def __str__(self):
         return self.title
 
-class TimelineEvent(models.Model):
+class Fact(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
     timeline = models.ForeignKey(Timeline, on_delete=models.CASCADE)

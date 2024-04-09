@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Timeline, TimelineEvent
+from .models import User, Timeline, Fact
 
 # TODO HyperlinkedModel necessary?
 class UserSerializer(serializers.ModelSerializer): 
@@ -13,8 +13,8 @@ class TimelineSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'title']
         depth = 1
 
-class TimelineEventSerializer(serializers.ModelSerializer):
+class FactSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TimelineEvent
+        model = Fact
         fields = ['id', 'user', 'timeline', 'date', 'info', 'img']
         depth = 1

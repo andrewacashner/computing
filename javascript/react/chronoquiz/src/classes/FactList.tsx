@@ -57,7 +57,7 @@ export default class FactList {
 
   // Sort the array by the date field, ascending.
   sortByDate(): FactList {
-    this.#items.sort((c1, c2) => { return c1.date - c2.date });
+    this.#items.sort((c1, c2) => { return c1.fact.date - c2.fact.date });
     return this;
   }
 

@@ -36,14 +36,14 @@ export default function Card(props) {
       <div key={card.id}
         className={classList(card)}
         id={card.id}
-        data-when={card.date.getFullYear()}
+        data-when={card.fact.year}
         data-noselect="noselect"
         {...expand(card)}
         {...color(card)}
         {...draggable(card)}>
-        <span className="date">{card.dateToString()}</span>
-        { card.img ? <img alt="Clue" src={card.img} /> : null }
-        <span className="info">{card.info}</span>
+        <span className="date">{card.isClue ? "Clue" : card.fact.yearString }</span>
+        { card.fact.img ? <img alt="Clue" src={card.fact.img} /> : null }
+        <span className="info">{card.fact.info}</span>
       </div>
     );
   }

@@ -1,29 +1,24 @@
+import Fact from "./Fact";
+
 interface CardInput  {
   isClue: boolean;      // Is this a clue (true) or answer?
-  date: Date | number | string;  // Date object or numeric year of event
-  // TODO return to this, depends on backend server output
-  info: string;         // Brief description of event
-  img: string;          // Full URL of image
+  fact: Fact;
 }
 
 export default class Card {
   isClue: boolean;
   id: string;
-  date: Date; 
-  info: string;
-  img: string;
+  fact: Fact;
   color: string;    // CSS color to be used in timeline
   expand: boolean;  // Add margin because a card is being dragged over?
   flash: boolean;   // Should this card flash an alert? (For wrong guess)
   #safe: boolean;   // Has this card been sanitized?
 
   // Each card gets the given info and a random unique identifier.
-  constructor({ isClue = true, date, info, img, color = null, expand = false, flash = false }: CardInput) {
+  constructor({ isClue = true, fact = new Fact(), color = null, expand = false, flash = false }: CardInput) {
     this.isClue = isClue;
     this.id = crypto.randomUUID();
-    this.date = date;
-    this.info = info;
-    this.img = img;
+    this.fact = fact;
     this.color = color;
     this.expand = expand;
     this.flash = flash;
@@ -57,16 +52,14 @@ export default class Card {
     let card = null;
     try {
       let cleanDate = Card.#sanitizeDate(date);
-      let cleanInfo = info; // React already sanitizes (?)
+      let cleanInfo = info;
       let cleanImg = await Card.#sanitizeImg(img).catch(console.error);
 
       // The date is the only dealbreaker. We just skip a bad image link.
       if (cleanDate) {
         card = new Card({
           isClue: isClue, 
-          date: cleanDate, 
-          info: cleanInfo, 
-          img: cleanImg
+          fact: new Fact({ date: cleanDate, info: cleanInfo, img: cleanImg})
         });
         card.markSafe();
         return card;
@@ -80,11 +73,7 @@ export default class Card {
   }
 
   json() {
-    return {
-      date: this.year,
-      info: this.info,
-      img: this.img
-    };
+    return this.fact.json();
   }
 
   // PRIVATE METHODS
@@ -152,8 +141,8 @@ export default class Card {
       let yearZero = new Date();
       yearZero.setFullYear(0);
 
-      let displayYear = this.year;
-      if (this.date < yearZero) {
+      let displayYear = this.fact.year;
+      if (this.fact.date < yearZero) {
         displayYear = `${-displayYear} bce`; 
       } 
       return displayYear;
@@ -161,7 +150,9 @@ export default class Card {
   }
 
   // Return the date as YYYY year string.
-  get year(): string { return this.date.getFullYear(); }
+  get year(): string { 
+    return this.fact.year; 
+  }
 
   copyAsAnswer(): Card {
     return new Card({ ...this, isClue: false});

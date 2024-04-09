@@ -5,8 +5,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@100..900&display=swap');
 
 :root {
-/*  --roman-font: "IM Fell English", "EB Garamond", "Goudy Old Style", Georgia, serif; */
-  --roman-font: "Roboto Slab", serif;
+  --roman-font: "IM Fell English", "EB Garamond", "Goudy Old Style", Georgia, serif;
+/*  --roman-font: "Roboto Slab", serif;*/
   --heading-font: "IM Fell English SC", "IM Fell English", "EB Garamond", "Goudy Old Style", Georgia, serif;
   --sans-font: "Roboto Slab", sans-serif;
   --mono-font: "IBM Plex Mono", "Source Code Pro", monospace;

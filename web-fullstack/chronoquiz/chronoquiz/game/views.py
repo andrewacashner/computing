@@ -1,7 +1,7 @@
 import json
-from .models import User, Timeline, TimelineEvent
+from .models import User, Timeline, Fact 
 
-from .serializers import UserSerializer, TimelineSerializer,  TimelineEventSerializer
+from .serializers import UserSerializer, TimelineSerializer,  FactSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework import viewsets
@@ -54,13 +54,13 @@ class Timelines(APIView):
         target.delete()
         return Response(f"Deleted timeline with id {id}")
 
-class TimelineEvents(APIView):
+class Facts(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request, id):
-        quiz = TimelineEvent.objects.filter(timeline_id=id)
+        quiz = Fact.objects.filter(timeline_id=id)
         if len(quiz) > 0:
-            response = TimelineEventSerializer(quiz, many=True)
+            response = FactSerializer(quiz, many=True)
             return Response(response.data)
         else:
             return Response("Quiz not found",
@@ -76,8 +76,8 @@ class TimelineEvents(APIView):
         title = data['title']
         timeline = Timeline.objects.get(title=title)
        
-        events = TimelineEvent.objects.filter(user=user, timeline=timeline)
-        response = TimelineEventSerializer(events, many=True)
+        facts = Fact.objects.filter(user=user, timeline=timeline)
+        response = FactSerializer(facts, many=True)
         return Response(response.data)
 
 class CreateTimeline(APIView):
@@ -91,8 +91,8 @@ class CreateTimeline(APIView):
         new_timeline.is_valid(raise_exception=True)
         this_timeline = new_timeline.save(user=request.user)
 
-        for event in user_timeline['events']:
-            new_event = TimelineEventSerializer(data={
+        for event in user_timeline['facts']:
+            new_event = FactSerializer(data={
                 'date': event['date'],
                 'info': event['info'],
                 'img': event.get('img')
@@ -100,8 +100,8 @@ class CreateTimeline(APIView):
             new_event.is_valid(raise_exception=True)
             new_event.save(user=request.user, timeline=this_timeline)
 
-        count = TimelineEvent.objects.filter(user=request.user, 
-                                             timeline=this_timeline).count()
+        count = Fact.objects.filter(user=request.user, 
+                                    timeline=this_timeline).count()
 
         return Response(f"Create new timeline '{user_timeline['title']}' with {count} items")
         

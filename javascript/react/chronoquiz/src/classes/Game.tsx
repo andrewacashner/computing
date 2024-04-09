@@ -1,4 +1,5 @@
 import Card from "./Card";
+import Fact from "./Fact";
 import FactList from "./FactList";
 import { default as Color } from "./RgbColorMix";
 
@@ -58,9 +59,11 @@ export default class Game {
   static startingGame(): Game {
     let NowCard = new Card({
       isClue: false, 
-      date: new Date(),
-      info: "Now", 
-      img: "../img/hourglass.jpg",
+      fact: new Fact({ 
+        date: new Date(), 
+        info: "Now", 
+        img: "../img/hourglass.jpg"
+      }),
       color: Color.VIOLET
     });
     NowCard.markSafe();

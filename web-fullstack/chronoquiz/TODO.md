@@ -36,6 +36,7 @@
 # BUGS
 
 ## Create page
-- Adds two events to timeline only if the event is the default
+- (DONE) Adds two events to timeline only if the event is the default
   card
-- Tab from one form field to next doesn't work as expected
+- Tab from one form field to next doesn't work as expected (related to onBlur)
+- (DONE - needed to update Timeline component to check card.event.date) GAME NO LONGER WORKS!

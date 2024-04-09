@@ -107,12 +107,12 @@ export default function Clues() {
       guess: Card,           // Card that clue was dropped onto
       preGuess: Card | null  // previous card of guess, if exists
     ): boolean {
-      let clueDate = clue.date
-      let guessDate = guess.date
+      let clueDate = clue.fact.date
+      let guessDate = guess.fact.date
       let isBeforeGuess = clueDate <= guessDate;
     
       let noPreGuess = !preGuess;
-      let isAfterPreGuess = preGuess && (clueDate >= preGuess.date);
+      let isAfterPreGuess = preGuess && (clueDate >= preGuess.fact.date);
       let isAfterAnyPreGuess = noPreGuess || isAfterPreGuess;
     
       return isBeforeGuess && isAfterAnyPreGuess;
