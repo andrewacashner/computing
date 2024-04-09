@@ -91,8 +91,6 @@ class CreateTimeline(APIView):
         new_timeline.is_valid(raise_exception=True)
         this_timeline = new_timeline.save(user=request.user)
 
-        print(user_timeline['events'])
-        print(len(user_timeline['events']))
         for event in user_timeline['events']:
             new_event = TimelineEventSerializer(data={
                 'date': event['date'],

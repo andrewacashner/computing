@@ -32,3 +32,10 @@
 # STYLE
 
 - (DONE) NavLink active highlighting
+
+# BUGS
+
+## Create page
+- Adds two events to timeline only if the event is the default
+  card
+- Tab from one form field to next doesn't work as expected

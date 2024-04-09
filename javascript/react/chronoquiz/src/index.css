@@ -356,3 +356,8 @@ section#preview div.card {
   margin-right: auto;
   background: LightSteelBlue;
 }
+
+button#save {
+  font-size: 150%;
+  margin: 1em;
+}

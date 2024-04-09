@@ -47,8 +47,8 @@ class Timeline {
     return inputStr.split(";").map(s => s.trim());
   }
 
-  get keywordString() {
-    return this.keywords.join("; ");
+  static keywordString(keywords: Array<string>) {
+    return keywords.join("; ");
   }
 
   addFact(card: Card): Timeline {
@@ -92,39 +92,65 @@ export default function Create() {
       <p className="instructions">Your data will not be saved until you click Save.</p>
     );
   }
+  
+  let [title, setTitle] = useState("");
+  let [description, setDescription] = useState("");
+  let [keywords, setKeywords] = useState([""]);
+  let [creator, setCreator] = useState(currentUser.username);
+  let [events, setEvents] = useState(new FactList());
+
+  function updateTimeline() {
+    setTimeline(new Timeline({
+      title: title,
+      description: description,
+      keywords: keywords,
+      creator: creator,
+      events: events
+    }));
+  }
 
   function MetadataPanel() {
-    function getDefault(field, fallback="") {
-      return timeline ? timeline[field] : fallback;
+
+    function setField(setFn) {
+      return function(event) {
+        setFn(event.target.value);
+        updateTimeline();
+      }
     }
 
-    let defaults = { 
-      title: getDefault("title"),
-      description: getDefault("description"),
-      keywords: getDefault("keywordString"),
-      creator: getDefault("creator", currentUser.username)
+    function setKeywordsParsed(event) {
+      setKeywords(Timeline.parseKeywords(event.target.value));
     }
 
-
-   return(
-     <div className="formInputBlock">
-       <div className="formItem">
-         <label htmlFor="title">Title</label>
-         <input type="text" name="title" defaultValue={defaults.title} />
-       </div>
-       <div className="formItem">
-         <label htmlFor="description">Description</label>
-         <input type="text" name="description" defaultValue={defaults.description} />
-       </div>
-       <div className="formItem">
-         <label htmlFor="keywords">Keywords (separated with semicolons)</label>
-         <input type="text" name="keywords" defaultValue={defaults.keywords} />
-       </div>
-       <div className="formItem">
-         <label htmlFor="creator">Creator (for public display; default: your username)</label>
-         <input type="text" name="creator" defaultValue={defaults.creator}/>
-       </div>
-     </div>
+    return(
+      <form className="timelinePanel">
+        <div className="formInputBlock">
+          <div className="formItem">
+            <label htmlFor="title">Title</label>
+            <input type="text" name="title" 
+              onBlur={event => setTitle(event.target.value)}
+              defaultValue={title} />
+          </div>
+          <div className="formItem">
+            <label htmlFor="description">Description</label>
+            <input type="text" name="description" 
+              onBlur={setField(setDescription)}
+              defaultValue={description} />
+          </div>
+          <div className="formItem">
+            <label htmlFor="keywords">Keywords (separated with semicolons)</label>
+            <input type="text" name="keywords" 
+              onBlur={setKeywordsParsed}
+              defaultValue={Timeline.keywordString(keywords)} />
+          </div>
+          <div className="formItem">
+            <label htmlFor="creator">Creator (for public display; default: your username)</label>
+            <input type="text" name="creator" 
+              onBlur={setField(setCreator)}
+              defaultValue={creator}/>
+          </div>
+        </div>
+      </form>
     );
   }
 
@@ -139,9 +165,15 @@ export default function Create() {
       );
     }
 
+    function Instructions() {
+      return(
+        <p className="instructions">Enter timeline events using the form below</p>
+      );
+    }
+
     return(
       <section id="currentTimeline">
-        <h2>Current Timeline Facts</h2>
+        <h2>Current Timeline Events</h2>
         <table className="timeline">
           <thead>
             <tr>
@@ -151,9 +183,10 @@ export default function Create() {
             </tr>
           </thead>
           <tbody>
-            { timeline ? timeline?.events.map(currentFact) : null }
+            { events ? events.map(currentFact) : null }
           </tbody>
         </table>
+        { events ? null : <Instructions /> }
       </section>
     );
   }
@@ -165,17 +198,15 @@ export default function Create() {
     let [testCardImg, setTestCardImg] = useState("https://picsum.photos/200.jpg");
 
     function newFact(event) {
-      event.preventDefault();
-      if (event.target.date.value && event.target.info.value) {
+      if (testCardDate && testCardInfo) {
         let newCard = new Card({
           date: testCardDate,
           info: testCardInfo,
           img: testCardImg
         });
-        if (timeline) {
-          setTimeline(prev => prev.addFact(newCard));
-          console.debug("Added fact to timeline");
-        }
+        setEvents(prev => prev.addFact(newCard));
+        console.debug("Added fact to timeline");
+        updateTimeline();
       }
     }
 
@@ -206,8 +237,8 @@ export default function Create() {
 
     return(
       <section id="new">
-        <h2>Add an Fact</h2>
-        <form onSubmit={newFact}>
+        <h2>Add an Event</h2>
+        <form id="addEventForm">
           <div className="formInputBlock">
             <div className="formItem">
               <label htmlFor="date">Year</label>
@@ -241,41 +272,45 @@ export default function Create() {
               info={testCardInfo} 
               img={testCardImg} />
           </section>
-          <button type="submit">Add</button>
+          <button type="button" id="add" onClick={newFact}>Add</button>
         </form>
       </section>
     );
   }
 
-  function SubmitButton() {
+  function SaveButton() {
     return(
-      <button type="submit">Save</button>
+      <button id="save" type="button" onClick={saveTimeline}>Save</button>
     );
   }
-  
-  function createTimeline(event) {
-    event.preventDefault();
-    if (event.target.title.value) {
-      if (timeline) { console.debug(timeline.events); }
-      let timelineInput = {
-        title: event.target.title.value,
-        description: event.target.description.value,
-        keywords: Timeline.parseKeywords(event.target.keywords.value),
-        creator: event.target.creator.value || currentUser.username,
-        events: timeline ? timeline.events : new FactList()
-      }
-      
-      let action = timeline ? "Updated" : "Created";
-      console.debug(`${action} new timeline with title ${event.target.title.value}`);
 
-      console.debug(timelineInput.events);
-      setTimeline(new Timeline(timelineInput));
-      setSaveReady(true);
-    } else {
-      setSaveReady(false);
-    }
+ 
+  function saveTimeline(event) {
+    updateTimeline();
+    let action = timeline ? "Updated" : "Created";
+    console.debug(`${action} timeline with title '${title}'`);
+
+    setSaveReady(true);
   }
 
+  function ResetButton() {
+    return(
+      <button id="reset" type="button" onClick={resetTimeline}>Reset</button>
+    );
+  }
+
+  // TODO reset to last saved version on backend
+  function resetTimeline() {
+    if (window.confirm("Are you sure you want to discard changes to the current timeline? This action cannot be undone.")) {
+      setTitle("");
+      setDescription("");
+      setKeywords([""]);
+      setCreator(currentUser.username);
+      setEvents(new FactList());
+      setTimeline(null);
+    }
+  }
+ 
  
   useEffect(() => {
     async function postTimeline(user, token, timeline) {
@@ -293,15 +328,15 @@ export default function Create() {
       if (response.ok) {
         let json = await response.json();
         console.debug(json);
-        setSaveReady(false);
       } else {
         console.debug(`Problem creating timeline: Server status ${response.status}, ${response.statusText}`);
       }
     }
-    if (saveReady && timeline) {
+    if (saveReady) {
       console.debug("Ready to post timeline");
-      console.debug(timeline.events);
+      console.debug(timeline);
       postTimeline(currentUser, userToken, timeline);
+      setSaveReady(false);
     } 
   }, [saveReady, timeline, currentUser, userToken]);
 
@@ -310,12 +345,11 @@ export default function Create() {
     <main>
       <h1>Create a Chronoquiz</h1>
       <Instructions />
-      <form className="timelinePanel" onSubmit={createTimeline}>
-        <MetadataPanel />
-        <CurrentFactsPanel />
-        <SubmitButton />
-      </form>
+      <MetadataPanel />
+      <CurrentFactsPanel />
       <NewFactForm />
+      <SaveButton />
+      <ResetButton />
     </main>
   );
 }
