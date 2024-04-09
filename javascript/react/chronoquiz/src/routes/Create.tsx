@@ -12,8 +12,6 @@ import User from "../classes/User";
 import Card from "../classes/Card";
 import FactList from "../classes/FactList";
 
-import { default as CardDisplay } from "../components/Card";
-
 import UserContext from "../store/UserContext";
 
 interface TimelineInput {
@@ -36,7 +34,7 @@ class Timeline {
     description = "", 
     keywords = [], 
     creator = "", 
-    events  = new FactList() 
+    events = new FactList() 
   }: TimelineInput) {
     this.title = title;
     this.description = description;
@@ -53,11 +51,21 @@ class Timeline {
     return this.keywords.join("; ");
   }
 
-  addEvent(event: Card): Timeline {
+  addFact(card: Card): Timeline {
     return new Timeline({
       ...this,
-      events: this.events.appendClone(event)
+      events: new FactList([...this.events.cards, card]).sortByDate()
     });
+  }
+
+  json() {
+    return JSON.stringify({
+      title: this.title,
+      description: this.description,
+      keywords: this.keywords,
+      creator: this.creator,
+      events: this.events.json()
+     });
   }
 
 }
@@ -78,11 +86,6 @@ export default function Create() {
 
   let [timeline, setTimeline] = useState(null);
   let [saveReady, setSaveReady] = useState(false);
-  let [testCard, setTestCard] = useState(new Card({
-    date: new Date(),
-    info: "",
-    img: ""
-  }));
 
   function Instructions() {
     return(
@@ -125,11 +128,11 @@ export default function Create() {
     );
   }
 
-  function CurrentEventsPanel() {
-    function currentEvent(item) {
+  function CurrentFactsPanel() {
+    function currentFact(item) {
       return(
-        <tr key={item.info} >
-          <td>{item.date}</td>
+        <tr key={crypto.randomUUID()}>
+          <td>{item.year}</td>
           <td>{item.info}</td>
           <td>{item.img}</td>
         </tr>
@@ -138,7 +141,7 @@ export default function Create() {
 
     return(
       <section id="currentTimeline">
-        <h2>Current Timeline Events</h2>
+        <h2>Current Timeline Facts</h2>
         <table className="timeline">
           <thead>
             <tr>
@@ -148,47 +151,48 @@ export default function Create() {
             </tr>
           </thead>
           <tbody>
-            { timeline ? timeline.events.map(currentEvent) : null }
+            { timeline ? timeline?.events.map(currentFact) : null }
           </tbody>
         </table>
       </section>
     );
   }
 
-  function NewEventForm() {
-    function addEvent(event) {
+  function NewFactForm() {
+
+    let [testCardDate, setTestCardDate] = useState(new Date());
+    let [testCardInfo, setTestCardInfo] = useState("Description");
+    let [testCardImg, setTestCardImg] = useState("https://picsum.photos/200.jpg");
+
+    function newFact(event) {
       event.preventDefault();
       if (event.target.date.value && event.target.info.value) {
-        let newCard = Card.newSafeCard({
-          date: event.target.date.value,
-          info: event.target.info.value,
-          img: event.target.img.value
+        let newCard = new Card({
+          date: testCardDate,
+          info: testCardInfo,
+          img: testCardImg
         });
-        setTestCard(newCard);
         if (timeline) {
-          setTimeline(prev => prev.addEvent(newCard));
-          console.debug("Added event to timeline");
+          setTimeline(prev => prev.addFact(newCard));
+          console.debug("Added fact to timeline");
         }
       }
     }
 
-    //    function preview(event) {
-    //      let newCard = Card.newSafeCard({
-    //        date: event.target.date.value,
-    //        info: event.target.info.value,
-    //        img: event.target.img.value
-    //      });
-    //      setTestCard(newCard);
-    //    }
-
-    let [testCardDate, setTestCardDate] = useState(new Date());
-    let [testCardInfo, setTestCardInfo] = useState("");
-    let [testCardImg, setTestCardImg] = useState("");
+    function CardPreview({ date, info, img }) {
+      let year = date.getFullYear();
+      return(
+        <div className="card" data-when={year} data-noselect="noselect">
+          <span className="date">{year}</span>
+          <img alt={img} src={img} />
+          <span className="info">{info}</span>
+        </div>
+      );
+    }
 
     function setDate(event) {
       let date = new Date();
       date.setFullYear(Number(event.target.value));
-      console.debug(date);
       setTestCardDate(date);
     }
 
@@ -202,8 +206,8 @@ export default function Create() {
 
     return(
       <section id="new">
-        <h2>Add an Event</h2>
-        <form onSubmit={addEvent}>
+        <h2>Add an Fact</h2>
+        <form onSubmit={newFact}>
           <div className="formInputBlock">
             <div className="formItem">
               <label htmlFor="date">Year</label>
@@ -211,7 +215,7 @@ export default function Create() {
                 type="number" 
                 name="date" 
                 onChange={setDate}
-                defaultValue={testCardDate} />
+                defaultValue={testCardDate.getFullYear()} />
             </div>
             <div className="formItem">
               <label htmlFor="info">Description of event</label>
@@ -230,18 +234,15 @@ export default function Create() {
                 defaultValue={testCardImg} />
             </div>
           </div>
+          <section id="preview">
+            <h3>Preview</h3>
+            <CardPreview 
+              date={testCardDate} 
+              info={testCardInfo} 
+              img={testCardImg} />
+          </section>
           <button type="submit">Add</button>
         </form>
-        <section id="preview">
-          <h3>Preview</h3>
-          <CardDisplay>{new Card({
-            isClue: false,
-            date: testCardDate,
-            info: testCardInfo,
-            img: testCardImg,
-            color: "gray" // TODO 
-          })}</CardDisplay>
-        </section>
       </section>
     );
   }
@@ -278,6 +279,8 @@ export default function Create() {
  
   useEffect(() => {
     async function postTimeline(user, token, timeline) {
+      console.debug(timeline.events);
+      console.debug(timeline.json());
       let response = await fetch(`${User.SERVER}/timelines/create/`, {
         method: "POST",
         headers: new Headers({
@@ -285,7 +288,7 @@ export default function Create() {
           "Accept": "application/json",
           "Authorization": `Token ${token}`
         }),
-        body: JSON.stringify(timeline)
+        body: timeline.json()
       });
       if (response.ok) {
         let json = await response.json();
@@ -296,6 +299,8 @@ export default function Create() {
       }
     }
     if (saveReady && timeline) {
+      console.debug("Ready to post timeline");
+      console.debug(timeline.events);
       postTimeline(currentUser, userToken, timeline);
     } 
   }, [saveReady, timeline, currentUser, userToken]);
@@ -307,10 +312,10 @@ export default function Create() {
       <Instructions />
       <form className="timelinePanel" onSubmit={createTimeline}>
         <MetadataPanel />
-        <CurrentEventsPanel />
+        <CurrentFactsPanel />
         <SubmitButton />
       </form>
-      <NewEventForm />
+      <NewFactForm />
     </main>
   );
 }

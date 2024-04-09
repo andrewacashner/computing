@@ -12,6 +12,10 @@ export default class FactList {
     return this.#items;
   }
 
+  json() {
+    return this.#items.map(i => i.json());
+  }
+
   // PRIVATE METHODS
   
   // Set the colors of the cards in this list, in chronological order, to

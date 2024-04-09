@@ -19,6 +19,7 @@
 - (DONE) FactList is a leaky abstraction: Make sure never need to reference items
   member outside of class
 
+- Allow HTML in info field or Markdown for italics at least
 # CSS
 
 - Replace hacky timeline bar display

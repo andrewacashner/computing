@@ -2,9 +2,13 @@
 
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
 
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@100..900&display=swap');
+
 :root {
-  --roman-font: "IM Fell English", "EB Garamond", "Goudy Old Style", Georgia, serif;
+/*  --roman-font: "IM Fell English", "EB Garamond", "Goudy Old Style", Georgia, serif; */
+  --roman-font: "Roboto Slab", serif;
   --heading-font: "IM Fell English SC", "IM Fell English", "EB Garamond", "Goudy Old Style", Georgia, serif;
+  --sans-font: "Roboto Slab", sans-serif;
   --mono-font: "IBM Plex Mono", "Source Code Pro", monospace;
   --card-height: 16.8em; /* h:w = 5:7 */
   --card-width: 12em;
@@ -13,7 +17,7 @@
 
 html {
   height: 100%;
-  background: AntiqueWhite;
+/*  background: AntiqueWhite; */
 }
 
 body {
@@ -330,6 +334,12 @@ table.timeline {
   margin-bottom: 1em;
 }
 
+
+table.timeline th, table.timeline td {
+  padding-left: 1ex;
+  padding-right: 1ex;
+}
+
 section#new {
   border: 2px solid black;
   width: 80%;
@@ -337,10 +347,12 @@ section#new {
   margin-right: auto;
   margin-top: 1em;
   padding: 1ex;
+  background: WhiteSmoke;
 }
 
-table.timeline th, table.timeline td {
-  padding-left: 1ex;
-  padding-right: 1ex;
+section#preview div.card {
+  width: var(--card-width);
+  margin-left: auto;
+  margin-right: auto;
+  background: LightSteelBlue;
 }
-

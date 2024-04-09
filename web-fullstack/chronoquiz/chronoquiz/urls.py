@@ -14,26 +14,9 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.urls import path, include
+from django.urls import path
 from rest_framework.authtoken.views import obtain_auth_token
-from rest_framework.routers import DefaultRouter
 from chronoquiz.game import views
-
-# timeline_list = views.TimelineEvents.as_view({
-#     'get': 'list',
-#     'post': 'create'
-# })
-# 
-# timeline_detail = views.TimelineEvents.as_view({
-#     'get': 'retrieve',
-#     'put': 'update',
-#     'patch': 'partial_update',
-#     'delete': 'destroy'
-# })
-# 
-# router = DefaultRouter()
-# router.register(r'timelines', views.Timelines, basename='timeline')
-# router.register(r'events', views.TimelineEvents, basename='events')
 
 urlpatterns = [
     path('login/',         obtain_auth_token,              name='login'),
@@ -47,7 +30,5 @@ urlpatterns = [
 
     # TODO could do something like this for user-readable URL
     # path('game/<str:username>/<str:title>/', views.TimelineEvents.as_view(), name='quiz'),
-
-#    path('', include(router.urls)),
 
 ]

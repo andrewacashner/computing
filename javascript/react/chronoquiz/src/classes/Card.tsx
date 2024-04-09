@@ -79,6 +79,14 @@ export default class Card {
     return card;
   }
 
+  json() {
+    return {
+      date: this.year,
+      info: this.info,
+      img: this.img
+    };
+  }
+
   // PRIVATE METHODS
   // Sanitize input 
   static #sanitizeDate(rawDate: any): Date | null {
