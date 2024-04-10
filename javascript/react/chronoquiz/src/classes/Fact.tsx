@@ -9,9 +9,10 @@ export default class Fact {
     this.img = img;
   }
 
-  static fromYear({ year, info, img }) {
-    let date = new Date().setFullYear(year);
-    let event = new Fact({ date: date, info: info, img: img });
+  static newFromYear({ date, info, img }) {
+    let realDate = new Date();
+    realDate.setFullYear(date);
+    let event = new Fact({ date: realDate, info: info, img: img });
     return event;
   }
 

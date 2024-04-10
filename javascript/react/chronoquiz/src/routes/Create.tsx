@@ -1,72 +1,12 @@
-/*
- * TODO
- * - We can create timeline and add items, but clicking Save sends timeline
- * creation request to server with 0 event items.
- * - On server, create OR update
- */
-
 import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import User from "../classes/User";
 import Fact from "../classes/Fact";
 import FactList from "../classes/FactList";
+import Timeline from "../classes/Timeline";
 
 import UserContext from "../store/UserContext";
-
-interface TimelineInput {
-  title: string;
-  description: string;
-  keywords: Array<string>;
-  creator: string;
-  facts: FactList;
-}
-
-
-class Timeline {
-  title: string;
-  description: string;
-  keywords: Array<string>;
-  creator: string;
-  facts: Array<Fact>;
-
-  constructor({ 
-    title = "", 
-    description = "", 
-    keywords = [], 
-    creator = "", 
-    facts = []
-  }: TimelineInput = {}) {
-    this.title = title;
-    this.description = description;
-    this.keywords = keywords;
-    this.creator = creator;
-    this.facts = facts;
-  }
-
-  static parseKeywords(inputStr: string): Array<string> {
-    return inputStr.split(";").map(s => s.trim());
-  }
-
-  get keywordString() {
-    return this.keywords.join("; ");
-  }
-
-  json() {
-    return JSON.stringify({
-      title: this.title,
-      description: this.description,
-      keywords: this.keywords,
-      creator: this.creator,
-      facts: this.facts.map(e => e.json())
-     });
-  }
-
-  sortByDate() {
-    this.facts.sort((c1, c2) => c1.date - c2.date);
-    return this;
-  }
-}
 
 export default function Create() {
   let userContext = useContext(UserContext);
@@ -98,7 +38,85 @@ export default function Create() {
       <p className="instructions">Your data will not be saved until you click Save.</p>
     );
   }
-  
+
+  let [timelineList, setTimelineList] = useState([]);
+
+  useEffect(() => {
+    async function loadTimelineList(user, token) {
+      let list = await user.loadUserTimelineList(token);
+      if (list) {
+        setTimelineList(list);
+      }
+    }
+    if (authenticated) {
+      loadTimelineList(currentUser, userToken);
+    } else {
+      setTimelineList([]);
+    }
+  }, [authenticated, currentUser, userToken]);
+
+  let [timelineID, setTimelineID] = useState(null);
+
+  function loadTimeline(event) {
+    event.preventDefault();
+    let data = new FormData(event.target);
+    let id = data.get("select-timeline");
+    setTimelineID(id);
+  }
+
+  useEffect(() => {
+    async function loadTimeline(id, token) {
+      let response = await fetch(`${User.SERVER}/timeline-full/${id}`, {
+        method: "GET",
+        headers: new Headers({
+          "Authorization": `Token ${token}`
+        })
+      });
+
+      if (response.ok) {
+        let json = await response.json();
+        console.debug(json);
+        let newTimeline = new Timeline({
+          title: json.title,
+          description: json.description,
+          keywords: Timeline.parseKeywords(json.keywords),
+          creator: Timeline.creator ?? currentUser.username,
+          facts: json.facts.map(f => Fact.newFromYear(f))
+        });
+        setTimeline(newTimeline);
+      } else {
+        console.debug(`Problem loading timeline with id ${id}: Server status ${response.status}, ${response.statusText}`);
+      }
+    }
+
+    if (timelineID) {
+      if (timelineID === "create") {
+        setTimeline(new Timeline());
+      } else {
+        loadTimeline(timelineID, userToken);
+      }
+    }
+  }, [timelineID]);
+
+
+  function Chooser() {
+    function timelineOption(timeline) {
+      return(
+        <option key={timeline.id} value={timeline.id}>{timeline.title}</option>
+      );
+    }
+    return(
+      <form id="chooser" onSubmit={loadTimeline}>
+        <label for="select-timeline">Select a Timeline:</label>
+        <select name="select-timeline" defaultValue="create">
+          <option value="create" selected>Create New</option>
+          { timelineList.map(timelineOption) }
+        </select>
+        <button type="submit">Submit</button>
+      </form>
+    );
+  }
+
   function MetadataPanel() {
 
     function setTitle(event) {
@@ -319,7 +337,7 @@ export default function Create() {
     async function postTimeline(user, token, timeline) {
       console.debug(timeline.facts);
       console.debug(timeline.json());
-      let response = await fetch(`${User.SERVER}/timelines/create/`, {
+      let response = await fetch(`${User.SERVER}/timeline-full/`, {
         method: "POST",
         headers: new Headers({
           "Content-Type": "application/json",
@@ -348,6 +366,7 @@ export default function Create() {
     <main>
       <h1>Create a Chronoquiz</h1>
       <Instructions />
+      <Chooser />
       <MetadataPanel />
       <CurrentFactsPanel />
       <NewFactForm />

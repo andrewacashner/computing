@@ -1,7 +1,7 @@
 import json
 from .models import User, Timeline, Fact 
 
-from .serializers import UserSerializer, TimelineSerializer,  FactSerializer
+from .serializers import UserSerializer, TimelineSerializer, FactSerializer, TimelineFullSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework import viewsets
@@ -80,29 +80,58 @@ class Facts(APIView):
         response = FactSerializer(facts, many=True)
         return Response(response.data)
 
-class CreateTimeline(APIView):
+class TimelineFull(APIView):
     permission_classes = (IsAuthenticated,)
+
+    def get(self, request, id):
+        timeline = Timeline.objects.get(user=request.user, id=id)
+        facts = Fact.objects.filter(user=request.user, timeline=timeline)
+
+        response = TimelineFullSerializer(timeline, 
+                                          context = { 'facts': facts })
+        return Response(response.data)
 
     def post(self, request):
         user_timeline = json.loads(request.body)
-        print(user_timeline)
-        
-        new_timeline = TimelineSerializer(data=user_timeline)
-        new_timeline.is_valid(raise_exception=True)
-        this_timeline = new_timeline.save(user=request.user)
+
+        new_timeline, created = Timeline.objects.update_or_create(
+                user = request.user,
+                title = user_timeline['title'],
+                defaults = {
+                    'description':  user_timeline['description'],
+                    'keywords':     user_timeline['keywords'],
+                    'creator':      user_timeline['creator']
+                })
+        action = "Create new" if created else "Updated"
+
+# TODO validation? (before we did this:)
+#            new_timeline = TimelineSerializer(data=user_timeline)
+#            new_timeline.is_valid(raise_exception=True)
+#            draft_timeline = new_timeline.save(user=request.user)
+#            action = "Created new"
+
+        facts_created = facts_updated = 0
 
         for event in user_timeline['facts']:
-            new_event = FactSerializer(data={
-                'date': event['date'],
-                'info': event['info'],
-                'img': event.get('img')
-            })
-            new_event.is_valid(raise_exception=True)
-            new_event.save(user=request.user, timeline=this_timeline)
+            new_event, created = Fact.objects.update_or_create(
+                    user = request.user,
+                    timeline = new_timeline,
+                    defaults = {
+                        'date': event['date'],
+                        'info': event['info'],
+                        'img':  event.get('img')
+                    })
+            if created:
+                facts_created += 1
+            else:
+                facts_updated += 1
 
         count = Fact.objects.filter(user=request.user, 
-                                    timeline=this_timeline).count()
+                                    timeline=new_timeline).count()
 
-        return Response(f"Create new timeline '{user_timeline['title']}' with {count} items")
+        return Response(f"{action} timeline '{user_timeline['title']}'"
+                        + f" with {count} items"
+                        + f" ({facts_created} new and {facts_updated} updated)")
         
+
 

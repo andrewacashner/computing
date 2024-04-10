@@ -7,6 +7,7 @@
   dates on client side)
 - switch to MySQL instead of sqlite
 - user-readable links (`/user/normalized_title`) instead of using ID nos
+- add timeline client fields (description, keywords, creator name) to DB
 
 # TIMELINE LIST
 - (DONE) unauthenticated users see list of all available quizzes
@@ -40,3 +41,7 @@
   card
 - Tab from one form field to next doesn't work as expected (related to onBlur)
 - (DONE - needed to update Timeline component to check card.event.date) GAME NO LONGER WORKS!
+
+- Adding item deletes previous?
+- Ensure IDs are preserved
+

@@ -10,6 +10,9 @@ class Timeline(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
     title = models.CharField(max_length=80)
+    description = models.CharField(max_length=160, null=True, blank=True)
+    keywords = models.CharField(max_length=80, null=True, blank=True) # should be separate table?
+    creator = models.CharField(max_length=40, null=True, blank=True)
 
     def __str__(self):
         return self.title
