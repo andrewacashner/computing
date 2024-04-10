@@ -63,6 +63,14 @@ export default class Timeline {
     this.facts.sort((c1, c2) => c1.date - c2.date);
     return this;
   }
+
+  removeFact(fact) {
+    let filtered = this.facts.filter(f => f !== fact);
+    return new Timeline({
+      ...this,
+      facts: filtered
+    });
+  }
 }
 
 

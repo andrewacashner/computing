@@ -180,9 +180,27 @@ export default function Create() {
   }
 
   function CurrentFactsPanel() {
+
     function currentFact(item) {
+
+      function deleteFact(event) {
+        if (window.confirm("Are you sure you want to delete the current fact? Deleted facts can be recovered by reloading the timeline without first clicking Save.")) {
+          setTimeline(startingTimeline());
+          console.debug(`Delete item (date ${item.date.getFullYear()})`);
+          setTimeline(prev => prev.removeFact(item));
+        }
+      }
+
+      function editFact(event) {
+        console.debug(`Edit item (date ${item.date.getFullYear()})`);
+        setTestCard(item);
+        setTimeline(prev => prev.removeFact(item));
+      }
+
       return(
         <tr key={crypto.randomUUID()}>
+          <td><button type="button" onClick={editFact}>Edit</button>
+            <button type="button" onClick={deleteFact}>Delete</button></td>
           <td>{item.year}</td>
           <td>{item.info}</td>
           <td>{item.img}</td>
@@ -202,6 +220,7 @@ export default function Create() {
         <table className="timeline">
           <thead>
             <tr>
+              <th>Controls</th>
               <th>Year</th>
               <th>Description</th>
               <th>Image URL</th>
@@ -216,12 +235,14 @@ export default function Create() {
     );
   }
 
-  function NewFactForm() {
+  const starterCard = () => new Fact({
+    info: "Description", 
+    img: "https://picsum.photos/200.jpg"
+  });
 
-    let [testCard, setTestCard] = useState(new Fact({
-      info: "Description", 
-      img: "https://picsum.photos/200.jpg"
-    }));
+  let [testCard, setTestCard] = useState(starterCard());
+
+  function NewFactForm() {
 
     function setTimelineFacts(facts: Array<Fact>) {
       let newTimeline = new Timeline({
@@ -236,6 +257,7 @@ export default function Create() {
       if (testCard.date && testCard.info) {
         setTimelineFacts([...timeline.facts, testCard]);
         console.debug("Added fact to timeline");
+        setTestCard(starterCard());
       }
     }
 

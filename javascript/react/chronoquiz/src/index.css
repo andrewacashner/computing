@@ -361,3 +361,7 @@ button#save {
   font-size: 150%;
   margin: 1em;
 }
+
+td button {
+  margin-left: 1ex;
+}
