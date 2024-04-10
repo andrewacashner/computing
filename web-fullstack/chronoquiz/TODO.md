@@ -44,4 +44,6 @@
 
 - Adding item deletes previous?
 - Ensure IDs are preserved
+- Form input super slow and loses focus with every keystroke when using
+  onChange in form (using onBlur instead)
 

@@ -1,9 +1,8 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 import User from "../classes/User";
 import Fact from "../classes/Fact";
-import FactList from "../classes/FactList";
 import Timeline from "../classes/Timeline";
 
 import UserContext from "../store/UserContext";
@@ -22,11 +21,11 @@ export default function Create() {
     }
   }, [authenticated, navigate]);
 
-  const startingTimeline = () => {
+  const startingTimeline = useCallback(() => {
     return new Timeline({
       creator: currentUser.username
     });
-  }
+  }, [currentUser.username]);
 
   let [timeline, setTimeline] = useState(startingTimeline());
   console.debug(timeline);
@@ -91,12 +90,12 @@ export default function Create() {
 
     if (timelineID) {
       if (timelineID === "create") {
-        setTimeline(new Timeline());
+        setTimeline(startingTimeline());
       } else {
         loadTimeline(timelineID, userToken);
       }
     }
-  }, [timelineID]);
+  }, [timelineID, currentUser.username, startingTimeline, userToken]);
 
 
   function Chooser() {
@@ -109,7 +108,7 @@ export default function Create() {
       <form id="chooser" onSubmit={loadTimeline}>
         <label for="select-timeline">Select a Timeline:</label>
         <select name="select-timeline" defaultValue="create">
-          <option value="create" selected>Create New</option>
+          <option value="create">Create New</option>
           { timelineList.map(timelineOption) }
         </select>
         <button type="submit">Submit</button>
@@ -185,7 +184,6 @@ export default function Create() {
 
       function deleteFact(event) {
         if (window.confirm("Are you sure you want to delete the current fact? Deleted facts can be recovered by reloading the timeline without first clicking Save.")) {
-          setTimeline(startingTimeline());
           console.debug(`Delete item (date ${item.date.getFullYear()})`);
           setTimeline(prev => prev.removeFact(item));
         }
@@ -235,12 +233,13 @@ export default function Create() {
     );
   }
 
-  const starterCard = () => new Fact({
+  const startingCard = () => new Fact({
+    date: new Date(),
     info: "Description", 
     img: "https://picsum.photos/200.jpg"
   });
 
-  let [testCard, setTestCard] = useState(starterCard());
+  let [testCard, setTestCard] = useState(startingCard());
 
   function NewFactForm() {
 
@@ -257,7 +256,7 @@ export default function Create() {
       if (testCard.date && testCard.info) {
         setTimelineFacts([...timeline.facts, testCard]);
         console.debug("Added fact to timeline");
-        setTestCard(starterCard());
+        setTestCard(startingCard());
       }
     }
 
@@ -297,6 +296,7 @@ export default function Create() {
               <input 
                 type="number" 
                 name="date" 
+                max={startingCard().year}
                 onChange={setDate}
                 defaultValue={testCard.year} />
             </div>
@@ -305,7 +305,7 @@ export default function Create() {
               <input 
                 type="text" 
                 name="info" 
-                onChange={setInfo}
+                onBlur={setInfo}
                 defaultValue={testCard.info} />
             </div>
             <div className="formItem">
@@ -313,7 +313,7 @@ export default function Create() {
               <input 
                 type="url" 
                 name="img" 
-                onChange={setImg}
+                onBlur={setImg}
                 defaultValue={testCard.img} />
             </div>
           </div>

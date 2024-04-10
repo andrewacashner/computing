@@ -29,7 +29,8 @@ export default class Fact {
   }
 
   get yearString(): string {
-    return (this.year < 0) ? `${-this.year} BCE` : `${this.year}`;
+    // bce is lowercase because the card date uses small-caps font 
+    return (this.year < 0) ? `${-this.year} bce` : `${this.year}`;
   }
 
   json() {
