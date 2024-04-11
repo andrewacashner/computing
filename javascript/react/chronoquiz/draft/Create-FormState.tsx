@@ -20,23 +20,34 @@ export default function Create() {
       navigate("../admin");
     }
   }, [authenticated, navigate]);
-  
-  let [metadata, setMetadata] = useState({
-    title: '',
-    description: '',
-    keywordString: [],
-    creator: currentUser.username
-  });
 
+  const defaultMetadata = useCallback(() => {
+    return {
+      title: '',
+      description: '',
+      keywordString: [],
+      creator: currentUser.username
+    }
+  }, [currentUser.username]);
+
+  let [metadata, setMetadata] = useState(defaultMetadata);
+
+  let [facts, setFacts] = useState([]);
 
   const startingTimeline = useCallback(() => {
-    return new Timeline({
-      creator: currentUser.username
-    });
-  }, [currentUser.username]);
+    return new Timeline({ ...defaultMetadata });
+  }, [defaultMetadata]);
 
   let [timeline, setTimeline] = useState(startingTimeline());
   console.debug(timeline);
+
+  const updateTimeline = useCallback(() => {
+    setTimeline({ ...metadata, facts: facts });
+  }, [metadata, facts]);
+
+  const resetTimeline = useCallback(() => {
+    setTimeline(startingTimeline());
+  }, [startingTimeline]);
 
   let [saveReady, setSaveReady] = useState(false);
   
@@ -61,8 +72,10 @@ export default function Create() {
       setTimelineList([]);
     }
   }, [authenticated, currentUser, userToken]);
+  // TODO update when new timeline created
 
   let [timelineID, setTimelineID] = useState(null);
+  // TODO replace with field of timeline?
 
   function loadTimeline(event) {
     event.preventDefault();
@@ -83,19 +96,15 @@ export default function Create() {
       if (response.ok) {
         let json = await response.json();
         console.debug(json);
-        
         setMetadata({
           title: json.title,
           description: json.description,
           keywords: Timeline.parseKeywords(json.keywords),
-          creator: Timeline.creator ?? currentUser.username
+          creator: Timeline.creator ?? currentUser.username,
         });
+        setFacts(json.facts.map(f => Fact.newFromYear(f)));
+        updateTimeline();
 
-        setTimeline(new Timeline({
-          id: json.id,
-          ...metadata,
-          facts: json.facts.map(f => Fact.newFromYear(f))
-        }));
       } else {
         console.debug(`Problem loading timeline with id ${id}: Server status ${response.status}, ${response.statusText}`);
       }
@@ -103,12 +112,12 @@ export default function Create() {
 
     if (timelineID) {
       if (timelineID === "create") {
-        setTimeline(startingTimeline());
+        resetTimeline();
       } else {
         loadTimeline(timelineID, userToken);
       }
     }
-  }, [timelineID, currentUser.username, startingTimeline, userToken]);
+  }, [timelineID, currentUser.username, resetTimeline, updateTimeline, userToken]);
 
 
   function Chooser() {
@@ -129,18 +138,8 @@ export default function Create() {
     );
   }
 
-  function setTimelineMetadata(newMetadata) {
-     setTimeline(prev => new Timeline({
-      ...prev,
-      title: newMetadata.title,
-      description: newMetadata.description,
-      keywords: Timeline.parseKeywords(newMetadata.keywords),
-      creator: newMetadata.creator
-     }));
-  }
-
   function MetadataPanel() {
-    function updateMetadata(event) {
+        function updateMetadata(event) {
       event.preventDefault();
       let data = new FormData(event.target);
       setMetadata({
@@ -192,14 +191,14 @@ export default function Create() {
       function deleteFact(event) {
         if (window.confirm("Are you sure you want to delete the current fact? Deleted facts can be recovered by reloading the timeline without first clicking Save.")) {
           console.debug(`Delete item (date ${item.date.getFullYear()})`);
-          setTimeline(prev => prev.removeFact(item));
+          setFacts(prev => Fact.remove(prev, item));
         }
       }
 
       function editFact(event) {
         console.debug(`Edit item (date ${item.date.getFullYear()})`);
         setTestCard(item);
-        setTimeline(prev => prev.removeFact(item));
+        setFacts(prev => Fact.remove(prev, item));
       }
 
       return(
@@ -234,7 +233,7 @@ export default function Create() {
             </tr>
           </thead>
           <tbody>
-            { timeline ? timeline.facts.map(currentFact) : null }
+            { facts?.length > 0 ? facts.map(currentFact) : null }
           </tbody>
         </table>
         { timeline ? null : <Instructions /> }
@@ -249,23 +248,18 @@ export default function Create() {
   });
 
   let [testCard, setTestCard] = useState(startingCard());
+ 
+  function resetTestCard() {
+    setTestCard(startingCard());
+  }
 
   function NewFactForm() {
 
-    function setTimelineFacts(facts: Array<Fact>) {
-      let newTimeline = new Timeline({
-        ...timeline,
-        facts: facts
-      });
-      newTimeline.sortByDate();
-      setTimeline(newTimeline);
-    }
-
     function newFact(event) {
       if (testCard.date && testCard.info) {
-        setTimelineFacts([...timeline.facts, testCard]);
+        setFacts(prev => Fact.append(prev, testCard));
         console.debug("Added fact to timeline");
-        setTestCard(startingCard());
+        resetTestCard();
       }
     }
 
@@ -314,7 +308,7 @@ export default function Create() {
               <input 
                 type="text" 
                 name="info" 
-                onBlur={setInfo}
+                onChange={setInfo}
                 defaultValue={testCard.info} />
             </div>
             <div className="formItem">
@@ -322,7 +316,7 @@ export default function Create() {
               <input 
                 type="url" 
                 name="img" 
-                onBlur={setImg}
+                onChange={setImg}
                 defaultValue={testCard.img} />
             </div>
           </div>
@@ -348,18 +342,19 @@ export default function Create() {
   function saveTimeline(event) {
     let action = timeline ? "Updated" : "Created";
     console.debug(`${action} timeline with title '${timeline.title}'`);
-    setTimelineMetadata(metadata);
+    
+    setTimeline(new Timeline({ ...metadata, facts: facts }));
     setSaveReady(true);
   }
 
   function ResetButton() {
     return(
-      <button id="reset" type="button" onClick={resetTimeline}>Reset</button>
+      <button id="reset" type="button" onClick={resetAllForms}>Reset</button>
     );
   }
 
   // TODO reset to last saved version on backend
-  function resetTimeline() {
+  function resetAllForms() {
     if (window.confirm("Are you sure you want to discard changes to the current timeline? This action cannot be undone.")) {
       setTimeline(startingTimeline());
     }
