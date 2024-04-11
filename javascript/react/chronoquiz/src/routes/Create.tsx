@@ -134,7 +134,7 @@ export default function Create() {
       ...prev,
       title: newMetadata.title,
       description: newMetadata.description,
-      keywords: Timeline.parseKeywords(newMetadata.keywords),
+      keywords: Timeline.parseKeywords(newMetadata.keywordString),
       creator: newMetadata.creator
      }));
   }

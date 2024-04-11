@@ -29,7 +29,7 @@
 
 # Timeline builder
 - (DONE) user creates new timeline item-by-item (like todo app)
-
+- useReducer to handle metadata and new card form states separately?
 # STYLE
 
 - (DONE) NavLink active highlighting
