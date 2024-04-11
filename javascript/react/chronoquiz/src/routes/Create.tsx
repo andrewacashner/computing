@@ -279,26 +279,24 @@ export default function Create() {
       );
     }
 
-    function setDate(event) {
+    function preview(event) {
+      event.preventDefault();
+      let data = new FormData(event.target);
+      
       let newDate = new Date();
-      newDate.setFullYear(Number(event.target.value));
-      setTestCard(prev => new Fact({ ...prev, date: newDate }));
-    }
+      newDate.setFullYear(data.get("date"));
 
-    function setInfo(event) {
-      let newInfo = event.target.value;
-      setTestCard(prev => new Fact({ ...prev, info: newInfo }));
+      setTestCard(new Fact({
+        date: newDate,
+        info: data.get("info"),
+        img: data.get("img") 
+      }));
     }
-
-    function setImg(event) {
-      let newImg = event.target.value;
-      setTestCard(prev => new Fact({ ...prev, img: newImg }));
-    }
-
+    // TODO allow add or preview
     return(
       <section id="new">
         <h2>Add an Event</h2>
-        <form id="addFactForm">
+        <form id="addFactForm" onSubmit={preview}>
           <div className="formInputBlock">
             <div className="formItem">
               <label htmlFor="date">Year</label>
@@ -306,7 +304,6 @@ export default function Create() {
                 type="number" 
                 name="date" 
                 max={startingCard().year}
-                onChange={setDate}
                 defaultValue={testCard.year} />
             </div>
             <div className="formItem">
@@ -314,7 +311,6 @@ export default function Create() {
               <input 
                 type="text" 
                 name="info" 
-                onBlur={setInfo}
                 defaultValue={testCard.info} />
             </div>
             <div className="formItem">
@@ -322,7 +318,6 @@ export default function Create() {
               <input 
                 type="url" 
                 name="img" 
-                onBlur={setImg}
                 defaultValue={testCard.img} />
             </div>
           </div>
@@ -330,7 +325,8 @@ export default function Create() {
             <h3>Preview</h3>
             <CardPreview fact={testCard} />
           </section>
-          <button type="button" id="add" onClick={newFact}>Add</button>
+          <button type="submit" id="preview">Preview</button>
+          <button type="submit" id="add" onClick={newFact}>Add</button>
         </form>
       </section>
     );
