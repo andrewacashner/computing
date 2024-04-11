@@ -117,65 +117,66 @@ export default function Create() {
     );
   }
 
+  function setTimelineMetadata(newMetadata) {
+     setTimeline(prev => new Timeline({
+      ...prev,
+      title: newMetadata.title,
+      description: newMetadata.description,
+      keywords: Timeline.parseKeywords(newMetadata.keywords),
+      creator: newMetadata.creator
+     }));
+  }
+
+  let [metadata, setMetadata] = useState({
+    title: '',
+    description: '',
+    keywordString: [],
+    creator: currentUser.username
+  });
+
   function MetadataPanel() {
-
-    function setTitle(event) {
-      setTimeline(prev => new Timeline({
-        ...prev,
-        title: event.target.value
-      }));
-    }
-
-    function setDescription(event) {
-      setTimeline(prev => new Timeline({
-        ...prev,
-        description: event.target.value
-      }));
-    }
-
-    function setKeywords(event) {
-      setTimeline(prev => new Timeline({
-        ...prev,
-        keywords: Timeline.parseKeywords(event.target.value)
-      }));
-    }
-
-    function setCreator(event) {
-      setTimeline(prev => new Timeline({
-        ...prev,
-        creator: event.target.value
-      }));
+        function updateMetadata(event) {
+      event.preventDefault();
+      let data = new FormData(event.target);
+      setMetadata({
+        title: data.get("title"),
+        description: data.get("description"),
+        keywordString: data.get("keywords"),
+        creator: data.get("creator")
+      });
+      console.log("Updating metadata on client side; remember to save your timeline");
+      console.debug(metadata);
     }
 
     return(
-      <form className="timelinePanel">
-        <div className="formInputBlock">
-          <div className="formItem">
-            <label htmlFor="title">Title</label>
-            <input type="text" name="title" 
-              onBlur={setTitle}
-              defaultValue={timeline.title} />
+      <section id="metadata">
+        <h2>Metadata</h2>
+        <form className="timelinePanel" onSubmit={updateMetadata}>
+          <div className="formInputBlock">
+            <div className="formItem">
+              <label htmlFor="title">Title</label>
+              <input type="text" name="title" 
+                defaultValue={metadata.title} />
+            </div>
+            <div className="formItem">
+              <label htmlFor="description">Description</label>
+              <input type="text" name="description" 
+                defaultValue={metadata.description} />
+            </div>
+            <div className="formItem">
+              <label htmlFor="keywords">Keywords (separated with semicolons)</label>
+              <input type="text" name="keywords" 
+                defaultValue={metadata.keywordString} />
+            </div>
+            <div className="formItem">
+              <label htmlFor="creator">Creator (for public display; default: your username)</label>
+              <input type="text" name="creator" 
+                defaultValue={metadata.creator}/>
+            </div>
           </div>
-          <div className="formItem">
-            <label htmlFor="description">Description</label>
-            <input type="text" name="description" 
-              onBlur={setDescription}
-              defaultValue={timeline.description} />
-          </div>
-          <div className="formItem">
-            <label htmlFor="keywords">Keywords (separated with semicolons)</label>
-            <input type="text" name="keywords" 
-              onBlur={setKeywords}
-              defaultValue={timeline.keywordString} />
-          </div>
-          <div className="formItem">
-            <label htmlFor="creator">Creator (for public display; default: your username)</label>
-            <input type="text" name="creator" 
-              onBlur={setCreator}
-              defaultValue={timeline.creator}/>
-          </div>
-        </div>
-      </form>
+          <button type="submit">Update Metadata</button>
+        </form>
+      </section>
     );
   }
 
@@ -336,11 +337,13 @@ export default function Create() {
     );
   }
 
- 
+
+  // TODO indicate save state: 
+  // (1) metadata, (2) facts, (3) whole timeline on server
   function saveTimeline(event) {
     let action = timeline ? "Updated" : "Created";
     console.debug(`${action} timeline with title '${timeline.title}'`);
-
+    setTimelineMetadata(metadata);
     setSaveReady(true);
   }
 
