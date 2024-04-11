@@ -94,37 +94,47 @@ class TimelineFull(APIView):
     def post(self, request):
         user_timeline = json.loads(request.body)
 
-        new_timeline, created = Timeline.objects.update_or_create(
-                user = request.user,
-                title = user_timeline['title'],
-                defaults = {
-                    'description':  user_timeline['description'],
-                    'keywords':     user_timeline['keywords'],
-                    'creator':      user_timeline['creator']
-                })
-        action = "Create new" if created else "Updated"
+        if user_timeline['id'] == -1:
+            make_timeline = TimelineSerializer(data=user_timeline)
+            make_timeline.is_valid(raise_exception=True)
+            new_timeline = make_timeline.save(user=request.user)
+            action = "Created new"
+        else:
+            new_timeline, created = Timeline.objects.update_or_create(
+                    user = request.user,
+                    id = user_timeline['id'],
+                    defaults = {
+                        'title':        user_timeline['title'],
+                        'description':  user_timeline['description'],
+                        'keywords':     user_timeline['keywords'],
+                        'creator':      user_timeline['creator']
+                        })
+            action = "Create new" if created else "Updated"
 
-# TODO validation? (before we did this:)
-#            new_timeline = TimelineSerializer(data=user_timeline)
-#            new_timeline.is_valid(raise_exception=True)
-#            draft_timeline = new_timeline.save(user=request.user)
-#            action = "Created new"
 
         facts_created = facts_updated = 0
 
         for event in user_timeline['facts']:
-            new_event, created = Fact.objects.update_or_create(
-                    user = request.user,
-                    timeline = new_timeline,
-                    defaults = {
-                        'date': event['date'],
-                        'info': event['info'],
-                        'img':  event.get('img')
-                    })
-            if created:
+            if event['id'] == -1:
+                make_event = FactSerializer(data=event)
+                make_event.is_valid(raise_exception=True)
+                new_event = make_event.save(user=request.user,
+                                            timeline=new_timeline)
                 facts_created += 1
             else:
-                facts_updated += 1
+                new_event, created = Fact.objects.update_or_create(
+                        user = request.user,
+                        timeline = new_timeline,
+                        id = event['id'],
+                        defaults = {
+                            'date': event['date'],
+                            'info': event['info'],
+                            'img':  event.get('img')
+                            })
+                if created:
+                    facts_created += 1
+                else:
+                    facts_updated += 1
 
         count = Fact.objects.filter(user=request.user, 
                                     timeline=new_timeline).count()

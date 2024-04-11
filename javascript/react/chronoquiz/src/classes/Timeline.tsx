@@ -1,4 +1,5 @@
 interface TimelineInput {
+  id: number;
   title: string;
   description: string;
   keywords: Array<string>;
@@ -7,6 +8,7 @@ interface TimelineInput {
 }
 
 export default class Timeline {
+  id: number;
   title: string;
   description: string;
   keywords: Array<string>;
@@ -14,12 +16,14 @@ export default class Timeline {
   facts: Array<Fact>;
 
   constructor({ 
+    id = -1,
     title = "", 
     description = "", 
     keywords = [], 
     creator = "", 
     facts = []
   }: TimelineInput = {}) {
+    this.id = id;
     this.title = title;
     this.description = description;
     this.keywords = keywords;
@@ -39,8 +43,9 @@ export default class Timeline {
     return this.keywords.join("; ");
   }
 
-  static newFromKeywordString({ title, description, keywords, creator, facts }) {
+  static newFromKeywordString({ id, title, description, keywords, creator, facts }) {
     return new Timeline({
+      id: id,
       title: title,
       description: description,
       keywords: keywords ? Timeline.parseKeywords(keywords) : [],
@@ -51,6 +56,7 @@ export default class Timeline {
 
   json() {
     return JSON.stringify({
+      id: this.id,
       title: this.title,
       description: this.description,
       keywords: this.keywordString,

@@ -8,17 +8,20 @@ class UserSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TimelineSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     class Meta:
         model = Timeline
         fields = '__all__'
         depth = 1
 
 class FactSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     class Meta:
         model = Fact
-        fields = ['id', 'date', 'info', 'img']
+        fields = ['id', 'date', 'info', 'img'] # omit user
 
 class TimelineFullSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     facts = serializers.SerializerMethodField()
 
     class Meta:

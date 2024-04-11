@@ -7,7 +7,7 @@
   dates on client side)
 - switch to MySQL instead of sqlite
 - user-readable links (`/user/normalized_title`) instead of using ID nos
-- add timeline client fields (description, keywords, creator name) to DB
+- (DONE) add timeline client fields (description, keywords, creator name) to DB
 
 # TIMELINE LIST
 - (DONE) unauthenticated users see list of all available quizzes
@@ -22,13 +22,13 @@
     - How to handle invalid input on server vs. client:
         - "baddata.json" unexpected Django validation result
 - Add try/catch so no timeline created if problem in creation process
-- creation: ensure no duplicates
+- (DONE) creation: ensure no duplicates
 - user can set timelines to public or private visibility
-- add keywords or longer description to timelines DB (not just title)
+- (DONE) add keywords or longer description to timelines DB (not just title)
 - "get shareable link" (and/or QR code) in admin panel
 
 # Timeline builder
-- user creates new timeline item-by-item (like todo app)
+- (DONE) user creates new timeline item-by-item (like todo app)
 
 # STYLE
 
@@ -42,8 +42,8 @@
 - Tab from one form field to next doesn't work as expected (related to onBlur)
 - (DONE - needed to update Timeline component to check card.event.date) GAME NO LONGER WORKS!
 
-- Adding item deletes previous?
-- Ensure IDs are preserved
+- (DONE) Adding item deletes previous?
+- (DONE) Ensure IDs are preserved
 - Form input super slow and loses focus with every keystroke when using
   onChange in form (using onBlur instead)
 

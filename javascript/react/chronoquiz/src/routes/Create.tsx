@@ -76,6 +76,7 @@ export default function Create() {
         let json = await response.json();
         console.debug(json);
         let newTimeline = new Timeline({
+          id: json.id,
           title: json.title,
           description: json.description,
           keywords: Timeline.parseKeywords(json.keywords),
@@ -199,6 +200,7 @@ export default function Create() {
         <tr key={crypto.randomUUID()}>
           <td><button type="button" onClick={editFact}>Edit</button>
             <button type="button" onClick={deleteFact}>Delete</button></td>
+          <td>{item.id}</td>
           <td>{item.year}</td>
           <td>{item.info}</td>
           <td>{item.img}</td>
@@ -219,6 +221,7 @@ export default function Create() {
           <thead>
             <tr>
               <th>Controls</th>
+              <th>ID</th>
               <th>Year</th>
               <th>Description</th>
               <th>Image URL</th>

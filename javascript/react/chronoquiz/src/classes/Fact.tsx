@@ -1,18 +1,20 @@
 export default class Fact {
+  id: number;
   date: Date;
   info: string;
   img: string;
 
-  constructor({ date = new Date(), info = "", img = "" } = {}) {
+  constructor({ id = -1, date = new Date(), info = "", img = "" } = {}) {
+    this.id = id;
     this.date = date;
     this.info = info;
     this.img = img;
   }
 
-  static newFromYear({ date, info, img }) {
+  static newFromYear({ id, date, info, img }) {
     let realDate = new Date();
     realDate.setFullYear(date);
-    let event = new Fact({ date: realDate, info: info, img: img });
+    let event = new Fact({ id: id, date: realDate, info: info, img: img });
     return event;
   }
 
@@ -35,6 +37,7 @@ export default class Fact {
 
   json() {
     return {
+      id: this.id,
       date: this.year,
       info: this.info,
       img: this.img
