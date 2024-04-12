@@ -7,13 +7,13 @@ import Timeline from "../classes/Timeline";
 
 import UserContext from "../store/UserContext";
 
-const timelineDefaults = {
+const defaultTimeline = new Timeline({
   title: '',
   description: '',
   keyword: [],
   creator: '',
   facts: []
-};
+});
 
 function timelineReducer(state, action) {
   let obj = action.payload;
@@ -26,7 +26,7 @@ function timelineReducer(state, action) {
     break;
 
     case "reset":
-      newState = new Timeline(timelineDefaults);
+      newState = defaultTimeline;
     break;
 
     case "addFact":
@@ -45,11 +45,11 @@ function timelineReducer(state, action) {
 }
 
 
-const factDefaults = {
+const defaultFact = new Fact({
   date: new Date(),
   info: "Description", 
   img: "https://picsum.photos/200.jpg"
-};
+});
 
 function factReducer(state, action) {
   let obj = action.payload;
@@ -61,7 +61,7 @@ function factReducer(state, action) {
     break;
 
     case "reset":
-      newState = new Fact(factDefaults);
+      newState = defaultFact;
     break;
 
     default:
@@ -105,8 +105,8 @@ export default function Create() {
   }, [authenticated, navigate]);
 
 
-  let [timelineState, dispatchTimeline] = useReducer(timelineReducer, timelineDefaults);
-  let [factState, dispatchFact] = useReducer(factReducer, factDefaults);
+  let [timelineState, dispatchTimeline] = useReducer(timelineReducer, defaultTimeline);
+  let [factState, dispatchFact] = useReducer(factReducer, defaultFact);
   
   const updateFact = updateReducer(dispatchFact);
   const updateTimeline = updateReducer(dispatchTimeline);
@@ -146,6 +146,7 @@ export default function Create() {
 
   useEffect(() => {
     async function loadTimeline(id, token) {
+      console.debug(`Loading timeline id ${timelineID}`);
       let response = await fetch(`${User.SERVER}/timeline-full/${id}`, {
         method: "GET",
         headers: new Headers({
@@ -348,7 +349,7 @@ export default function Create() {
               <input 
                 type="number" 
                 name="date" 
-                max={factDefaults.year}
+                max={defaultFact.year}
                 onChange={updateFact("date", dateFromYear)}
                 defaultValue={factState.year} />
             </div>
@@ -395,17 +396,32 @@ export default function Create() {
   }
 
   function DeleteTimelineButton() {
+    // TODO real deletion 
+    // let [timelineToDelete, setTimelineToDelete] = useState(null);
+
+    function deleteTimeline() {
+      if (window.confirm("Are you sure you want to delete this quiz? All of its fact cards will be lost. This action cannot be undone.")) {
+        //        console.debug(timelineID);
+        //        setTimelineToDelete(timelineID);
+        //        console.debug(timelineToDelete);
+        dispatchTimeline({ type: "reset" });
+      }
+    }
+
+    //    useEffect(() => {
+    //      // TODO delete on server
+    //      if (timelineID !== "create") {
+    //        console.debug(`Deleting timeline with id ${timelineToDelete}`);
+    //        // setTimelineToDelete(null);
+    //      }
+    //    }, [timelineToDelete]);
+
     return(
       <button id="deleteTimeline" type="button" onClick={deleteTimeline}>Delete Quiz</button>
     );
   }
 
-  // TODO reset to last saved version on backend
-  function deleteTimeline() {
-    if (window.confirm("Are you sure you want to delete this quiz? All of its fact cards will be lost. This action cannot be undone.")) {
-      dispatchTimeline({ type: "reset" });
-    }
-  }
+  
 
    
   useEffect(() => {
