@@ -7,53 +7,67 @@ import Timeline from "../classes/Timeline";
 
 import UserContext from "../store/UserContext";
 
-const timelineDefaults = new Timeline({
+const timelineDefaults = {
   title: '',
   description: '',
-  keywordString: [],
-  creator: currentUser.username,
+  keyword: [],
+  creator: '',
   facts: []
-});
+};
 
 function timelineReducer(state, action) {
-  let toDo = action.type;
   let obj = action.payload;
 
-  let newState = state;
+  let newState = null;
+  
+  switch(action.type) {
+    case "set":
+      newState = new Timeline({ ...state, ...obj });
+    break;
 
-  const actions = {
-    set:        new Timeline({ ...state, ...obj }),
-    reset:      timelineDefaults,
-    addFact:    state.addFact(obj.fact),
-    removeFact: state.removeFact(obj.fact),
-  };
+    case "reset":
+      newState = new Timeline(timelineDefaults);
+    break;
 
-  if (toDo in actions) {
-    newState = actions[toDo];
+    case "addFact":
+      newState = state.addFact(obj.fact);
+    break;
+
+    case "removeFact":
+      newState = state.removeFact(obj.fact);
+    break;
+
+    default:
+      newState = state; 
   }
+
   return newState;
 }
 
 
-const factDefaults = new Fact({
+const factDefaults = {
   date: new Date(),
   info: "Description", 
   img: "https://picsum.photos/200.jpg"
-});
+};
 
 function factReducer(state, action) {
-  let toDo = action.type;
   let obj = action.payload;
-  let newState = state;
+  let newState = null;
 
-  const actions = {
-    set:    new Fact({ ...state, ...obj }),
-    reset:  factDefaults
+  switch(action.type) {
+    case "set":
+      newState = new Fact({ ...state, ...obj });
+    break;
+
+    case "reset":
+      newState = new Fact(factDefaults);
+    break;
+
+    default:
+      newState = state;
   };
 
-  if (toDo in actions) {
-    newState = actions[toDo];
-  }
   return newState;
 }
 
@@ -150,7 +164,7 @@ export default function Create() {
             title:        json.title,
             description:  json.description,
             keywords:     Timeline.parseKeywords(json.keywords),
-            creator:      Timeline.creator ?? currentUser.username,
+            creator:      json.creator ?? currentUser.username,
             facts:        json.facts.map(f => Fact.newFromYear(f))
           }
         });
@@ -161,7 +175,7 @@ export default function Create() {
 
     if (timelineID) {
       if (timelineID === "create") {
-        dispatchTimeline({ type: "reset" })
+        dispatchTimeline({ type: "reset" });
       } else {
         loadTimeline(timelineID, userToken);
       }
@@ -182,7 +196,7 @@ export default function Create() {
           <option value="create">Create New</option>
           { timelineList.map(timelineOption) }
         </select>
-        <button type="submit">Submit</button>
+        <button type="submit">Load</button>
       </form>
     );
   }
@@ -216,7 +230,7 @@ export default function Create() {
               <label htmlFor="creator">Creator (for public display; default: your username)</label>
               <input type="text" name="creator" 
                 onBlur={updateTimeline("creator")}
-                defaultValue={timelineState.creator}/>
+                defaultValue={timelineState.creator ?? currentUser.username}/>
             </div>
           </div>
         </form>
@@ -252,9 +266,12 @@ export default function Create() {
 
       return(
         <tr key={crypto.randomUUID()}>
-          <td><button type="button" onClick={editFact}>Edit</button>
-            <button type="button" onClick={deleteFact}>Delete</button></td>
-          <td>{item.id}</td>
+          <td>
+            <div className="FactListControls">
+              <button type="button" onClick={editFact}>Edit</button>
+              <button type="button" onClick={deleteFact}>Delete</button>
+            </div>
+          </td>
           <td>{item.year}</td>
           <td>{item.info}</td>
           <td>{item.img}</td>
@@ -275,7 +292,6 @@ export default function Create() {
           <thead>
             <tr>
               <th>Controls</th>
-              <th>ID</th>
               <th>Year</th>
               <th>Description</th>
               <th>Image URL</th>
@@ -378,15 +394,15 @@ export default function Create() {
     setSaveReady(true);
   }
 
-  function ResetButton() {
+  function DeleteTimelineButton() {
     return(
-      <button id="reset" type="button" onClick={resetTimeline}>Reset</button>
+      <button id="deleteTimeline" type="button" onClick={deleteTimeline}>Delete Quiz</button>
     );
   }
 
   // TODO reset to last saved version on backend
-  function resetTimeline() {
-    if (window.confirm("Are you sure you want to discard changes to the current timeline? This action cannot be undone.")) {
+  function deleteTimeline() {
+    if (window.confirm("Are you sure you want to delete this quiz? All of its fact cards will be lost. This action cannot be undone.")) {
       dispatchTimeline({ type: "reset" });
     }
   }
@@ -421,6 +437,14 @@ export default function Create() {
   }, [saveReady, timelineState, currentUser, userToken]);
 
 
+  function Controls() {
+    return(
+      <div className="controls">
+        <SaveButton />
+        <DeleteTimelineButton />
+      </div>
+    );
+  }
   return(
     <main>
       <h1>Create a Chronoquiz</h1>
@@ -429,8 +453,7 @@ export default function Create() {
       <MetadataPanel />
       <CurrentFactsPanel />
       <NewFactForm />
-      <SaveButton />
-      <ResetButton />
+      <Controls />
     </main>
   );
 }

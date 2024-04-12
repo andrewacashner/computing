@@ -208,16 +208,12 @@ div.timeline {
   justify-content: center;
 }
 
-/*
+
 footer {
-  position: fixed;
-  bottom: 1em;
   width: 100%;
+  height: 3em;
 }
-*/
-footer {
-  height: 0;
-}
+
 
 div.gameover {
   font-size: 240%;
@@ -228,12 +224,10 @@ div.gameover {
 div.gameover p {
   margin: 1ex;
 }
-/*
+
 main section {
-  text-align: left;
   margin: 1em;
 }
-*/
 
 div.card[data-noselect="noselect"] img {
   pointer-events: none;
@@ -321,6 +315,11 @@ ul li button {
   background: none;
 }
 
+form#chooser label, form#chooser select {
+  margin-right: 1ex;
+
+}
+
 form.timelinePanel {
 }
 
@@ -357,11 +356,34 @@ section#preview div.card {
   background: LightSteelBlue;
 }
 
-button#save {
-  font-size: 150%;
-  margin: 1em;
+
+table.timeline th, table.timeline td {
+  vertical-align: top;
 }
 
-td button {
+td div.FactListControls {
+  display: flex;
+  flex-direction: horizontal;
+}
+
+td div button + button {
   margin-left: 1ex;
+}
+
+div.controls {
+  width: 20vw;
+  margin-left: 70vw;
+  margin-right: 10%;
+  display: flex;
+  flex-direction: horizontal;
+  justify-content: space-between;
+}
+
+div.controls button#save {
+  font-size: 150%;
+  
+}
+
+div.controls button#deleteTimeline {
+  font-size: 100%;
 }
