@@ -7,6 +7,75 @@ import Timeline from "../classes/Timeline";
 
 import UserContext from "../store/UserContext";
 
+const timelineDefaults = new Timeline({
+  title: '',
+  description: '',
+  keywordString: [],
+  creator: currentUser.username,
+  facts: []
+});
+
+function timelineReducer(state, action) {
+  let toDo = action.type;
+  let obj = action.payload;
+
+  let newState = state;
+
+  const actions = {
+    set:        new Timeline({ ...state, ...obj }),
+    reset:      timelineDefaults,
+    addFact:    state.addFact(obj.fact),
+    removeFact: state.removeFact(obj.fact),
+  };
+
+  if (toDo in actions) {
+    newState = actions[toDo];
+  }
+  return newState;
+}
+
+
+const factDefaults = new Fact({
+  date: new Date(),
+  info: "Description", 
+  img: "https://picsum.photos/200.jpg"
+});
+
+function factReducer(state, action) {
+  let toDo = action.type;
+  let obj = action.payload;
+  let newState = state;
+
+  const actions = {
+    set:    new Fact({ ...state, ...obj }),
+    reset:  factDefaults
+  };
+
+  if (toDo in actions) {
+    newState = actions[toDo];
+  }
+  return newState;
+}
+
+function updateReducer(dispatchFn: (obj: object) => obj) {
+  return function(
+    field: string, 
+    setValueFn: (value: any) => any = null
+  ): void {
+    return function(event): void {
+      let value = event.target.value;
+      let newValue = setValueFn ? setValueFn(value) : value;
+      dispatchFn({
+        type: "set",
+        payload: { 
+          [field]: newValue
+        }
+      });
+    };
+  }
+}
+
+
 export default function Create() {
   let userContext = useContext(UserContext);
   let authenticated = userContext.get("authenticated");
@@ -22,78 +91,9 @@ export default function Create() {
   }, [authenticated, navigate]);
 
 
-  const timelineDefaults = new Timeline({
-    title: '',
-    description: '',
-    keywordString: [],
-    creator: currentUser.username,
-    facts: []
-  });
-
-  function timelineReducer(state, action) {
-    let toDo = action.type;
-    let obj = action.payload;
-
-    let newState = state;
-
-    const actions = {
-      set:        new Timeline({ ...state, ...obj }),
-      reset:      timelineDefaults,
-      addFact:    state.addFact(obj.fact),
-      removeFact: state.removeFact(obj.fact),
-    };
-
-    if (toDo in actions) {
-      newState = actions[toDo];
-    }
-    return newState;
-  }
-
   let [timelineState, dispatchTimeline] = useReducer(timelineReducer, timelineDefaults);
-  
-  const factDefaults = new Fact({
-    date: new Date(),
-    info: "Description", 
-    img: "https://picsum.photos/200.jpg"
-  });
-
-  function factReducer(state, action) {
-    let toDo = action.type;
-    let obj = action.payload;
-    let newState = state;
-
-    const actions = {
-      set:    new Fact({ ...state, ...obj }),
-      reset:  factDefaults
-    };
-
-    if (toDo in actions) {
-      newState = actions[toDo];
-    }
-    return newState;
-  }
-
   let [factState, dispatchFact] = useReducer(factReducer, factDefaults);
-
-
-  function updateReducer(dispatchFn: (obj: object) => obj) {
-    return function(
-      field: string, 
-      setValueFn: (value: any) => any = null
-    ): void {
-      return function(event): void {
-        let value = event.target.value;
-        let newValue = setValueFn ? setValueFn(value) : value;
-        dispatchFn({
-          type: "set",
-          payload: { 
-            [field]: newValue
-          }
-        });
-      };
-    }
-  }
-
+  
   const updateFact = updateReducer(dispatchFact);
   const updateTimeline = updateReducer(dispatchTimeline);
 
