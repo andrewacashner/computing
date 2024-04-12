@@ -70,6 +70,14 @@ export default class Timeline {
     return this;
   }
 
+  addFact(fact) {
+    let newTimeline = new Timeline({
+      ...this,
+      facts: [...this.facts, fact]
+    });
+    return newTimeline.sortByDate();
+  }
+
   removeFact(fact) {
     let filtered = this.facts.filter(f => f !== fact);
     return new Timeline({

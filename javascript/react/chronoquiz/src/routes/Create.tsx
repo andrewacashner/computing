@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useCallback } from "react";
+import { useState, useContext, useEffect, useReducer } from "react";
 import { useNavigate } from "react-router-dom";
 
 import User from "../classes/User";
@@ -20,23 +20,82 @@ export default function Create() {
       navigate("../admin");
     }
   }, [authenticated, navigate]);
-  
-  let [metadata, setMetadata] = useState({
+
+
+  const timelineDefaults = new Timeline({
     title: '',
     description: '',
     keywordString: [],
-    creator: currentUser.username
+    creator: currentUser.username,
+    facts: []
   });
 
+  function timelineReducer(state, action) {
+    let toDo = action.type;
+    let obj = action.payload;
 
-  const startingTimeline = useCallback(() => {
-    return new Timeline({
-      creator: currentUser.username
-    });
-  }, [currentUser.username]);
+    let newState = state;
 
-  let [timeline, setTimeline] = useState(startingTimeline());
-  console.debug(timeline);
+    const actions = {
+      set:        new Timeline({ ...state, ...obj }),
+      reset:      timelineDefaults,
+      addFact:    state.addFact(obj.fact),
+      removeFact: state.removeFact(obj.fact),
+    };
+
+    if (toDo in actions) {
+      newState = actions[toDo];
+    }
+    return newState;
+  }
+
+  let [timelineState, dispatchTimeline] = useReducer(timelineReducer, timelineDefaults);
+  
+  const factDefaults = new Fact({
+    date: new Date(),
+    info: "Description", 
+    img: "https://picsum.photos/200.jpg"
+  });
+
+  function factReducer(state, action) {
+    let toDo = action.type;
+    let obj = action.payload;
+    let newState = state;
+
+    const actions = {
+      set:    new Fact({ ...state, ...obj }),
+      reset:  factDefaults
+    };
+
+    if (toDo in actions) {
+      newState = actions[toDo];
+    }
+    return newState;
+  }
+
+  let [factState, dispatchFact] = useReducer(factReducer, factDefaults);
+
+
+  function updateReducer(dispatchFn: (obj: object) => obj) {
+    return function(
+      field: string, 
+      setValueFn: (value: any) => any = null
+    ): void {
+      return function(event): void {
+        let value = event.target.value;
+        let newValue = setValueFn ? setValueFn(value) : value;
+        dispatchFn({
+          type: "set",
+          payload: { 
+            [field]: newValue
+          }
+        });
+      };
+    }
+  }
+
+  const updateFact = updateReducer(dispatchFact);
+  const updateTimeline = updateReducer(dispatchTimeline);
 
   let [saveReady, setSaveReady] = useState(false);
   
@@ -83,19 +142,18 @@ export default function Create() {
       if (response.ok) {
         let json = await response.json();
         console.debug(json);
-        
-        setMetadata({
-          title: json.title,
-          description: json.description,
-          keywords: Timeline.parseKeywords(json.keywords),
-          creator: Timeline.creator ?? currentUser.username
-        });
 
-        setTimeline(new Timeline({
-          id: json.id,
-          ...metadata,
-          facts: json.facts.map(f => Fact.newFromYear(f))
-        }));
+        dispatchTimeline({
+          type: "set",
+          payload: {
+            id:           json.id,
+            title:        json.title,
+            description:  json.description,
+            keywords:     Timeline.parseKeywords(json.keywords),
+            creator:      Timeline.creator ?? currentUser.username,
+            facts:        json.facts.map(f => Fact.newFromYear(f))
+          }
+        });
       } else {
         console.debug(`Problem loading timeline with id ${id}: Server status ${response.status}, ${response.statusText}`);
       }
@@ -103,12 +161,12 @@ export default function Create() {
 
     if (timelineID) {
       if (timelineID === "create") {
-        setTimeline(startingTimeline());
+        dispatchTimeline({ type: "reset" })
       } else {
         loadTimeline(timelineID, userToken);
       }
     }
-  }, [timelineID, currentUser.username, startingTimeline, userToken]);
+  }, [timelineID, currentUser.username, userToken]);
 
 
   function Chooser() {
@@ -119,7 +177,7 @@ export default function Create() {
     }
     return(
       <form id="chooser" onSubmit={loadTimeline}>
-        <label for="select-timeline">Select a Timeline:</label>
+        <label htmlFor="select-timeline">Select a Timeline:</label>
         <select name="select-timeline" defaultValue="create">
           <option value="create">Create New</option>
           { timelineList.map(timelineOption) }
@@ -129,77 +187,67 @@ export default function Create() {
     );
   }
 
-  function setTimelineMetadata(newMetadata) {
-     setTimeline(prev => new Timeline({
-      ...prev,
-      title: newMetadata.title,
-      description: newMetadata.description,
-      keywords: Timeline.parseKeywords(newMetadata.keywordString),
-      creator: newMetadata.creator
-     }));
-  }
-
   function MetadataPanel() {
-    function updateMetadata(event) {
-      event.preventDefault();
-      let data = new FormData(event.target);
-      setMetadata({
-        title: data.get("title"),
-        description: data.get("description"),
-        keywordString: data.get("keywords"),
-        creator: data.get("creator")
-      });
-      console.log("Updating metadata on client side; remember to save your timeline");
-      console.debug(metadata);
-    }
 
     return(
       <section id="metadata">
         <h2>Metadata</h2>
-        <form className="timelinePanel" onSubmit={updateMetadata}>
+        <form className="timelinePanel">
           <div className="formInputBlock">
             <div className="formItem">
               <label htmlFor="title">Title</label>
               <input type="text" name="title" 
-                defaultValue={metadata.title} />
+                onBlur={updateTimeline("title")}
+                defaultValue={timelineState.title} />
             </div>
             <div className="formItem">
               <label htmlFor="description">Description</label>
               <input type="text" name="description" 
-                defaultValue={metadata.description} />
+                onBlur={updateTimeline("description")}
+                defaultValue={timelineState.description} />
             </div>
             <div className="formItem">
               <label htmlFor="keywords">Keywords (separated with semicolons)</label>
               <input type="text" name="keywords" 
-                defaultValue={metadata.keywordString} />
+                onBlur={updateTimeline("keywords", Timeline.parseKeywords)}
+                defaultValue={timelineState.keywordString} />
             </div>
             <div className="formItem">
               <label htmlFor="creator">Creator (for public display; default: your username)</label>
               <input type="text" name="creator" 
-                defaultValue={metadata.creator}/>
+                onBlur={updateTimeline("creator")}
+                defaultValue={timelineState.creator}/>
             </div>
           </div>
-          <button type="submit">Update Metadata</button>
         </form>
       </section>
     );
   }
 
   function CurrentFactsPanel() {
+    console.debug(timelineState);
 
     function currentFact(item) {
-
       function deleteFact(event) {
         if (window.confirm("Are you sure you want to delete the current fact? Deleted facts can be recovered by reloading the timeline without first clicking Save.")) {
           console.debug(`Delete item (date ${item.date.getFullYear()})`);
-          setTimeline(prev => prev.removeFact(item));
+          dispatchTimeline({ 
+            type: "removeFact",
+            payload: { fact: item }
+          });
         }
       }
 
       function editFact(event) {
         console.debug(`Edit item (date ${item.date.getFullYear()})`);
-        setTestCard(item);
-        setTimeline(prev => prev.removeFact(item));
+        dispatchFact({
+          type: "set",
+          payload: item
+        });
+        dispatchTimeline({ 
+          type: "removeFact",
+          payload: { fact: item }
+        });
       }
 
       return(
@@ -234,99 +282,82 @@ export default function Create() {
             </tr>
           </thead>
           <tbody>
-            { timeline ? timeline.facts.map(currentFact) : null }
+            { timelineState.facts.map(currentFact) }
           </tbody>
         </table>
-        { timeline ? null : <Instructions /> }
+        { timelineState.facts.length === 0 ? <Instructions /> : null }
       </section>
     );
   }
 
-  const startingCard = () => new Fact({
-    date: new Date(),
-    info: "Description", 
-    img: "https://picsum.photos/200.jpg"
-  });
-
-  let [testCard, setTestCard] = useState(startingCard());
-
   function NewFactForm() {
 
-    function setTimelineFacts(facts: Array<Fact>) {
-      let newTimeline = new Timeline({
-        ...timeline,
-        facts: facts
-      });
-      newTimeline.sortByDate();
-      setTimeline(newTimeline);
-    }
-
     function newFact(event) {
-      if (testCard.date && testCard.info) {
-        setTimelineFacts([...timeline.facts, testCard]);
+      if (factState.date && factState.info) {
+        dispatchTimeline({
+          type: "addFact",
+          payload: { fact: factState }
+        });
         console.debug("Added fact to timeline");
-        setTestCard(startingCard());
+        dispatchFact({ type: "reset" });
       }
     }
-
+    
     function CardPreview({ fact }) {
       return(
-        <div className="card" data-when={fact.year} data-noselect="noselect">
-          <span className="date">{fact.year}</span>
-          <img alt={fact.img} src={fact.img} />
-          <span className="info">{fact.info}</span>
+        <div className="card" data-when={factState.year} data-noselect="noselect">
+          <span className="date">{factState.year}</span>
+          <img alt={factState.img} src={factState.img} />
+          <span className="info">{factState.info}</span>
         </div>
       );
     }
 
-    function preview(event) {
-      event.preventDefault();
-      let data = new FormData(event.target);
-      
-      let newDate = new Date();
-      newDate.setFullYear(data.get("date"));
 
-      setTestCard(new Fact({
-        date: newDate,
-        info: data.get("info"),
-        img: data.get("img") 
-      }));
+
+
+    function dateFromYear(year: number): Date {
+      let date = new Date();
+      date.setFullYear(year);
+      return date
     }
-    // TODO allow add or preview
+
     return(
       <section id="new">
         <h2>Add an Event</h2>
-        <form id="addFactForm" onSubmit={preview}>
+        <form id="addFactForm">
           <div className="formInputBlock">
             <div className="formItem">
               <label htmlFor="date">Year</label>
               <input 
                 type="number" 
                 name="date" 
-                max={startingCard().year}
-                defaultValue={testCard.year} />
+                max={factDefaults.year}
+                onChange={updateFact("date", dateFromYear)}
+                defaultValue={factState.year} />
             </div>
             <div className="formItem">
               <label htmlFor="info">Description of event</label>
               <input 
                 type="text" 
                 name="info" 
-                defaultValue={testCard.info} />
+                onBlur={updateFact("info")}
+                defaultValue={factState.info} />
             </div>
             <div className="formItem">
               <label htmlFor="img">Complete URL of image (optional)</label>
               <input 
                 type="url" 
                 name="img" 
-                defaultValue={testCard.img} />
+                onBlur={updateFact("img")}
+                defaultValue={factState.img} />
             </div>
           </div>
           <section id="preview">
             <h3>Preview</h3>
-            <CardPreview fact={testCard} />
+            <CardPreview fact={factState} />
           </section>
-          <button type="submit" id="preview">Preview</button>
-          <button type="submit" id="add" onClick={newFact}>Add</button>
+          <button type="button" id="add" onClick={newFact}>Add</button>
         </form>
       </section>
     );
@@ -342,9 +373,8 @@ export default function Create() {
   // TODO indicate save state: 
   // (1) metadata, (2) facts, (3) whole timeline on server
   function saveTimeline(event) {
-    let action = timeline ? "Updated" : "Created";
-    console.debug(`${action} timeline with title '${timeline.title}'`);
-    setTimelineMetadata(metadata);
+    let action = timelineState ? "Updated" : "Created";
+    console.debug(`${action} timeline with title '${timelineState.title}'`);
     setSaveReady(true);
   }
 
@@ -357,7 +387,7 @@ export default function Create() {
   // TODO reset to last saved version on backend
   function resetTimeline() {
     if (window.confirm("Are you sure you want to discard changes to the current timeline? This action cannot be undone.")) {
-      setTimeline(startingTimeline());
+      dispatchTimeline({ type: "reset" });
     }
   }
 
@@ -384,11 +414,11 @@ export default function Create() {
     }
     if (saveReady) {
       console.debug("Ready to post timeline");
-      console.debug(timeline);
-      postTimeline(currentUser, userToken, timeline);
+      console.debug(timelineState);
+      postTimeline(currentUser, userToken, timelineState);
       setSaveReady(false);
     } 
-  }, [saveReady, timeline, currentUser, userToken]);
+  }, [saveReady, timelineState, currentUser, userToken]);
 
 
   return(
