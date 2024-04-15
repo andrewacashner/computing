@@ -109,6 +109,7 @@ export default function AdminPanel() {
 
   let [saveReady, setSaveReady] = useState(false);
   let [updateTimelineList, setUpdateTimelineList] = useState(true);
+  let [refresh, setRefresh] = useState(true);
   
   function Instructions() {
     return(
@@ -175,8 +176,9 @@ export default function AdminPanel() {
         loadTimeline(timelineID, userToken);
       }
       setUpdateTimelineList(true);
+      setRefresh(false);
     }
-  }, [timelineID, currentUser.username, userToken]);
+  }, [timelineID, currentUser.username, userToken, refresh]);
 
 
   function Chooser() {
@@ -497,11 +499,21 @@ export default function AdminPanel() {
   }
 
 
+  function DiscardChangesButton() {
+    function discardChanges(event) {
+      setRefresh(true);
+    }
+
+    return(
+      <button type="button" onClick={discardChanges}>Discard Changes</button>
+    );
+  }
 
   function Controls() {
     return(
       <div className="controls">
         <SaveButton />
+        <DiscardChangesButton />
         <DeleteTimelineButton />
       </div>
     );
