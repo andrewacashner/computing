@@ -1,11 +1,12 @@
 import { useState, useContext, useEffect, useReducer } from "react";
-import { useNavigate } from "react-router-dom";
 
 import User from "../classes/User";
 import Fact from "../classes/Fact";
 import Timeline from "../classes/Timeline";
 
 import UserContext from "../store/UserContext";
+
+import UploadForm from "./UploadForm";
 
 const defaultTimeline = new Timeline({
   title: '',
@@ -35,6 +36,10 @@ function timelineReducer(state, action) {
 
     case "removeFact":
       newState = state.removeFact(obj.fact);
+    break;
+
+    case "addFacts":
+      newState = state.addFacts(obj);
     break;
 
     default:
@@ -90,20 +95,11 @@ function updateReducer(dispatchFn: (obj: object) => obj) {
 }
 
 
-export default function Create() {
+export default function AdminPanel() {
   let userContext = useContext(UserContext);
-  let authenticated = userContext.get("authenticated");
-  let currentUser = userContext.get("currentUser");
-  let userToken = userContext.get("userToken");
-
-  let navigate = useNavigate();
-
-  useEffect(() => {
-    if (!authenticated) {
-      navigate("../admin");
-    }
-  }, [authenticated, navigate]);
-
+  let authenticated = userContext.get.authenticated;
+  let currentUser   = userContext.get.currentUser;
+  let userToken     = userContext.get.userToken;
 
   let [timelineState, dispatchTimeline] = useReducer(timelineReducer, defaultTimeline);
   let [factState, dispatchFact] = useReducer(factReducer, defaultFact);
@@ -112,6 +108,7 @@ export default function Create() {
   const updateTimeline = updateReducer(dispatchTimeline);
 
   let [saveReady, setSaveReady] = useState(false);
+  let [updateTimelineList, setUpdateTimelineList] = useState(true);
   
   function Instructions() {
     return(
@@ -128,21 +125,15 @@ export default function Create() {
         setTimelineList(list);
       }
     }
-    if (authenticated) {
+    if (authenticated && updateTimelineList) {
       loadTimelineList(currentUser, userToken);
+      setUpdateTimelineList(false);
     } else {
       setTimelineList([]);
     }
-  }, [authenticated, currentUser, userToken]);
+  }, [authenticated, updateTimelineList, currentUser, userToken]);
 
   let [timelineID, setTimelineID] = useState(null);
-
-  function loadTimeline(event) {
-    event.preventDefault();
-    let data = new FormData(event.target);
-    let id = data.get("select-timeline");
-    setTimelineID(id);
-  }
 
   useEffect(() => {
     async function loadTimeline(id, token) {
@@ -157,6 +148,9 @@ export default function Create() {
       if (response.ok) {
         let json = await response.json();
         console.debug(json);
+        let creator = (json.creator === "")
+                      ? currentUser.username
+                      : json.creator;
 
         dispatchTimeline({
           type: "set",
@@ -165,7 +159,7 @@ export default function Create() {
             title:        json.title,
             description:  json.description,
             keywords:     Timeline.parseKeywords(json.keywords),
-            creator:      json.creator ?? currentUser.username,
+            creator:      creator,
             facts:        json.facts.map(f => Fact.newFromYear(f))
           }
         });
@@ -180,29 +174,51 @@ export default function Create() {
       } else {
         loadTimeline(timelineID, userToken);
       }
+      setUpdateTimelineList(true);
     }
   }, [timelineID, currentUser.username, userToken]);
 
 
   function Chooser() {
+    function loadTimeline(event) {
+      event.preventDefault();
+      let data = new FormData(event.target);
+      let id = data.get("select-timeline");
+      // TODO if there are no unsaved changes
+      setTimelineID(id);
+    }
+
     function timelineOption(timeline) {
       return(
         <option key={timeline.id} value={timeline.id}>{timeline.title}</option>
       );
     }
+
+    let [currentTimelineSelection, setCurrentTimelineSelection] = useState("create");
+
+    function updateSelection(event) {
+      setCurrentTimelineSelection(event.target.value);
+    }
+
+    let loadButtonText = (currentTimelineSelection === "create") 
+                          ? "Create" : "Load";
+
     return(
       <form id="chooser" onSubmit={loadTimeline}>
         <label htmlFor="select-timeline">Select a Timeline:</label>
-        <select name="select-timeline" defaultValue="create">
+        <select name="select-timeline" defaultValue="create" onChange={updateSelection}>
           <option value="create">Create New</option>
           { timelineList.map(timelineOption) }
         </select>
-        <button type="submit">Load</button>
+        <button type="submit">{ loadButtonText }</button>
       </form>
     );
   }
 
   function MetadataPanel() {
+    let creator = (timelineState.creator === "") 
+                  ? currentUser.username 
+                  : timelineState.creator;
 
     return(
       <section id="metadata">
@@ -231,7 +247,7 @@ export default function Create() {
               <label htmlFor="creator">Creator (for public display; default: your username)</label>
               <input type="text" name="creator" 
                 onBlur={updateTimeline("creator")}
-                defaultValue={timelineState.creator ?? currentUser.username}/>
+                defaultValue={creator}/>
             </div>
           </div>
         </form>
@@ -282,13 +298,17 @@ export default function Create() {
 
     function Instructions() {
       return(
-        <p className="instructions">Enter timeline events using the form below</p>
+        <>
+          <p className="instructions">Enter timeline events manually or upload the data using the forms below</p>
+          <UploadForm dispatch={dispatchTimeline} />
+        </>
       );
     }
 
     return(
       <section id="currentTimeline">
         <h2>Current Timeline Events</h2>
+        <Instructions />
         <table className="timeline">
           <thead>
             <tr>
@@ -302,7 +322,6 @@ export default function Create() {
             { timelineState.facts.map(currentFact) }
           </tbody>
         </table>
-        { timelineState.facts.length === 0 ? <Instructions /> : null }
       </section>
     );
   }
@@ -329,8 +348,6 @@ export default function Create() {
         </div>
       );
     }
-
-
 
 
     function dateFromYear(year: number): Date {
@@ -381,6 +398,7 @@ export default function Create() {
   }
 
   function SaveButton() {
+    // TODO if there are unsaved changes
     return(
       <button id="save" type="button" onClick={saveTimeline}>Save</button>
     );
@@ -395,35 +413,6 @@ export default function Create() {
     setSaveReady(true);
   }
 
-  function DeleteTimelineButton() {
-    // TODO real deletion 
-    // let [timelineToDelete, setTimelineToDelete] = useState(null);
-
-    function deleteTimeline() {
-      if (window.confirm("Are you sure you want to delete this quiz? All of its fact cards will be lost. This action cannot be undone.")) {
-        //        console.debug(timelineID);
-        //        setTimelineToDelete(timelineID);
-        //        console.debug(timelineToDelete);
-        dispatchTimeline({ type: "reset" });
-      }
-    }
-
-    //    useEffect(() => {
-    //      // TODO delete on server
-    //      if (timelineID !== "create") {
-    //        console.debug(`Deleting timeline with id ${timelineToDelete}`);
-    //        // setTimelineToDelete(null);
-    //      }
-    //    }, [timelineToDelete]);
-
-    return(
-      <button id="deleteTimeline" type="button" onClick={deleteTimeline}>Delete Quiz</button>
-    );
-  }
-
-  
-
-   
   useEffect(() => {
     async function postTimeline(user, token, timeline) {
       console.debug(timeline.facts);
@@ -449,8 +438,64 @@ export default function Create() {
       console.debug(timelineState);
       postTimeline(currentUser, userToken, timelineState);
       setSaveReady(false);
+      setUpdateTimelineList(true);
     } 
   }, [saveReady, timelineState, currentUser, userToken]);
+  
+
+  function DeleteTimelineButton() {
+    let [timelineToDelete, setTimelineToDelete] = useState(null);
+
+    function deleteTimeline() {
+      if (window.confirm("Are you sure you want to delete this quiz? All of its fact cards will be lost. This action cannot be undone.")) {
+        console.debug(timelineID);
+        setTimelineToDelete(timelineID);
+      }
+    }
+
+    useEffect(() => {
+      async function requestDeletion(timelineID, token) {
+        let result = false;
+        let response = await fetch(`${User.SERVER}/timelines/${timelineID}/`, {
+          method: "DELETE",
+          headers: new Headers({
+            "Accept": "application/json",
+            "Authorization": `Token ${token}`
+          })
+        });
+        if (response.ok) {
+          let json = await response.json();
+          console.debug(json);
+          result = true;
+        } else {
+          console.debug(`Could not delete timeline with id ${timelineID}: Server status ${response.status}, ${response.statusText}`);
+          result = false;
+        }
+        return result;
+      }
+
+      if (timelineToDelete !== null) {
+        console.debug(`Deleting timeline with id ${timelineToDelete}`);
+
+        if (timelineID === "create") {
+          dispatchTimeline({ type: "reset" });
+        } else {
+          let deleted = requestDeletion(timelineToDelete, userToken);
+          if (deleted) {
+            dispatchTimeline({ type: "reset" });
+            setUpdateTimelineList(true);
+          }
+        }
+
+        setTimelineToDelete(null);
+      }
+    }, [timelineToDelete]);
+
+    return(
+      <button id="deleteTimeline" type="button" onClick={deleteTimeline}>Delete Quiz</button>
+    );
+  }
+
 
 
   function Controls() {
@@ -463,7 +508,7 @@ export default function Create() {
   }
   return(
     <main>
-      <h1>Create a Chronoquiz</h1>
+      <h1>Manage Your Quizzes</h1>
       <Instructions />
       <Chooser />
       <MetadataPanel />

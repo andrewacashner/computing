@@ -85,6 +85,14 @@ export default class Timeline {
       facts: filtered
     });
   }
+
+  addFacts(facts) {
+    let newTimeline = new Timeline({
+      ...this,
+      facts: [...this.facts, ...facts]
+    });
+    return newTimeline.sortByDate();
+  }
 }
 
 

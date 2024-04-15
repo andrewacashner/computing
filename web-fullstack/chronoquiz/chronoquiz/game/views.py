@@ -30,7 +30,6 @@ class Register(APIView):
         data = json.loads(request.body)
         User.objects.create_user(
                 username=data['username'],
-                email=data['email'],
                 password=data['password'])
         return Response(f"Created user {data['username']}")
 

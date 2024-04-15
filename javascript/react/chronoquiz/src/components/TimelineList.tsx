@@ -5,8 +5,8 @@ import User from "../classes/User";
 
 export default function TimelineList({ data, type = "game", updateFn = null }) {
   let userContext = useContext(UserContext);
-  let userToken =  userContext.get("userToken");
-  let authenticated = userContext.get("authenticated");
+  let userToken =  userContext.get.userToken;
+  let authenticated = userContext.get.authenticated;
 
 
   function AdminLink({ entry }) {
@@ -71,9 +71,10 @@ export default function TimelineList({ data, type = "game", updateFn = null }) {
   
   function GameLink({ entry }) {
     let href = `../game/${entry.id}`;
+    let creator = entry.creator ?? entry.user.username;
     return(
       <li key={entry.id}>
-        <Link to={href}>{entry.title} (<code>{entry.user.username}</code>)</Link>
+        <Link to={href}>{entry.title} (<code>{creator}</code>)</Link>
       </li>
     );
   }
