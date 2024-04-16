@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useReducer } from "react";
+import { useState, useContext, useEffect, useReducer, useCallback } from "react";
 
 import User from "../classes/User";
 import Fact from "../classes/Fact";
@@ -107,10 +107,25 @@ export default function AdminPanel() {
   const updateFact = updateReducer(dispatchFact);
   const updateTimeline = updateReducer(dispatchTimeline);
 
+  let [initialTimeline, setInitialTimeline] = useState(null);
+
   let [saveReady, setSaveReady] = useState(false);
   let [updateTimelineList, setUpdateTimelineList] = useState(true);
   let [refresh, setRefresh] = useState(true);
   
+  function activeStyle(isActive) {
+    return isActive ? "active" : "inactive";
+  }
+
+  // TODO doesn't show changes when fact lists are identical 
+  // (e.g., add an item, then delete it; still shows "unsaved changes")
+  const hasUnsavedChanges = useCallback(() => {
+    console.debug(initialTimeline);
+    console.debug(timelineState);
+    return (timelineState && initialTimeline) 
+      && !timelineState.equals(initialTimeline);
+  }, [timelineState, initialTimeline]);
+
   function Instructions() {
     return(
       <p className="instructions">Your data will not be saved until you click Save.</p>
@@ -153,30 +168,37 @@ export default function AdminPanel() {
                       ? currentUser.username
                       : json.creator;
 
+        let newTimeline = new Timeline({
+          id:           json.id,
+          title:        json.title,
+          description:  json.description,
+          keywords:     Timeline.parseKeywords(json.keywords),
+          creator:      creator,
+          facts:        json.facts.map(f => Fact.newFromYear(f))
+        });
+
         dispatchTimeline({
           type: "set",
-          payload: {
-            id:           json.id,
-            title:        json.title,
-            description:  json.description,
-            keywords:     Timeline.parseKeywords(json.keywords),
-            creator:      creator,
-            facts:        json.facts.map(f => Fact.newFromYear(f))
-          }
+          payload: newTimeline
         });
+
+        setInitialTimeline(newTimeline);
+
       } else {
         console.debug(`Problem loading timeline with id ${id}: Server status ${response.status}, ${response.statusText}`);
       }
     }
 
     if (timelineID) {
-      if (timelineID === "create") {
-        dispatchTimeline({ type: "reset" });
-      } else {
-        loadTimeline(timelineID, userToken);
+      if (!hasUnsavedChanges() || window.confirm("Your quiz has unsaved changes. Do you want to discard the changes and load a new quiz?")) {
+        if (timelineID === "create") {
+          dispatchTimeline({ type: "reset" });
+        } else {
+          loadTimeline(timelineID, userToken);
+        }
+        setUpdateTimelineList(true);
+        setRefresh(false);
       }
-      setUpdateTimelineList(true);
-      setRefresh(false);
     }
   }, [timelineID, currentUser.username, userToken, refresh]);
 
@@ -258,8 +280,6 @@ export default function AdminPanel() {
   }
 
   function CurrentFactsPanel() {
-    console.debug(timelineState);
-
     function currentFact(item) {
       function deleteFact(event) {
         if (window.confirm("Are you sure you want to delete the current fact? Deleted facts can be recovered by reloading the timeline without first clicking Save.")) {
@@ -399,10 +419,10 @@ export default function AdminPanel() {
     );
   }
 
+  
   function SaveButton() {
-    // TODO if there are unsaved changes
     return(
-      <button id="save" type="button" onClick={saveTimeline}>Save</button>
+      <button className={activeStyle(hasUnsavedChanges())} id="save" type="button" onClick={saveTimeline}>Save</button>
     );
   }
 
@@ -493,8 +513,9 @@ export default function AdminPanel() {
       }
     }, [timelineToDelete]);
 
+    let msg = (timelineID === "create") ? "Reset Quiz" : "Delete Quiz";
     return(
-      <button id="deleteTimeline" type="button" onClick={deleteTimeline}>Delete Quiz</button>
+      <button id="deleteTimeline" type="button" onClick={deleteTimeline}>{ msg }</button>
     );
   }
 
@@ -505,7 +526,7 @@ export default function AdminPanel() {
     }
 
     return(
-      <button type="button" onClick={discardChanges}>Discard Changes</button>
+      <button type="button" className={activeStyle(hasUnsavedChanges())} onClick={discardChanges}>Discard Changes</button>
     );
   }
 

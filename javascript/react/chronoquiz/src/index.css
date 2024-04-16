@@ -387,3 +387,7 @@ div.controls button#save {
 div.controls button#deleteTimeline {
   font-size: 100%;
 }
+
+button.inactive {
+  color: gray;
+}

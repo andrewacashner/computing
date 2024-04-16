@@ -49,8 +49,7 @@ export default class Fact {
     }
   }
 
-  equals(other: Fact): boolean {
-    return Object.entries(this).every(
-      ([key, value]) => value === other[key]);
+  isIdentical(other: Fact): boolean {
+    return Object.keys(this).every(key => this[key] === other[key]);
   }
 }

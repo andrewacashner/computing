@@ -94,21 +94,18 @@ export default class Timeline {
     return newTimeline.sortByDate();
   }
 
-  equals(other: Timeline): boolean {
-    let levelOne = Object.entries(this).every(
-      ([key, value]) => value === other[key]);
+  isIdentical(other: Timeline): boolean {
+    let levelOne = Object.keys(this).every(key => this[key] === other[key]);
 
-    let [kw, otherKw] = [this.keywords, other.keywords];
-    let keywordTest = (kw.length === otherKw.length) 
-    && kw.every(k => otherKw.includes(k));
+    let [kw, otherKw] = [this.keywords, other.keyWords];
+    let keywordTest = (kw.length === otherKw.length)
+                      && kw.every(k => otherKw.includes(k));
 
-    let [facts, otherFacts] = [this.facts, other.facts];
-    let factTest = (facts.length === otherFacts.length)
-    && facts.every((f, index) => f.equals(otherFacts[index]));
+    let [facts, otherFacts] = [this.facts, otherFacts];
+    let factTest = facts.every(f, index => f.isIdentical(otherFacts[index]));
 
     return levelOne && keywordTest && factTest;
   }
-
 }
 
 
