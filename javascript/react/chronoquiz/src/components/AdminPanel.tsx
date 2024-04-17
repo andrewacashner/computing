@@ -1,9 +1,10 @@
 import { useState, useContext, useEffect, useReducer } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 import debug from "../lib/debug";
 
 import User from "../classes/User";
+import Fact from "../classes/Fact";
 import Timeline from "../classes/Timeline";
 
 import UserContext from "../store/UserContext";
@@ -14,7 +15,7 @@ import { timelineReducer, defaultTimeline } from "../reducers/timelineReducer";
 import { factReducer, defaultFact } from "../reducers/factReducer";
 import updateReducer from "../reducers/updateReducer";
 
-export default function AdminPanel() {
+export default function AdminPanel(): React.ReactElement {
   let userContext = useContext(UserContext);
   let authenticated = userContext.get.authenticated;
   let currentUser   = userContext.get.currentUser;
@@ -69,15 +70,15 @@ export default function AdminPanel() {
   let [updateTimelineList, setUpdateTimelineList] = useState(true);
   
   useEffect(() => {
-    async function loadTimelineList(user: User, token: string): void {
-      let list = await user.loadUserTimelineList(token);
+    async function loadTimelineList(token: string): void {
+      let list = await Timeline.listTimelines(token);
       if (list) {
         setTimelineList(list);
       }
     }
 
     if (authenticated && updateTimelineList) {
-      loadTimelineList(currentUser, userToken);
+      loadTimelineList(userToken);
       setUpdateTimelineList(false);
     } else {
       setTimelineList([]);
@@ -95,7 +96,7 @@ export default function AdminPanel() {
     async function loadTimeline(user: User, id: number, token: string): void {
       debug(`Loading timeline id ${timelineID}`);
 
-      let newTimeline = await user.fetchTimeline(id, token);
+      let newTimeline = await Timeline.newFromBackend(id, token);
       if (newTimeline) {
         dispatchTimeline({ type: "set", payload: newTimeline });
         setInitialTimeline(newTimeline);
@@ -118,39 +119,42 @@ export default function AdminPanel() {
     }
   }, [timelineID, currentUser, userToken, refresh]);
 
-  function PageInstructions() {
+  function PageInstructions(): React.ReactElement {
     return(
       <p className="instructions">Your data will not be saved until you click Save.</p>
     );
   }
 
-  function Chooser() {
-    function loadTimeline(event) {
+  // Menu to choose which timeline to load (or create new)
+  function Chooser(): React.ReactElement {
+    function loadTimeline(event: React.FormEvent<HTMLFormElement>): void {
       event.preventDefault();
       let data = new FormData(event.target);
       let id = data.get("select-timeline");
       setTimelineID(id);
     }
 
-    function timelineOption(timeline) {
+    function timelineOption(timeline: Timeline): React.ReactElement {
       return(
         <option key={timeline.id} value={timeline.id}>{timeline.title}</option>
       );
     }
 
-    let [currentTimelineSelection, setCurrentTimelineSelection] = useState("create");
+    // Change display of submit button whether creating or loading
+    let [selection, setSelection] = useState("create");
 
-    function updateSelection(event) {
-      setCurrentTimelineSelection(event.target.value);
+    function updateSelection(event: React.FormEvent<HTMLFormElement>): void {
+      setSelection(event.target.value);
     }
 
-    let loadButtonText = (currentTimelineSelection === "create") 
-                          ? "Create" : "Load";
+    let loadButtonText = (selection === "create") ? "Create" : "Load";
 
     return(
       <form id="chooser" onSubmit={loadTimeline}>
         <label htmlFor="select-timeline">Select a Timeline:</label>
-        <select name="select-timeline" defaultValue="create" onChange={updateSelection}>
+        <select name="select-timeline" 
+          defaultValue="create" 
+          onChange={updateSelection}>
           <option value="create">Create New</option>
           { timelineList.map(timelineOption) }
         </select>
@@ -159,7 +163,7 @@ export default function AdminPanel() {
     );
   }
 
-  function MetadataPanel() {
+  function MetadataPanel(): React.ReactElement {
     let creator = (timelineState.creator === "") 
                   ? currentUser.username 
                   : timelineState.creator;
@@ -199,9 +203,11 @@ export default function AdminPanel() {
     );
   }
 
-  function CurrentFactsPanel() {
-    function currentFact(item) {
-      function deleteFact(event) {
+  function CurrentFactsPanel(): React.ReactElement {
+
+    function currentFact(item: Fact): React.ReactElement {
+
+      function deleteFact(event: React.MouseEvent<HTMLInputElement>): void {
         if (window.confirm("Are you sure you want to delete the current fact?")) {
           debug(`Delete item (date ${item.date.getFullYear()})`);
           dispatchTimeline({ 
@@ -211,7 +217,7 @@ export default function AdminPanel() {
         }
       }
 
-      function editFact(event) {
+      function editFact(event: React.MouseEvent<HTMLInputElement>): void {
         debug(`Edit item (date ${item.date.getFullYear()})`);
         dispatchFact({
           type: "set",
@@ -238,7 +244,7 @@ export default function AdminPanel() {
       );
     }
 
-    function TimelineInstructions() {
+    function TimelineInstructions(): React.ReactElement {
       return(
         <>
           <p className="instructions">Enter timeline events manually or upload the data using the forms below</p>
@@ -268,9 +274,9 @@ export default function AdminPanel() {
     );
   }
 
-  function NewFactForm() {
+  function NewFactForm(): React.ReactElement {
 
-    function newFact(event) {
+    function newFact(event: React.FormEvent<HTMLFormElement>) {
       if (factState.date && factState.info) {
         dispatchTimeline({
           type: "addFact",
@@ -281,7 +287,7 @@ export default function AdminPanel() {
       }
     }
     
-    function CardPreview({ fact }) {
+    function CardPreview({ fact: Fact }): React.ReactElement {
       return(
         <div className="card" data-when={factState.year} data-noselect="noselect">
           <span className="date">{factState.year}</span>
@@ -289,13 +295,6 @@ export default function AdminPanel() {
           <span className="info">{factState.info}</span>
         </div>
       );
-    }
-
-
-    function dateFromYear(year: number): Date {
-      let date = new Date();
-      date.setFullYear(year);
-      return date
     }
 
     return(
@@ -309,7 +308,7 @@ export default function AdminPanel() {
                 type="number" 
                 name="date" 
                 max={defaultFact.year}
-                onChange={updateFact("date", dateFromYear)}
+                onChange={updateFact("date", Fact.dateFromYear)}
                 defaultValue={factState.year} />
             </div>
             <div className="formItem">
@@ -339,38 +338,46 @@ export default function AdminPanel() {
     );
   }
 
-  function activeStyle(isActive) {
+  function activeStyle(isActive: boolean): string {
     return isActive ? "active" : "inactive";
   }
   
-  function SaveButton() {
+  function SaveButton(): React.ReactElement {
     return(
-      <button className={activeStyle(hasUnsavedChanges)} id="save" type="button" onClick={saveTimeline}>Save</button>
+      <button 
+        className={activeStyle(hasUnsavedChanges)} 
+        id="save" 
+        type="button" 
+        onClick={saveTimeline}>Save</button>
     );
   }
 
-
-  // TODO indicate save state: 
-  // (1) metadata, (2) facts, (3) whole timeline on server
-  function saveTimeline(event) {
+  // Send current timeline state to backend to save
+  function saveTimeline(event: React.FormEvent<HTMLFormElement>): void {
     let action = timelineState ? "Updated" : "Created";
     debug(`${action} timeline with title '${timelineState.title}'`);
     setSaveReady(true);
   }
 
   useEffect(() => {
-    async function postTimeline(user, token, timeline) {
+    async function postTimeline(
+      user: User, 
+      token: string, 
+      timeline: Timeline
+    ): void {
+
       debug(timeline.facts);
       debug(timeline.json());
-      let response = await fetch(`${User.SERVER}/timeline-full/`, {
+
+      let request = new BackendRequest({
+        url: "timeline-full/",
         method: "POST",
-        headers: new Headers({
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "Authorization": `Token ${token}`
-        }),
-        body: timeline.json()
+        token: token,
+        bodyObject: timeline.json()
       });
+
+      let response = await request.fetch();
+
       if (response.ok) {
         let json = await response.json();
         debug(json);
@@ -378,6 +385,7 @@ export default function AdminPanel() {
         debug(`Problem creating timeline: Server status ${response.status}, ${response.statusText}`);
       }
     }
+
     if (saveReady) {
       debug("Ready to post timeline");
       debug(timelineState);
@@ -389,26 +397,32 @@ export default function AdminPanel() {
   }, [saveReady, timelineState, currentUser, userToken]);
   
 
-  function DeleteTimelineButton() {
+  function DeleteTimelineButton(): React.ReactElement {
     let [timelineToDelete, setTimelineToDelete] = useState(null);
 
-    function deleteTimeline() {
-      if (window.confirm("Are you sure you want to delete this quiz? All of its fact cards will be lost. This action cannot be undone.")) {
+    function deleteTimeline(): void {
+      let msg = "Are you sure you want to delete this quiz? All of its fact cards will be lost. This action cannot be undone."
+
+      if (window.confirm(msg)) {
         debug(timelineID);
         setTimelineToDelete(timelineID);
       }
     }
 
     useEffect(() => {
-      async function requestDeletion(timelineID, token) {
+      async function requestDeletion(
+        timelineID: number, 
+        token: string
+      ): boolean {
         let result = false;
-        let response = await fetch(`${User.SERVER}/timelines/${timelineID}/`, {
+        let request = new BackendRequest({
+          url: `timelines/${timelineID}/`,
           method: "DELETE",
-          headers: new Headers({
-            "Accept": "application/json",
-            "Authorization": `Token ${token}`
-          })
+          token: token
         });
+
+        let response = await request.fetch();
+
         if (response.ok) {
           let json = await response.json();
           debug(json);
@@ -438,23 +452,26 @@ export default function AdminPanel() {
     }, [timelineToDelete]);
 
     let msg = (timelineID === "create") ? "Reset Quiz" : "Delete Quiz";
+
     return(
       <button id="deleteTimeline" type="button" onClick={deleteTimeline}>{ msg }</button>
     );
   }
 
 
-  function DiscardChangesButton() {
-    function discardChanges(event) {
+  function DiscardChangesButton(): React.ReactElement {
+    function discardChanges(event: React.MouseEvent<HTMLInputElement>): void {
       setRefresh(true);
     }
 
     return(
-      <button type="button" className={activeStyle(hasUnsavedChanges)} onClick={discardChanges}>Discard Changes</button>
+      <button 
+        type="button" 
+        className={activeStyle(hasUnsavedChanges)} onClick={discardChanges}>Discard Changes</button>
     );
   }
 
-  function Controls() {
+  function Controls(): React.ReactElement {
     return(
       <div className="controls">
         <SaveButton />
@@ -463,7 +480,6 @@ export default function AdminPanel() {
       </div>
     );
   }
-  let navigate = useNavigate();
 
   if (authenticated) {
     return(
@@ -478,7 +494,9 @@ export default function AdminPanel() {
       </main>
     );
   } else {
-    navigate("/login");
+    return(
+      <Navigate to="/login" />
+      );
   }
 }
 

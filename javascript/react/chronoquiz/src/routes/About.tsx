@@ -22,13 +22,15 @@ export default function About() {
           <section>
             <p>
               The game can read input files in JSON format with the following characteristics:
-              <ol>
-                <li>The contents should be a single JSON array.</li>
-                <li>Each item in the array should be a JSON object.</li>
-                <li>Each object must have at least a <code>date</code> field and an <code>info</code> field. The date should be entered as a numeric year, and the info field is a brief description (too long and users will have to scroll on the card to read it).</li>
-                <li>Dates must be entered as four-digit years. For dates BC, use negative numbers. If there are multiple events with the same year, users can put the events for that year on the timeline in any order.</li>
-                <li>Each object may also include an optional <code>img</code> field with a URL to an image (online, not a local file). The thumbnail images on Wikipedia articles work well.</li>
-              </ol>
+            </p>
+            <ol>
+              <li>The contents should be a single JSON array.</li>
+              <li>Each item in the array should be a JSON object.</li>
+              <li>Each object must have at least a <code>date</code> field and an <code>info</code> field. The date should be entered as a numeric year, and the info field is a brief description (too long and users will have to scroll on the card to read it).</li>
+              <li>Dates must be entered as four-digit years. For dates BC, use negative numbers. If there are multiple events with the same year, users can put the events for that year on the timeline in any order.</li>
+              <li>Each object may also include an optional <code>img</code> field with a URL to an image (online, not a local file). The thumbnail images on Wikipedia articles work well.</li>
+            </ol>
+            <p>
               Note that all items except numbers must be enclosed in quotation marks.
               A comma separates each key-value pair in the objects, and each object in the array.
             </p>
@@ -63,10 +65,12 @@ export default function About() {
             <p>
             Another option is to store your timeline data in a spreadsheet.
               There should be only three columns, headed <code>date</code>, <code>info</code>, and <code>img</code>.
-              <ul>
-                <li>From Excel, you can export JSON directly.</li>
-                <li>From Numbers or Google Sheets, you can export a CSV file and then use a converter like <a href="https://csvjson.com">csvjson</a> to convert that to JSON.</li>
-              </ul>
+            </p>
+            <ul>
+              <li>From Excel, you can export JSON directly.</li>
+              <li>From Numbers or Google Sheets, you can export a CSV file and then use a converter like <a href="https://csvjson.com">csvjson</a> to convert that to JSON.</li>
+            </ul>
+            <p>
               Make sure the resulting JSON matches the format shown above.
             </p>
           </section>

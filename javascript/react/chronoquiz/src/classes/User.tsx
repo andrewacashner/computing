@@ -1,76 +1,36 @@
 import debug from "../lib/debug";
-import Fact from "./Fact";
-import Timeline from "./Timeline";
+import BackendRequest from "../classes/BackendRequest";
 
 interface UserInput {
   username: string,
-  email: string,
   password: string 
 } 
 
-interface RequestInput {
-  url: string, 
-  method: string, 
-  bodyObject: object,
-  token: string 
-}
-
 export default class User {
   username: string;
-  email: string;
   password: string;
 
-  constructor(
-    { username = "",
-      email    = "",
-      password = "" }: UserInput = {}
-  ) {
+  constructor({ username = "", password = "" }: UserInput = {}) {
     this.username = username;
-    this.email = email;
     this.password = password;
   }
 
   get isEmpty(): boolean {
-    return (this.username === ""
-            && this.email === ""
-            && this.password === "");
+    return !Object.values(this).some(v => v);
   }
 
   json(): string {
     return JSON.stringify(this);
   }
 
-  static SERVER = "http://127.0.0.1:8000";
-
-  async request({ url, method, bodyObject, token }: RequestInput): object {
-
-    let fullUrl = `${User.SERVER}/${url}`;
-
-    let authorization = token 
-      ? { "Authorization": `Token ${token}` } 
-      : null;
-
-    let msg = {
-      method: method,
-      headers: new Headers({
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        ...authorization
-      }),
-      body: JSON.stringify(bodyObject)
-    }
-
-    let response = await fetch(fullUrl, msg);
-    return response;
-  }
-
   async exists(): boolean {
     let answer = false;
-    let response = await this.request({
+    let request = new BackendRequest({
       url: "check_user/", 
       method: "POST", 
       bodyObject: this
     });
+    let response = await request.fetch();
     if (response.ok) {
       answer = true;
     } else {
@@ -81,11 +41,12 @@ export default class User {
 
   async register(): boolean {
     let answer = false;
-    let response = await this.request({
+    let request = new BackendRequest({
       url: "register/", 
       method: "POST", 
       bodyObject: this
     });
+    let response = await request.fetch();
     if (response.ok) {
       answer = true;
     } else {
@@ -96,11 +57,12 @@ export default class User {
 
   async authenticate(): string {
     let token = null;
-    let response = await this.request({
+    let request = new BackendRequest({
       url: "login/", 
       method: "POST", 
       bodyObject: this
     });
+    let response = await request.fetch();
     if (response.ok) {
       let json = await response.json();
       token = json.token;
@@ -111,50 +73,4 @@ export default class User {
     return token;
   }
 
-  async loadUserTimelineList(token: string = ""): array<string> {
-    let list = null;
-    let response = await this.request({
-      url: "timelines/", 
-      method: "POST", 
-      bodyObject: this, 
-      token: token
-    });
-    if (response.ok) {
-      let json = await response.json();
-      list = json;
-      debug(`Loaded list of ${json.length} timelines`);
-    } else {
-      debug(`Problem retrieving quiz list: Server responded ${response.status}, ${response.statusText}`);
-    }
-    return list;
-  }
-
-  async fetchTimeline(id: number, token: string): Timeline {
-    let newTimeline = null;
-
-    let response = await this.request({
-      url: `timeline-full/${id}/`, 
-      method: "GET",
-      token: token
-    });
-
-    if (response.ok) {
-      let json = await response.json();
-      debug(json);
-      let creator = (json.creator === "") ? this.username : json.creator;
-
-      newTimeline = new Timeline({
-        id:           json.id,
-        title:        json.title,
-        description:  json.description,
-        keywords:     Timeline.parseKeywords(json.keywords),
-        creator:      creator,
-        facts:        json.facts.map(f => Fact.newFromYear(f))
-      });
-    } else {
-      debug(`Problem loading timeline with id ${id}: Server status ${response.status}, ${response.statusText}`);
-    }
-
-    return newTimeline;
-  }
 }

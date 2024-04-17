@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 
+import BackendRequest from "../classes/BackendRequest";
 import Game from "../classes/Game";
-import User from "../classes/User";
 
 import Instructions from "../components/Instructions";
 import InputForm from "../components/InputForm";
@@ -18,7 +18,7 @@ export default function Chronoquiz() {
   let gameContext = { get: game, set: setGame };
 
   let location = useLocation();
-  let sourceUrl = `${User.SERVER}${location.pathname}/`;
+  let sourceUrl = `${BackendRequest.SERVER}${location.pathname}/`;
 
   return (
     <TimelineContext.Provider value={gameContext}>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-import User from "../classes/User";
+import BackendRequest from "../classes/BackendRequest";
 import TimelineList from "../components/TimelineList";
 
 export default function Choose() {
@@ -9,7 +9,8 @@ export default function Choose() {
 
   useEffect(() => {
     async function loadTimelineList() {
-      let response = await fetch(`${User.SERVER}/timelines/`);
+      let request = new BackendRequest({ url: "timelines/" , method: "GET" });
+      let response = await request.fetch();
       if (response.ok) {
         let json = await response.json();
         setTimelineList(json);

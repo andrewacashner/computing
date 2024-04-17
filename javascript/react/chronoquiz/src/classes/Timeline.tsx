@@ -1,3 +1,7 @@
+import debug from "../lib/debug";
+import BackendRequest from "./BackendRequest";
+import Fact from "./Fact";
+
 interface TimelineInput {
   id: number;
   title: string;
@@ -55,14 +59,14 @@ export default class Timeline {
   }
 
   json() {
-    return JSON.stringify({
+    return {
       id: this.id,
       title: this.title,
       description: this.description,
       keywords: this.keywordString,
       creator: this.creator,
       facts: this.facts.map(e => e.json())
-     });
+     };
   }
 
   sortByDate() {
@@ -107,6 +111,55 @@ export default class Timeline {
     && facts.every((f, index) => f.equals(otherFacts[index]));
 
     return levelOne && keywordTest && factTest;
+  }
+  
+  static async listTimelines(token: string = ""): array<string> {
+    let list = null;
+    let request = new BackendRequest({
+      url: "timelines/", 
+      method: "POST", 
+      token: token
+    });
+    let response = await request.fetch();
+    if (response.ok) {
+      let json = await response.json();
+      list = json;
+      debug(`Loaded list of ${json.length} timelines`);
+    } else {
+      debug(`Problem retrieving quiz list: Server responded ${response.status}, ${response.statusText}`);
+    }
+    return list;
+  } 
+
+  static async newFromBackend(id: number, token: string): Timeline {
+    let newTimeline = null;
+
+    let request = new BackendRequest({
+      url: `timeline-full/${id}/`, 
+      method: "GET",
+      token: token
+    });
+    let response = await request.fetch();
+    if (response.ok) {
+      let json = await response.json();
+      debug(json);
+      // TODO don't need this because we always set a creator field when
+      // creating
+      // let creator = (json.creator === "") ? this.username : json.creator;
+
+      newTimeline = new Timeline({
+        id:           json.id,
+        title:        json.title,
+        description:  json.description,
+        keywords:     Timeline.parseKeywords(json.keywords),
+        creator:      json.creator,
+        facts:        json.facts.map(f => Fact.newFromYear(f))
+      });
+    } else {
+      debug(`Problem loading timeline with id ${id}: Server status ${response.status}, ${response.statusText}`);
+    }
+
+    return newTimeline;
   }
 
 }
