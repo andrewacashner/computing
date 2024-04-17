@@ -34,6 +34,6 @@ class TimelineFullSerializer(serializers.ModelSerializer):
             facts = FactSerializer(fact_objects, many=True)
             return facts.data
         else:
-            return null
+            return [] 
 
 

@@ -1,16 +1,26 @@
 // Menu to choose which timeline to load (or create new)
 
-import { useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import Timeline from "../classes/Timeline";
 
-interface AdminChooserInput {
-  timelines: array<Timeline>,
+import UserContext from "../store/UserContext";
+
+interface ChooserInput {
   setID: (id: number) => void,
+  update: boolean,
+  setUpdate: (b: boolean) => void
 }
 
 export default function AdminChooser({ 
-  timelines, setID 
-}: AdminChooserInput): React.ReactElement {
+  setID, update, setUpdate 
+}: ChooserInput): React.ReactElement {
+
+  let userContext = useContext(UserContext);
+  let authenticated = userContext.get.authenticated;
+  let currentUser   = userContext.get.currentUser;
+  let userToken     = userContext.get.userToken;
+
+  let [timelineList, setTimelineList] = useState([]);
 
   function loadTimeline(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
@@ -18,6 +28,25 @@ export default function AdminChooser({
     let id = data.get("select-timeline");
     setID(id);
   }
+
+  useEffect(() => {
+    async function loadTimelineList(token: string): void {
+      let list = await Timeline.listTimelines(token);
+      if (list) {
+        setTimelineList(list);
+      }
+    }
+
+    if (authenticated && update) {
+      loadTimelineList(userToken);
+      setUpdate(false);
+    } else {
+      setTimelineList([]);
+    }
+  }, [authenticated, update, currentUser, userToken]);
+  // TODO this is not being triggered by the 'update' state in the parent
+  // component
+
 
   function timelineOption(timeline: Timeline): React.ReactElement {
     return(
@@ -41,7 +70,7 @@ export default function AdminChooser({
         defaultValue="create" 
         onChange={updateSelection}>
         <option value="create">Create New</option>
-        { timelines.map(timelineOption) }
+        { timelineList.map(timelineOption) }
       </select>
       <button type="submit">{ loadButtonText }</button>
     </form>

@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 
 import debug from "../lib/debug";
 
+import BackendRequest from "../classes/BackendRequest";
 import User from "../classes/User";
 import Fact from "../classes/Fact";
 import Timeline from "../classes/Timeline";
@@ -41,8 +42,9 @@ export default function AdminPanel(): React.ReactElement {
   // timeline data to the backend database?)
   let [saveReady, setSaveReady] = useState(false);
 
-  // Used to trigger update of timeline display
-  // TODO is this needed?
+  // Used to trigger update of timeline display when "discard changes" is
+  // clicked
+  // TODO is there a better way?
   let [refresh, setRefresh] = useState(true);
 
   // MONITOR FOR UNSAVED CHANGES
@@ -66,28 +68,11 @@ export default function AdminPanel(): React.ReactElement {
 
 
   // GET LIST OF USER TIMELINES
-  let [timelineList, setTimelineList] = useState([]);
   
   // Do we need to update the list of user timelines in the select options?
   let [updateTimelineList, setUpdateTimelineList] = useState(true);
   
-  useEffect(() => {
-    async function loadTimelineList(token: string): void {
-      let list = await Timeline.listTimelines(token);
-      if (list) {
-        setTimelineList(list);
-      }
-    }
-
-    if (authenticated && updateTimelineList) {
-      loadTimelineList(userToken);
-      setUpdateTimelineList(false);
-    } else {
-      setTimelineList([]);
-    }
-  }, [authenticated, updateTimelineList, currentUser, userToken]);
-
-
+ 
   // LOAD A TIMELINE FROM BACKEND
 
   // 'id' field of Javascript Timeline object on client-side, and of Django
@@ -95,11 +80,12 @@ export default function AdminPanel(): React.ReactElement {
   let [timelineID, setTimelineID] = useState(null);
 
   // Trigger: timelineID set when user selects timeline to load or create
-  // Effects: update timelineState, initialTimeline;
-  //          toggle: 
-  //            updateTimelineList -> true, 
-  //            refresh -> false, 
-  //            hasUnsavedChanges -> false
+  // Effects: 
+  //     - update timelineState, initialTimeline;
+  //     - toggle: 
+  //         - updateTimelineList -> true, 
+  //         - refresh -> false, 
+  //         - hasUnsavedChanges -> false
   useEffect(() => {
     async function loadTimeline(user: User, id: number, token: string): void {
       debug(`Loading timeline id ${timelineID}`);
@@ -120,7 +106,6 @@ export default function AdminPanel(): React.ReactElement {
         } else {
           loadTimeline(currentUser, timelineID, userToken);
         }
-        setUpdateTimelineList(true);
         setRefresh(false);
         setHasUnsavedChanges(false);
       }
@@ -395,6 +380,7 @@ export default function AdminPanel(): React.ReactElement {
         if (response.ok) {
           let json = await response.json();
           debug(json);
+          setUpdateTimelineList(true);
           result = true;
         } else {
           debug(`Could not delete timeline with id ${timelineID}: Server status ${response.status}, ${response.statusText}`);
@@ -454,7 +440,10 @@ export default function AdminPanel(): React.ReactElement {
       <main>
         <h1>Manage Your Quizzes</h1>
         <PageInstructions />
-        <AdminChooser timelines={ timelineList } setID={ setTimelineID } />
+        <AdminChooser 
+          setID={ setTimelineID } 
+          update={updateTimelineList}
+          setUpdate={setUpdateTimelineList} />
         <MetadataPanel />
         <CurrentFactsPanel />
         <NewFactForm />
