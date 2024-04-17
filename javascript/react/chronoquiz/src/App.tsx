@@ -1,4 +1,5 @@
 import React from "react";
+import { Navigate } from "react-router-dom";
 import "./App.css";
 
 import { useReducer } from "react";
@@ -10,41 +11,9 @@ import Admin from "./routes/Admin";
 import Choose from "./routes/Choose";
 import Chronoquiz from "./routes/Chronoquiz";
 
-import User from "./classes/User";
 import UserContext from "./store/UserContext";
 
-const defaultUserState = {
-  currentUser: new User(),
-  authenticated: false,
-  userToken: null
-}
-
-function userReducer(state, action) {
-  console.debug(action);
-  console.debug(state);
-
-  let obj = action.payload;
-  let newState = null;
-
-  switch(action.type) {
-    case "set":
-      newState = { ...state, ...obj };
-    break;
-
-    case "user":
-      newState = { ...state, currentUser: obj };
-    break;
-
-    case "reset":
-      newState = defaultUserState;
-    break;
-
-    default:
-      newState = state;
-  }
-
-  return newState;
-}
+import { userReducer, defaultUserState } from "./reducers/userReducer";
 
 function App() {
 
@@ -60,10 +29,11 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
+            <Route index element={<Navigate to="/game" replace />} />
+            <Route path="/game" element={<Choose/>} />
+            <Route path="/game/:gameId" element={<Chronoquiz />} />
             <Route path="/about" element={<About />} />
             <Route path="/admin" element={<Admin />} />
-            <Route path="/game" element={<Choose />} />
-            <Route path="/game/:gameId" element={<Chronoquiz />} />
           </Route>
         </Routes>
       </BrowserRouter>

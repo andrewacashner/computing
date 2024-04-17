@@ -17,8 +17,9 @@ export default function UploadForm({ dispatch }) {
   }
 
   useEffect(() => {
-    // TODO remove duplication (this may not be needed when reading from
-    // server)
+    // TODO remove duplication of code (this may not be needed when reading
+    // from server)
+    // - also, skip duplicates when adding
     function isInputValid(json) {
       return Array.isArray(json) && 
         json.length > 0 &&

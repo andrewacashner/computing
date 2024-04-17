@@ -1,8 +1,19 @@
+import debug from "../lib/debug";
+import Fact from "./Fact";
+import Timeline from "./Timeline";
+
 interface UserInput {
   username: string,
   email: string,
   password: string 
 } 
+
+interface RequestInput {
+  url: string, 
+  method: string, 
+  bodyObject: object,
+  token: string 
+}
 
 export default class User {
   username: string;
@@ -31,12 +42,7 @@ export default class User {
 
   static SERVER = "http://127.0.0.1:8000";
 
-  async request(
-    url: string, 
-    method: string, 
-    bodyObject: object,
-    token: string = null
-  ): object {
+  async request({ url, method, bodyObject, token }: RequestInput): object {
 
     let fullUrl = `${User.SERVER}/${url}`;
 
@@ -45,7 +51,7 @@ export default class User {
       : null;
 
     let msg = {
-      method: "POST",
+      method: method,
       headers: new Headers({
         "Content-Type": "application/json",
         "Accept": "application/json",
@@ -60,49 +66,95 @@ export default class User {
 
   async exists(): boolean {
     let answer = false;
-    let response = await this.request("check_user/", "POST", this);
+    let response = await this.request({
+      url: "check_user/", 
+      method: "POST", 
+      bodyObject: this
+    });
     if (response.ok) {
       answer = true;
     } else {
-      console.debug("User not found");
+      debug("User not found");
     }
     return answer;
   }
 
   async register(): boolean {
     let answer = false;
-    let response = await this.request("register/", "POST", this);
+    let response = await this.request({
+      url: "register/", 
+      method: "POST", 
+      bodyObject: this
+    });
     if (response.ok) {
       answer = true;
     } else {
-      console.debug("Could not register user");
+      debug("Could not register user");
     }
     return answer;
   }
 
   async authenticate(): string {
     let token = null;
-    let response = await this.request("login/", "POST", this);
+    let response = await this.request({
+      url: "login/", 
+      method: "POST", 
+      bodyObject: this
+    });
     if (response.ok) {
       let json = await response.json();
       token = json.token;
-      console.debug(`Authenticated user ${this.username}`);
+      debug(`Authenticated user ${this.username}`);
     } else {
-      console.debug(`Problem authenticating user ${this.username}: Response status ${response.status}, ${response.statusText}`);
+      debug(`Problem authenticating user ${this.username}: Response status ${response.status}, ${response.statusText}`);
     }
     return token;
   }
 
   async loadUserTimelineList(token: string = ""): array<string> {
     let list = null;
-    let response = await this.request("timelines/", "POST", this, token);
+    let response = await this.request({
+      url: "timelines/", 
+      method: "POST", 
+      bodyObject: this, 
+      token: token
+    });
     if (response.ok) {
       let json = await response.json();
       list = json;
-      console.debug(`Loaded list of ${json.length} timelines`);
+      debug(`Loaded list of ${json.length} timelines`);
     } else {
-      console.debug(`Problem retrieving quiz list: Server responded ${response.status}, ${response.statusText}`);
+      debug(`Problem retrieving quiz list: Server responded ${response.status}, ${response.statusText}`);
     }
     return list;
+  }
+
+  async fetchTimeline(id: number, token: string): Timeline {
+    let newTimeline = null;
+
+    let response = await this.request({
+      url: `timeline-full/${id}/`, 
+      method: "GET",
+      token: token
+    });
+
+    if (response.ok) {
+      let json = await response.json();
+      debug(json);
+      let creator = (json.creator === "") ? this.username : json.creator;
+
+      newTimeline = new Timeline({
+        id:           json.id,
+        title:        json.title,
+        description:  json.description,
+        keywords:     Timeline.parseKeywords(json.keywords),
+        creator:      creator,
+        facts:        json.facts.map(f => Fact.newFromYear(f))
+      });
+    } else {
+      debug(`Problem loading timeline with id ${id}: Server status ${response.status}, ${response.statusText}`);
+    }
+
+    return newTimeline;
   }
 }

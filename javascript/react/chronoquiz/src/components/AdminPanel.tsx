@@ -1,99 +1,18 @@
-import { useState, useContext, useEffect, useReducer, useCallback } from "react";
+import { useState, useContext, useEffect, useReducer } from "react";
+import { useNavigate } from "react-router-dom";
+
+import debug from "../lib/debug";
 
 import User from "../classes/User";
-import Fact from "../classes/Fact";
 import Timeline from "../classes/Timeline";
 
 import UserContext from "../store/UserContext";
 
 import UploadForm from "./UploadForm";
 
-const defaultTimeline = new Timeline({
-  title: '',
-  description: '',
-  keyword: [],
-  creator: '',
-  facts: []
-});
-
-function timelineReducer(state, action) {
-  let obj = action.payload;
-
-  let newState = null;
-  
-  switch(action.type) {
-    case "set":
-      newState = new Timeline({ ...state, ...obj });
-    break;
-
-    case "reset":
-      newState = defaultTimeline;
-    break;
-
-    case "addFact":
-      newState = state.addFact(obj.fact);
-    break;
-
-    case "removeFact":
-      newState = state.removeFact(obj.fact);
-    break;
-
-    case "addFacts":
-      newState = state.addFacts(obj);
-    break;
-
-    default:
-      newState = state; 
-  }
-
-  return newState;
-}
-
-
-const defaultFact = new Fact({
-  date: new Date(),
-  info: "Description", 
-  img: "https://picsum.photos/200.jpg"
-});
-
-function factReducer(state, action) {
-  let obj = action.payload;
-  let newState = null;
-
-  switch(action.type) {
-    case "set":
-      newState = new Fact({ ...state, ...obj });
-    break;
-
-    case "reset":
-      newState = defaultFact;
-    break;
-
-    default:
-      newState = state;
-  };
-
-  return newState;
-}
-
-function updateReducer(dispatchFn: (obj: object) => obj) {
-  return function(
-    field: string, 
-    setValueFn: (value: any) => any = null
-  ): void {
-    return function(event): void {
-      let value = event.target.value;
-      let newValue = setValueFn ? setValueFn(value) : value;
-      dispatchFn({
-        type: "set",
-        payload: { 
-          [field]: newValue
-        }
-      });
-    };
-  }
-}
-
+import { timelineReducer, defaultTimeline } from "../reducers/timelineReducer";
+import { factReducer, defaultFact } from "../reducers/factReducer";
+import updateReducer from "../reducers/updateReducer";
 
 export default function AdminPanel() {
   let userContext = useContext(UserContext);
@@ -101,46 +20,62 @@ export default function AdminPanel() {
   let currentUser   = userContext.get.currentUser;
   let userToken     = userContext.get.userToken;
 
+  // Current timeline on client side
   let [timelineState, dispatchTimeline] = useReducer(timelineReducer, defaultTimeline);
+
+  // Current new fact card
   let [factState, dispatchFact] = useReducer(factReducer, defaultFact);
-  
-  const updateFact = updateReducer(dispatchFact);
+
+  // Set a single state field from form input
   const updateTimeline = updateReducer(dispatchTimeline);
+  const updateFact = updateReducer(dispatchFact);
 
-  let [initialTimeline, setInitialTimeline] = useState(null);
+  // Initial timeline loaded
+  let [initialTimeline, setInitialTimeline] = useState(defaultTimeline);
 
+
+  // Has the user requested to save the timeline (that is, to send client-side
+  // timeline data to the backend database?)
   let [saveReady, setSaveReady] = useState(false);
-  let [updateTimelineList, setUpdateTimelineList] = useState(true);
-  let [refresh, setRefresh] = useState(true);
-  
-  function activeStyle(isActive) {
-    return isActive ? "active" : "inactive";
-  }
 
-  // TODO doesn't show changes when fact lists are identical 
-  // (e.g., add an item, then delete it; still shows "unsaved changes")
-  const hasUnsavedChanges = useCallback(() => {
-    console.debug(initialTimeline);
-    console.debug(timelineState);
-    return (timelineState && initialTimeline) 
-      && !timelineState.equals(initialTimeline);
+  // Used to trigger update of timeline display
+  // TODO is this needed?
+  let [refresh, setRefresh] = useState(true);
+
+  // MONITOR FOR UNSAVED CHANGES
+  // Is the client-side timeline data different from what was originally
+  // received from the backend server? Used to set display of "save" and
+  // "discard changes" button and to prompt to save unsaved changes when new
+  // timeline is selected
+  let [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // When a timeline is loaded or changed, record whether there are unsaved
+  // changes (current timeline differs from initial timeline loaded)
+  useEffect(() => {
+    if (initialTimeline) { debug(initialTimeline); }
+    if (timelineState) { debug(timelineState); }
+    
+    let status = (timelineState && initialTimeline
+                  && !timelineState.equals(initialTimeline));
+
+    setHasUnsavedChanges(status);
   }, [timelineState, initialTimeline]);
 
-  function Instructions() {
-    return(
-      <p className="instructions">Your data will not be saved until you click Save.</p>
-    );
-  }
 
+  // GET LIST OF USER TIMELINES
   let [timelineList, setTimelineList] = useState([]);
-
+  
+  // Do we need to update the list of user timelines in the select options?
+  let [updateTimelineList, setUpdateTimelineList] = useState(true);
+  
   useEffect(() => {
-    async function loadTimelineList(user, token) {
+    async function loadTimelineList(user: User, token: string): void {
       let list = await user.loadUserTimelineList(token);
       if (list) {
         setTimelineList(list);
       }
     }
+
     if (authenticated && updateTimelineList) {
       loadTimelineList(currentUser, userToken);
       setUpdateTimelineList(false);
@@ -149,66 +84,51 @@ export default function AdminPanel() {
     }
   }, [authenticated, updateTimelineList, currentUser, userToken]);
 
+
+  // LOAD A TIMELINE FROM BACKEND
+
+  // 'id' field of Javascript Timeline object on client-side, and of Django
+  // Timeline model on server-side (= primary key)
   let [timelineID, setTimelineID] = useState(null);
 
   useEffect(() => {
-    async function loadTimeline(id, token) {
-      console.debug(`Loading timeline id ${timelineID}`);
-      let response = await fetch(`${User.SERVER}/timeline-full/${id}`, {
-        method: "GET",
-        headers: new Headers({
-          "Authorization": `Token ${token}`
-        })
-      });
+    async function loadTimeline(user: User, id: number, token: string): void {
+      debug(`Loading timeline id ${timelineID}`);
 
-      if (response.ok) {
-        let json = await response.json();
-        console.debug(json);
-        let creator = (json.creator === "")
-                      ? currentUser.username
-                      : json.creator;
-
-        let newTimeline = new Timeline({
-          id:           json.id,
-          title:        json.title,
-          description:  json.description,
-          keywords:     Timeline.parseKeywords(json.keywords),
-          creator:      creator,
-          facts:        json.facts.map(f => Fact.newFromYear(f))
-        });
-
-        dispatchTimeline({
-          type: "set",
-          payload: newTimeline
-        });
-
+      let newTimeline = await user.fetchTimeline(id, token);
+      if (newTimeline) {
+        dispatchTimeline({ type: "set", payload: newTimeline });
         setInitialTimeline(newTimeline);
-
-      } else {
-        console.debug(`Problem loading timeline with id ${id}: Server status ${response.status}, ${response.statusText}`);
-      }
+      } 
     }
 
     if (timelineID) {
-      if (!hasUnsavedChanges() || window.confirm("Your quiz has unsaved changes. Do you want to discard the changes and load a new quiz?")) {
+      if (!hasUnsavedChanges 
+            || window.confirm("Your quiz has unsaved changes. Do you want to discard the changes and reload the quiz?")) {
+
         if (timelineID === "create") {
           dispatchTimeline({ type: "reset" });
         } else {
-          loadTimeline(timelineID, userToken);
+          loadTimeline(currentUser, timelineID, userToken);
         }
         setUpdateTimelineList(true);
         setRefresh(false);
+        setHasUnsavedChanges(false);
       }
     }
-  }, [timelineID, currentUser.username, userToken, refresh]);
+  }, [timelineID, currentUser, userToken, refresh]);
 
+  function PageInstructions() {
+    return(
+      <p className="instructions">Your data will not be saved until you click Save.</p>
+    );
+  }
 
   function Chooser() {
     function loadTimeline(event) {
       event.preventDefault();
       let data = new FormData(event.target);
       let id = data.get("select-timeline");
-      // TODO if there are no unsaved changes
       setTimelineID(id);
     }
 
@@ -282,8 +202,8 @@ export default function AdminPanel() {
   function CurrentFactsPanel() {
     function currentFact(item) {
       function deleteFact(event) {
-        if (window.confirm("Are you sure you want to delete the current fact? Deleted facts can be recovered by reloading the timeline without first clicking Save.")) {
-          console.debug(`Delete item (date ${item.date.getFullYear()})`);
+        if (window.confirm("Are you sure you want to delete the current fact?")) {
+          debug(`Delete item (date ${item.date.getFullYear()})`);
           dispatchTimeline({ 
             type: "removeFact",
             payload: { fact: item }
@@ -292,7 +212,7 @@ export default function AdminPanel() {
       }
 
       function editFact(event) {
-        console.debug(`Edit item (date ${item.date.getFullYear()})`);
+        debug(`Edit item (date ${item.date.getFullYear()})`);
         dispatchFact({
           type: "set",
           payload: item
@@ -311,14 +231,14 @@ export default function AdminPanel() {
               <button type="button" onClick={deleteFact}>Delete</button>
             </div>
           </td>
-          <td>{item.year}</td>
+          <td>{String(item.year)}</td>
           <td>{item.info}</td>
           <td>{item.img}</td>
         </tr>
       );
     }
 
-    function Instructions() {
+    function TimelineInstructions() {
       return(
         <>
           <p className="instructions">Enter timeline events manually or upload the data using the forms below</p>
@@ -330,7 +250,7 @@ export default function AdminPanel() {
     return(
       <section id="currentTimeline">
         <h2>Current Timeline Events</h2>
-        <Instructions />
+        <TimelineInstructions />
         <table className="timeline">
           <thead>
             <tr>
@@ -356,7 +276,7 @@ export default function AdminPanel() {
           type: "addFact",
           payload: { fact: factState }
         });
-        console.debug("Added fact to timeline");
+        debug("Added fact to timeline");
         dispatchFact({ type: "reset" });
       }
     }
@@ -419,10 +339,13 @@ export default function AdminPanel() {
     );
   }
 
+  function activeStyle(isActive) {
+    return isActive ? "active" : "inactive";
+  }
   
   function SaveButton() {
     return(
-      <button className={activeStyle(hasUnsavedChanges())} id="save" type="button" onClick={saveTimeline}>Save</button>
+      <button className={activeStyle(hasUnsavedChanges)} id="save" type="button" onClick={saveTimeline}>Save</button>
     );
   }
 
@@ -431,14 +354,14 @@ export default function AdminPanel() {
   // (1) metadata, (2) facts, (3) whole timeline on server
   function saveTimeline(event) {
     let action = timelineState ? "Updated" : "Created";
-    console.debug(`${action} timeline with title '${timelineState.title}'`);
+    debug(`${action} timeline with title '${timelineState.title}'`);
     setSaveReady(true);
   }
 
   useEffect(() => {
     async function postTimeline(user, token, timeline) {
-      console.debug(timeline.facts);
-      console.debug(timeline.json());
+      debug(timeline.facts);
+      debug(timeline.json());
       let response = await fetch(`${User.SERVER}/timeline-full/`, {
         method: "POST",
         headers: new Headers({
@@ -450,17 +373,18 @@ export default function AdminPanel() {
       });
       if (response.ok) {
         let json = await response.json();
-        console.debug(json);
+        debug(json);
       } else {
-        console.debug(`Problem creating timeline: Server status ${response.status}, ${response.statusText}`);
+        debug(`Problem creating timeline: Server status ${response.status}, ${response.statusText}`);
       }
     }
     if (saveReady) {
-      console.debug("Ready to post timeline");
-      console.debug(timelineState);
+      debug("Ready to post timeline");
+      debug(timelineState);
       postTimeline(currentUser, userToken, timelineState);
       setSaveReady(false);
       setUpdateTimelineList(true);
+      setHasUnsavedChanges(false);
     } 
   }, [saveReady, timelineState, currentUser, userToken]);
   
@@ -470,7 +394,7 @@ export default function AdminPanel() {
 
     function deleteTimeline() {
       if (window.confirm("Are you sure you want to delete this quiz? All of its fact cards will be lost. This action cannot be undone.")) {
-        console.debug(timelineID);
+        debug(timelineID);
         setTimelineToDelete(timelineID);
       }
     }
@@ -487,17 +411,17 @@ export default function AdminPanel() {
         });
         if (response.ok) {
           let json = await response.json();
-          console.debug(json);
+          debug(json);
           result = true;
         } else {
-          console.debug(`Could not delete timeline with id ${timelineID}: Server status ${response.status}, ${response.statusText}`);
+          debug(`Could not delete timeline with id ${timelineID}: Server status ${response.status}, ${response.statusText}`);
           result = false;
         }
         return result;
       }
 
       if (timelineToDelete !== null) {
-        console.debug(`Deleting timeline with id ${timelineToDelete}`);
+        debug(`Deleting timeline with id ${timelineToDelete}`);
 
         if (timelineID === "create") {
           dispatchTimeline({ type: "reset" });
@@ -526,7 +450,7 @@ export default function AdminPanel() {
     }
 
     return(
-      <button type="button" className={activeStyle(hasUnsavedChanges())} onClick={discardChanges}>Discard Changes</button>
+      <button type="button" className={activeStyle(hasUnsavedChanges)} onClick={discardChanges}>Discard Changes</button>
     );
   }
 
@@ -539,16 +463,22 @@ export default function AdminPanel() {
       </div>
     );
   }
-  return(
-    <main>
-      <h1>Manage Your Quizzes</h1>
-      <Instructions />
-      <Chooser />
-      <MetadataPanel />
-      <CurrentFactsPanel />
-      <NewFactForm />
-      <Controls />
-    </main>
-  );
+  let navigate = useNavigate();
+
+  if (authenticated) {
+    return(
+      <main>
+        <h1>Manage Your Quizzes</h1>
+        <PageInstructions />
+        <Chooser />
+        <MetadataPanel />
+        <CurrentFactsPanel />
+        <NewFactForm />
+        <Controls />
+      </main>
+    );
+  } else {
+    navigate("/login");
+  }
 }
 
