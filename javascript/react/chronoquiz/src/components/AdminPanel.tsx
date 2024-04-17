@@ -7,9 +7,11 @@ import User from "../classes/User";
 import Fact from "../classes/Fact";
 import Timeline from "../classes/Timeline";
 
+import AdminChooser from "./AdminChooser";
+import UploadForm from "./UploadForm";
+
 import UserContext from "../store/UserContext";
 
-import UploadForm from "./UploadForm";
 
 import { timelineReducer, defaultTimeline } from "../reducers/timelineReducer";
 import { factReducer, defaultFact } from "../reducers/factReducer";
@@ -92,6 +94,12 @@ export default function AdminPanel(): React.ReactElement {
   // Timeline model on server-side (= primary key)
   let [timelineID, setTimelineID] = useState(null);
 
+  // Trigger: timelineID set when user selects timeline to load or create
+  // Effects: update timelineState, initialTimeline;
+  //          toggle: 
+  //            updateTimelineList -> true, 
+  //            refresh -> false, 
+  //            hasUnsavedChanges -> false
   useEffect(() => {
     async function loadTimeline(user: User, id: number, token: string): void {
       debug(`Loading timeline id ${timelineID}`);
@@ -122,44 +130,6 @@ export default function AdminPanel(): React.ReactElement {
   function PageInstructions(): React.ReactElement {
     return(
       <p className="instructions">Your data will not be saved until you click Save.</p>
-    );
-  }
-
-  // Menu to choose which timeline to load (or create new)
-  function Chooser(): React.ReactElement {
-    function loadTimeline(event: React.FormEvent<HTMLFormElement>): void {
-      event.preventDefault();
-      let data = new FormData(event.target);
-      let id = data.get("select-timeline");
-      setTimelineID(id);
-    }
-
-    function timelineOption(timeline: Timeline): React.ReactElement {
-      return(
-        <option key={timeline.id} value={timeline.id}>{timeline.title}</option>
-      );
-    }
-
-    // Change display of submit button whether creating or loading
-    let [selection, setSelection] = useState("create");
-
-    function updateSelection(event: React.FormEvent<HTMLFormElement>): void {
-      setSelection(event.target.value);
-    }
-
-    let loadButtonText = (selection === "create") ? "Create" : "Load";
-
-    return(
-      <form id="chooser" onSubmit={loadTimeline}>
-        <label htmlFor="select-timeline">Select a Timeline:</label>
-        <select name="select-timeline" 
-          defaultValue="create" 
-          onChange={updateSelection}>
-          <option value="create">Create New</option>
-          { timelineList.map(timelineOption) }
-        </select>
-        <button type="submit">{ loadButtonText }</button>
-      </form>
     );
   }
 
@@ -396,7 +366,6 @@ export default function AdminPanel(): React.ReactElement {
     } 
   }, [saveReady, timelineState, currentUser, userToken]);
   
-
   function DeleteTimelineButton(): React.ReactElement {
     let [timelineToDelete, setTimelineToDelete] = useState(null);
 
@@ -458,7 +427,6 @@ export default function AdminPanel(): React.ReactElement {
     );
   }
 
-
   function DiscardChangesButton(): React.ReactElement {
     function discardChanges(event: React.MouseEvent<HTMLInputElement>): void {
       setRefresh(true);
@@ -486,7 +454,7 @@ export default function AdminPanel(): React.ReactElement {
       <main>
         <h1>Manage Your Quizzes</h1>
         <PageInstructions />
-        <Chooser />
+        <AdminChooser timelines={ timelineList } setID={ setTimelineID } />
         <MetadataPanel />
         <CurrentFactsPanel />
         <NewFactForm />
