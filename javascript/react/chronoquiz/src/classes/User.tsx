@@ -1,26 +1,34 @@
 import debug from "../lib/debug";
 import BackendRequest from "../classes/BackendRequest";
 
+// TODO could you include the token as a member?
 interface UserInput {
   username: string,
-  password: string 
+  password: string,
 } 
 
 export default class User {
   username: string;
   password: string;
 
-  constructor({ username = "", password = "" }: UserInput = {}) {
+  constructor({ username = "", password = "", }: UserInput = {}) {
     this.username = username;
     this.password = password;
   }
 
   get isEmpty(): boolean {
-    return !Object.values(this).some(v => v);
+    return (this.username === "" && this.password === "");
+  }
+
+  profile(): object {
+    return {
+      username: this.username,
+      password: this.password
+    };
   }
 
   json(): string {
-    return JSON.stringify(this);
+    return JSON.stringify(this.profile());
   }
 
   async exists(): boolean {
@@ -28,9 +36,11 @@ export default class User {
     let request = new BackendRequest({
       url: "check_user/", 
       method: "POST", 
-      bodyObject: this
+      bodyObject: this.profile()
     });
+
     let response = await request.fetch();
+
     if (response.ok) {
       answer = true;
     } else {
@@ -44,9 +54,10 @@ export default class User {
     let request = new BackendRequest({
       url: "register/", 
       method: "POST", 
-      bodyObject: this
+      bodyObject: this.profile()
     });
     let response = await request.fetch();
+
     if (response.ok) {
       answer = true;
     } else {
@@ -60,9 +71,11 @@ export default class User {
     let request = new BackendRequest({
       url: "login/", 
       method: "POST", 
-      bodyObject: this
+      bodyObject: this.profile()
     });
+
     let response = await request.fetch();
+
     if (response.ok) {
       let json = await response.json();
       token = json.token;

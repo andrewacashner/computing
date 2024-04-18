@@ -4,7 +4,8 @@ import debug from "../lib/debug";
 const defaultUserState = {
   currentUser:    new User(),
   authenticated:  false,
-  userToken:      null    // Used for token authentication with backend
+  userToken:      null,    // Used for token authentication with backend
+  timelineList:   []
 }
 
 function userReducer(state, action) {
@@ -21,6 +22,10 @@ function userReducer(state, action) {
 
     case "user":
       newState = { ...state, currentUser: obj };
+    break;
+
+    case "list":
+      newState = { ...state, timelineList: [...obj] };
     break;
 
     case "reset":

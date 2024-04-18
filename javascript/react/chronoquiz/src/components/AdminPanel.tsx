@@ -23,6 +23,7 @@ export default function AdminPanel(): React.ReactElement {
   let authenticated = userContext.get.authenticated;
   let currentUser   = userContext.get.currentUser;
   let userToken     = userContext.get.userToken;
+  let timelineList  = userContext.get.timelineList;
 
   // Current timeline on client side
   let [timelineState, dispatchTimeline] = useReducer(timelineReducer, defaultTimeline);
@@ -442,8 +443,8 @@ export default function AdminPanel(): React.ReactElement {
         <PageInstructions />
         <AdminChooser 
           setID={ setTimelineID } 
-          update={updateTimelineList}
-          setUpdate={setUpdateTimelineList} />
+          update={ updateTimelineList } // TODO avoid? do internally?
+          setUpdate={ setUpdateTimelineList } />
         <MetadataPanel />
         <CurrentFactsPanel />
         <NewFactForm />

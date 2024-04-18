@@ -19,8 +19,8 @@ export default function AdminChooser({
   let authenticated = userContext.get.authenticated;
   let currentUser   = userContext.get.currentUser;
   let userToken     = userContext.get.userToken;
-
-  let [timelineList, setTimelineList] = useState([]);
+  let timelineList  = userContext.get.timelineList;
+  let dispatch      = userContext.set;
 
   function loadTimeline(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
@@ -33,7 +33,7 @@ export default function AdminChooser({
     async function loadTimelineList(token: string): void {
       let list = await Timeline.listTimelines(token);
       if (list) {
-        setTimelineList(list);
+        dispatch({ type: "list", payload: list });
       }
     }
 
@@ -41,9 +41,9 @@ export default function AdminChooser({
       loadTimelineList(userToken);
       setUpdate(false);
     } else {
-      setTimelineList([]);
+      dispatch({ type: "list", payload: [] });
     }
-  }, [authenticated, update, currentUser, userToken]);
+  }, [authenticated, update, setUpdate, dispatch, currentUser, userToken]);
   // TODO this is not being triggered by the 'update' state in the parent
   // component
 
