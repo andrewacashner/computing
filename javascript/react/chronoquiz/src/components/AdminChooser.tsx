@@ -4,46 +4,49 @@ import { useState, useContext, useEffect } from "react";
 import Timeline from "../classes/Timeline";
 
 import UserContext from "../store/UserContext";
+import AdminContext from "../store/AdminContext";
 
-interface ChooserInput {
-  setID: (id: number) => void,
-  update: boolean,
-  setUpdate: (b: boolean) => void
-}
-
-export default function AdminChooser({ 
-  setID, update, setUpdate 
-}: ChooserInput): React.ReactElement {
+export default function AdminChooser(): React.ReactElement {
 
   let userContext = useContext(UserContext);
-  let authenticated = userContext.get.authenticated;
-  let currentUser   = userContext.get.currentUser;
-  let userToken     = userContext.get.userToken;
-  let timelineList  = userContext.get.timelineList;
-  let dispatch      = userContext.set;
+  let authenticated    = userContext.get.authenticated;
+  let currentUser      = userContext.get.currentUser;
+  let userToken        = userContext.get.userToken;
+  let timelineList     = userContext.get.timelineList;
+  let dispatchTimeline = userContext.set;
+
+  let adminContext = useContext(AdminContext);
+  let update           = adminContext.get.updateTimelineList;
+  let dispatchAdmin    = adminContext.set;
 
   function loadTimeline(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     let data = new FormData(event.target);
     let id = data.get("select-timeline");
-    setID(id);
+    dispatchAdmin({ 
+      type: "set", 
+      payload: { timelineID: id }
+    });
   }
 
   useEffect(() => {
     async function loadTimelineList(token: string): void {
       let list = await Timeline.listTimelines(token);
       if (list) {
-        dispatch({ type: "list", payload: list });
+        dispatchTimeline({ type: "list", payload: list });
       }
     }
 
     if (authenticated && update) {
       loadTimelineList(userToken);
-      setUpdate(false);
+      dispatchAdmin({ 
+        type: "set",
+        payload: { updateTimelineList: false }
+      });
     } else {
-      dispatch({ type: "list", payload: [] });
+      dispatchTimeline({ type: "list", payload: [] });
     }
-  }, [authenticated, update, setUpdate, dispatch, currentUser, userToken]);
+  }, [authenticated, update, dispatchAdmin, dispatchTimeline, currentUser, userToken]);
   // TODO this is not being triggered by the 'update' state in the parent
   // component
 

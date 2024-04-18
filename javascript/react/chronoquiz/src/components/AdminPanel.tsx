@@ -12,18 +12,19 @@ import AdminChooser from "./AdminChooser";
 import UploadForm from "./UploadForm";
 
 import UserContext from "../store/UserContext";
-
+import AdminContext from "../store/AdminContext";
 
 import { timelineReducer, defaultTimeline } from "../reducers/timelineReducer";
 import { factReducer, defaultFact } from "../reducers/factReducer";
+import { adminReducer, defaultAdminState } from "../reducers/adminReducer";
 import updateReducer from "../reducers/updateReducer";
 
 export default function AdminPanel(): React.ReactElement {
+
   let userContext = useContext(UserContext);
   let authenticated = userContext.get.authenticated;
   let currentUser   = userContext.get.currentUser;
   let userToken     = userContext.get.userToken;
-  let timelineList  = userContext.get.timelineList;
 
   // Current timeline on client side
   let [timelineState, dispatchTimeline] = useReducer(timelineReducer, defaultTimeline);
@@ -39,6 +40,9 @@ export default function AdminPanel(): React.ReactElement {
   let [initialTimeline, setInitialTimeline] = useState(defaultTimeline);
 
 
+  // TODO can we add other state values to the adminReducer,
+  // or eliminate some of them?
+ 
   // Has the user requested to save the timeline (that is, to send client-side
   // timeline data to the backend database?)
   let [saveReady, setSaveReady] = useState(false);
@@ -69,17 +73,20 @@ export default function AdminPanel(): React.ReactElement {
 
 
   // GET LIST OF USER TIMELINES
-  
-  // Do we need to update the list of user timelines in the select options?
-  let [updateTimelineList, setUpdateTimelineList] = useState(true);
-  
- 
+  let [adminState, dispatchAdmin] = useReducer(adminReducer, defaultAdminState);
+
+  let adminContext = {
+    get: adminState,
+    set: dispatchAdmin
+  };
+
+  let timelineID = adminState.timelineID;
+  const setUpdateTimelineList = (bool) => dispatchAdmin({
+    type: "set",
+    payload: { updateTimelineList: bool }
+  });
+
   // LOAD A TIMELINE FROM BACKEND
-
-  // 'id' field of Javascript Timeline object on client-side, and of Django
-  // Timeline model on server-side (= primary key)
-  let [timelineID, setTimelineID] = useState(null);
-
   // Trigger: timelineID set when user selects timeline to load or create
   // Effects: 
   //     - update timelineState, initialTimeline;
@@ -407,7 +414,8 @@ export default function AdminPanel(): React.ReactElement {
       }
     }, [timelineToDelete]);
 
-    let msg = (timelineID === "create") ? "Reset Quiz" : "Delete Quiz";
+    let msg = (timelineID === "create") 
+              ? "Reset Quiz" : "Delete Quiz";
 
     return(
       <button id="deleteTimeline" type="button" onClick={deleteTimeline}>{ msg }</button>
@@ -441,14 +449,13 @@ export default function AdminPanel(): React.ReactElement {
       <main>
         <h1>Manage Your Quizzes</h1>
         <PageInstructions />
-        <AdminChooser 
-          setID={ setTimelineID } 
-          update={ updateTimelineList } // TODO avoid? do internally?
-          setUpdate={ setUpdateTimelineList } />
-        <MetadataPanel />
-        <CurrentFactsPanel />
-        <NewFactForm />
-        <Controls />
+        <AdminContext.Provider value={ adminContext }>
+          <AdminChooser />
+          <MetadataPanel />
+          <CurrentFactsPanel />
+          <NewFactForm />
+          <Controls />
+        </AdminContext.Provider>
       </main>
     );
   } else {

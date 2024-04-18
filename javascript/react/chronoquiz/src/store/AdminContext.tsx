@@ -1,8 +1,8 @@
 import { createContext } from "react";
 
-const UserContext = createContext({
+const AdminContext = createContext({
   get: {},
   set: () => {}
 });
 
-export default UserContext;
+export default AdminContext;
