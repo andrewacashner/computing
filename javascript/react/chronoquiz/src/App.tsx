@@ -1,9 +1,8 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
 import "./App.css";
 
 import { useReducer } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Layout from "./components/shared/Layout";
 import About from "./routes/About";

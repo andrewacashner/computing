@@ -21,7 +21,7 @@ export default class BackendRequest {
     this.bodyObject = bodyObject;
   }
 
-  static SERVER = "http://127.0.0.1:8000";
+  static SERVER = "https://api.chronoquiz.net"; // "http://127.0.0.1:8000";
   
   get fullUrl(): string {
     return `${BackendRequest.SERVER}/${this.url}`;
