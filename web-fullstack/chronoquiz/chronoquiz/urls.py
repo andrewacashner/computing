@@ -14,11 +14,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.urls import path
+from django.urls import path, include
 from rest_framework.authtoken.views import obtain_auth_token
 from chronoquiz.game import views
 
 urlpatterns = [
+    path('api-auth/', include("rest_framework.urls",
+                               namespace="rest_framework")),
     path('login/',         obtain_auth_token,              name='login'),
     path('check_user/',    views.UserExists.as_view(),     name='check_user'),
     path('register/',      views.Register.as_view(),       name='register'),
