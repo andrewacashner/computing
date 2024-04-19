@@ -6,7 +6,7 @@ const defaultFact = new Fact({
   img: "https://picsum.photos/200.jpg"
 });
 
-function factReducer(state, action) {
+function factReducer(state: Fact, action: object): Fact {
   let obj = action.payload;
   let newState = null;
 

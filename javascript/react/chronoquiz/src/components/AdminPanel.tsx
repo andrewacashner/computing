@@ -36,56 +36,34 @@ export default function AdminPanel(): React.ReactElement {
   const updateTimeline = updateReducer(dispatchTimeline);
   const updateFact = updateReducer(dispatchFact);
 
-  // Initial timeline loaded
-  let [initialTimeline, setInitialTimeline] = useState(defaultTimeline);
-
-
-  // TODO can we add other state values to the adminReducer,
-  // or eliminate some of them?
- 
-  // Has the user requested to save the timeline (that is, to send client-side
-  // timeline data to the backend database?)
-  let [saveReady, setSaveReady] = useState(false);
-
-  // Used to trigger update of timeline display when "discard changes" is
-  // clicked
-  // TODO is there a better way?
-  let [refresh, setRefresh] = useState(true);
-
   // MONITOR FOR UNSAVED CHANGES
-  // Is the client-side timeline data different from what was originally
-  // received from the backend server? Used to set display of "save" and
-  // "discard changes" button and to prompt to save unsaved changes when new
-  // timeline is selected
-  let [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-  // When a timeline is loaded or changed, record whether there are unsaved
-  // changes (current timeline differs from initial timeline loaded)
-  useEffect(() => {
-    if (initialTimeline) { debug(initialTimeline); }
-    if (timelineState) { debug(timelineState); }
-    
-    let status = (timelineState && initialTimeline
-                  && !timelineState.equals(initialTimeline));
-
-    setHasUnsavedChanges(status);
-  }, [timelineState, initialTimeline]);
-
-
-  // GET LIST OF USER TIMELINES
+  // (see adminReducer)
+  //  - timelineID (number), initialTimeline (Timeline)
+  //  - updateTimelineList, saveReady, refresh, adminState.hasUnsavedChanges (booleans)
   let [adminState, dispatchAdmin] = useReducer(adminReducer, defaultAdminState);
 
   let adminContext = {
     get: adminState,
     set: dispatchAdmin
   };
+  
+  // When a timeline is loaded or changed, record whether there are unsaved
+  // changes (current timeline differs from initial timeline loaded)
+  useEffect(() => {
+    if (adminState.initialTimeline) { debug(adminState.initialTimeline); }
+    if (timelineState) { debug(timelineState); }
+    
+    let status = (timelineState && adminState.initialTimeline
+                  && !timelineState.equals(adminState.initialTimeline));
 
-  let timelineID = adminState.timelineID;
-  const setUpdateTimelineList = (bool) => dispatchAdmin({
-    type: "set",
-    payload: { updateTimelineList: bool }
-  });
+    dispatchAdmin({
+      type: "set",
+      payload: { hasUnsavedChanges: status }
+    });
+  }, [timelineState, adminState.initialTimeline]);
 
+
+  // GET LIST OF USER TIMELINES
   // LOAD A TIMELINE FROM BACKEND
   // Trigger: timelineID set when user selects timeline to load or create
   // Effects: 
@@ -93,32 +71,45 @@ export default function AdminPanel(): React.ReactElement {
   //     - toggle: 
   //         - updateTimelineList -> true, 
   //         - refresh -> false, 
-  //         - hasUnsavedChanges -> false
+  //         - adminState.hasUnsavedChanges -> false
   useEffect(() => {
     async function loadTimeline(user: User, id: number, token: string): void {
-      debug(`Loading timeline id ${timelineID}`);
+      debug(`Loading timeline id ${adminState.timelineID}`);
 
       let newTimeline = await Timeline.newFromBackend(id, token);
       if (newTimeline) {
-        dispatchTimeline({ type: "set", payload: newTimeline });
-        setInitialTimeline(newTimeline);
+        dispatchTimeline({ 
+          type: "set", 
+          payload: newTimeline 
+        });
+        dispatchAdmin({ 
+          type: "set", 
+          payload: { initialTimeline: newTimeline }
+        });
       } 
     }
 
-    if (timelineID) {
-      if (!hasUnsavedChanges 
+    if (adminState.timelineID) {
+      if (!adminState.hasUnsavedChanges 
             || window.confirm("Your quiz has unsaved changes. Do you want to discard the changes and reload the quiz?")) {
 
-        if (timelineID === "create") {
+        if (adminState.timelineID === "create") {
           dispatchTimeline({ type: "reset" });
         } else {
-          loadTimeline(currentUser, timelineID, userToken);
+          loadTimeline(currentUser, adminState.timelineID, userToken);
         }
-        setRefresh(false);
-        setHasUnsavedChanges(false);
+        dispatchAdmin({
+          type: "set",
+          payload: {
+            refresh: false,
+            hasUnsavedChanges: false
+          }
+        });
       }
     }
-  }, [timelineID, currentUser, userToken, refresh]);
+  }, [adminState.timelineID, currentUser, userToken, adminState.refresh]);
+  // TODO fix or silence warning about missing dependency,
+  // adminState.hasUnsavedChanges
 
   function PageInstructions(): React.ReactElement {
     return(
@@ -308,7 +299,7 @@ export default function AdminPanel(): React.ReactElement {
   function SaveButton(): React.ReactElement {
     return(
       <button 
-        className={activeStyle(hasUnsavedChanges)} 
+        className={activeStyle(adminState.hasUnsavedChanges)} 
         id="save" 
         type="button" 
         onClick={saveTimeline}>Save</button>
@@ -319,7 +310,10 @@ export default function AdminPanel(): React.ReactElement {
   function saveTimeline(event: React.FormEvent<HTMLFormElement>): void {
     let action = timelineState ? "Updated" : "Created";
     debug(`${action} timeline with title '${timelineState.title}'`);
-    setSaveReady(true);
+    dispatchAdmin({
+      type: "set",
+      payload: { saveReady: true }
+    });
   }
 
   useEffect(() => {
@@ -349,15 +343,20 @@ export default function AdminPanel(): React.ReactElement {
       }
     }
 
-    if (saveReady) {
+    if (adminState.saveReady) {
       debug("Ready to post timeline");
       debug(timelineState);
       postTimeline(currentUser, userToken, timelineState);
-      setSaveReady(false);
-      setUpdateTimelineList(true);
-      setHasUnsavedChanges(false);
+      dispatchAdmin({ 
+        type: "set", 
+        payload: {
+          updateTimelineList: true,
+          saveReady: false,
+          hasUnsavedChanges: false
+        }
+      });
     } 
-  }, [saveReady, timelineState, currentUser, userToken]);
+  }, [adminState.saveReady, timelineState, currentUser, userToken]);
   
   function DeleteTimelineButton(): React.ReactElement {
     let [timelineToDelete, setTimelineToDelete] = useState(null);
@@ -366,8 +365,8 @@ export default function AdminPanel(): React.ReactElement {
       let msg = "Are you sure you want to delete this quiz? All of its fact cards will be lost. This action cannot be undone."
 
       if (window.confirm(msg)) {
-        debug(timelineID);
-        setTimelineToDelete(timelineID);
+        debug(adminState.timelineID);
+        setTimelineToDelete(adminState.timelineID);
       }
     }
 
@@ -388,7 +387,10 @@ export default function AdminPanel(): React.ReactElement {
         if (response.ok) {
           let json = await response.json();
           debug(json);
-          setUpdateTimelineList(true);
+          dispatchAdmin({ 
+            type: "set",
+            payload: { updateTimelineList: true } 
+          });
           result = true;
         } else {
           debug(`Could not delete timeline with id ${timelineID}: Server status ${response.status}, ${response.statusText}`);
@@ -400,13 +402,16 @@ export default function AdminPanel(): React.ReactElement {
       if (timelineToDelete !== null) {
         debug(`Deleting timeline with id ${timelineToDelete}`);
 
-        if (timelineID === "create") {
+        if (adminState.timelineID === "create") {
           dispatchTimeline({ type: "reset" });
         } else {
           let deleted = requestDeletion(timelineToDelete, userToken);
           if (deleted) {
             dispatchTimeline({ type: "reset" });
-            setUpdateTimelineList(true);
+            dispatchTimeline({ 
+              type: "set", 
+              payload: { updateTimelineList: true }
+            });
           }
         }
 
@@ -414,7 +419,7 @@ export default function AdminPanel(): React.ReactElement {
       }
     }, [timelineToDelete]);
 
-    let msg = (timelineID === "create") 
+    let msg = (adminState.timelineID === "create") 
               ? "Reset Quiz" : "Delete Quiz";
 
     return(
@@ -424,13 +429,16 @@ export default function AdminPanel(): React.ReactElement {
 
   function DiscardChangesButton(): React.ReactElement {
     function discardChanges(event: React.MouseEvent<HTMLInputElement>): void {
-      setRefresh(true);
+      dispatchAdmin({
+        type: "set",
+        payload: { refresh: true }
+      });
     }
 
     return(
       <button 
         type="button" 
-        className={activeStyle(hasUnsavedChanges)} onClick={discardChanges}>Discard Changes</button>
+        className={activeStyle(adminState.hasUnsavedChanges)} onClick={discardChanges}>Discard Changes</button>
     );
   }
 

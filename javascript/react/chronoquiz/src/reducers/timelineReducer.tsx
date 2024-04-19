@@ -8,7 +8,7 @@ const defaultTimeline = new Timeline({
   facts: []
 });
 
-function timelineReducer(state, action) {
+function timelineReducer(state: Timeline, action: object) {
   let obj = action.payload;
 
   let newState = null;

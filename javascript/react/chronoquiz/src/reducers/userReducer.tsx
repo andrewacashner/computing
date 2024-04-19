@@ -1,14 +1,21 @@
 import User from "../classes/User";
 import debug from "../lib/debug";
 
-const defaultUserState = {
+interface UserState {
+  currentUser:    User,
+  authenticated:  boolean
+  userToken:      string | null,
+  timelineList:   array<Timeline>
+}
+
+const defaultUserState: UserState = {
   currentUser:    new User(),
   authenticated:  false,
   userToken:      null,    // Used for token authentication with backend
   timelineList:   []
 }
 
-function userReducer(state, action) {
+function userReducer(state: UserState, action: object): UserState {
   debug(action);
   debug(state);
 
