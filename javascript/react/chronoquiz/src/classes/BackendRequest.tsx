@@ -21,7 +21,7 @@ export default class BackendRequest {
     this.bodyObject = bodyObject;
   }
 
-  static SERVER = "https://api.chronoquiz.net"; // "http://127.0.0.1:8000";
+  static SERVER = process.env.REACT_APP_BACKEND_SERVER; 
   
   get fullUrl(): string {
     return `${BackendRequest.SERVER}/${this.url}`;

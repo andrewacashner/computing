@@ -26,9 +26,7 @@ SECRET_KEY = 'django-insecure-hfm)jqf&8#&u6d&f(76hbe9dw(u$jzcn)t-na1oe!^hksnyq7=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    'api.chronoquiz.net',
-]
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -142,6 +140,5 @@ AUTH_USER_MODEL = 'game.User'
 CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:3000',
     'http://localhost:3000',
-    'http://chronoquiz.net',
 ]
 
