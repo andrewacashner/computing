@@ -1,10 +1,10 @@
-import Card from "./Card";
+import FactCard from "./FactCard";
 import { default as Color } from "./RgbColorMix";
 
-export default class FactList {
-  #items: Array<Card>;
+export default class TimelineDeck {
+  #items: Array<FactCard>;
 
-  constructor(cards: Array<Card> = []) {
+  constructor(cards: Array<FactCard> = []) {
     this.#items = cards;
   }
 
@@ -20,7 +20,7 @@ export default class FactList {
   
   // Set the colors of the cards in this list, in chronological order, to
   // evenly spaced intervals along the spectrum.
-  #setColors(): FactList {
+  #setColors(): TimelineDeck {
     this.sortByDate();
     let items = this.#items;
 
@@ -33,7 +33,7 @@ export default class FactList {
 
   // Shuffle the array, using the Fisher-Yates/Knuth shuffle
   // (`https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle`)
-  #shuffle(): FactList {
+  #shuffle(): TimelineDeck {
     
     function randomInt(max: number): number {
       return Math.floor(Math.random() * max);
@@ -51,17 +51,17 @@ export default class FactList {
 
   // PUBLIC METHODS
 
-  clone(): FactList {
-    return new FactList([...this.#items]);
+  clone(): TimelineDeck {
+    return new TimelineDeck([...this.#items]);
   }
 
   // Sort the array by the date field, ascending.
-  sortByDate(): FactList {
+  sortByDate(): TimelineDeck {
     this.#items.sort((c1, c2) => { return c1.fact.date - c2.fact.date });
     return this;
   }
 
-  sortedByDate(): FactList {
+  sortedByDate(): TimelineDeck {
     return this.clone().sortByDate();
   }
   
@@ -79,35 +79,35 @@ export default class FactList {
     return this.length === 0;
   }
 
-  allButLastItems(): Array<Card> {
+  allButLastItems(): Array<FactCard> {
     return this.#items.slice(0, -1);
   }
 
-  last(): Card {
+  last(): FactCard {
     return this.#items.at(-1);
   }
 
-  pop(): Card {
+  pop(): FactCard {
     let card = this.#items.pop();
     return card;
   }
 
-  dropLast(): FactList {
+  dropLast(): TimelineDeck {
     this.pop();
     return this;
   }
 
-  dropLastCopy(): FactList {
-    return new FactList(this.#items.slice(0, -1));
+  dropLastCopy(): TimelineDeck {
+    return new TimelineDeck(this.#items.slice(0, -1));
   }
 
-  prepend(item): FactList {
+  prepend(item): TimelineDeck {
     this.#items.unshift(item);
     return this;
   }
   
-  prependCopy(item): FactList {
-    return new FactList([item, ...this.#items]);
+  prependCopy(item): TimelineDeck {
+    return new TimelineDeck([item, ...this.#items]);
   }
 
   // Add event to array and then resort by date.
@@ -117,36 +117,36 @@ export default class FactList {
     return this;
   }
 
-  resetMargins(): FactList {
+  resetMargins(): TimelineDeck {
     let resetItems = [];
     for (let i of this.#items) {
-      let card = new Card({...i, expand: false});
+      let card = new FactCard({...i, expand: false});
       resetItems.push(card);
     }
-    return new FactList(resetItems);
+    return new TimelineDeck(resetItems);
   }
 
-  addAnswer(answer): FactList {
+  addAnswer(answer): TimelineDeck {
     return this.prependCopy(answer).sortedByDate().resetMargins();
   }
 
-  findById(id: string): Card {
+  findById(id: string): FactCard {
     return this.#items.find(c => c.id === id);
   }
 
-  findIndexById(id: string): Card {
+  findIndexById(id: string): FactCard {
     return this.#items.findIndex(c => c.id === id);
   }
 
-  at(index: number): Card {
+  at(index: number): FactCard {
     return this.#items.at(index);
   }
 
-  map(fn: (Card) => Card): FactList {
+  map(fn: (FactCard) => FactCard): TimelineDeck {
     return this.#items.map(fn);
   }
 
-  appendClone(newCard: Card): FactList {
+  appendClone(newCard: FactCard): TimelineDeck {
     return this.clone().addFact(newCard);
   }
 

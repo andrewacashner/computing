@@ -1,11 +1,11 @@
 import Fact from "./Fact";
 
-interface CardInput  {
+interface FactCardInput  {
   isClue: boolean;      // Is this a clue (true) or answer?
   fact: Fact;
 }
 
-export default class Card {
+export default class FactCard {
   isClue: boolean;
   id: string;
   fact: Fact;
@@ -15,7 +15,7 @@ export default class Card {
   #safe: boolean;   // Has this card been sanitized?
 
   // Each card gets the given info and a random unique identifier.
-  constructor({ isClue = true, fact = new Fact(), color = null, expand = false, flash = false }: CardInput) {
+  constructor({ isClue = true, fact = new Fact(), color = null, expand = false, flash = false }: FactCardInput) {
     this.isClue = isClue;
     this.id = crypto.randomUUID();
     this.fact = fact;
@@ -25,7 +25,7 @@ export default class Card {
     this.#safe = false; // Has this card been sanitized?
   }
 
-  markSafe(): Card {
+  markSafe(): FactCard {
     this.#safe = true;
     return this;
   }
@@ -42,22 +42,22 @@ export default class Card {
    * - The info is converted to plain text using textContent.
    * - The image, if present, is downloaded and cached.
    *
-   * The parameters are the same as for new Card().
+   * The parameters are the same as for new FactCard().
    *
-   * Returns: Card with validated content (with safe property set to true), or
+   * Returns: FactCard with validated content (with safe property set to true), or
    * null if the input was invalid.
    */
   static async newSafeCard({ isClue, date, info, img }: 
-                           CardInput): Card | null {
+                           FactCardInput): FactCard | null {
     let card = null;
     try {
-      let cleanDate = Card.#sanitizeDate(date);
+      let cleanDate = FactCard.#sanitizeDate(date);
       let cleanInfo = info;
-      let cleanImg = await Card.#sanitizeImg(img).catch(console.error);
+      let cleanImg = await FactCard.#sanitizeImg(img).catch(console.error);
 
       // The date is the only dealbreaker. We just skip a bad image link.
       if (cleanDate) {
-        card = new Card({
+        card = new FactCard({
           isClue: isClue, 
           fact: new Fact({ date: cleanDate, info: cleanInfo, img: cleanImg})
         });
@@ -154,11 +154,11 @@ export default class Card {
     return this.fact.year; 
   }
 
-  copyAsAnswer(): Card {
-    return new Card({ ...this, isClue: false});
+  copyAsAnswer(): FactCard {
+    return new FactCard({ ...this, isClue: false});
   }
 
-  flash(): Card {
+  flash(): FactCard {
     this.flash = true;
     return this;
   }

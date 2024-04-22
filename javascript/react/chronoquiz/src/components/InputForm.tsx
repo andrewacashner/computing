@@ -1,7 +1,7 @@
 import { useContext, useState, useEffect } from "react";
 
-import Card from "../classes/Card";
-import FactList from "../classes/FactList";
+import FactCard from "../classes/FactCard";
+import TimelineDeck from "../classes/TimelineDeck";
 import Game from "../classes/Game";
 
 import RestartButton from "./RestartButton";
@@ -15,13 +15,13 @@ function isInputValid(json: any): boolean {
   && json.every(fact => ("date" in fact) && ("info" in fact));
 }
 
-async function clueListFromJson(json: object): FactList { 
+async function clueListFromJson(json: object): TimelineDeck { 
   let cards = [];
   try {
     if (json && json.length > 0) {
       for (let entry of json) {
         try {
-          let card = await Card.newSafeCard(entry);
+          let card = await FactCard.newSafeCard(entry);
           if (card && card.isSafe) {
             cards.push(card);
           } else {
@@ -35,7 +35,7 @@ async function clueListFromJson(json: object): FactList {
   } catch(e) {
     console.error(e);
   }
-  return new FactList(cards);
+  return new TimelineDeck(cards);
 }
 
 

@@ -8,7 +8,7 @@ interface TimelineInput {
   description: string;
   keywords: Array<string>;
   creator: string;
-  facts: FactList;
+  facts: Array<Fact>;
 }
 
 export default class Timeline {

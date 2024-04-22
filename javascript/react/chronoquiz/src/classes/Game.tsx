@@ -1,17 +1,17 @@
-import Card from "./Card";
+import FactCard from "./FactCard";
 import Fact from "./Fact";
-import FactList from "./FactList";
+import TimelineDeck from "./TimelineDeck";
 import { default as Color } from "./RgbColorMix";
 
 interface GameInput {
-  clues: FactList;
-  timeline: FactList;
+  clues: TimelineDeck;
+  timeline: TimelineDeck;
   score: number;
 }
 
 export default class Game {
-  clues: FactList;
-  timeline: FactList;
+  clues: TimelineDeck;
+  timeline: TimelineDeck;
   score: number;
   isActive: boolean;
   isGameOver: boolean;
@@ -57,7 +57,7 @@ export default class Game {
   // Start the game with just a "Now" card in the timeline.
   // Since we have the image locally we don't need to sanitize the card.
   static startingGame(): Game {
-    let NowCard = new Card({
+    let NowCard = new FactCard({
       isClue: false, 
       fact: new Fact({ 
         date: new Date(), 
@@ -69,8 +69,8 @@ export default class Game {
     NowCard.markSafe();
 
     return new Game({
-      clues: new FactList(), 
-      timeline: new FactList([NowCard]),
+      clues: new TimelineDeck(), 
+      timeline: new TimelineDeck([NowCard]),
       score: 0
     });
   }

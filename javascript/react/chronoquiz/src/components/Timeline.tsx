@@ -103,9 +103,9 @@ export default function Clues() {
     
     // Is the given clue between a given answer card and the one before it?
     function isClueBetweenDates(
-      clue: Card,            // Dropped card
-      guess: Card,           // Card that clue was dropped onto
-      preGuess: Card | null  // previous card of guess, if exists
+      clue: FactCard,            // Dropped card
+      guess: FactCard,           // Card that clue was dropped onto
+      preGuess: FactCard | null  // previous card of guess, if exists
     ): boolean {
       let clueDate = clue.fact.date
       let guessDate = guess.fact.date

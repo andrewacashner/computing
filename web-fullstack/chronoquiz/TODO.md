@@ -47,3 +47,7 @@
 - Form input super slow and loses focus with every keystroke when using
   onChange in form (using onBlur instead)
 
+# ADDED FUNCTIONALITY
+- Ability to upload timeline in CSV
+    - Upload entire timeline, not just fact list?
+- Ability to download timeline
