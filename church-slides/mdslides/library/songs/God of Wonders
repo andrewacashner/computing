@@ -1,0 +1,71 @@
+# God of Wonders
+
+| Marc Byrd, Steve Hindalong (2000)
+| CCLI 3118757
+
+define(v1,
+#
+| Lord of all creation
+| Of water earth and sky
+| The heavens are Your tabernacle
+| Glory to the Lord on high
+)
+
+define(ch1, 
+#
+| God of wonders beyond our galaxy
+| You are holy holy
+| The universe declares Your majesty
+| You are holy holy
+
+#
+| Lord of heaven and earth
+| Lord of heaven and earth
+)
+
+define(v2,
+#
+| Early in the morning
+| I will celebrate the light
+| When I stumble in the darkness
+| I will call Your name by night
+)
+
+define(br,
+#
+| Hallelujah
+| (to the Lord of heaven and earth)
+| You are holy
+)
+
+define(ch2,
+#
+| God of wonders beyond our galaxy
+| You are holy holy
+
+#
+| Precious Lord reveal Your heart to me
+| Father hold me hold me
+| The universe declares Your majesty
+| You are holy holy holy holy
+)
+define(ch3, 
+#
+| God of wonders beyond our galaxy
+| You are holy holy
+| Precious Lord reveal Your heart to me
+| Father hold me hold me
+)
+define(end, 
+#
+| Hallelujah
+| (to the Lord of heaven and earth) 
+)
+
+v1 
+ch1 
+v2 
+ch1 
+br 
+ch2 
+ch3
