@@ -9,19 +9,28 @@ interface
 uses SysUtils; 
 
 type
-  TLinkedList = class
+  TNode = class
   private
     var
       FData: Integer;
-      FNext: TLinkedList;
+      FNext: TNode;
+  public
+    constructor Create(); 
+    constructor Create(Data: Integer);
+
+    function ToString(): String; override;
+  end;
+
+  TLinkedList = class
+  private
+    var
+      FHead: TNode;
   
   public
-    constructor Create();
-    constructor Create(Item: Integer);
+    constructor Create(); 
+    constructor Create(Items: Array of Integer);
     destructor Destroy(); override;
 
-    class function CreateList(Items: Array of Integer): TLinkedList; static;
-    function NodeToString(): String;
     function ToString(): String; override;
     function Length(): Integer;
     function At(N: Integer): Integer;
@@ -29,56 +38,91 @@ type
 
 implementation
 
-constructor TLinkedList.Create();
+{ LINKED LIST NODE }
+constructor TNode.Create(); 
 begin
-  inherited Create;
-end;
-
-constructor TLinkedList.Create(Item: Integer);
-begin
-  inherited Create;
-  Self.FData := Item;
+  inherited Create();
   Self.FNext := Nil;
 end;
 
-class function TLinkedList.CreateList(Items: Array of Integer): TLinkedList;
-var
-  Node, Prev: TLinkedList;
-  Head: TLinkedList = Nil;
-  Item: Integer;
+constructor TNode.Create(Data: Integer); 
 begin
-  for Item in Items do
+  inherited Create();
+  Self.FData := Data;
+  Self.FNext := Nil;
+  WriteLn('Created TNode: { FData: "' + IntToStr(Self.FData) + '" }');
+end;
+
+{ destructor TNode.Destroy();
+begin
+  FreeAndNil(Self.FNext);
+  inherited Destroy();
+end;
+}
+
+function TNode.ToString(): String;
+begin
+  result := IntToStr(Self.FData);
+end;
+
+{ LINKED LIST }
+constructor TLinkedList.Create();
+begin
+  inherited Create();
+  Self.FHead := TNode.Create();
+end;
+
+constructor TLinkedList.Create(Items: Array of Integer);
+var
+  Head, Last, ThisNode: TNode;
+  ThisItem: Integer;
+begin
+  inherited Create();
+  Head := Nil;
+  for ThisItem in Items do
   begin
-    Node := TLinkedList.Create(Item);
+    ThisNode := TNode.Create(ThisItem);
     if not Assigned(Head) then
     begin
-      Head := Node;
-      Prev := Node;
+      Head := ThisNode;
+      Last := Head;
     end
     else
     begin
-      Prev.FNext := Node;
-      Prev := Node;
+      Last.FNext := ThisNode;
+      Last := ThisNode;
     end;
   end;
-  result := Head;
+  Self.FHead := Head;
+  WriteLn('Created TLinkedList: ' + Self.ToString());
 end;
 
 { TODO Still one block unfreed }
 destructor TLinkedList.Destroy();
+var
+  Current, Trash: TNode;
 begin
-  if Assigned(Self.FNext) then
-    Self.FNext.Destroy();
-    
+  {
+  FreeAndNil(Self.FHead);
+  inherited Destroy;
+  }
+  Current := Self.FHead;
+  while Assigned(Current) do
+  begin
+    Trash := Current;
+    Current := Current.FNext;
+    WriteLn('Freeing node { FData: "' + IntToStr(Trash.FData) + '" }');
+    FreeAndNil(Trash);
+  end;
   inherited Destroy();
 end;
 
 function TLinkedList.Length(): Integer;
 var 
   Count: Integer = 1; 
-  Current: TLinkedList;
+  Current: TNode;
 begin
-  Current := Self;
+  Current := Self.FHead;
   while Assigned(Current.FNext) do
   begin
     Inc(Count);
@@ -89,12 +133,12 @@ end;
 
 function TLinkedList.At(N: Integer): Integer;
 var
-  Current: TLinkedList;
+  Current: TNode;
   ThisIndex: Integer = 0;
 begin
-  Current := Self;
+  Current := Self.FHead;
   if N > Self.Length() then
-    raise Exception.create('Index out of range');
+    raise Exception.Create('Index out of range');
 
   if N < 0 then
     N := N + Self.Length();
@@ -109,21 +153,16 @@ begin
   end;
 end;
 
-function TLinkedList.NodeToString(): String;
-begin
-  result := IntToStr(Self.FData);
-end;
-
 function TLinkedList.ToString(): String;
 var 
-  Current: TLinkedList;
+  Current: TNode;
   OutputMsg: String = '(';
 begin
-  Current := Self;
-  OutputMsg := OutputMsg + Current.NodeToString();
+  Current := Self.FHead;
+  OutputMsg := OutputMsg + Current.ToString();
   while Assigned(Current.FNext) do
   begin
-    OutputMsg := OutputMsg + ', ' + Current.FNext.NodeToString();
+    OutputMsg := OutputMsg + ', ' + Current.FNext.ToString();
     Current := Current.FNext;
   end;
   result := OutputMsg + ')';

@@ -10,10 +10,12 @@ var
   List: TLinkedList;
   Answer, TestVal: Integer;
 begin
+  List := TLinkedList.Create(Nums);
+  FreeAndNil(List);
+    {
   try
-    List := TLinkedList.CreateList(Nums);
+    List := TLinkedList.Create(Nums);
     WriteLn(List.ToString());
-    { 
     for TestVal in TestVals do
     begin
       try 
@@ -24,9 +26,8 @@ begin
         on E: Exception do WriteLn(E.Message);
       end;
     end;
-    }
   finally
     FreeAndNil(List);
-    {    FreeAndNil(List); }
   end;
+  }
 end.
