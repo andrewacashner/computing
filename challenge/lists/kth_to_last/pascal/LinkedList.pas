@@ -1,6 +1,9 @@
 {$mode objfpc}{$H+}{$J-}
 
-{ TODO Memory leak on deletion: see below }
+{ 
+  kth item from end of singly linked list
+  2024/05/03
+}
 
 unit LinkedList;
 
@@ -15,8 +18,8 @@ type
       FData: Integer;
       FNext: TNode;
   public
-    constructor Create(); 
     constructor Create(Data: Integer);
+    destructor Destroy(); override;
 
     function ToString(): String; override;
   end;
@@ -27,7 +30,6 @@ type
       FHead: TNode;
   
   public
-    constructor Create(); 
     constructor Create(Items: Array of Integer);
     destructor Destroy(); override;
 
@@ -39,26 +41,18 @@ type
 implementation
 
 { LINKED LIST NODE }
-constructor TNode.Create(); 
-begin
-  inherited Create();
-  Self.FNext := Nil;
-end;
-
 constructor TNode.Create(Data: Integer); 
 begin
   inherited Create();
   Self.FData := Data;
   Self.FNext := Nil;
-  WriteLn('Created TNode: { FData: "' + IntToStr(Self.FData) + '" }');
 end;
 
-{ destructor TNode.Destroy();
+destructor TNode.Destroy();
 begin
   FreeAndNil(Self.FNext);
   inherited Destroy();
 end;
-}
 
 function TNode.ToString(): String;
 begin
@@ -66,12 +60,6 @@ begin
 end;
 
 { LINKED LIST }
-constructor TLinkedList.Create();
-begin
-  inherited Create();
-  Self.FHead := TNode.Create();
-end;
-
 constructor TLinkedList.Create(Items: Array of Integer);
 var
   Head, Last, ThisNode: TNode;
@@ -97,24 +85,10 @@ begin
   WriteLn('Created TLinkedList: ' + Self.ToString());
 end;
 
-{ TODO Still one block unfreed }
 destructor TLinkedList.Destroy();
-var
-  Current, Trash: TNode;
 begin
-  {
   FreeAndNil(Self.FHead);
   inherited Destroy;
-  }
-  Current := Self.FHead;
-  while Assigned(Current) do
-  begin
-    Trash := Current;
-    Current := Current.FNext;
-    WriteLn('Freeing node { FData: "' + IntToStr(Trash.FData) + '" }');
-    FreeAndNil(Trash);
-  end;
-  inherited Destroy();
 end;
 
 function TLinkedList.Length(): Integer;
@@ -138,6 +112,7 @@ var
 begin
   Current := Self.FHead;
   if N > Self.Length() then
+    { TODO exception message not passed on? }
     raise Exception.Create('Index out of range');
 
   if N < 0 then
