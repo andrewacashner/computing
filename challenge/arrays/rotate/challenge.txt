@@ -1,0 +1,33 @@
+Given an image file represented as a N x N matrix, rotate the image 90
+degrees.
+
+- top right becomes bottom right
+- [TL, TR, BR, BL] each element moves to the next
+- top row [0 1 2 3 4] becomes rightmost column
+[... 0] [0,0] -> [0, 4]
+[... 1] [0,1] -> [1, 4]
+[... 2] [0,2] -> [2, 4]
+[... 3]
+[... 4] [0,4] -> [4, 4]
+    - (x, y) -> (y, max - x)
+
+- rightmost column
+[... 0]
+[... 1]
+[... 2]
+[... 3]
+[... 4]
+becomes bottom: [4 3 2 1 0]
+[0, 4] -> [4, 4]
+[1, 4] -> [4, 3]
+...
+[4, 4] -> [4, 0]
+    - (x, y) -> (y, max - x)
+
+
+- read data
+- fill matrix
+- draw original
+- rotate
+- draw new
+

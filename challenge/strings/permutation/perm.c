@@ -28,7 +28,7 @@ int main(void) {
 
 void register_chars(int *inventory, int increment, char *str) {
     int i;
-    int c;
+    char c;
     for (i = 0; str[i] != '\0'; ++i) {
         c = str[i];
         inventory[(int)c] += increment;
