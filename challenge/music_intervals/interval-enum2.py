@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 import re
 import itertools as it
 
@@ -10,42 +10,102 @@ TODO
 - evaluate which class diff methods should be in
 - use separate accidental class including all enum-based logic?
 """
+"""
+pure table approach?
+[
+        [PC_C, PC_D, PC_E, PC_F, PC_G, PC_A, PC_B],
+        ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+        [0, 2, 4, 5, 7, 9, 11]
+]
 
-GAMUT = [ 'C', 'D', 'E', 'F', 'G', 'A', 'B' ]
+str(enum): table[1][enum.value]
+offset(enum): table[2][enum.value]
+from_string(s): table[0][table[1].index(s)]
+in_gamut(s): s in table[1]
+diatonic_to_chromatic(n): table[2][n]
+"""
 
-class Accidental:
-    def __init__(self, value, input_str, output_str):
-        self.value = value
-        self.input_str = input_str
-        self.output_str = output_str
+class Gamut(Enum):
+    PC_C = 0
+    PC_D = 1
+    PC_E = 2
+    PC_F = 3
+    PC_G = 4
+    PC_A = 5
+    PC_B = 6
+
+    __LETTERS = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+    __OFFSETS = [ 0,   2,   4,   5,   7,   9,  11 ]
 
     def __str__(self):
-        return self.output_str
-    
-    DOUBLE_FLAT  = Accidental(-2, 'bb', '♭♭')
-    FLAT         = Accidental(-1, 'b', '♭')
-    NATURAL      = Accidental(0, '', '')
-    SHARP        = Accidental(1, '#', '♯')
-    DOUBLE_SHARP = Accidental(2, '##', '♯♯')
+        return self.__LETTERS[self.value]
 
-    @staticmethod
-    def is_valid_input(s):
-        return s in ['bb', 'b', '', '#', '##']
+    def chromatic_offset(self):
+        return self.__OFFSETS[self.value]
 
     @classmethod
     def from_string(cls, s):
-        match s:
-            case 'bb':
-                return DOUBLE_FLAT
-            case 'b':
-                return FLAT
-            case '#':
-                return SHARP
-            case '##':
-                return DOUBLE_SHARP
-            case _:
-                return NATURAL
+        s = s.upper()
+        if s in cls.__LETTERS:
+            return cls(cls.__LETTERS.index(s))
+        else:
+            raise Exception('Bad pitch letter name input')
 
+class Accidental(Enum):
+    __OFFSET = -2
+
+    DOUBLE_FLAT  = -2
+    FLAT         = -1
+    NATURAL      =  0
+    SHARP        =  1
+    DOUBLE_SHARP =  2
+
+    __INPUTS =  ['bb', 'b', '', '#', '##']
+    __STRINGS = ['♭♭', '♭', '', '♯', '♯♯']
+
+    def __str__(self): 
+        return self.__STRINGS[self.value - self.__OFFSET]
+
+    @classmethod
+    def from_string(cls, s):
+        if s not in cls.__INPUTS:
+            raise Exception('Bad accidental input')
+
+        value = cls.__INPUTS.index(s) + cls.__OFFSET
+        return cls(value)
+
+class Imperfect_Quality(Enum):
+    __OFFSET = -2
+
+    DIMINISHED  = -2
+    MINOR       = -1
+    MAJOR       =  0
+    AUGMENTED   =  1 
+
+    __STRINGS = ['d', 'm', 'M', 'a']
+
+    def __str__(self):
+        return self.__STRINGS[self.value - self.__OFFSET]
+
+    @classmethod
+    def from_int(cls, n):
+        return cls(n)
+
+class Perfect_Quality(Enum):
+    __OFFSET = -1
+
+    DIMINISHED  = -1
+    PERFECT     = 0 
+    AUGMENTED   = 1
+
+    __STRINGS = ['d', 'P', 'a']
+
+    def __str__(self):
+        return self.__STRINGS[self.value - self.__OFFSET]
+
+    @classmethod
+    def from_int(cls, n):
+        return cls(n)
 
 class Pitch:
     def __init__(self, pname, accid=Accidental.NATURAL):
@@ -53,34 +113,27 @@ class Pitch:
         self.accid = accid
 
     def __str__(self):
-        return f"{self.pname}{str(self.accid)}"
+        return f"{self.pname}{self.accid}"
 
     @classmethod
-    def fromString(cls, input_string):
+    def from_string(cls, input_string):
         pattern = r"([a-zA-Z]{1})([b#]*)"
         parsed = re.match(pattern, input_string)
         if parsed:
-            (letter, accid_str) = parsed.groups()
+            (letter_str, accid_str) = parsed.groups()
         else:
-            raise Exception("Bad pitch input")
+            raise Exception('Bad pitch input')
 
-        if letter.upper() not in GAMUT:
-            raise Exception("Bad pitch letter name")
-
-        if accid_str and not Accidental.is_valid_input(accid_str):
-            raise Exception("Bad accidental input")
-
+        pname = Gamut.from_string(letter_str)
         accid = Accidental.from_string(accid_str)
-        return cls(letter.upper(), accid)
+        return cls(pname, accid)
 
     def abs7(self):
-        return GAMUT.index(self.pname)
+        return self.pname.value
 
     def abs12(self):
-        start = Interval.CHROMATIC_OFFSET[self.pname]
+        start = self.pname.chromatic_offset()
         return start + self.accid.value
-
-
 
 class Interval:
     def __init__(self, base, quality):
@@ -88,46 +141,11 @@ class Interval:
         self.quality = quality
 
     def __str__(self):
-        qual_str = self.QUALITY_STRING[self.quality]
-        return f"{qual_str}{self.base}"
+        return f"{self.quality}{self.base}"
 
-    Quality = Enum('Quality', ['DIM', 'MIN', 'PERF', 'MAJ', 'AUG'])
-
-    QUALITY_STRING = {
-            Quality.DIM: 'd',
-            Quality.MIN: 'm',
-            Quality.PERF: 'P',
-            Quality.MAJ: 'M',
-            Quality.AUG: 'a'
-            }
-
-    CHROMATIC_OFFSET = {
-            'C': 0,
-            'D': 2,
-            'E': 4,
-            'F': 5,
-            'G': 7,
-            'A': 9,
-            'B': 11
-            }
-
-    PERFECT_INTERVALS_ONE_INDEX = [1, 4, 5]
-
-    ALTERATIONS = {
-            'perfect': 
-            { 
-             Quality.DIM: -1, 
-             Quality.PERF: 0, 
-             Quality.AUG: 1 
-             },
-            'imperfect': 
-            { 
-             Quality.DIM: -2,
-             Quality.MIN: -1,
-             Quality.MAJ: 0,
-             Quality.AUG: 1
-             }
-            }
+    @staticmethod
+    def is_perfect(interval):
+        return interval in [0, 3, 4] # zero index
 
     @classmethod
     def diff7(cls, noteA, noteB):
@@ -140,32 +158,26 @@ class Interval:
         return (valB - valA) % 12
  
     @classmethod
-    def fromPitches(cls, pitchA, pitchB):
+    def from_pitches(cls, pitchA, pitchB):
         diatonic_interval = cls.diff7(pitchA, pitchB)
+        offset = Gamut(diatonic_interval).chromatic_offset()
+        
         chromatic_interval = cls.diff12(pitchA, pitchB)
-
-        category = 'perfect' if (diatonic_interval + 1) \
-                in cls.PERFECT_INTERVALS_ONE_INDEX \
-                else 'imperfect'
-
-        offset = cls.CHROMATIC_OFFSET[GAMUT[diatonic_interval]]
         interval_diff = chromatic_interval - offset
 
-        alterations = [key for (key, value) \
-                in cls.ALTERATIONS[category].items() \
-                if value == interval_diff]
+        quality = Perfect_Quality \
+                if Interval.is_perfect(diatonic_interval) \
+                else Imperfect_Quality
 
-        if len(alterations) > 0:
-            alteration = alterations[0] 
-        else:
-            raise Exception("Bad quality")
-
+        alteration = quality.from_int(interval_diff)
+        
+        # Output interval with 1-index (interval of 1 is a "second")
         return cls(diatonic_interval + 1, alteration)
 
     @classmethod
-    def fromStrings(cls, stringA, stringB):
-        vals = [Pitch.fromString(s) for s in [stringA, stringB]]
-        return cls.fromPitches(*vals)
+    def from_strings(cls, stringA, stringB):
+        vals = [Pitch.from_string(s) for s in [stringA, stringB]]
+        return cls.from_pitches(*vals)
 
 def melodic_intervals(pitches):
-    return [Interval.fromStrings(*pair) for pair in it.pairwise(pitches)]
+    return [Interval.from_strings(*pair) for pair in it.pairwise(pitches)]
