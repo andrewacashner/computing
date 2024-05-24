@@ -1,4 +1,0 @@
-{
-    "dotnet.defaultSolution": "hello.sln",
-    "cmake.configureOnOpen": false
-}
