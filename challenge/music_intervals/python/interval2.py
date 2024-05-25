@@ -1,15 +1,19 @@
+#!/usr/bin/env python
+
+import sys
+import argparse
 from enum import Enum, auto
 import re
 import itertools as it
 
+parser = argparse.ArgumentParser(
+        prog="interval",
+        description="Calculate musical intervals",
+        epilog="Copyright © 2024 Andrew A. Cashner")
 
-"""
-TODO 
-- use aenum module to associate strings with enums, avoid [enum]_STR
-  methods
-- evaluate which class diff methods should be in
-- use separate accidental class including all enum-based logic?
-"""
+parser.add_argument("pitch1")
+parser.add_argument("pitch2")
+
 """
 pure table approach?
 [
@@ -61,7 +65,7 @@ class Accidental(Enum):
     DOUBLE_SHARP =  2
 
     __INPUTS =  ['bb', 'b', '', '#', '##']
-    __STRINGS = ['♭♭', '♭', '', '♯', '♯♯']
+    __STRINGS = ['𝄫', '♭', '♮', '♯', '𝄪']
 
     def __str__(self): 
         return self.__STRINGS[self.value - self.__OFFSET]
@@ -179,5 +183,15 @@ class Interval:
         vals = [Pitch.from_string(s) for s in [stringA, stringB]]
         return cls.from_pitches(*vals)
 
-def melodic_intervals(pitches):
-    return [Interval.from_strings(*pair) for pair in it.pairwise(pitches)]
+# def melodic_intervals(pitches):
+#     return [Interval.from_strings(*pair) for pair in it.pairwise(pitches)]
+
+def main(args=parser.parse_args()):
+    (pitch1_str, pitch2_str) = (args.pitch1, args.pitch2)
+    (pitch1, pitch2) = tuple([Pitch.from_string(p) 
+                              for p in [pitch1_str, pitch2_str]])
+    interval = Interval.from_pitches(pitch1, pitch2)
+    print(f"{pitch1} to {pitch2} = {interval}")
+
+if __name__ == "__main__":
+    sys.exit(main())

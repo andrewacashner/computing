@@ -181,23 +181,21 @@ namespace Musarithmetic
     public class Quality
     {
         enum Qual { DIMINISHED, MINOR, MAJOR, PERFECT, AUGMENTED };
+        bool IsPerfect(int interval) => interval is 0 or 3 or 4;
 
         Qual quality;
-        
-        // 0-indexed intervals (= one-indexed P1, P4, P5)
-        int[] perfectIntervals = [0, 3, 4];
-
+       
         public Quality(int degree, int adjustment)
         {
             quality = adjustment switch 
             {
-                -2 => Qual.DIMINISHED,
-                -1 => perfectIntervals.Contains(degree) 
-                        ? Qual.DIMINISHED : Qual.MINOR,
-                 0 => perfectIntervals.Contains(degree)
-                        ? Qual.PERFECT : Qual.MAJOR,
+                -2 => Qual.DIMINISHED, 
+                -1 when IsPerfect(degree) => Qual.DIMINISHED,
+                -1 => Qual.MINOR,
+                 0 when IsPerfect(degree) => Qual.PERFECT,
+                 0 => Qual.MAJOR,
                  1 => Qual.AUGMENTED,
-                _  => throw new ArgumentException($"Interval out of range")
+                 _ => throw new ArgumentException($"Interval out of range")
             };
         }
 /*
