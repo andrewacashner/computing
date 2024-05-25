@@ -61,11 +61,11 @@ namespace Musarithmetic
     
     public class Accidental
     {
-        public enum Accid { DOUBLE_FLAT, FLAT, NATURAL, SHARP, DOUBLE_SHARP }
+        enum Accid { DOUBLE_FLAT, FLAT, NATURAL, SHARP, DOUBLE_SHARP }
 
         Accid accid = Accid.NATURAL;
 
-        public Accidental(Accid a) => accid = a;
+        // public Accidental(Accid a) => accid = a;
 
         public Accidental(string input)
         {
@@ -139,7 +139,13 @@ namespace Musarithmetic
 
         public Interval(Pitch p1, Pitch p2)
         {
-            degree = p2.DiatonicValue() - p1.DiatonicValue();
+            int val1 = p1.DiatonicValue();
+            int val2 = p2.DiatonicValue();
+
+            if (val2 < val1)
+                val2 += 7;
+
+            degree = val2 - val1;
         }
 
         public override string ToString()
