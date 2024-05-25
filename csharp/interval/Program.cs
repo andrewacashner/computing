@@ -6,36 +6,50 @@ internal class Program
     private static void Main(string[] args)
     {
         ExitIfInputInvalid(args);
+        string expr = args[0];
 
-        string note1, note2;
-        ReadInput(args, out note1, out note2);
-
-        Pitch? pitch1, pitch2;
-        pitch1 = pitch2 = null;
+        string? note1, note2;
+        note1 = note2 = null;
 
         try
         {
-            pitch1 = new Pitch(note1);
-            pitch2 = new Pitch(note2);
+            Expression.Parse(expr, out note1, out note2);
         }
         catch(ArgumentException ex)
         {
-            string error = $"Could not create Pitch: {ex.Message}";
-            Console.Error.WriteLine(error);
+            Console.Error.WriteLine(ex.Message);
             Environment.Exit(1);
         }
-
-        if (pitch1 != null && pitch2 != null)
+        
+        if (note1 != null && note2 != null)
         {
-            try 
+            Pitch? pitch1, pitch2;
+            pitch1 = pitch2 = null;
+
+            try
             {
-                Interval interval = new(pitch1, pitch2);
-                Console.WriteLine($"{pitch1} to {pitch2} = {interval}");
+                pitch1 = new Pitch(note1);
+                pitch2 = new Pitch(note2);
             }
             catch(ArgumentException ex)
             {
-                Console.Error.WriteLine($"Problem creating interval: {ex.Message}");
+                string error = $"Could not create Pitch: {ex.Message}";
+                Console.Error.WriteLine(error);
                 Environment.Exit(1);
+            }
+
+            if (pitch1 != null && pitch2 != null)
+            {
+                try 
+                {
+                    Interval interval = new(pitch1, pitch2);
+                    Console.WriteLine($"{pitch2} - {pitch1} = {interval}");
+                }
+                catch(ArgumentException ex)
+                {
+                    Console.Error.WriteLine($"Problem creating interval: {ex.Message}");
+                    Environment.Exit(1);
+                }
             }
         }
     }
@@ -43,26 +57,40 @@ internal class Program
     static void ExitIfInputInvalid(string[] args)
     {
         const string USAGE = """
-        Usage: interval NOTE1 NOTE2
-            (NOTE: A, Ab, Abb, A#, or A##)
+        Usage: interval 'EXPRESSION'
+            EXPRESSION may be one of the following:
+              PITCH1 - PITCH2       (=> interval)
+              PITCH [+-] INTERVAL    (=> pitch2)
+              INTERVAL [*/] N          (=> interval)
+            Or a combination, e.g.:
+              PITCH1 + (PITCH2 - PITCH3) - (INTERVAL * N) => pitch4
         """;
 
-        if (args.Length != 2)
+        if (!(args.Length == 1))
         {
             Console.Error.WriteLine(USAGE);
             Environment.Exit(1);
         }
     }
-
-    static void ReadInput(string[] args, out string note1, out string note2)
-    {
-        note1 = args[0];
-        note2 = args[1];
-    }
 }
 
 namespace Musarithmetic
 {
+    public class Expression
+    {
+        public static void Parse(string expr, out string note1, out string note2)
+        {
+            string[] words = expr.Split(' ');
+            if (words.Length == 3 && words[1] == "-")
+            {
+                note2 = words[0];
+                note1 = words[2];
+            }
+            else
+                throw new ArgumentException($"Could not parse expression '{expr}'");
+        }
+    }
+
     public class Accidental
     {
         enum Accid { DOUBLE_FLAT, FLAT, NATURAL, SHARP, DOUBLE_SHARP };
