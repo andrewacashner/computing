@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Musarithmetic;
 
 internal class Program
@@ -8,19 +9,21 @@ internal class Program
         ExitIfInputInvalid(args);
         string expr = args[0];
 
-        string? note1, note2;
-        note1 = note2 = null;
 
+        Queue<object> tokens; 
         try
         {
-            Expression.Parse(expr, out note1, out note2);
+            tokens = Expression.Parse(expr);
+            Expression.Evaluate(tokens);
         }
         catch(ArgumentException ex)
         {
             Console.Error.WriteLine(ex.Message);
             Environment.Exit(1);
         }
-        
+
+       
+        /*
         if (note1 != null && note2 != null)
         {
             Pitch? pitch1, pitch2;
@@ -52,6 +55,7 @@ internal class Program
                 }
             }
         }
+        */
     }
 
     static void ExitIfInputInvalid(string[] args)
