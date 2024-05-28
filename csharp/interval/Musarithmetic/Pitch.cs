@@ -102,6 +102,20 @@ public class Pitch
         return $"{this.pname}{this.accid}";
     }
 
+/*
+ * public static bool IsValidInput(string input)
+    {
+        bool IsValidPnameInput(char input) => 
+            ["ABCDEFG"].Contains(Char.ToUpper(input));
+
+        bool IsValidAccidInput(string input) => 
+            ["bb", "b", "#", "##"].Contains(input);
+        
+        return input != "" && IsValidPnameInput(input[0])
+            && (input.Length == 1 || IsValidAccidInput(input[1..]));
+    }
+    */
+
     public int DiatonicValue() => pname.DiatonicOffset();
 
     public int ChromaticValue()

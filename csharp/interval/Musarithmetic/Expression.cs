@@ -2,6 +2,12 @@ namespace Musarithmetic;
 
 public class Expression
 {
+    public static bool IsExpression(string[] words, string operatorStr)
+    {
+        return words.Length == 3 
+            && words[1] == operatorStr;
+    }
+
     public static void Parse(string expr, out string note1, out string note2)
     {
         string[] words = expr.Split(' ');
