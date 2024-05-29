@@ -35,12 +35,6 @@ using System.Collections.Generic;
 
 public class Expression
 {
-    public static bool IsExpression(string[] words, string operatorStr)
-    {
-        return words.Length == 3 
-            && words[1] == operatorStr;
-    }
-
     public static Queue<object> Parse(string expr)
     {
 
@@ -66,12 +60,11 @@ public class Expression
 
             if (thisWord.Contains("(") && thisWord.Contains(")"))
             {
-
                 char[] delimiters = ['(', ')'];
                 string[] inputs = thisWord.Split(delimiters);
 
                 string prefix, arg;
-                if (inputs.Length >= 2)
+                if (inputs.Length >= 2 && inputs[1] != "")
                 {
                     prefix = inputs[0];
                     arg = inputs[1];
@@ -81,8 +74,11 @@ public class Expression
                 switch (prefix)
                 {
                     case "Pitch":
-                        Pitch p = new(arg);
-                        tokens.Enqueue(p);
+                        try {
+                            Pitch p = new(arg);
+                            tokens.Enqueue(p);
+                        }
+                        catch { throw; }
                         break;
                     case "Interval":
                         Interval? i;
@@ -106,72 +102,76 @@ public class Expression
         return tokens;
     }
 
-    static object? NextToken(Queue<object> tokens)
-    {
-        object obj;
-        Pitch? pitch = null;
-        Interval? interval = null;
-        Operator? op = null;
-
-        obj = tokens.Dequeue();
-        switch (obj)
-        {
-            case Pitch p:
-                pitch = p;
-                break;
-            case Interval i:
-                interval = i;
-                break;
-            case Operator o:
-                op = o;
-                break;
-            default:
-                break;
-        }
-       
-        if (pitch != null)
-            return pitch;
-        else if (interval != null)
-            return interval;
-        else if (op != null)
-            return op;
-        else 
-            return null;
-    }
-
     public static void Evaluate(Queue<object> tokens)
     {
-        object o1, o2, o3;
+        bool IsSubtract(Operator op) =>
+            op.operation == Operator.Operation.SUBTRACT;
+
+        void PitchPitchOperation(Operator op, Pitch p1, Pitch p2, Queue<object> tokens)
+        {
+            if (IsSubtract(op))
+            {
+                Interval i = new(p2, p1);
+                tokens.Enqueue(i);
+            }
+            else
+                throw new ArgumentException("Unknown operation or expression");
+        }
+
+        void PitchIntervalOperation(Operator op, Pitch pitch, Interval interval, Queue<object> tokens)
+        {
+            throw new ArgumentException("I don't know how to add or subtract intervals from pitches yet");
+        }
+
+
+        object[] stream = new object[3];
         while (tokens.Count() >= 3)
         {
-            o1 = tokens.Dequeue();
-            o2 = tokens.Dequeue();
-            o3 = tokens.Dequeue();
-
-            if (o2 is Operator 
-                    && ((Operator)o2).operation == Operator.Operation.SUBTRACT)
+            for (int i = 0; i < 3; ++i)
             {
-                if (o1 is Pitch && o3 is Pitch)
+                stream[i] = tokens.Dequeue();
+            }
+
+            if (stream[1] is Operator && stream[0] is Pitch)
+            {
+                if (stream[2] is Pitch)
+                    PitchPitchOperation(
+                            (Operator)stream[1], 
+                            (Pitch)stream[0], 
+                            (Pitch)stream[2],
+                            tokens);
+                else if (stream[2] is Interval)
+                    PitchIntervalOperation(
+                            (Operator)stream[1],
+                            (Pitch)stream[0],
+                            (Interval)stream[2],
+                            tokens);
+                else
+                    throw new ArgumentException("Unknown operation or expression");
+            }
+
+            /*
+            if (stream[1] is Operator 
+                    && ((Operator)stream[1]).operation == Operator.Operation.SUBTRACT)
+            {
+                if (stream[0] is Pitch && stream[2] is Pitch)
                 {
-                    Interval i = new((Pitch)o3, (Pitch)o1);
+                    Interval i = new((Pitch)stream[2], (Pitch)stream[0]);
                     tokens.Enqueue(i);
                     continue;
                 }
-                else if (o1 is Pitch && o3 is Interval)
+                else if (stream[0] is Pitch && stream[2] is Interval)
                 {
                     // subtract interval from pitch
                     throw new ArgumentException("I don't know how to subtract intervals from pitches yet");
                 }
             }
             else
-            {
                 throw new ArgumentException("Unknown operation or expression");
-            }
+                */
         }
         if (tokens.Count() == 1)
-        {
             Console.WriteLine(tokens.Dequeue());
-        }
     }
 }
 
