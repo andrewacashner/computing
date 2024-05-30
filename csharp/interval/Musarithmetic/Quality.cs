@@ -1,75 +1,51 @@
 namespace Musarithmetic;
 
-public class Quality
+public enum Quality { DIMINISHED, MINOR, MAJOR, PERFECT, AUGMENTED };
+
+public static class QualityHelper
 {
-    public enum Qual { DIMINISHED, MINOR, MAJOR, PERFECT, AUGMENTED };
     public static bool IsPerfectDegree(int interval) => interval is 0 or 3 or 4;
 
-    public Qual quality;
-    
-    public static string[] ValidInputs = ["d", "m", "M", "P", "A"];
-    public static string[] ValidOutputs = ValidInputs;
 
-    public Quality(Qual q)
+    public static Quality FromSize(int degree, int adjustment)
     {
-        quality = q;
-    }
-
-    public Quality(int degree, int adjustment)
-    {
-        quality = adjustment switch 
+        return adjustment switch 
         {
-            -2 => Qual.DIMINISHED, 
-                -1 when IsPerfectDegree(degree) => Qual.DIMINISHED,
-                -1 => Qual.MINOR,
-                0 when IsPerfectDegree(degree) => Qual.PERFECT,
-                0 => Qual.MAJOR,
-                1 => Qual.AUGMENTED,
-                _ => throw new ArgumentException($"Interval out of range")
+            -2 => Quality.DIMINISHED, 
+            -1 when IsPerfectDegree(degree) => Quality.DIMINISHED,
+            -1 => Quality.MINOR,
+            0 when IsPerfectDegree(degree) => Quality.PERFECT,
+            0 => Quality.MAJOR,
+            1 => Quality.AUGMENTED,
+            _ => throw new ArgumentException($"Interval out of range")
         };
     }
 
-    public Quality(char input)
+    public static Quality FromChar(char input)
     {
-        quality = input switch
+        return input switch
         {
-            'd' => Qual.DIMINISHED,
-            'm' => Qual.MINOR,
-            'M' => Qual.MAJOR,
-            'P' => Qual.PERFECT,
-            'a' => Qual.AUGMENTED,
+            'd' => Quality.DIMINISHED,
+            'm' => Quality.MINOR,
+            'M' => Quality.MAJOR,
+            'P' => Quality.PERFECT,
+            'a' => Quality.AUGMENTED,
             _ => throw new ArgumentException($"Unrecognized quality input {input}")
         };
-
     }
-   
 
-    public override string ToString()
+    public static string ToSymbol(this Quality quality)
     {
+        string[] ValidOutputs = ["d", "m", "M", "P", "A"];
         return ValidOutputs[(int)quality];
     }
     
-    public bool IsPerfect()
-    {
-        Qual[] perfectQualities = [
-            Qual.DIMINISHED, 
-            Qual.PERFECT,
-            Qual.AUGMENTED
-        ];
-        return perfectQualities.Contains(this.quality);
-    }
+    public static bool IsPerfect(this Quality quality) =>
+        quality is Quality.DIMINISHED or Quality.PERFECT or Quality.AUGMENTED;
 
-    public bool IsImperfect()
-    {
-        Qual[] imperfectQualities = [
-            Qual.DIMINISHED, 
-            Qual.MINOR, 
-            Qual.MAJOR, 
-            Qual.AUGMENTED
-        ];
-        return imperfectQualities.Contains(this.quality);
-    }
-
+    public static bool IsImperfect(this Quality quality) =>
+        quality is Quality.DIMINISHED or Quality.MINOR 
+        or Quality.MAJOR or Quality.AUGMENTED;
 }
 
 

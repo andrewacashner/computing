@@ -2,7 +2,7 @@ public enum Operator { ADD, SUBTRACT, MULTIPLY, DIVIDE };
 
 public static class OperatorHelper
 {
-    public static Operator ToOperator(this string opStr)
+    public static Operator FromString(string opStr)
     {
         return opStr switch 
         {

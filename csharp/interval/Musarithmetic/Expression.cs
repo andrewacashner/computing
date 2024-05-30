@@ -20,7 +20,7 @@ public class Expression
         {
             try
             {
-                Operator op = operatorStr.ToOperator();
+                Operator op = OperatorHelper.FromString(operatorStr);
                 tokens.Enqueue(op);
             }
             catch { throw; }
@@ -38,14 +38,11 @@ public class Expression
 
         void EnqueueNewInterval(string intervalStr, Queue<object> tokens)
         {
-            Interval? i;
+            Interval i;
             try 
             {
                 i = Interval.FromString(intervalStr);
-                if (i != null)
-                    tokens.Enqueue(i);
-                else
-                    ThrowNoParseError(intervalStr);
+                tokens.Enqueue(i);
             }
             catch { throw; }
         }

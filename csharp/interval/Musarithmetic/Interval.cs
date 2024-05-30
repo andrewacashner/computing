@@ -7,18 +7,18 @@ public class Interval
 
     public Interval(Quality quality, int degree)
     {
-        bool IsValid(Quality quality, int degree) 
-        {
-            return (quality.IsPerfect() && Quality.IsPerfectDegree(degree))
-                || (quality.IsImperfect() && !Quality.IsPerfectDegree(degree));
-        }
+        bool IsValid(Quality quality, int degree) =>
+            (quality.IsPerfect() 
+             && QualityHelper.IsPerfectDegree(degree))
+                || (quality.IsImperfect() 
+                        && !QualityHelper.IsPerfectDegree(degree));
 
         if (IsValid(quality, degree))
         {
             this.quality = quality;
             this.degree = degree;
         } else
-            throw new ArgumentException($"Invalid quality/degree combination {quality}/{degree + 1}");
+            throw new ArgumentException($"Invalid quality/degree combination {quality.ToSymbol()}/{degree + 1}");
     }
 
     public Interval(Pitch p1, Pitch p2)
@@ -31,31 +31,31 @@ public class Interval
 
         try 
         {
-            quality = new Quality(degree, adjustment);
+            quality = QualityHelper.FromSize(degree, adjustment);
         }
         catch { throw; }
     }
 
-    public static Interval? FromString(string input)
+    public static Interval FromString(string input)
     {
-        Interval? interval = null;
+        Interval interval;
 
         void ThrowInputException() => 
             throw new Exception($"Could not create Interval from string {input}");
 
         if (input.Length >= 2)
         {
-            Quality? quality = null;
+            Quality quality;
 
             try
             {
-                quality = new(input[0]); 
+                quality = QualityHelper.FromChar(input[0]); 
             }
             catch { throw; }
     
             int degree;
             bool test = Int32.TryParse(input[1..], out degree);
-            if (quality != null && test)
+            if (test)
             {
                 Interval i = new(quality, degree - 1);
                 return i;
@@ -97,7 +97,7 @@ public class Interval
 
     public override string ToString()
     {
-        return $"{quality}{degree + 1}";
+        return $"{quality.ToSymbol()}{degree + 1}";
     }
 }
 
