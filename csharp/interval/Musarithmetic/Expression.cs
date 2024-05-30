@@ -1,35 +1,4 @@
 namespace Musarithmetic;
-/*
- * pitch + interval = pitch
- * pitch - pitch = interval
- *
- * Patterns:
- *     Pitch: /[a-zA-Z]{1}[bb|b|#|##].*[0-9].* /
- *     Interval: /[mMPda]{1}[0-9].* / (1+) [+ 2x, 3x d, a]
- *         - but Interval a4 vs pitch a4?
- *
- * Examples: 
- * a#4 + P8 = a#5 | Pitch(a#4) + Interval(P8)
- * eb3 + m3 = g3  | Pitch(eb3) + Interval(m3)
- * gb5 - P5 = eb5 | Pitch(gb5) - Interval(P5)
- * gb5 - eb5 = P5 | Pitch(gb5) - Pitch(eb5)
-
- * == Additions TBD:
- * |interval| = n (absolute chromatic value)
- * ToInterval(n) = interval
- * interval -+ interval = ToInterval(|interval| -+ |interval|)
- * interval /* interval = ToInterval(|interval| -+ |interval|) = interval
- *
- * Examples
- * m2 + m2 = M2 (not d3?)
- * P8 - m3 = M6
- * m2 * 2 = |m2 + m2| = M2
- * P8 / 2 = |P8| / 2 = 6 = d5
- * |m2| = 1
- * |M2| = 2
- * |m2 + m2| = 2
- * 
- */
 
 using System.Collections.Generic;
 
@@ -37,64 +6,86 @@ public class Expression
 {
     public static Queue<object> Parse(string expr)
     {
+        void ThrowNoParseError(string input) 
+            => throw new ArgumentException($"Could not parse input '{input}'");
+       
+        bool IsValidOperandInput(string inputStr)
+        {
+            return (inputStr.StartsWith("Interval(") 
+                    || inputStr.StartsWith("Pitch("))
+                && inputStr.EndsWith(")");
+        }
+
+        void EnqueueNewOperator(string operatorStr, Queue<object> tokens)
+        {
+            try
+            {
+                Operator op = operatorStr.ToOperator();
+                tokens.Enqueue(op);
+            }
+            catch { throw; }
+        }
+
+        void EnqueueNewPitch(string pitchStr, Queue<object> tokens)
+        {
+            try
+            {
+                Pitch p = new(pitchStr);
+                tokens.Enqueue(p);
+            }
+            catch { throw; }
+        }
+
+        void EnqueueNewInterval(string intervalStr, Queue<object> tokens)
+        {
+            Interval? i;
+            try 
+            {
+                i = Interval.FromString(intervalStr);
+                if (i != null)
+                    tokens.Enqueue(i);
+                else
+                    ThrowNoParseError(intervalStr);
+            }
+            catch { throw; }
+        }
 
         Queue<object> tokens = new();
 
-        void ThrowNoParseError(string input) 
-            => throw new ArgumentException($"Could not parse input '{input}'");
-
         string[] words = expr.Split(' ');
-
+        
         foreach (string thisWord in words)
         {
             switch (thisWord)
             {
                 case "-":
                 case "+":
-                    Operator op = new(thisWord);
-                    tokens.Enqueue(op);
+                    EnqueueNewOperator(thisWord, tokens);
                     continue;
                 default:
                     break;
             }
 
-            if (thisWord.Contains("(") && thisWord.Contains(")"))
+            if (IsValidOperandInput(thisWord))
             {
-                char[] delimiters = ['(', ')'];
-                string[] inputs = thisWord.Split(delimiters);
+                string[] inputs = thisWord.Split(['(', ')'],
+                        StringSplitOptions.RemoveEmptyEntries);
 
-                string prefix, arg;
-                if (inputs.Length >= 2 && inputs[1] != "")
+                switch (inputs)
                 {
-                    prefix = inputs[0];
-                    arg = inputs[1];
-                } else
-                    ThrowNoParseError(thisWord);
+                    case ["Pitch", string arg]:
+                        EnqueueNewPitch(arg, tokens);
+                        break;
 
-                switch (prefix)
-                {
-                    case "Pitch":
-                        try {
-                            Pitch p = new(arg);
-                            tokens.Enqueue(p);
-                        }
-                        catch { throw; }
+                    case ["Interval", string arg]:
+                        EnqueueNewInterval(arg, tokens);
                         break;
-                    case "Interval":
-                        Interval? i;
-                        try {
-                            i = Interval.FromString(arg);
-                            if (i != null)
-                                tokens.Enqueue(i);
-                            else
-                                ThrowNoParseError(thisWord);
-                        }
-                        catch { throw; }
-                        break;
+
                     default:
                         ThrowNoParseError(thisWord);
                         break;
                 }
+
             } 
             else
                 ThrowNoParseError(thisWord);
@@ -104,27 +95,19 @@ public class Expression
 
     public static void Evaluate(Queue<object> tokens)
     {
-        bool IsSubtract(Operator op) =>
-            op.operation == Operator.Operation.SUBTRACT;
-
-        void PitchPitchOperation(Operator op, Pitch p1, Pitch p2, Queue<object> tokens)
+        void PitchDiff(Pitch p1, Pitch p2, Queue<object> tokens)
         {
-            if (IsSubtract(op))
-            {
-                Interval i = new(p2, p1);
-                tokens.Enqueue(i);
-            }
-            else
-                throw new ArgumentException("Unknown operation or expression");
+            Interval i = new(p2, p1);
+            tokens.Enqueue(i);
         }
 
-        void PitchIntervalOperation(Operator op, Pitch pitch, Interval interval, Queue<object> tokens)
+        void PitchInc(Operator op, Pitch pitch, Interval interval, Queue<object> tokens)
         {
             throw new ArgumentException("I don't know how to add or subtract intervals from pitches yet");
         }
 
-
         object[] stream = new object[3];
+
         while (tokens.Count() >= 3)
         {
             for (int i = 0; i < 3; ++i)
@@ -132,44 +115,24 @@ public class Expression
                 stream[i] = tokens.Dequeue();
             }
 
-            if (stream[1] is Operator && stream[0] is Pitch)
+            switch (stream)
             {
-                if (stream[2] is Pitch)
-                    PitchPitchOperation(
-                            (Operator)stream[1], 
-                            (Pitch)stream[0], 
-                            (Pitch)stream[2],
-                            tokens);
-                else if (stream[2] is Interval)
-                    PitchIntervalOperation(
-                            (Operator)stream[1],
-                            (Pitch)stream[0],
-                            (Interval)stream[2],
-                            tokens);
-                else
+                case [Pitch p1, Operator.SUBTRACT,  Pitch p2]:
+
+                    PitchDiff((Pitch)p1, (Pitch)p2, tokens);
+                    break;
+
+                case [Pitch p, 
+                     Operator op and (Operator.ADD or Operator.SUBTRACT), Interval i]:
+
+                    PitchInc((Operator)op, (Pitch)p, (Interval)i, tokens);
+                    break;
+
+                default:
                     throw new ArgumentException("Unknown operation or expression");
             }
-
-            /*
-            if (stream[1] is Operator 
-                    && ((Operator)stream[1]).operation == Operator.Operation.SUBTRACT)
-            {
-                if (stream[0] is Pitch && stream[2] is Pitch)
-                {
-                    Interval i = new((Pitch)stream[2], (Pitch)stream[0]);
-                    tokens.Enqueue(i);
-                    continue;
-                }
-                else if (stream[0] is Pitch && stream[2] is Interval)
-                {
-                    // subtract interval from pitch
-                    throw new ArgumentException("I don't know how to subtract intervals from pitches yet");
-                }
-            }
-            else
-                throw new ArgumentException("Unknown operation or expression");
-                */
         }
+
         if (tokens.Count() == 1)
             Console.WriteLine(tokens.Dequeue());
     }

@@ -1,26 +1,23 @@
-public class Operator
+public enum Operator { ADD, SUBTRACT, MULTIPLY, DIVIDE };
+
+public static class OperatorHelper
 {
-
-    public enum Operation { ADD, SUBTRACT, MULTIPLY, DIVIDE };
-
-    public Operation operation;
-
-    public Operator(string op)
+    public static Operator ToOperator(this string opStr)
     {
-        operation = op switch 
+        return opStr switch 
         {
-            "+" => Operation.ADD,
-            "-" => Operation.SUBTRACT,
-            "*" => Operation.MULTIPLY,
-            "/" => Operation.DIVIDE,
-            _ => throw new Exception($"Bad operator input {op}")
+            "+" => Operator.ADD,
+            "-" => Operator.SUBTRACT,
+            "*" => Operator.MULTIPLY,
+            "/" => Operator.DIVIDE,
+            _ => throw new Exception($"Bad operator input {opStr}")
         };
     }
 
-    public override string ToString()
+    public static string ToSymbol(this Operator op)
     {
         string[] ValidOutputs = ["+", "-", "*", "/"];
-        return ValidOutputs[(int)operation];
+        return ValidOutputs[(int)op];
     }
 
 
