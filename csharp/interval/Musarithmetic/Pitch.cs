@@ -9,16 +9,14 @@ public class Pitch
     {
         try
         {
-            pname = new PitchName(pitchStr[0]);
-            accid = new Accidental(pitchStr[1..]);
+            pname = PitchNameHelper.FromString(pitchStr[..1]);
+            accid = AccidentalHelper.FromString(pitchStr[1..]);
         }
         catch { throw; }
     }
 
-    public override string ToString()
-    {
-        return $"{this.pname}{this.accid}";
-    }
+    public override string ToString() => 
+        pname.ToSymbol() + accid.ToSymbol();
 
     public int DiatonicValue() => pname.DiatonicOffset();
 

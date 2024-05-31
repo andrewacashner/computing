@@ -16,8 +16,8 @@ public static class OperatorHelper
 
     public static string ToSymbol(this Operator op)
     {
-        string[] ValidOutputs = ["+", "-", "*", "/"];
-        return ValidOutputs[(int)op];
+        string[] outputs = ["+", "-", "*", "/"];
+        return outputs[(int)op];
     }
 
 

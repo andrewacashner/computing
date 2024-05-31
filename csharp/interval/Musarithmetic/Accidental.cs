@@ -1,35 +1,32 @@
 namespace Musarithmetic;
 
-public class Accidental
+public enum Accidental { DOUBLE_FLAT, FLAT, NATURAL, SHARP, DOUBLE_SHARP };
+
+public static class AccidentalHelper
 {
-    enum Accid { DOUBLE_FLAT, FLAT, NATURAL, SHARP, DOUBLE_SHARP };
-
-    Accid accid = Accid.NATURAL;
-
-    public Accidental(string accidStr)
+    public static Accidental FromString(string accidStr)
     {
-        accid = accidStr switch 
+        return accidStr switch 
         {
-            "bb" => Accid.DOUBLE_FLAT,
-                "b"  => Accid.FLAT,
-                ""   => Accid.NATURAL,
-                "#"  => Accid.SHARP,
-                "##" => Accid.DOUBLE_SHARP,
-                _    => throw new ArgumentException($"""
+            "bb" => Accidental.DOUBLE_FLAT,
+            "b"  => Accidental.FLAT,
+            ""   => Accidental.NATURAL,
+            "#"  => Accidental.SHARP,
+            "##" => Accidental.DOUBLE_SHARP,
+            _    => throw new ArgumentException($"""
                         Unrecognized accidental input '{accidStr}'
                         (Acceptable inputs: 'bb', 'b', '#', '##', or nothing if natural)
                         """)
         };
-
     }
 
-    public override string ToString() 
+    public static string ToSymbol(this Accidental accid) 
     {
         string[] outputs = ["𝄫", "♭", "♮", "♯", "𝄪"];
         return outputs[(int)accid];
     }
 
-    public int Adjustment() => (int)accid - 2;
+    public static int Adjustment(this Accidental accid) => (int)accid - 2;
 }
 
 

@@ -25,7 +25,7 @@ public class Interval
     {
         degree = DiatonicInterval(p1, p2);
 
-        int defaultInterval = PitchName.ChromaticOffset(degree);
+        int defaultInterval = PitchNameHelper.ChromaticOffset(degree);
         int inflectedInterval = ChromaticInterval(p1, p2);
         int adjustment = inflectedInterval - defaultInterval;
 
@@ -49,7 +49,7 @@ public class Interval
 
             try
             {
-                quality = QualityHelper.FromChar(input[0]); 
+                quality = QualityHelper.FromString(input[..1]); 
             }
             catch { throw; }
     
@@ -97,7 +97,7 @@ public class Interval
 
     public override string ToString()
     {
-        return $"{quality.ToSymbol()}{degree + 1}";
+        return quality.ToSymbol() + $"{degree + 1}";
     }
 }
 

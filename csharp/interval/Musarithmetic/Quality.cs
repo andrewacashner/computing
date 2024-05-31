@@ -4,8 +4,8 @@ public enum Quality { DIMINISHED, MINOR, MAJOR, PERFECT, AUGMENTED };
 
 public static class QualityHelper
 {
-    public static bool IsPerfectDegree(int interval) => interval is 0 or 3 or 4;
-
+    public static bool IsPerfectDegree(int interval) => 
+        interval is 0 or 3 or 4;
 
     public static Quality FromSize(int degree, int adjustment)
     {
@@ -21,23 +21,23 @@ public static class QualityHelper
         };
     }
 
-    public static Quality FromChar(char input)
+    public static Quality FromString(string qualityStr)
     {
-        return input switch
+        return qualityStr switch
         {
-            'd' => Quality.DIMINISHED,
-            'm' => Quality.MINOR,
-            'M' => Quality.MAJOR,
-            'P' => Quality.PERFECT,
-            'a' => Quality.AUGMENTED,
-            _ => throw new ArgumentException($"Unrecognized quality input {input}")
+            "d" => Quality.DIMINISHED,
+            "m" => Quality.MINOR,
+            "M" => Quality.MAJOR,
+            "P" => Quality.PERFECT,
+            "a" => Quality.AUGMENTED,
+            _ => throw new ArgumentException($"Unrecognized quality input {qualityStr}")
         };
     }
 
     public static string ToSymbol(this Quality quality)
     {
-        string[] ValidOutputs = ["d", "m", "M", "P", "A"];
-        return ValidOutputs[(int)quality];
+        string[] outputs = ["d", "m", "M", "P", "A"];
+        return outputs[(int)quality];
     }
     
     public static bool IsPerfect(this Quality quality) =>
