@@ -92,6 +92,14 @@ public class Expression
 
     public static void Evaluate(Queue<object> tokens)
     {
+        object PitchPlusInterval(Pitch pitch, Interval interval, Operator op = Operator.ADD)
+        {
+            if (op == Operator.SUBTRACT)
+                interval = interval.Negate();
+            
+            return (Pitch)pitch.Inc(interval);
+        }
+
         object accumulator = tokens.Dequeue();
         
         while (tokens.Count() >= 2)
@@ -110,12 +118,13 @@ public class Expression
                 case (Pitch pitch, 
                      Operator op and (Operator.ADD or Operator.SUBTRACT), 
                      Interval interval):
-               
-                    if (op == Operator.SUBTRACT)
-                    {
-                        interval = interval.Negate();
-                    }
-                    accumulator = (Pitch)pitch.Inc(interval);
+                    
+                    accumulator = PitchPlusInterval((Pitch)pitch, (Interval)interval, (Operator)op);
+                    break;
+
+                case (Interval interval, Operator.ADD, Pitch pitch):
+                    
+                    accumulator = PitchPlusInterval((Pitch)pitch, (Interval)interval);
                     break;
 
                 default:
