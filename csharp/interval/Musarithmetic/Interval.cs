@@ -69,15 +69,8 @@ public class Interval
         return interval;
     }
 
-
-
-    static int loopDiff(int n, int m, int max)
-    {
-        if (m < n)
-            m += max;
-
-        return m - n;
-    }
+    static int loopDiff(int n, int m, int max) => 
+        (n < m) ? n - m + max : n - m;
 
     // TODO replace this and next with generics?
     static int DiatonicInterval(Pitch p1, Pitch p2)
