@@ -10,7 +10,7 @@ internal class Program
         string expr = args[0];
 
 
-        List<object> tokens; 
+        Queue<object> tokens; 
         try
         {
             tokens = Expression.Parse(expr);

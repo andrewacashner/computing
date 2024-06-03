@@ -5,7 +5,7 @@ public enum Quality { DIMINISHED, MINOR, MAJOR, PERFECT, AUGMENTED };
 public static class QualityHelper
 {
     public static bool IsPerfectDegree(int interval) => 
-        interval is 0 or 3 or 4;
+        (interval % 7) is 0 or 3 or 4;
 
     public static Quality FromSize(int degree, int adjustment)
     {
@@ -46,6 +46,7 @@ public static class QualityHelper
     public static bool IsImperfect(this Quality quality) =>
         quality is Quality.DIMINISHED or Quality.MINOR 
         or Quality.MAJOR or Quality.AUGMENTED;
+
 }
 
 

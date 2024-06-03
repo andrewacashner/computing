@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class Expression
 {
-    public static List<object> Parse(string expr)
+    public static Queue<object> Parse(string expr)
     {
         void ThrowNoParseError(string input) 
             => throw new ArgumentException($"Could not parse input '{input}'");
@@ -16,38 +16,38 @@ public class Expression
                 && inputStr.EndsWith(")");
         }
 
-        void AppendNewOperator(string operatorStr, List<object> tokens)
+        void EnqueueNewOperator(string operatorStr, Queue<object> tokens)
         {
             try
             {
                 Operator op = OperatorHelper.FromString(operatorStr);
-                tokens.Add(op);
+                tokens.Enqueue(op);
             }
             catch { throw; }
         }
 
-        void AppendNewPitch(string pitchStr, List<object> tokens)
+        void EnqueueNewPitch(string pitchStr, Queue<object> tokens)
         {
             try
             {
                 Pitch p = new(pitchStr);
-                tokens.Add(p);
+                tokens.Enqueue(p);
             }
             catch { throw; }
         }
 
-        void AppendNewInterval(string intervalStr, List<object> tokens)
+        void EnqueueNewInterval(string intervalStr, Queue<object> tokens)
         {
             Interval i;
             try 
             {
                 i = Interval.FromString(intervalStr);
-                tokens.Add(i);
+                tokens.Enqueue(i);
             }
             catch { throw; }
         }
 
-        List<object> tokens = new();
+        Queue<object> tokens = new();
 
         string[] words = expr.Split(' ');
         
@@ -57,7 +57,7 @@ public class Expression
             {
                 case "-":
                 case "+":
-                    AppendNewOperator(thisWord, tokens);
+                    EnqueueNewOperator(thisWord, tokens);
                     continue;
                 default:
                     break;
@@ -71,11 +71,11 @@ public class Expression
                 switch (inputs)
                 {
                     case ["Pitch", string arg]:
-                        AppendNewPitch(arg, tokens);
+                        EnqueueNewPitch(arg, tokens);
                         break;
 
                     case ["Interval", string arg]:
-                        AppendNewInterval(arg, tokens);
+                        EnqueueNewInterval(arg, tokens);
                         break;
 
                     default:
@@ -90,52 +90,40 @@ public class Expression
         return tokens;
     }
 
-    public static void Evaluate(List<object> tokens)
+    public static void Evaluate(Queue<object> tokens)
     {
-      
-        // TODO is there a better way?
-        // Need to access input tokens in FIFO order
-        // But need to process them in groups of three and then push the
-        // results back to the front of the list (which is LIFO)
-        // So currently, we save inputs in a List, then reverse the list and
-        // convert it to a Stack, then pop from and push to the Stack for
-        // evaluating.  
-        List<object> lifoTokens = new(tokens);
-        lifoTokens.Reverse();
+        object accumulator = tokens.Dequeue();
         
-        Stack<object> tokenStack = new(lifoTokens);
-
-        object[] stream = new object[3];
-
-        while (tokenStack.Count() >= 3)
+        while (tokens.Count() >= 2)
         {
-            for (int i = 0; i < 3; ++i)
-            {
-                stream[i] = tokenStack.Pop();
-                Console.Write(stream[i].ToString() + " ");
-            }
-            Console.WriteLine();
+            object argA = tokens.Dequeue();
+            object argB = tokens.Dequeue();
 
-            switch (stream)
-            {
-                case [Pitch p1, Operator.SUBTRACT,  Pitch p2]:
+            Console.WriteLine($"{accumulator.ToString()} {argA.ToString()} {argB.ToString()}");
 
-                    tokenStack.Push(new Interval((Pitch)p1, (Pitch)p2));
+            switch (accumulator, argA, argB)
+            {
+                case (Pitch p1, Operator.SUBTRACT, Pitch p2):
+                    accumulator = new Interval((Pitch)p1, (Pitch)p2);
                     break;
 
-                case [Pitch p, 
+                case (Pitch pitch, 
                      Operator op and (Operator.ADD or Operator.SUBTRACT), 
-                     Interval i]:
-
-                    throw new ArgumentException("I don't know how to add or subtract intervals from pitches yet");
+                     Interval interval):
+               
+                    if (op == Operator.SUBTRACT)
+                    {
+                        interval = interval.Negate();
+                    }
+                    accumulator = (Pitch)pitch.Inc(interval);
+                    break;
 
                 default:
                     throw new ArgumentException("Unknown operation or expression");
             }
         }
 
-        if (tokenStack.Count() == 1)
-            Console.WriteLine(tokenStack.Pop());
+        Console.WriteLine(accumulator.ToString());
     }
 }
 

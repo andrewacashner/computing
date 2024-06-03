@@ -32,7 +32,7 @@ public static class PitchNameHelper
     public static int ChromaticOffset(int degree)
     {
         int[] offsets = [0, 2, 4, 5, 7, 9, 11];
-        return offsets[degree];
+        return offsets[Math.Abs(degree % 7)];
     }
 
     public static int ChromaticOffset(this PitchName pname) =>

@@ -5,6 +5,8 @@ public class Interval
     Quality quality;
     int degree;
 
+    public int Degree { get => degree; }
+
     public Interval(Quality quality, int degree)
     {
         bool IsValid(Quality quality, int degree) =>
@@ -13,7 +15,7 @@ public class Interval
                 || (quality.IsImperfect() 
                         && !QualityHelper.IsPerfectDegree(degree));
 
-        if (IsValid(quality, degree))
+        if (IsValid(quality, Math.Abs(degree)))
         {
             this.quality = quality;
             this.degree = degree;
@@ -54,7 +56,7 @@ public class Interval
             catch { throw; }
     
             int degree;
-            bool test = Int32.TryParse(input[1..], out degree);
+            bool test = int.TryParse(input[1..], out degree);
             if (test)
             {
                 Interval i = new(quality, degree - 1);
@@ -69,7 +71,7 @@ public class Interval
         return interval;
     }
 
-    static int loopDiff(int n, int m, int max) => 
+    public static int LoopDiff(int n, int m, int max) => 
         (n < m) ? n - m + max : n - m;
 
     // TODO replace this and next with generics?
@@ -77,14 +79,14 @@ public class Interval
     {
         int val1 = p1.DiatonicValue();
         int val2 = p2.DiatonicValue();
-        return loopDiff(val1, val2, 7);
+        return LoopDiff(val1, val2, 7);
     }
 
     static int ChromaticInterval(Pitch p1, Pitch p2)
     {
         int val1 = p1.ChromaticValue();
         int val2 = p2.ChromaticValue();
-        return loopDiff(val1, val2, 12);
+        return LoopDiff(val1, val2, 12);
     }
 
 
@@ -92,5 +94,29 @@ public class Interval
     {
         return quality.ToSymbol() + $"{degree + 1}";
     }
+
+    public int ChromaticValue()
+    {
+        int offset = PitchNameHelper.ChromaticOffset(degree % 7);
+        int adjustment = quality switch
+        {
+            Quality.DIMINISHED => QualityHelper.IsPerfectDegree(degree) ? -1 : -2,
+            Quality.MINOR => -1,
+            Quality.MAJOR or Quality.PERFECT => 0,
+            Quality.AUGMENTED => 1,
+            _ => throw new ArgumentException($"Cannot calculate chromatic value of interval quality {quality}")
+        };
+
+        int chromaticValue = offset + adjustment;
+        if (degree < 0) chromaticValue *= -1;
+
+        return chromaticValue;
+    }
+
+    public Interval Negate()
+    {
+        return new Interval(this.quality, -this.degree);
+    }
+
 }
 
