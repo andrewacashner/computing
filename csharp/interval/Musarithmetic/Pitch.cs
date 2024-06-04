@@ -15,23 +15,18 @@ public class Pitch
     {
         try
         {
-            pname = PitchNameHelper.FromString(pitchStr[..1]);
-            accid = AccidentalHelper.FromString(pitchStr[1..]);
+            pname = new PitchName(pitchStr[..1]);
+            accid = new Accidental(pitchStr[1..]);
         }
         catch { throw; }
     }
 
-    public override string ToString() => 
-        pname.ToSymbol() + accid.ToSymbol();
+    public override string ToString() => $"{pname}{accid}";
 
-    public int DiatonicValue() => pname.DiatonicOffset();
+    public int DiatonicValue { get => pname.DiatonicOffset; }
 
-    public int ChromaticValue()
-    {
-        int offset = pname.ChromaticOffset();
-        int adjustment = accid.Adjustment();
-        return offset + adjustment;
-    }
+    public int ChromaticValue { get => 
+        pname.ChromaticOffset + accid.Adjustment; }
 
     static int Modulo(int numBase, int n)
     {
@@ -49,17 +44,22 @@ public class Pitch
   
     public Pitch Inc(Interval interval)
     {
-        int newDiatonicOffset = Pitch.DiatonicModulo(pname.DiatonicOffset() + interval.Degree);
+        int newDiatonicOffset = Pitch.DiatonicModulo(pname.DiatonicOffset + interval.Degree);
 
-        PitchName newPname = (PitchName)newDiatonicOffset;
+        PitchName newPname = new(newDiatonicOffset);
 
-        int startingOffset = this.ChromaticValue();
+        int startingOffset = this.ChromaticValue;
 
-        int newChromaticOffset = ChromaticModulo(startingOffset + interval.ChromaticValue());
+        int inflectedChromaticOffset = ChromaticModulo(startingOffset + interval.ChromaticValue);
 
-        int adjustment = newChromaticOffset - newPname.ChromaticOffset();
+        int diatonicBaseChromaticOffset = newPname.ChromaticOffset;
+        if (diatonicBaseChromaticOffset == 0 
+                && diatonicBaseChromaticOffset < inflectedChromaticOffset)
+            diatonicBaseChromaticOffset = 12;
 
-        Accidental newAccid = AccidentalHelper.FromAdjustment(adjustment);
+        int adjustment = inflectedChromaticOffset - diatonicBaseChromaticOffset;
+       
+        Accidental newAccid = new(adjustment);
         return new Pitch(newPname, newAccid);
     }
 

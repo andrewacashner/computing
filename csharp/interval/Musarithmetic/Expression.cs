@@ -8,7 +8,7 @@ public class Expression
     {
         void ThrowNoParseError(string input) 
             => throw new ArgumentException($"Could not parse input '{input}'");
-       
+
         bool IsValidOperandInput(string inputStr)
         {
             return (inputStr.StartsWith("Interval(") 
@@ -59,6 +59,7 @@ public class Expression
                 case "+":
                     EnqueueNewOperator(thisWord, tokens);
                     continue;
+
                 default:
                     break;
             }

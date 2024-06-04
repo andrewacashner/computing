@@ -1,40 +1,42 @@
 namespace Musarithmetic;
 
-public enum PitchName { PC_C, PC_D, PC_E, PC_F, PC_G, PC_A, PC_B };
-
-public static class PitchNameHelper
+public class PitchName
 {
+    enum Pname { PC_C, PC_D, PC_E, PC_F, PC_G, PC_A, PC_B };
 
-    public static PitchName FromString(string pnameStr)
+    Pname pitchName;
+
+    public int Value { get => (int)pitchName; }
+
+    public PitchName(int degree)
     {
-        return pnameStr.ToUpper() switch
+        pitchName = (Pname)(Math.Abs(degree % 7));
+
+        if (!Enum.IsDefined<Pname>(pitchName))
+            throw new ArgumentException($"Degree value {degree} is not valid for creating a PitchName");
+    }
+
+    public PitchName(string pnameStr)
+    {
+        pitchName = pnameStr.ToUpper() switch
         {
-            "C" => PitchName.PC_C,
-            "D" => PitchName.PC_D,
-            "E" => PitchName.PC_E,
-            "F" => PitchName.PC_F,
-            "G" => PitchName.PC_G,
-            "A" => PitchName.PC_A,
-            "B" => PitchName.PC_B,
+            "C" => Pname.PC_C,
+            "D" => Pname.PC_D,
+            "E" => Pname.PC_E,
+            "F" => Pname.PC_F,
+            "G" => Pname.PC_G,
+            "A" => Pname.PC_A,
+            "B" => Pname.PC_B,
             _   => throw new ArgumentException(
                     $"Unrecognized pitch name '{pnameStr}' (Must be a letter A-G)")
         };
     }
 
-    public static string ToSymbol(this PitchName pname)
-    {
-        string[] outputs = ["C", "D", "E", "F", "G", "A", "B"];
-        return outputs[(int)pname];
-    }
+    public override string ToString()
+        => (new [] {"C", "D", "E", "F", "G", "A", "B"}).ElementAt(this.Value);
 
-    public static int DiatonicOffset(this PitchName pname) => (int)pname;
+    public int DiatonicOffset { get => this.Value; }
+    public int ChromaticOffset { get => 
+        (new [] {0, 2, 4, 5, 7, 9, 11}).ElementAt(this.Value); }
 
-    public static int ChromaticOffset(int degree)
-    {
-        int[] offsets = [0, 2, 4, 5, 7, 9, 11];
-        return offsets[Math.Abs(degree % 7)];
-    }
-
-    public static int ChromaticOffset(this PitchName pname) =>
-        ChromaticOffset((int)pname);
 }
