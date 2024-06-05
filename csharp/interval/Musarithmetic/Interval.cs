@@ -9,13 +9,7 @@ public class Interval
 
     public Interval(Quality quality, int degree)
     {
-        bool IsValid(Quality quality, int degree) =>
-            (quality.IsPerfect() 
-             && Quality.IsPerfectDegree(degree))
-                || (quality.IsImperfect() 
-                        && !Quality.IsPerfectDegree(degree));
-
-        if (IsValid(quality, Math.Abs(degree)))
+        if (quality.MatchesDegree(degree))
         {
             this.quality = quality;
             this.degree = degree;
@@ -27,7 +21,7 @@ public class Interval
     {
         degree = DiatonicInterval(p1, p2);
 
-        int defaultInterval = new PitchName(degree).ChromaticOffset;
+        int defaultInterval = new PitchName(degree).ChromaticValue;
         int inflectedInterval = ChromaticInterval(p1, p2);
         int adjustment = inflectedInterval - defaultInterval;
 
@@ -74,10 +68,10 @@ public class Interval
     public static int LoopDiff(int n, int m, int max) => 
         (n < m) ? n - m + max : n - m;
 
-    static int DiatonicInterval(Pitch p1, Pitch p2) =>
+    int DiatonicInterval(Pitch p1, Pitch p2) =>
         LoopDiff(p1.DiatonicValue, p2.DiatonicValue, 7);
 
-    static int ChromaticInterval(Pitch p1, Pitch p2) =>
+    int ChromaticInterval(Pitch p1, Pitch p2) =>
         LoopDiff(p1.ChromaticValue, p2.ChromaticValue, 12);
 
     public override string ToString() => $"{quality}{degree + 1}";
@@ -85,7 +79,7 @@ public class Interval
     public int ChromaticValue { 
         get 
         {
-            int offset = new PitchName(degree % 7).ChromaticOffset;
+            int offset = PitchName.ChromaticOffset(degree);
             int chromaticValue = offset + quality.Adjustment(degree);
             if (degree < 0) chromaticValue *= -1;
 

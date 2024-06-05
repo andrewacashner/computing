@@ -1,25 +1,31 @@
-public enum Operator { ADD, SUBTRACT, MULTIPLY, DIVIDE };
+namespace Musarithmetic;
 
-public static class OperatorHelper
+public class Operator
 {
-    public static Operator FromString(string opStr)
+    public enum kOperator { ADD, SUBTRACT, MULTIPLY, DIVIDE };
+
+    kOperator op;
+
+    int Value { get => (int)op; }
+
+    public Operator(string opStr)
     {
-        return opStr switch 
+        op = opStr switch 
         {
-            "+" => Operator.ADD,
-            "-" => Operator.SUBTRACT,
-            "*" => Operator.MULTIPLY,
-            "/" => Operator.DIVIDE,
+            "+" => kOperator.ADD,
+            "-" => kOperator.SUBTRACT,
+            "*" => kOperator.MULTIPLY,
+            "/" => kOperator.DIVIDE,
             _ => throw new Exception($"Bad operator input {opStr}")
         };
     }
 
-    public static string ToSymbol(this Operator op)
-    {
-        string[] outputs = ["+", "-", "*", "/"];
-        return outputs[(int)op];
-    }
+    public override string ToString() =>
+        (new [] {"+", "-", "*", "/"}).ElementAt(this.Value);
 
+    public bool IsAdd()           => op == kOperator.ADD;
+    public bool IsSubtract()      => op == kOperator.SUBTRACT;
+    public bool IsAddOrSubtract() => IsAdd() || IsSubtract();
 }
 
 

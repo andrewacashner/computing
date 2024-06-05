@@ -2,17 +2,17 @@ namespace Musarithmetic;
 
 public class PitchName
 {
-    enum Pname { PC_C, PC_D, PC_E, PC_F, PC_G, PC_A, PC_B };
+    enum kPitchName { PC_C, PC_D, PC_E, PC_F, PC_G, PC_A, PC_B };
 
-    Pname pitchName;
+    kPitchName pitchName;
 
-    public int Value { get => (int)pitchName; }
+    int Value { get => (int)pitchName; }
 
     public PitchName(int degree)
     {
-        pitchName = (Pname)(Math.Abs(degree % 7));
+        pitchName = (kPitchName)(Math.Abs(degree % 7));
 
-        if (!Enum.IsDefined<Pname>(pitchName))
+        if (!Enum.IsDefined<kPitchName>(pitchName))
             throw new ArgumentException($"Degree value {degree} is not valid for creating a PitchName");
     }
 
@@ -20,13 +20,13 @@ public class PitchName
     {
         pitchName = pnameStr.ToUpper() switch
         {
-            "C" => Pname.PC_C,
-            "D" => Pname.PC_D,
-            "E" => Pname.PC_E,
-            "F" => Pname.PC_F,
-            "G" => Pname.PC_G,
-            "A" => Pname.PC_A,
-            "B" => Pname.PC_B,
+            "C" => kPitchName.PC_C,
+            "D" => kPitchName.PC_D,
+            "E" => kPitchName.PC_E,
+            "F" => kPitchName.PC_F,
+            "G" => kPitchName.PC_G,
+            "A" => kPitchName.PC_A,
+            "B" => kPitchName.PC_B,
             _   => throw new ArgumentException(
                     $"Unrecognized pitch name '{pnameStr}' (Must be a letter A-G)")
         };
@@ -35,8 +35,11 @@ public class PitchName
     public override string ToString()
         => (new [] {"C", "D", "E", "F", "G", "A", "B"}).ElementAt(this.Value);
 
-    public int DiatonicOffset { get => this.Value; }
-    public int ChromaticOffset { get => 
-        (new [] {0, 2, 4, 5, 7, 9, 11}).ElementAt(this.Value); }
+    public int DiatonicValue { get => this.Value; }
+
+    public static int ChromaticOffset(int degree) =>
+        (new [] {0, 2, 4, 5, 7, 9, 11}).ElementAt(Math.Abs(degree % 7));
+
+    public int ChromaticValue { get => ChromaticOffset(this.Value); }
 
 }

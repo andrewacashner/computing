@@ -23,12 +23,12 @@ public class Pitch
 
     public override string ToString() => $"{pname}{accid}";
 
-    public int DiatonicValue { get => pname.DiatonicOffset; }
+    public int DiatonicValue { get => pname.DiatonicValue; }
 
     public int ChromaticValue { get => 
-        pname.ChromaticOffset + accid.Adjustment; }
+        pname.ChromaticValue + accid.Adjustment; }
 
-    static int Modulo(int numBase, int n)
+    int Modulo(int numBase, int n)
     {
         if (n >= numBase) 
             n = n % numBase;
@@ -37,29 +37,33 @@ public class Pitch
         return n;
     }
 
-    static int DiatonicModulo(int n) => Modulo(7, n);
-    static int ChromaticModulo(int n) => Modulo(12, n);
-    static int ChromaticLoopDiff(int n, int m) =>
-        Interval.LoopDiff(n, m, 12);
+    int DiatonicModulo(int n)  => Modulo(7, n);
+    int ChromaticModulo(int n) => Modulo(12, n);
+    int ChromaticLoopDiff(int n, int m) => Interval.LoopDiff(n, m, 12);
   
     public Pitch Inc(Interval interval)
     {
-        int newDiatonicOffset = Pitch.DiatonicModulo(pname.DiatonicOffset + interval.Degree);
+        int newDiatonicOffset = DiatonicModulo(
+                pname.DiatonicValue + interval.Degree);
 
         PitchName newPname = new(newDiatonicOffset);
 
         int startingOffset = this.ChromaticValue;
 
-        int inflectedChromaticOffset = ChromaticModulo(startingOffset + interval.ChromaticValue);
+        int inflectedChromaticOffset = ChromaticModulo(
+                startingOffset + interval.ChromaticValue);
 
-        int diatonicBaseChromaticOffset = newPname.ChromaticOffset;
+        int diatonicBaseChromaticOffset = newPname.ChromaticValue;
+
         if (diatonicBaseChromaticOffset == 0 
                 && diatonicBaseChromaticOffset < inflectedChromaticOffset)
             diatonicBaseChromaticOffset = 12;
 
-        int adjustment = inflectedChromaticOffset - diatonicBaseChromaticOffset;
+        int adjustment = 
+            inflectedChromaticOffset - diatonicBaseChromaticOffset;
        
         Accidental newAccid = new(adjustment);
+
         return new Pitch(newPname, newAccid);
     }
 

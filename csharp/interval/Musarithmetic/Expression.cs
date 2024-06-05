@@ -20,7 +20,7 @@ public class Expression
         {
             try
             {
-                Operator op = OperatorHelper.FromString(operatorStr);
+                Operator op = new Operator(operatorStr);
                 tokens.Enqueue(op);
             }
             catch { throw; }
@@ -93,9 +93,9 @@ public class Expression
 
     public static void Evaluate(Queue<object> tokens)
     {
-        object PitchPlusInterval(Pitch pitch, Interval interval, Operator op = Operator.ADD)
+        object PitchPlusInterval(Pitch pitch, Interval interval, Operator op)
         {
-            if (op == Operator.SUBTRACT)
+            if (op.IsSubtract())
                 interval = interval.Negate();
             
             return (Pitch)pitch.Inc(interval);
@@ -112,20 +112,27 @@ public class Expression
 
             switch (accumulator, argA, argB)
             {
-                case (Pitch p1, Operator.SUBTRACT, Pitch p2):
-                    accumulator = new Interval((Pitch)p1, (Pitch)p2);
+                case (Pitch p1, Operator op, Pitch p2):
+                    if (op.IsSubtract())
+                        accumulator = new Interval((Pitch)p1, (Pitch)p2);
                     break;
 
-                case (Pitch pitch, 
-                     Operator op and (Operator.ADD or Operator.SUBTRACT), 
-                     Interval interval):
-                    
-                    accumulator = PitchPlusInterval((Pitch)pitch, (Interval)interval, (Operator)op);
+                case (Pitch pitch, Operator op, Interval interval):
+                   
+                    if (op.IsAddOrSubtract())
+                        accumulator = PitchPlusInterval(
+                                (Pitch)pitch, 
+                                (Interval)interval, 
+                                (Operator)op);
                     break;
 
-                case (Interval interval, Operator.ADD, Pitch pitch):
+                case (Interval interval, Operator op, Pitch pitch):
                     
-                    accumulator = PitchPlusInterval((Pitch)pitch, (Interval)interval);
+                    if (op.IsAdd())
+                        accumulator = PitchPlusInterval(
+                                (Pitch)pitch, 
+                                (Interval)interval,
+                                (Operator)op);
                     break;
 
                 default:
