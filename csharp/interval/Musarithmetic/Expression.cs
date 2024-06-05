@@ -96,7 +96,7 @@ public class Expression
         object PitchPlusInterval(Pitch pitch, Interval interval, Operator op)
         {
             if (op.IsSubtract())
-                interval = interval.Negate();
+                interval.Negate();
             
             return (Pitch)pitch.Inc(interval);
         }
@@ -108,7 +108,7 @@ public class Expression
             object argA = tokens.Dequeue();
             object argB = tokens.Dequeue();
 
-            Console.WriteLine($"{accumulator.ToString()} {argA.ToString()} {argB.ToString()}");
+//            Console.WriteLine($"{accumulator.ToString()} {argA.ToString()} {argB.ToString()}");
 
             switch (accumulator, argA, argB)
             {

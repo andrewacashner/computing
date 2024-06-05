@@ -4,15 +4,15 @@ public class Interval
 {
     Quality quality;
     int degree;
+    bool negative = false;
 
-    public int Degree { get => degree; }
 
     public Interval(Quality quality, int degree)
     {
         if (quality.MatchesDegree(degree))
         {
             this.quality = quality;
-            this.degree = degree;
+            this.degree = degree % 7;
         } else
             throw new ArgumentException($"Invalid quality/degree combination {quality}/{degree + 1}");
     }
@@ -76,18 +76,23 @@ public class Interval
 
     public override string ToString() => $"{quality}{degree + 1}";
 
+    public int DiatonicShift { get => negative ? 0 - degree : degree; }
+
     public int ChromaticValue { 
         get 
         {
-            int offset = PitchName.ChromaticOffset(degree);
+            int offset = new PitchName(degree).ChromaticValue;
             int chromaticValue = offset + quality.Adjustment(degree);
-            if (degree < 0) chromaticValue *= -1;
 
             return chromaticValue;
         }
     }
+    public int ChromaticShift { get => 
+        negative ? 0 - ChromaticValue : ChromaticValue; }
 
-    public Interval Negate() => new Interval(this.quality, -this.degree);
-
+    public Interval Negate() {
+        this.negative = true;
+        return this;
+    }
 }
 

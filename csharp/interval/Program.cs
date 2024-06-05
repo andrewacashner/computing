@@ -6,7 +6,7 @@ internal class Program
 {
     private static void Main(string[] args)
     {
-    //    ExitIfInputInvalid(args);
+        ExitIfInputInvalid(args);
         string expr = args[0];
 
 
@@ -29,10 +29,16 @@ internal class Program
         Usage: interval 'EXPRESSION'
             EXPRESSION may be one of the following:
               PITCH1 - PITCH2       (=> interval)
-              PITCH [+-] INTERVAL    (=> pitch2)
-              INTERVAL [*/] N          (=> interval)
+              PITCH [+-] INTERVAL    (=> pitch)
             Or a combination, e.g.:
-              PITCH1 + (PITCH2 - PITCH3) - (INTERVAL * N) => pitch4
+              PITCH1 + INTERVAL - INTERVAL => pitch
+
+            Pitch is written as 'Pitch(c#)'
+            Interval is written as 'Interval(m2)'
+
+            Examples: 
+                'Pitch(Ab) - Interval(m2) + Interval(P5)' (Result: 'D♮')
+                'Pitch(d) - Interval(m2) - Pitch(b)'      (Result: 'M2')
         """;
 
         if (!(args.Length == 1))

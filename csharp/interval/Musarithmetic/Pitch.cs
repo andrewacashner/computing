@@ -28,40 +28,46 @@ public class Pitch
     public int ChromaticValue { get => 
         pname.ChromaticValue + accid.Adjustment; }
 
-    int Modulo(int numBase, int n)
-    {
-        if (n >= numBase) 
-            n = n % numBase;
-        if (n < 0)
-            n = numBase + (n % numBase);
-        return n;
+    int Modulo(int numBase, int n) {
+        int mod = n % numBase;
+        return mod < 0 ? n + numBase : mod;
     }
 
     int DiatonicModulo(int n)  => Modulo(7, n);
     int ChromaticModulo(int n) => Modulo(12, n);
-    int ChromaticLoopDiff(int n, int m) => Interval.LoopDiff(n, m, 12);
+
+    int WithinMarginOfZero(int n, int modBase, int margin) =>
+        modBase - n < margin ? n - modBase : n;
+
+    int CircularChromaticDiff(int n, int m)
+    {
+        n = Modulo(12, n);
+        m = Modulo(12, m);
+        if (m == 0) n = WithinMarginOfZero(n, 12, 3);
+        else if (n == 0) m = WithinMarginOfZero(m, 12, 3);
+        
+        return n - m;
+    }
   
     public Pitch Inc(Interval interval)
     {
-        int newDiatonicOffset = DiatonicModulo(
-                pname.DiatonicValue + interval.Degree);
-
+        int newDiatonicOffset = DiatonicModulo(pname.DiatonicValue + interval.DiatonicShift);
         PitchName newPname = new(newDiatonicOffset);
 
         int startingOffset = this.ChromaticValue;
+        int inflectedChromaticOffset = 
+            ChromaticModulo(startingOffset + interval.ChromaticShift);
 
-        int inflectedChromaticOffset = ChromaticModulo(
-                startingOffset + interval.ChromaticValue);
+//        Console.WriteLine($"starting Offset: {startingOffset}, interval.ChromaticShift {interval.ChromaticShift}");
 
         int diatonicBaseChromaticOffset = newPname.ChromaticValue;
 
-        if (diatonicBaseChromaticOffset == 0 
-                && diatonicBaseChromaticOffset < inflectedChromaticOffset)
-            diatonicBaseChromaticOffset = 12;
+        int adjustment = CircularChromaticDiff(
+                    inflectedChromaticOffset,
+                    diatonicBaseChromaticOffset);
 
-        int adjustment = 
-            inflectedChromaticOffset - diatonicBaseChromaticOffset;
-       
+ //      Console.WriteLine($"inflectedChromaticOffset {inflectedChromaticOffset}, diatonicBaseChromaticOffset {diatonicBaseChromaticOffset}, adjustment {adjustment}");
+
         Accidental newAccid = new(adjustment);
 
         return new Pitch(newPname, newAccid);

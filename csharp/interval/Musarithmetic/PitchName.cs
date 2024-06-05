@@ -37,9 +37,7 @@ public class PitchName
 
     public int DiatonicValue { get => this.Value; }
 
-    public static int ChromaticOffset(int degree) =>
-        (new [] {0, 2, 4, 5, 7, 9, 11}).ElementAt(Math.Abs(degree % 7));
-
-    public int ChromaticValue { get => ChromaticOffset(this.Value); }
+    public int ChromaticValue { get => 
+        (new [] {0, 2, 4, 5, 7, 9, 11}).ElementAt(this.Value); }
 
 }
