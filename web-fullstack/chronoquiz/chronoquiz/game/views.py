@@ -8,7 +8,6 @@ from rest_framework import viewsets, status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
-from rest_framework.serializers import Serializer
 
 class UserExists(APIView):
     permission_classes = (AllowAny,)
