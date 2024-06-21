@@ -1,0 +1,19 @@
+\def\compose#1#2{%
+    \expandafter\def\csname#1#2\endcsname##1{%
+        \csname#1\endcsname{%
+            \csname#2\endcsname{##1}%
+            }%
+        }%
+}
+
+\def\em#1{{/#1/}}
+
+\def\strong#1{{$**$#1$**$}}
+
+\compose{em}{strong}
+\compose{strong}{em}
+
+Hello, \emstrong{world!}
+Hello, \strongem{world!}
+
+\bye
