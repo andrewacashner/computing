@@ -19,6 +19,11 @@ header h1 {
   font-size: 250%;
 }
 
+header h1 a {
+  text-decoration: none;
+  color: black;
+}
+
 header h2 {
   font-size: 175%;
   font-style: italic;
@@ -78,4 +83,61 @@ footer {
 
 footer p {
   font-size: 80%;
+}
+
+div.card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 22em);
+}
+
+section.card {
+  width: 19em;
+  height: 30em;
+  border: 1px solid black;
+  padding: 1em;
+  margin: 1ex;
+  overflow: scroll;
+  background: DimGray;
+  color: white;
+  border-radius: 1ex;
+  display: grid;
+  grid-template-rows: 2em 5em auto 10em 2em;
+}
+
+section.card h1, h2, img, ul, a.highlight {
+  display: block;
+}
+
+section.card a {
+  color: PaleTurquoise;
+}
+
+section.card a.highlight {
+  color: Turquoise;
+  font-size: 120%;
+  font-weight: bold;
+}
+
+section.card code {
+  font-size: 120%;
+}
+
+section.card h1 {
+  font-size: 150%;
+  margin-top: 0;
+}
+
+section.card h2 {
+  font-size: 125%;
+}
+
+section.card ul {
+  font-size: 90%;
+  padding-left: 1.5em;
+}
+
+section.card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
