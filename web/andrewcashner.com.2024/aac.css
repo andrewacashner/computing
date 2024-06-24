@@ -6,6 +6,7 @@ body {
   height: 100%;
   margin: 0;
   font-family: sans-serif;
+  background-color: FloralWhite;
 }
 
 header {
@@ -21,6 +22,7 @@ header h1 {
 header h2 {
   font-size: 175%;
   font-style: italic;
+  padding-bottom: 1em;
 }
 
 main {
@@ -33,7 +35,7 @@ section.stream {
 }
 
 section.stream.software {
-  background-color: MediumTurquoise;
+  background-color: LightCoral;
 }
 
 section.stream.music {
@@ -41,7 +43,7 @@ section.stream.music {
 }
 
 section.stream.writing {
-  background-color: Plum;
+  background-color: LightSeaGreen;
 }
 
 section.stream h1 {
@@ -61,7 +63,13 @@ section.stream a {
   display: block;
   text-align: right;
   padding-right: 1em;
-  padding-bottom: 1ex;
+  padding-bottom: 1em;
+  color: white;
+  text-decoration: none;
+}
+
+section.stream a::after {
+  content: " ⇒";
 }
 
 footer {
