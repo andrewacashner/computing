@@ -5,22 +5,34 @@ internal class Program
 {
     private static void Main(string[] args)
     {
-        string path = args.Length > 0 ? args.ElementAt(0) : "";
-        string input = "";
+        string input = (args.Length > 0) ? File.ReadAllText(args[0]) : ReadStdIn();
 
-        if (path == "")
+        Registry wordRegistry = new(input);
+
+        Console.WriteLine(wordRegistry);
+    }
+    
+    private static string ReadStdIn() => new StreamReader(Console.OpenStandardInput()).ReadToEnd();
+
+
+    class Registry
+    {
+        record WordCount(string word, int count)
         {
-            string? thisLine;
-            while ((thisLine = Console.ReadLine()) != null)
-            {
-                input += thisLine + "\n";
-            }
-        }
-        else
+            public override string ToString() => word.PadRight(20) + $"{count}";
+        };
+
+        List<WordCount> register;
+
+        public Registry(string input)
         {
-            input = File.ReadAllText(path);
+            List<string> words = new(input.Split(null));
+            register = words.GroupBy(x => x)
+                            .Select(g => new WordCount(g.Key, g.Count()))
+                            .ToList();
+            // TODO exclude empty items
         }
 
-        Console.WriteLine(input);
+        public override string ToString() => String.Join("\n", register.Select(x => x.ToString()));
     }
 }
