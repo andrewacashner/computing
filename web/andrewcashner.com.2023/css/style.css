@@ -1,0 +1,87 @@
+/* CSS for http://www.andrewcashner.com, by Andrew A. Cashner, 2015-05 */
+
+html {
+    max-width: 1920px;
+    min-width: 320px;
+    margin: auto;
+    background-color: grey;
+}
+body {
+    margin: auto;
+    max-width: 45em;
+    font-family: sans-serif; 
+    font-size: 100%;
+    background-color: white;
+    padding-left: 2em;
+    padding-right: 2em;
+    padding-bottom: 1em;
+} 
+main {
+    line-height: 1.25;
+}
+li {
+    margin-top: 0.25em;
+}
+q {
+    quotes: "\201C" "\201D" "\2018" "\2019";
+}
+code {
+    font-family: monospace;
+}
+cite {
+    font-style: italic;
+}
+p.abstract {
+  font-style: italic;
+  font-size: 80%;
+  margin-left: 3em;
+  margin-right: 3em;
+}
+section + section {
+  padding-bottom: 1em;
+  border: 1px solid red;
+}
+
+/* Header with site title, page title, and nav menu */
+header {
+    background-color: #002b36; 
+    margin-left: -2em;
+    margin-right: -2em;
+    padding-top: 0.5em;
+    padding-left: 2em;
+    padding-bottom: 1em;
+}
+header h1 {
+    font-size: 2.25em;
+    color: #dc322f
+}
+header h2 {
+    font-size: 2em;
+    font-style: italic;
+    font-weight: normal;
+    color: #cb4b16; 
+}
+header a {
+    font-size: 1.25em;
+    color: #268bd2;
+    text-decoration: none;
+}
+header nav {
+    width: 100%;
+    display: table;
+
+}
+header nav ul {
+    display: table-row;
+}
+header nav li {
+    display: table-cell;
+    padding-right: 1em;
+}
+
+/* Display nav menu as vertical stack on small screens */
+@media only screen and (max-width: 420px) {
+    header nav li {
+        display: block;
+    }
+}

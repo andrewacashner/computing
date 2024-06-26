@@ -11,18 +11,28 @@
     <title>Andrew Cashner: Software</title>
   </head>
   <body>
-    <header>
+    <header class="software">
       <h1><a href="../index.html">Andrew Cashner</a></h1>
       <h2>Building Software</h2>
     </header>
     <main>
+      <section id="sec:intro">
+        <ul>
+          <li>A self-motivated, creative problem-solver with ten years’ programming experience</li>
+          <li>Skills in front-end and full-stack web development, digital typesetting and publishing</li>
+          <li>Languages: Javascript, Python, C#, Scheme, Haskell, Object Pascal, C, XSLT, Bash, SQL</li>
+          <li>Frameworks and Technologies: React.js, Django, Linux OS and command-line tools, LaTeX, Lilypond</li>
+          <li>Open-source code on <a href="https://github.com/andrewacashner">GitHub</a></li>
+          <li><a href="../docs/Cashner-2024-Resume.pdf">Full resumé</a></li>
+        </ul>
+      </section>
       <section id="sec:projects">
         <h1>Projects</h1>
         <div class="card-container">
           <section class="card" id="card:arca">
             <h1>Arca musarithmica</h1>
             <h2>A device for automatic music composition from 1650</h2>
-            <img src="../img/arca.jpg" alt="Engraving of the Arca musarithmica, from Athanasius Kircher, 'Musurgia universalis' (1650)" />
+            <img src="../media/arca.jpg" alt="Engraving of the Arca musarithmica, from Athanasius Kircher, 'Musurgia universalis' (1650)" />
             <ul>
               <li>Command-line app in Haskell</li>
               <li>Web interface in Javascript and PHP</li>
@@ -33,7 +43,7 @@
           <section class="card" id="card:chronoquiz">
             <h1>Chronoquiz</h1>
             <h2>A web app to build and share timeline quiz games</h2>
-            <img src="../img/chronoquiz.png" alt="Screenshot of chronoquiz.net showing a timeline of history fact cards" />
+            <img src="../media/chronoquiz.png" alt="Screenshot of chronoquiz.net showing a timeline of history fact cards" />
             <ul>
               <li>Front end in Typescript with React.js framework</li>
               <li>Back end in Python with Django framework, MySQL database</li>
@@ -43,7 +53,7 @@
           <section class="card" id="card:lirio">
             <h1><code>lirio</code> and <code>ly2mei</code></h1>
             <h2>Tools for digital music editing with Lilypond</h2>
-            <img src="../img/lirio.png" alt="Snippet of music notation produced with the lirio library" />
+            <img src="../media/lirio.png" alt="Snippet of music notation produced with the lirio library" />
             <ul>
               <li><code>lirio</code>: Extending Lilypond with Scheme for complex digital editions</li>
               <li><code>ly2mei</code>: Converts Lilypond to <a href="http://www.music-encoding.org">MEI-XML</a>, written in Object Pascal</li>
@@ -55,7 +65,7 @@
           <section class="card" id="card:xmlauthor">
             <h1><code>xmlauthor</code></h1>
             <h2>A digital authoring system for academic writers</h2>
-            <img src="../img/xmlauthor.png" alt="Snippet of XHTML source code" />
+            <img src="../media/xmlauthor.png" alt="Snippet of XHTML source code" />
             <ul>
               <li>Uses XSLT to generate print (PDF via LaTeX) and web (HTML and CSS) output from the same XHTML source with 
                 automatic citations, bibliography</li>
@@ -64,6 +74,19 @@
             <a class="highlight" href="https://github.com/andrewacashner/xmlauthor.git"><code>xmlauthor</code> on GitHub</a>
           </section>
         </div>
+      </section>
+      <section id="sec:publications">
+        <h1>Research Publications</h1>
+        <ul>
+          <li>
+            <a href="../research/index.html#lilypond"><q>Lilypond Notation Software in the Digital-Humanities Toolbox</q></a>, <cite>Digital Humanities Quarterly</cite>, vol. 18, no. 2 (2024)
+          </li>
+          <li>
+            <a href="../research/index.html#kircher-computation"><q>Athanasius Kircher’s Arca musarithmica (1650) as a Computational System</q></a>,
+            <cite>Journal of Creative Music Systems</cite>, vol. 8, no. 1 (2024)
+          </li>
+        </ul>
+
       </section>
     </main>
     <footer>

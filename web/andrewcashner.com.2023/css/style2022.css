@@ -1,0 +1,174 @@
+/* New CSS for 2022 for Cashner personal website, www.andrewcashner.com
+  Andrew Cashner, 2022/03/15
+  */
+
+@import
+url('https://fonts.googleapis.com/css2?family=Spectral&display=swap');
+
+@font-face {
+  font-family: "Libris ADF Std";
+  src: url("fonts/libris-adf-std.regular.otf");
+  font-weight: normal;
+}
+
+/* LAYOUT, SPACING */
+html {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  width: 90%;
+  max-width: 40em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+header h1, header h2 {
+  margin-left: 20px;
+}
+header h1 {
+  padding-top: 0.5em;
+}
+
+
+header nav ul {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+}
+
+section + section {
+  padding-top: 1em;
+}
+
+
+/* Display nav menu as vertical stack on small screens */
+@media only screen and (max-width: 420px) {
+    header nav ul {
+        flex-direction: column;
+    }
+}
+
+header nav ul li {
+  margin: 0;
+  padding: 0.2em;
+  flex-grow: 1;
+}
+header nav ul li a {
+  color: white;
+}
+
+
+/* FONT, TYPOGRAPHY, COLOR */
+
+body {
+  font-family: 'Spectral', serif;
+  font-size: 120%;
+}
+
+header {
+  background-color: CadetBlue;
+}
+
+header nav {
+  background-color: DimGray;
+}
+
+h1, h2 {
+  font-family: 'Libris ADF Std', sans-serif;
+  font-weight: normal;
+}
+
+h3, h4, h5, h6 {
+  font-family: 'Spectral', serif;
+}
+
+p {
+  text-align: justify;
+  hyphens: auto;
+  line-height: 1.5em;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+p + p {
+  text-indent: 1.5em;
+}
+
+
+
+ul blockquote {
+  font-size: 80%;
+  margin-left: 0;
+}
+
+ul li {
+  margin-top: 0.25em;
+}
+
+footer p {
+  margin-bottom: 0.5em;
+  text-indent: 0;
+}
+
+code {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 80%;
+}
+
+q { 
+  quotes: '“' '”' '‘' '’';
+}
+
+cite {
+  font-style: italic;
+}
+
+a {
+  color: black;
+  text-decoration: underline;
+  text-decoration-color: LightGray;
+}
+
+a:hover {
+  background-color: LightGray;
+}
+
+header nav a {
+  color: DimGray;
+  text-decoration: none;
+}
+
+details {
+  user-select: none;
+}
+
+/*
+details summary {
+  font-style: italic;
+}
+*/
+
+details summary::after {
+  content: "➕" ; /* U+2795 */
+ /* font-style: normal; */
+  padding-left: 1ex;
+}
+
+details[open] summary::after {
+  content: " ➖" ; /* U+2796 */
+}
+
+summary {
+  display: flex;
+  cursor: pointer;
+}
+
+p.abstract {
+  font-style: normal;
+  font-size: 85%;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  margin-left: 1em;
+}
