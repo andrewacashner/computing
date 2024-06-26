@@ -49,7 +49,7 @@ public class Pitch
         return n - m;
     }
   
-    public Pitch Inc(Interval interval)
+    Pitch Inc(Interval interval)
     {
         int newDiatonicOffset = DiatonicModulo(pname.DiatonicValue + interval.DiatonicShift);
         PitchName newPname = new(newDiatonicOffset);
@@ -73,4 +73,12 @@ public class Pitch
         return new Pitch(newPname, newAccid);
     }
 
+    public static Pitch operator + (Pitch pitch, Interval interval) => 
+        pitch.Inc(interval);
+
+    public static Pitch operator - (Pitch pitch, Interval interval) =>
+        pitch.Inc(interval.Negate());
+
+    public static Interval operator - (Pitch p1, Pitch p2)
+        => new Interval(p1, p2);
 }

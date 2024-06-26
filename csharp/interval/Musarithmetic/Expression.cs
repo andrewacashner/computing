@@ -93,51 +93,41 @@ public class Expression
 
     public static void Evaluate(Queue<object> tokens)
     {
-        object PitchPlusInterval(Pitch pitch, Interval interval, Operator op)
-        {
-            if (op.IsSubtract())
-                interval.Negate();
-            
-            return (Pitch)pitch.Inc(interval);
-        }
-
         object accumulator = tokens.Dequeue();
-        
+     
+        Interval SubtractPitches(Pitch p1, Pitch p2, Operator op) => 
+            op.Meaning switch
+            {
+                Operator.kOperator.SUBTRACT => p1 - p2,
+                _ => throw new ArgumentException($"Cannot process operation {op}")
+            };
+
+        Pitch PitchPlusInterval(Pitch pitch, Interval interval, Operator op) => 
+            op.Meaning switch
+            {
+                Operator.kOperator.ADD => pitch + interval,
+                Operator.kOperator.SUBTRACT => pitch - interval,
+                _ => throw new ArgumentException($"Cannot process operation {op}")
+            };
+
         while (tokens.Count() >= 2)
         {
             object argA = tokens.Dequeue();
             object argB = tokens.Dequeue();
 
-//            Console.WriteLine($"{accumulator.ToString()} {argA.ToString()} {argB.ToString()}");
-
-            switch (accumulator, argA, argB)
+            accumulator = (accumulator, argA, argB) switch
             {
-                case (Pitch p1, Operator op, Pitch p2):
-                    if (op.IsSubtract())
-                        accumulator = new Interval((Pitch)p1, (Pitch)p2);
-                    break;
+                (Pitch p1, Operator o, Pitch p2) =>
+                    SubtractPitches((Pitch)p1, (Pitch)p2, (Operator)o),
 
-                case (Pitch pitch, Operator op, Interval interval):
-                   
-                    if (op.IsAddOrSubtract())
-                        accumulator = PitchPlusInterval(
-                                (Pitch)pitch, 
-                                (Interval)interval, 
-                                (Operator)op);
-                    break;
+                (Pitch p, Operator o, Interval i) =>
+                    PitchPlusInterval((Pitch)p, (Interval)i, (Operator)o),
 
-                case (Interval interval, Operator op, Pitch pitch):
-                    
-                    if (op.IsAdd())
-                        accumulator = PitchPlusInterval(
-                                (Pitch)pitch, 
-                                (Interval)interval,
-                                (Operator)op);
-                    break;
-
-                default:
-                    throw new ArgumentException("Unknown operation or expression");
-            }
+                (Interval i, Operator o, Pitch p) =>
+                    PitchPlusInterval((Pitch)p, (Interval)i, (Operator)o),
+                
+                _ => throw new ArgumentException("Unknown expression")
+            };
         }
 
         Console.WriteLine(accumulator.ToString());

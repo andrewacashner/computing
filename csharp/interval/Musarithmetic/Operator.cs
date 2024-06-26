@@ -6,6 +6,7 @@ public class Operator
 
     kOperator op;
 
+    public kOperator Meaning { get => op; }
     int Value { get => (int)op; }
 
     public Operator(string opStr)
