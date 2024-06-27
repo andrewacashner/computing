@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Musarithmetic;
+﻿using Musarithmetic;
 
 internal class Program
 {
@@ -41,7 +39,7 @@ internal class Program
                 'Pitch(d) - Interval(m2) - Pitch(b)'      (Result: 'M2')
         """;
 
-        if (!(args.Length == 1))
+        if (args.Length != 1)
         {
             Console.Error.WriteLine(USAGE);
             Environment.Exit(1);

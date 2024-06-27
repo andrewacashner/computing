@@ -1,50 +1,23 @@
 namespace Musarithmetic;
 
-using System.Collections.Generic;
-
 public class Expression
 {
     public static Queue<object> Parse(string expr)
     {
-        void ThrowNoParseError(string input) 
-            => throw new ArgumentException($"Could not parse input '{input}'");
+        bool IsValidOperandInput(string s)
+            => (s.StartsWith("Interval(") || s.StartsWith("Pitch("))
+                && s.EndsWith(")");
 
-        bool IsValidOperandInput(string inputStr)
+        ValueTuple<string, string> ParseToken(string word)
         {
-            return (inputStr.StartsWith("Interval(") 
-                    || inputStr.StartsWith("Pitch("))
-                && inputStr.EndsWith(")");
-        }
+            string[] inputs = word.Split(['(', ')'],
+                    StringSplitOptions.RemoveEmptyEntries);
 
-        void EnqueueNewOperator(string operatorStr, Queue<object> tokens)
-        {
-            try
-            {
-                Operator op = new Operator(operatorStr);
-                tokens.Enqueue(op);
-            }
-            catch { throw; }
-        }
-
-        void EnqueueNewPitch(string pitchStr, Queue<object> tokens)
-        {
-            try
-            {
-                Pitch p = new(pitchStr);
-                tokens.Enqueue(p);
-            }
-            catch { throw; }
-        }
-
-        void EnqueueNewInterval(string intervalStr, Queue<object> tokens)
-        {
-            Interval i;
-            try 
-            {
-                i = Interval.FromString(intervalStr);
-                tokens.Enqueue(i);
-            }
-            catch { throw; }
+            if (inputs.Length == 2)
+                return (inputs.ElementAt(0), inputs.ElementAt(1));
+            else
+                throw new ArgumentException(
+                        $"Problem parsing input token {word}");
         }
 
         Queue<object> tokens = new();
@@ -53,40 +26,36 @@ public class Expression
         
         foreach (string thisWord in words)
         {
-            switch (thisWord)
+            try 
             {
-                case "-":
-                case "+":
-                    EnqueueNewOperator(thisWord, tokens);
-                    continue;
+                object? new_token = null;
 
-                default:
-                    break;
-            }
-
-            if (IsValidOperandInput(thisWord))
-            {
-                string[] inputs = thisWord.Split(['(', ')'],
-                        StringSplitOptions.RemoveEmptyEntries);
-
-                switch (inputs)
+                if (thisWord is "-" or "+")
                 {
-                    case ["Pitch", string arg]:
-                        EnqueueNewPitch(arg, tokens);
-                        break;
+                    new_token = new Operator(thisWord);
+                } 
+                else if (IsValidOperandInput(thisWord))
+                {
+                    var (token_type, arg) = ParseToken(thisWord);
 
-                    case ["Interval", string arg]:
-                        EnqueueNewInterval(arg, tokens);
-                        break;
-
-                    default:
-                        ThrowNoParseError(thisWord);
-                        break;
+                    new_token = token_type switch
+                    {
+                        "Pitch"     => new Pitch(arg),
+                        "Interval"  => Interval.FromString(arg),
+                        _           => throw new ArgumentException(
+                                        $"Unrecognized input {thisWord}")
+                    };
                 }
 
-            } 
-            else
-                ThrowNoParseError(thisWord);
+                if (new_token != null)
+                    tokens.Enqueue(new_token);
+                else
+                    throw new ArgumentException(
+                            $"Could not parse input {thisWord}");
+            }
+            catch (Exception e) { 
+                throw new ArgumentException($"Input error: {e.Message}");
+            }
         }
         return tokens;
     }
