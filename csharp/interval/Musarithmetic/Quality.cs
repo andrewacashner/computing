@@ -8,8 +8,6 @@ public class Quality
 
     int value { get => (int)quality; }
 
-    bool IsPerfectDegree(int interval) => (interval % 7) is 0 or 3 or 4;
-
     public Quality(int degree, int adjustment)
     {
         quality = adjustment switch 
@@ -33,7 +31,8 @@ public class Quality
             "M" => kQuality.MAJOR,
             "P" => kQuality.PERFECT,
             "a" => kQuality.AUGMENTED,
-            _ => throw new ArgumentException($"Unrecognized quality input {qualityStr}")
+            _ => throw new ArgumentException(
+                    $"Unrecognized quality input {qualityStr}")
         };
     }
 
@@ -48,9 +47,12 @@ public class Quality
             kQuality.MINOR => -1,
             kQuality.MAJOR or kQuality.PERFECT => 0,
             kQuality.AUGMENTED => 1,
-            _ => throw new ArgumentException($"Cannot calculate chromatic value of interval quality {quality}")
+            _ => throw new ArgumentException(
+            $"Cannot calculate chromatic value of interval quality {quality}")
         };
     }
+
+    static bool IsPerfectDegree(int interval) => (interval % 7) is 0 or 3 or 4;
 
     bool IsPerfect() =>
         quality is kQuality.DIMINISHED or kQuality.PERFECT or kQuality.AUGMENTED;

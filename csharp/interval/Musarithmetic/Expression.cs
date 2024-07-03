@@ -5,7 +5,7 @@ public class Expression
     public static Queue<object> Parse(string expr)
     {
         bool IsValidOperandInput(string s)
-            => (s.StartsWith("Interval(") || s.StartsWith("Pitch("))
+            => (s.StartsWith("interval(") || s.StartsWith("pitch("))
                 && s.EndsWith(")");
 
         ValueTuple<string, string> ParseToken(string word)
@@ -40,8 +40,8 @@ public class Expression
 
                     new_token = token_type switch
                     {
-                        "Pitch"     => new Pitch(arg),
-                        "Interval"  => Interval.FromString(arg),
+                        "pitch"     => new Pitch(arg),
+                        "interval"  => Interval.FromString(arg),
                         _           => throw new ArgumentException(
                                         $"Unrecognized input {thisWord}")
                     };

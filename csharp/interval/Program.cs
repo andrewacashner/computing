@@ -7,7 +7,6 @@ internal class Program
         ExitIfInputInvalid(args);
         string expr = args[0];
 
-
         Queue<object> tokens; 
         try
         {
@@ -35,8 +34,8 @@ internal class Program
             Interval is written as 'Interval(m2)'
 
             Examples: 
-                'Pitch(Ab) - Interval(m2) + Interval(P5)' (Result: 'D♮')
-                'Pitch(d) - Interval(m2) - Pitch(b)'      (Result: 'M2')
+                'pitch(Ab) - interval(m2) + interval(P5)' (Result: 'D♮')
+                'pitch(d) - interval(m2) - pitch(b)'      (Result: 'M2')
         """;
 
         if (args.Length != 1)

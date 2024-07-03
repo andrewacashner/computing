@@ -48,25 +48,36 @@ public class Pitch
         
         return n - m;
     }
-  
+ 
+    // To add an interval to a pitch, we get the letter name by adding the
+    // diatonic values of the pitch (its offset) and the interval, modulo 7.
+    // To get the accidental, we add the chromatic values of the pitch and the
+    // interval (modulo 12) and then compare it with the chromatic value of
+    // what the diatonic pitch from the previous step would be.
+    //
+    // Example: D + m2 = Eb
+    //      1. D's diatonic offset is 1, diatonic value of m2 is 1; 1 + 1 = 2
+    //        which is E.
+    //      2. D's chromatic offset is 2, chromatic value of m2 is 1; 2 + 1 =
+    //      3.
+    //      3. E (result of step 1)'s chromatic value is 4. Compare to result
+    //      of step 2: 3 - 4 = -1. An adjustment of -1 is a flat accidental.
+    //      Result is Eb.
     Pitch Inc(Interval interval)
     {
-        int newDiatonicOffset = DiatonicModulo(pname.DiatonicValue + interval.DiatonicShift);
+        int newDiatonicOffset = DiatonicModulo(
+                pname.DiatonicValue + interval.DiatonicShift);
+        
         PitchName newPname = new(newDiatonicOffset);
+        int diatonicBaseChromaticOffset = newPname.ChromaticValue;
 
         int startingOffset = this.ChromaticValue;
         int inflectedChromaticOffset = 
             ChromaticModulo(startingOffset + interval.ChromaticShift);
 
-//        Console.WriteLine($"starting Offset: {startingOffset}, interval.ChromaticShift {interval.ChromaticShift}");
-
-        int diatonicBaseChromaticOffset = newPname.ChromaticValue;
-
         int adjustment = CircularChromaticDiff(
                     inflectedChromaticOffset,
                     diatonicBaseChromaticOffset);
-
- //      Console.WriteLine($"inflectedChromaticOffset {inflectedChromaticOffset}, diatonicBaseChromaticOffset {diatonicBaseChromaticOffset}, adjustment {adjustment}");
 
         Accidental newAccid = new(adjustment);
 
