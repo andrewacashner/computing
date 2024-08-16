@@ -13,30 +13,27 @@
 char *read_filename(int, char**);
 FILE *open_file(char*);
 int populate_csv(char[][MAX_CHAR], FILE*);
-void merge_cols(char*, char*);
+void merge_cols(char*);
 int char_count(char*, char);
+char *quoted(char*);
+void merge_quoted(char*, char*);
+void print_csv(char[][MAX_CHAR]);
 
 int main(int argc, char *argv[]) {
     char *filename;
     FILE *infile;
     char csv[MAX_LINES][MAX_CHAR] = {{0}};
     int i, rows;
-    char line[MAX_CHAR];
 
     filename = read_filename(argc, argv);
     infile = open_file(filename);
     rows = populate_csv(csv, infile);
 
     for (i = 0; i < rows; ++i) {
-        merge_cols(line, csv[i]);
-        printf("%s\n", line);
+        merge_cols(csv[i]);
     }
 
-    /*
-    for (i = 0; csv[i][0] != '\0'; ++i) {
-        printf("%s\n", csv[i]);
-    }
-    */
+    print_csv(csv);
    
     return(0);
 }
@@ -91,8 +88,7 @@ int char_index(char *s, char c) {
     int index = -1;
 
     for (i = 0; s[i] != '\0'; ++i) {
-        if (s[i] == 'c')
-        {
+        if (s[i] == c) {
             index = i;
             break;
         }
@@ -100,46 +96,60 @@ int char_index(char *s, char c) {
     return(index);
 }
 
-/*
-bool str_contains(char *s, char c) {
-    return(char_count(s, c) > 0);
-}
-*/
-
-void merge_cols(char *merged, char *csv_row) {
+void merge_cols(char *csv_row) {
     char *first, *second;
     char row[MAX_CHAR];
     int count;
     strcpy(row, csv_row);
+    /* TODO Need to check for quotes from beginning */
     count = char_count(row, ',');
     switch (count) {
         case 0:
-            strcpy(merged, row);
+            strcpy(csv_row, row);
             break;
         case 1:
             first = strtok(row, ",");
             second = strtok(NULL, ",");
-            sprintf(merged, "%s %s", first, second);
+            sprintf(csv_row, "%s %s", first, second);
             break;
         default:
-            if (char_count(row, '"') > 0) {
-                fprintf(stderr, "quote char found\n");
-                /* Parse quoted phrases */
-                if (char_index(row, '"') < char_index(row, ',')) {
-                    printf("quote char found in first name");
-                    /* Parse quoted firstname */
-                    second = strrchr(row, ",");
-                } else {
-                    printf("quote char found in last name");
-                    first = strtok(row, ",");
-                    /* Parse quoted lastname */
-                }
-                sprintf(merged, "%s %s", first, second);
-            } else {
-                fprintf(stderr, "Could not parse\n");
-            }
-            merged[0] = '\0';
+            merge_quoted(csv_row, row);
             break;
     }
 }
 
+char *quoted(char *s) {
+    if (char_index(s, '"') != 0) {
+        fprintf(stderr, "Cannot parse string '%s'\n", s);
+        exit(EXIT_FAILURE);
+    }
+    return(strtok(&s[1], "\""));
+}
+
+void merge_quoted(char *merged, char *s) {
+    char *first, *second;
+
+    if (char_count(s, '"') > 0) {
+        if (char_index(s, '"') < char_index(s, ',')) {
+            /* Quote in first name */
+            second = strrchr(s, ',') + 1;
+            first = quoted(s);
+        } else {
+            /* Quote in second name */
+            second = strchr(strchr(s, ','), '\"');
+            second = quoted(second);
+            first = strtok(s, ",");
+        } /* TODO what if both are quoted ? */
+        sprintf(merged, "%s %s", first, second);
+    } else {
+        fprintf(stderr, "Cannot parse string '%s'\n", s);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void print_csv(char csv[][MAX_CHAR]) {
+    int i;
+    for (i = 0; csv[i][0] != '\0'; ++i) {
+        printf("%s\n", csv[i]);
+    }
+}
