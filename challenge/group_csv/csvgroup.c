@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define MAX_CHAR 128
 #define MAX_LINES 512*2
@@ -15,7 +16,8 @@ FILE *open_file(char*);
 int populate_csv(char[][MAX_CHAR], FILE*);
 void merge_cols(char*);
 int char_count(char*, char);
-char *quoted(char*);
+char *csv_delim_index(char *s);
+void strcat_filter(char *dest, char *src, char c);
 void merge_quoted(char*, char*);
 void print_csv(char[][MAX_CHAR]);
 
@@ -35,7 +37,7 @@ int main(int argc, char *argv[]) {
 
     print_csv(csv);
    
-    return(0);
+    return 0;
 }
 
 char *read_filename(int argc, char *argv[]) {
@@ -43,7 +45,7 @@ char *read_filename(int argc, char *argv[]) {
         fprintf(stderr, "Usage: csvgroup FILENAME\n");
         exit(EXIT_FAILURE);
     }
-    return(&argv[1][0]);
+    return &argv[1][0];
 }
 
 FILE *open_file(char *filename) {
@@ -52,7 +54,7 @@ FILE *open_file(char *filename) {
         fprintf(stderr, "Could not open file %s for reading.\n", filename);
         exit(EXIT_FAILURE);
     }
-    return(infile);
+    return infile;
 }
 
 int populate_csv(char csv[][MAX_CHAR], FILE *infile) {
@@ -71,7 +73,7 @@ int populate_csv(char csv[][MAX_CHAR], FILE *infile) {
             csv[i][0] = '\0';
         }
 
-        return(rows);
+        return rows;
 }
 
 int char_count(char *s, char c) {
@@ -80,7 +82,7 @@ int char_count(char *s, char c) {
         if (s[i] == c) 
             ++count;
     }
-    return(count);
+    return count;
 }
 
 int char_index(char *s, char c) {
@@ -93,7 +95,7 @@ int char_index(char *s, char c) {
             break;
         }
     }
-    return(index);
+    return index;
 }
 
 void merge_cols(char *csv_row) {
@@ -101,7 +103,6 @@ void merge_cols(char *csv_row) {
     char row[MAX_CHAR];
     int count;
     strcpy(row, csv_row);
-    /* TODO Need to check for quotes from beginning */
     count = char_count(row, ',');
     switch (count) {
         case 0:
@@ -118,33 +119,40 @@ void merge_cols(char *csv_row) {
     }
 }
 
-char *quoted(char *s) {
-    if (char_index(s, '"') != 0) {
-        fprintf(stderr, "Cannot parse string '%s'\n", s);
-        exit(EXIT_FAILURE);
+char *column_end(char *s) {
+    bool ignore = false;
+    char *target;
+
+    for (target = s; *target != '\0'; ++target) {
+        if (*target == '"') {
+            ignore = !ignore;
+        } else if (*target == ',' && !ignore) {
+            break;
+        } 
     }
-    return(strtok(&s[1], "\""));
+    return target + 1;
+}
+
+void strcat_filter(char *dest, char *src, char c) {
+    int i, j;
+    for (i = 0, j = 0; src[i] != '\0'; ++i) {
+        if (src[i] != c) {
+            dest[j] = src[i];
+            ++j;
+        }
+    }
+    dest[j] = '\0';
 }
 
 void merge_quoted(char *merged, char *s) {
     char *first, *second;
+    char tmp[MAX_CHAR];
+    first = s;
+    second = column_end(s);
+    *(second - 1) = '\0';
 
-    if (char_count(s, '"') > 0) {
-        if (char_index(s, '"') < char_index(s, ',')) {
-            /* Quote in first name */
-            second = strrchr(s, ',') + 1;
-            first = quoted(s);
-        } else {
-            /* Quote in second name */
-            second = strchr(strchr(s, ','), '\"');
-            second = quoted(second);
-            first = strtok(s, ",");
-        } /* TODO what if both are quoted ? */
-        sprintf(merged, "%s %s", first, second);
-    } else {
-        fprintf(stderr, "Cannot parse string '%s'\n", s);
-        exit(EXIT_FAILURE);
-    }
+    sprintf(tmp, "%s %s", first, second);
+    strcat_filter(merged, tmp, '"');
 }
 
 void print_csv(char csv[][MAX_CHAR]) {
@@ -153,3 +161,5 @@ void print_csv(char csv[][MAX_CHAR]) {
         printf("%s\n", csv[i]);
     }
 }
+
+
