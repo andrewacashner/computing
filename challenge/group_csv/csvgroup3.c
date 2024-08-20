@@ -2,22 +2,30 @@
  * and sort the results into two groups. Return a list of both groups,
  * separated by two newlines, to standard output.
  */
-/* Shorter! 2024/08/19 */
+
+/* More declarative
+ * 2024/08/19
+ */
 #include <stdio.h>
 #include <stdbool.h>
 
+#define QUOTE '"'
+#define COMMA ','
+#define SPACE ' '
+
+void writechar(int c) {
+    if (c != QUOTE)
+        putchar(c);
+}
+
 int main(void) {
-    int c;
+    int c, newchar;
     bool in_quote = false;
 
     while ((c = getchar()) != EOF) {
-        if (c == '"') {
-            in_quote = !in_quote;
-        } else if (c == ',' && !in_quote) {
-            putchar(' ');
-        } else {
-            putchar(c);
-        }
+        in_quote = (c == QUOTE) ? !in_quote : in_quote;
+        newchar = (c == COMMA && !in_quote) ? SPACE : c;
+        writechar(newchar);
     }
     return(0);
 }
