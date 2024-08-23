@@ -19,6 +19,7 @@ typedef struct node {
 node_ptr new_node(bool is_head, int data, node_ptr prev, node_ptr next);
 node_ptr new_list();
 node_ptr append(node_ptr head, int new_data);
+node_ptr new_list_from_array(int inputs[], int max_inputs);
 
 void assert_not_empty(node_ptr head);
 node_ptr first(node_ptr head);
@@ -45,19 +46,18 @@ char add_diatonic(char start, int offset);
 
 node_ptr reverse(node_ptr head);
 
+
+
 #define MAX_INPUTS 10
 
 int main(void) {
-    node_ptr ls = new_list();
+    node_ptr ls;
     node_ptr match = NULL;
     
     int inputs[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     int i;
 
-    for (i = 0; i < MAX_INPUTS; ++i) {
-        ls = append(ls, inputs[i]);
-     
-    }
+    ls = new_list_from_array(inputs, MAX_INPUTS);
     print_list(ls);
 
     match = find_node(ls, 5);
@@ -90,7 +90,7 @@ int main(void) {
     print_list(ls);
 
     free_list(ls);
-    ls = new_list();
+    char *music_notes = "abcdefg";
     for (i = (int)'a'; i <= (int)'g'; ++i) {
         ls = append(ls, i);
     }
@@ -139,6 +139,15 @@ node_ptr append(node_ptr head, int new_data) {
     }
 
     return head;
+}
+
+node_ptr new_list_from_array(int inputs[], int max_inputs) {
+    node_ptr ls = new_list();
+    int i;
+    for (i = 0; i < max_inputs; ++i) {
+        ls = append(ls, inputs[i]);
+    }
+    return ls;
 }
 
 void assert_not_empty(node_ptr ls) {
