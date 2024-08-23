@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 typedef struct node *node_ptr;
 typedef struct node {
@@ -18,15 +19,31 @@ typedef struct node {
 node_ptr new_node(bool is_head, int data, node_ptr prev, node_ptr next);
 node_ptr new_list();
 node_ptr append(node_ptr head, int new_data);
+
 void assert_not_empty(node_ptr head);
 node_ptr first(node_ptr head);
 node_ptr last(node_ptr head);
 node_ptr find_node(node_ptr head, int value);
 node_ptr delete_node(node_ptr head, int value);
+
+node_ptr at_offset(node_ptr head, int n);
 node_ptr rotate(node_ptr head, int n);
+
 bool is_last(node_ptr node);
 void print_list(node_ptr ls);
 void free_list(node_ptr head);
+
+char *list_separator(bool is_last);
+void print_int_node(node_ptr node);
+void print_char_node(node_ptr node);
+void print_list_format(node_ptr ls, char *prefix, char *suffix,
+        void fn(node_ptr));
+
+node_ptr new_gamut();
+node_ptr new_gamut_on(char start);
+char add_diatonic(char start, int offset);
+
+node_ptr reverse(node_ptr head);
 
 #define MAX_INPUTS 10
 
@@ -50,6 +67,7 @@ int main(void) {
     ls = delete_node(ls, 5);
     print_list(ls);
 
+
     for (i = 0; i < MAX_INPUTS; i += 2) {
         ls = delete_node(ls, i);
     }
@@ -68,7 +86,24 @@ int main(void) {
     ls = rotate(ls, 5);
     print_list(ls);
 
+    ls = reverse(ls);
+    print_list(ls);
+
     free_list(ls);
+    ls = new_list();
+    for (i = (int)'a'; i <= (int)'g'; ++i) {
+        ls = append(ls, i);
+    }
+    print_list_format(ls, "(", ")", print_char_node);
+
+    ls = rotate(ls, 3);
+    print_list_format(ls, "(", ")", print_char_node);
+    ls = rotate(ls, 4);
+    printf("%c\n", (char)(at_offset(ls, 2)->data));
+
+    free_list(ls);
+
+    printf("%c\n", add_diatonic('g', 2)); /* answer should be 'b' */
 
     return 0;
 }
@@ -168,15 +203,23 @@ node_ptr connect(node_ptr first, node_ptr second) {
     return first;
 }
 
+node_ptr at_offset(node_ptr head, int n) {
+    node_ptr current;
+
+    assert_not_empty(head);
+    for (current = head->next; 
+            current && n > 0; 
+            --n, current = current->next) {
+        /* Just move to position */
+    }
+    return current;
+}
+
 node_ptr rotate(node_ptr head, int n) {
     node_ptr current;
     assert_not_empty(head);
 
-    for (current = head->next; 
-            n > 0 && current && !current->is_head; 
-            --n, current = current->next) {
-        /* Just find the new first element */
-    }
+    current = at_offset(head, n); /* New first element */
 
     /* Remove the head */
     connect(head->prev, head->next);
@@ -192,7 +235,42 @@ bool is_last(node_ptr node) {
     return !node->next || node->next->is_head;
 }
 
+char *list_separator(bool is_last) {
+    return (is_last) ? "" : ", ";
+}
 
+void print_int_node(node_ptr node) {
+    printf("%d", node->data);
+    printf("%s", list_separator(is_last(node)));
+}
+
+void print_char_node(node_ptr node) {
+    printf("%c", (char)node->data);
+    printf("%s", list_separator(is_last(node)));
+}
+
+void print_list_format(node_ptr ls, char *prefix, char *suffix, 
+        void fn(node_ptr)) {
+    if (ls) {
+        if (ls->is_head) {
+            printf(prefix);
+        } else {
+            fn(ls);
+        }
+        if (ls->next && !is_last(ls)) {
+            print_list_format(ls->next, prefix, suffix, fn);
+        }
+        if (is_last(ls)) {
+            printf("%s\n", suffix);
+        }
+    }
+}
+
+void print_list(node_ptr ls) {
+    print_list_format(ls, "[", "]", print_int_node);
+}
+
+/*
 void print_list(node_ptr ls) {
     if (ls) {
         if (ls->is_head) {
@@ -210,6 +288,9 @@ void print_list(node_ptr ls) {
         }
     }
 }
+*/
+
+
 
 void free_list(node_ptr ls) {
     if (ls) {
@@ -253,5 +334,70 @@ void free_list(node_ptr head) {
 }
 */
 
+node_ptr rotate_to_value(node_ptr head, int value) {
+    node_ptr new_first = find_node(head, value);
+    connect(head->prev, head->next);
+    connect(new_first->prev, head);
+    connect(head, new_first);
+    return head;
+}
 
+node_ptr new_gamut() {
+    int i;
+    char *alphabet = "abcdefg";
+    node_ptr gamut = new_list();
 
+    for (i = 0; alphabet[i] != '\0'; ++i) {
+        append(gamut, (int)(alphabet[i]));
+    }
+    return gamut;
+}
+
+node_ptr new_gamut_on(char start) {
+    node_ptr gamut = new_gamut();
+    gamut = rotate_to_value(gamut, (int)start);
+    return gamut;
+}
+
+char add_diatonic(char start, int offset) {
+    node_ptr gamut = new_gamut_on(start);
+    node_ptr target = at_offset(gamut, offset);
+    char result = (char)(target->data);
+    free_list(gamut);
+    return result;
+}
+
+node_ptr reverse(node_ptr head) {
+    node_ptr current, tmp;
+    assert_not_empty(head);
+
+    current = head;
+    do {
+        tmp = current->prev;
+        current->prev = current->next;
+        current->next = tmp;
+        current = current->next;
+    } while (!current->is_head);
+   
+    return head;
+}
+
+/*
+list:    H 0 1 2 3
+
+    prev     next
+    [3<-, H, ->0]
+    [H<-, 0, ->1]
+    [0<-, 1, ->2]
+    [1<-, 2, ->3]
+    [2<-, 3, ->H]
+
+reversed:    H 3 2 1 0 
+    [0<-, H, ->3] 
+    [H<-, 3, ->2] 
+    [3<-, 2, ->1]
+    [2<-, 1, ->0]
+    [1<-, 0, ->H]
+*/
+
+    
