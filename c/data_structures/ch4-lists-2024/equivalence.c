@@ -26,8 +26,7 @@ typedef struct node {
 FILE *setup_input(int argc, char *argv[]);
 int read_text(char buffer[MAX_SIZE][MAX_CHAR], FILE *infile);
 node_ptr new_node(int data, node_ptr link);
-void register_values(node_ptr values[MAX_SIZE],
-        char text[MAX_SIZE][MAX_CHAR], int line_count);
+void register_values(node_ptr values[MAX_SIZE], char text[MAX_SIZE][MAX_CHAR], int line_count);
 void free_values(node_ptr values[MAX_SIZE]);
 void print_equivalences(node_ptr values[MAX_SIZE], int pair_count);
 
@@ -40,15 +39,19 @@ int main(int argc, char *argv[]) {
     char text[MAX_SIZE][MAX_CHAR] = {{0}};
     int pair_count;
     node_ptr values[MAX_SIZE] = {NULL};
+    node_ptr equiv_stack = NULL;
 
     infile = setup_input(argc, argv);
     pair_count = read_text(text, infile);
 
     register_values(values, text, pair_count);
     print_equivalences(values, pair_count);
-/*
+
+    for (i = 0; i < MAX_SIZE; ++i) {
+        equiv_stack = build_equiv_stack(values, printed, i);
+    }
+
     free_values(values);
-    */
     
     return 0;
 }
@@ -171,7 +174,7 @@ void print_equivalences(node_ptr values[MAX_SIZE], int pair_count) {
             /*****************************/
             /* cleaned up version of original code,
              * don't totally get it,
-             * and not sure how to free memory after */
+             * and not sure how to free memory after *
             current = values[i];
             top = NULL;
             for (;;) {
@@ -196,7 +199,7 @@ void print_equivalences(node_ptr values[MAX_SIZE], int pair_count) {
 
                 print("}\n");
             }
-            /*****************************/
+            *****************************/
 
             /*****************************/
             /* My attempt at something I understand, but gave up because it
@@ -238,6 +241,8 @@ void print_equivalences(node_ptr values[MAX_SIZE], int pair_count) {
                 current = pop(&partner, current);
                 printf(", %d", partner);
             }
+            
+            printf("}\n");
 
 /*
 
@@ -262,7 +267,34 @@ void print_equivalences(node_ptr values[MAX_SIZE], int pair_count) {
 
                 current = values[top->data];
 */
-            printf("}\n");
         }
     }
+}
+
+node_ptr build_equiv_stack(node_ptr partners[MAX_SIZE], 
+        bool printed[MAX_SIZE], 
+        int match) {
+    node_ptr current = partners[match];
+    node_ptr stack = NULL;
+    int this_data;
+
+    while (current != NULL) {
+        this_data = current->data;
+        if (!printed[this_data]) {
+            stack = push(this_data, stack);
+        }
+        stack = combine_stacks(
+                build_equiv_stack(partners, printed, current->data), stack);
+        current = current->link;
+    }
+    return stack;
+}
+
+node_ptr combine_stacks(node_ptr s1, node_ptr s2) {
+    node_ptr current = s1;
+    while (current->link != NULL) {
+        current = current->link;
+    }
+    current->link = s2;
+    return s1;
 }
