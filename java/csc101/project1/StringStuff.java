@@ -10,6 +10,7 @@ import java.util.Scanner;
 import java.util.Random;
 
 class StringStuff {
+
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
         Random randGen = new Random();
