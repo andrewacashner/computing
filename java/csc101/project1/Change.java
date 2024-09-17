@@ -1,6 +1,6 @@
 /* Change
  * CSC101 Project 1
- * Andrew Cashner, 2024/09/16
+ * Andrew Cashner, 2024/09/17
  */
 
 import java.util.Scanner;
@@ -12,18 +12,6 @@ class Change {
    static final int DIME    =  10;
    static final int NICKEL  =   5;
    static final int PENNY   =   1;
-
-   static int change(int total, int value) {
-      return total / value;
-   }
-
-   static int remainder(int total, int value, int quantity) {
-      return total - (value * quantity);
-   }
-
-   static String changeRow(String label, int amount) {
-      return String.format("  %-10s%5d\n", label, amount);
-   }
 
    public static void main(String[] args) {
       Scanner kbScan = new Scanner(System.in);
@@ -41,28 +29,25 @@ class Change {
       // Round to avoid inaccuracy in conversion to int
       int changeLeft = (int)Math.round(changeTotal * 100);
 
-      int changeDollars = change(changeLeft, DOLLAR);
-      changeLeft = remainder(changeLeft, DOLLAR, changeDollars);
+      int changeDollars = changeLeft / DOLLAR;
+      changeLeft = changeLeft % DOLLAR;
 
-      int changeQuarters = change(changeLeft, QUARTER);
-      changeLeft = remainder(changeLeft, QUARTER, changeQuarters);
+      int changeQuarters = changeLeft / QUARTER;
+      changeLeft = changeLeft % QUARTER;
 
-      int changeDimes = change(changeLeft, DIME);
-      changeLeft = remainder(changeLeft, DIME, changeDimes);
+      int changeDimes = changeLeft / DIME;
+      changeLeft = changeLeft % DIME;
 
-      int changeNickels = change(changeLeft, NICKEL);
-      changeLeft = remainder(changeLeft, NICKEL, changeNickels);
+      int changeNickels = changeLeft / NICKEL;
+      changeLeft = changeLeft % NICKEL;
 
-      int changePennies = change(changeLeft, PENNY);
-
-      String table = 
-         changeRow("Dollars", changeDollars) +
-         changeRow("Quarters", changeQuarters) + 
-         changeRow("Dimes", changeDimes) + 
-         changeRow("Nickels", changeNickels) +
-         changeRow("Pennies", changePennies);
+      int changePennies = changeLeft / PENNY;
 
       System.out.printf("Total change: $%.2f\n\n", changeTotal);
-      System.out.print(table);
+      System.out.printf("  %-10s%5d\n", "Dollars", changeDollars);
+      System.out.printf("  %-10s%5d\n", "Quarters", changeQuarters);
+      System.out.printf("  %-10s%5d\n", "Dimes", changeDimes);
+      System.out.printf("  %-10s%5d\n", "Nickels", changeNickels);
+      System.out.printf("  %-10s%5d\n", "Pennies", changePennies);
    }
 }

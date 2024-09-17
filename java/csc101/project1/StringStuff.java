@@ -26,7 +26,6 @@ class StringStuff {
 
         int randomIndex = randGen.nextInt(length);
         String randomLetter = phrase.substring(randomIndex, randomIndex + 1);
-        // better: char randomLetter = phrase.charAt(randomIndex);
 
         int firstSpaceIndex = phrase.indexOf(" ");
 
