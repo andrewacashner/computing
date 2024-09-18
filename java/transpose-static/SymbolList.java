@@ -1,17 +1,3 @@
-
-/*
-Symbol pcC = new Symbol("C", "C", 0);
-Symbol pcA = new Symbol("A", "A", 5);
-SymbolList pnames = new SymbolList(pcC, pcA);
-SymbolList pnames = newSymbolList(
-        new String[]{"c", "d", "e"}, 
-        new String[]{"C", "D", "E"},
-        new int[]{0, 1, 2});
-String pcA = pnames.getFromValue(5);
-String pcA = pnames.getFromString("a");
-*/
-
-
 import java.util.List;
 import java.util.ArrayList;
 
