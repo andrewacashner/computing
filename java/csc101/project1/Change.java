@@ -30,16 +30,16 @@ class Change {
       int changeLeft = (int)Math.round(changeTotal * 100);
 
       int changeDollars = changeLeft / DOLLAR;
-      changeLeft = changeLeft % DOLLAR;
+      changeLeft %= DOLLAR;
 
       int changeQuarters = changeLeft / QUARTER;
-      changeLeft = changeLeft % QUARTER;
+      changeLeft %= QUARTER;
 
       int changeDimes = changeLeft / DIME;
-      changeLeft = changeLeft % DIME;
+      changeLeft %= DIME;
 
       int changeNickels = changeLeft / NICKEL;
-      changeLeft = changeLeft % NICKEL;
+      changeLeft %= NICKEL;
 
       int changePennies = changeLeft / PENNY;
 
