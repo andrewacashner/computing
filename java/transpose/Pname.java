@@ -1,3 +1,6 @@
+import java.util.List;
+import java.util.ArrayList;
+
 public class Pname {
     char name;
     int offset;
@@ -7,7 +10,7 @@ public class Pname {
     Pname(int offset) {
         if (offset >= 0 && offset <= 6) {
             this.offset = offset;
-            this.name = names[offset];
+            this.name = names.get(offset);
         } else {
             throw new Error(
                     String.format("Pname offset %d out of bounds", offset));
@@ -15,17 +18,9 @@ public class Pname {
     }
 
     Pname(char name) {
-        boolean found = false;
-        int i;
-        for (i = 0; i < this.names.length; ++i) {
-            if (this.names[i] == name) {
-                found = true;
-                break;
-            }
-        }
-        if (found) {
-            this.name = name;
-            this.offset = i;
+        this.offset = names.indexOf(name);
+        if (this.offset != -1) {
+            this.name = names.get(this.offset);
         } else {
             throw new Error(
                     String.format("Illegal pitch name \'%c\'", name));
