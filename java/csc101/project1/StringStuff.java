@@ -1,6 +1,7 @@
 /* StringStuff
  *
  * Given a multiple-word phrase, report some information about the string.
+ * We are assuming valid input.
  *
  * Andrew A. Cashner, 2024/09/10
  * For CSC101, Assignment 1
@@ -25,7 +26,7 @@ class StringStuff {
         String substring = phrase.substring(1, length - 1);
 
         int randomIndex = randGen.nextInt(length);
-        String randomLetter = phrase.substring(randomIndex, randomIndex + 1);
+        char randomLetter = phrase.charAt(randomIndex);
 
         int firstSpaceIndex = phrase.indexOf(" ");
 
@@ -35,9 +36,9 @@ class StringStuff {
         System.out.printf("%-40s| %d\n", "Length", length);
         System.out.printf("%-40s| \"%s\"\n", 
                 "Substring minus first and last letters", substring);
-        System.out.printf("%-40s| \'%s\'\n",
+        System.out.printf("%-40s| \'%c\'\n",
                 String.format("Letter at random index %d", randomIndex), 
-                randomIndex);
+                randomLetter);
         System.out.printf("%-40s| %d\n", 
                 "Index of first space character", firstSpaceIndex);
         System.out.println(rule);
