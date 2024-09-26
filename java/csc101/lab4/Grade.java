@@ -76,7 +76,7 @@ class Grade {
             break;
       }
 
-      System.out.printf("For a score of %d you earned the %c.\n", 
+      System.out.printf("For a score of %d you earned %c.\n", 
             score, letterGrade);
 
    }
