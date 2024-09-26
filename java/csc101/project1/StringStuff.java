@@ -29,7 +29,7 @@ class StringStuff {
 
         int firstSpaceIndex = phrase.indexOf(" ");
 
-        String rule = new String(        "--------------------------------------------------------------");
+        String rule = new String("--------------------------------------------------------------");
 
         System.out.println(rule);
         System.out.printf("%-40s| %d\n", "Length", length);

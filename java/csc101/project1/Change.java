@@ -1,4 +1,8 @@
 /* Change
+ *
+ * Given a price and an amount paid, report the amount of change to return for
+ * each denomination of currency.
+ *
  * CSC101 Project 1
  * Andrew Cashner, 2024/09/17
  */
