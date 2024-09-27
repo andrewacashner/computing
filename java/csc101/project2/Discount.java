@@ -125,8 +125,6 @@ class Discount {
 
       // Report order details in a receipt table
       // Three columns of width 30, 10, and 10
-      // (Would be much better to wrap these in functions instead of
-      // repeating the formatting)
       System.out.printf("\n%30s %10d $%10.2f\n",
             "Number of Bags Ordered:", bagsOrdered, coffeePriceFullRateUSD);
             
@@ -135,13 +133,23 @@ class Discount {
                "Discount:", discountPercent, discountAmountUSD);
       }
 
+      // Only show boxes that were used
       System.out.printf("%30s\n", "Boxes Used:");
-      System.out.printf("%30s %2d%8s $%10.2f\n", "", 
-            largeBoxes, "Large",   largeBoxPrice);
-      System.out.printf("%30s %2d%8s $%10.2f\n", "",
-            mediumBoxes, "Medium", mediumBoxPrice);
-      System.out.printf("%30s %2d%8s $%10.2f\n", "",
-            smallBoxes, "Small", smallBoxPrice);
+
+      if (largeBoxes > 0) {
+         System.out.printf("%30s %2d%8s $%10.2f\n", "", 
+               largeBoxes, "Large",   largeBoxPrice);
+      }
+
+      if (mediumBoxes > 0) {
+         System.out.printf("%30s %2d%8s $%10.2f\n", "",
+               mediumBoxes, "Medium", mediumBoxPrice);
+      }
+
+      if (smallBoxes > 0) {
+         System.out.printf("%30s %2d%8s $%10.2f\n", "",
+               smallBoxes, "Small", smallBoxPrice);
+      }
 
       System.out.printf("\n%30s %10s $%10.2f\n",
             "Total Price", "", totalPriceUSD);
