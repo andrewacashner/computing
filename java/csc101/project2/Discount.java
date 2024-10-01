@@ -1,6 +1,6 @@
 /* # Discount: Coffee Sales and Shipping
  *
- * | Andrew Cashner, <acashner@student.monroecc.edu>
+ * | Andrew Cashner, `acashner@student.monroecc.edu`
  * | CSC101, Project 2
  *
  * ## Description
