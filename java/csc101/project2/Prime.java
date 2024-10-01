@@ -1,5 +1,8 @@
 /* Prime
- * Find prime numbers within a given range
+ *
+ * Find prime numbers within a given range.
+ * The user inputs a minimum and a maximum and the program finds all prime
+ * numbers between those numbers (inclusive).
  *
  * Andrew Cashner, `acashner@student.monroecc.edu`
  * CSC101, Project 2
@@ -44,7 +47,6 @@ class Prime {
       // Check every integer value between min and max
       // For each one, check for divisors between 2 and itself - 1; if any
       // divide evenly, this number is not prime.
-
       for (int current = realMin; current <= max; ++current) {
 
          boolean hasFactor = false;
