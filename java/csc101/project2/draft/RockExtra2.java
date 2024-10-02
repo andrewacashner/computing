@@ -18,11 +18,6 @@
  *
  * If both choose the same item, the result is a tie.
  * Rock beats Scissors, Scissors beats Paper, Paper beats Rock.
- *
- * ### Limitations
- *
- * This program would be much better if I could use an enum with values ROCK,
- * PAPER, and SCISSORS, for both comparison values and output strings.
  */
 
 import java.util.Scanner;
@@ -30,10 +25,14 @@ import java.util.Random;
 
 class Rock {
    public static void main(String[] args) {
+      // Instead of an enum, which would be better, we use integer constants
+      // for the weapons; we select weapons from character input by finding
+      // the index in INITIALS; and we select weapons randomly using a
+      // randomly chosen index between 0 and INITIALS.length().
       final int ROCK     = 0;
       final int PAPER    = 1;
       final int SCISSORS = 2;
-      final int WEAPON_MAX = 3;
+      final String INITIALS = new String("rps");
 
       // Welcome, Get user input
       System.out.println("ROCK PAPER SCISSORS");
@@ -52,48 +51,31 @@ class Rock {
       int ties = 0;
       int round = 0;
 
-      String userInput = new String();
-
-      // Game loop: Keep playing until someone wins or user presses q; 
-      // count rounds
-      while (!userInput.equals("q") &&
-            userWins <= maxRound 
-            && computerWins <= maxRound) {
-
+      // Game loop: Keep playing until someone wins; count rounds
+      while (userWins <= maxRound && computerWins <= maxRound) {
          ++round; // Count rounds from 1
          System.out.printf("\n~~~ ROUND %d ~~~\n\n", round);
 
          // Get user choice
-         System.out.print("Select r, p, or s (Press q to quit): ");
-         userInput = kbScan.next().toLowerCase();
+         System.out.print("Select r, p, or s: ");
+         String userInput = kbScan.next().toLowerCase();
 
-         int userWeapon;
-         switch (userInput) {
-            case "r":
-               userWeapon = ROCK;
-               break;
-            case "p":
-               userWeapon = PAPER;
-               break;
-            case "s":
-               userWeapon = SCISSORS;
-               break;
-            default:
-               System.out.printf("Invalid input '%s': Try again!\n", 
-                     userInput);
-               --round; // Redo this round
-               continue;
+         if (!(INITIALS.contains(userInput))) {
+            System.err.printf("Invalid input '%s': Try again!\n", userInput);
+            --round; // Redo
+            continue;
          }
+         
+         int userWeapon = INITIALS.indexOf(userInput.charAt(0));
+
+         // Make computer choice (random)
+         int computerWeapon = randomizer.nextInt(INITIALS.length());
 
          String userWeaponName = switch (userWeapon) {
             case ROCK  -> "Rock";
             case PAPER -> "Paper";
             default    -> "Scissors";
          };
-
-
-         // Make computer choice (random)
-         int computerWeapon = randomizer.nextInt(WEAPON_MAX);
 
          String computerWeaponName = switch (computerWeapon) {
             case ROCK  -> "Rock";
@@ -108,8 +90,8 @@ class Rock {
          if (userWeapon == computerWeapon) {
             ++ties;
             System.out.println("Tie!");
-         } else if ((userWeapon == ROCK     && computerWeapon == SCISSORS) ||
-                    (userWeapon == PAPER    && computerWeapon == ROCK)     ||
+         } else if ((userWeapon == ROCK && computerWeapon == SCISSORS) ||
+                    (userWeapon == PAPER && computerWeapon == ROCK)    ||
                     (userWeapon == SCISSORS && computerWeapon == PAPER)) {
             ++userWins;
             System.out.printf("%s beats %s: You win!\n", 

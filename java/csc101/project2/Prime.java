@@ -1,12 +1,14 @@
-/* Prime
+/* # Prime
+ *
+ * | Andrew Cashner, `acashner@student.monroecc.edu`
+ * | CSC101, Project 2
+ * | October 2024
+ *
+ * ## Description
  *
  * Find prime numbers within a given range.
  * The user inputs a minimum and a maximum and the program finds all prime
  * numbers between those numbers (inclusive).
- *
- * Andrew Cashner, `acashner@student.monroecc.edu`
- * CSC101, Project 2
- * 2024/10/01
  */
 
 import java.util.Scanner;

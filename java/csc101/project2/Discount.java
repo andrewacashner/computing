@@ -2,6 +2,7 @@
  *
  * | Andrew Cashner, `acashner@student.monroecc.edu`
  * | CSC101, Project 2
+ * | October 2024
  *
  * ## Description
  *
@@ -34,12 +35,6 @@
  * 200--299   25%
  * 300+       30%
  * -------------------
- *
- * ## Changelog
- * 
- * -----------  -------------------
- * 2024/09/27   First draft
- * -----------  -------------------
  */
 
 import java.util.Scanner;
