@@ -57,8 +57,8 @@ class Rock {
       // Game loop: Keep playing until someone wins or user presses q; 
       // count rounds
       while (!userInput.equals("q") &&
-            userWins <= maxRound 
-            && computerWins <= maxRound) {
+            userWins < maxRound 
+            && computerWins < maxRound) {
 
          ++round; // Count rounds from 1
          System.out.printf("\n~~~ ROUND %d ~~~\n\n", round);
