@@ -54,10 +54,10 @@ class Discount {
       final double BOX_PRICE_SMALL_USD  = 0.60;
 
       // Welcome, Get input
-      System.out.println(" ~~~ Welcome to the Discount Coffee Store ~~~");
+      System.out.print(" ~~~ Welcome to the Discount Coffee Store ~~~\n\n");
 
       Scanner kbScan = new Scanner(System.in);
-      System.out.print("\nEnter the number of bags of coffee to order: ");
+      System.out.print("Enter the number of bags of coffee to order: ");
       int bagsOrdered = kbScan.nextInt();
 
       // Calculate coffee price: Determine discount (if any) and substract
@@ -149,7 +149,7 @@ class Discount {
       System.out.printf("\n%30s %10s $%10.2f\n",
             "Total Price", "", totalPriceUSD);
 
-      System.out.println(
-            "\nThank you for shopping at the Discount Coffee Store!");
+      System.out.print(
+            "\nThank you for shopping at the Discount Coffee Store!\n");
    }
 }

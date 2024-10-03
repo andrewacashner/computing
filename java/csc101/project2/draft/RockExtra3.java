@@ -33,10 +33,38 @@ import java.util.Random;
 
 class Rock {
    public static void main(String[] args) {
-      final int ROCK       = 0;
-      final int PAPER      = 1;
-      final int SCISSORS   = 2;
-      final int WEAPON_MAX = 3;
+      enum Weapon {
+          ROCK      ("Rock"), 
+          PAPER     ("Paper"),
+          SCISSORS  ("Scissors");
+
+          private String label;
+
+          private Weapon(String label) {
+              this.label = label;
+          }
+
+          static Weapon fromAbbrev(char abbrev) {
+              return switch (abbrev) {
+                  case 'r' -> ROCK;
+                  case 'p' -> PAPER;
+                  case 's' -> SCISSORS;
+                  default -> 
+                      throw new Error("Unrecognized weapon abbreviation");
+              };
+          }
+
+          public String toString() {
+              return this.label;
+          }
+
+          public boolean beats(Weapon opponent) {
+              return 
+                  (this == ROCK && opponent == SCISSORS) ||
+                  (this == PAPER && opponent == ROCK)    ||
+                  (this == SCISSORS && opponent == PAPER);
+          }
+      }
 
       // Welcome, Get user input
       System.out.print("ROCK PAPER SCISSORS\n");
@@ -69,58 +97,35 @@ class Rock {
          // Get user choice
          System.out.print("Select r, p, or s (Press q to quit): ");
          userInput = kbScan.next().toLowerCase();
-
-         int userWeapon;
-         switch (userInput) {
-            case "r":
-               userWeapon = ROCK;
-               break;
-            case "p":
-               userWeapon = PAPER;
-               break;
-            case "s":
-               userWeapon = SCISSORS;
-               break;
-            default:
-               System.out.printf("Invalid input '%s': Try again!\n\n", 
-                     userInput);
-               --round; // Redo this round
-               continue;
+         
+         Weapon userWeapon;
+         try {
+             userWeapon = Weapon.fromAbbrev(userInput.charAt(0));
+         } catch (Error e) {
+             System.out.printf("%s: Try again!\n\n", e.getMessage());
+             --round; // Redo this round
+             continue;
          }
 
-         String userWeaponName = switch (userWeapon) {
-            case ROCK  -> "Rock";
-            case PAPER -> "Paper";
-            default    -> "Scissors";
-         };
-
-
          // Make computer choice (random)
-         int computerWeapon = randomizer.nextInt(WEAPON_MAX);
-
-         String computerWeaponName = switch (computerWeapon) {
-            case ROCK  -> "Rock";
-            case PAPER -> "Paper";
-            default    -> "Scissors";
-         };
+         int weaponIndex = randomizer.nextInt(Weapon.values().length);
+         Weapon computerWeapon = Weapon.values()[weaponIndex];
 
          System.out.printf("\nYou chose %s, I chose %s\n", 
-              userWeaponName, computerWeaponName);
+              userWeapon, computerWeapon);
 
          // Evaluate contest and report results
          if (userWeapon == computerWeapon) {
             ++ties;
             System.out.print("Tie!\n\n");
-         } else if ((userWeapon == ROCK     && computerWeapon == SCISSORS) ||
-                    (userWeapon == PAPER    && computerWeapon == ROCK)     ||
-                    (userWeapon == SCISSORS && computerWeapon == PAPER)) {
+         } else if (userWeapon.beats(computerWeapon)) {
             ++userWins;
             System.out.printf("%s beats %s: You win!\n\n", 
-                  userWeaponName, computerWeaponName);
+                  userWeapon, computerWeapon);
          } else {
             ++computerWins;
             System.out.printf("%s beats %s: You lose!\n\n",
-                  computerWeaponName, userWeaponName);
+                  computerWeapon, userWeapon);
          }
 
          // Update game stats

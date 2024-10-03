@@ -16,8 +16,8 @@ import java.util.Scanner;
 class Prime {
    public static void main(String[] args) {
       // Welcome
-      System.out.println("PRIME NUMBER FINDER");
-      System.out.println("Find prime numbers between a given minimum and maximum (inclusive)");
+      System.out.print("PRIME NUMBER FINDER\n");
+      System.out.print("Find prime numbers between a given minimum and maximum (inclusive)\n\n");
 
       // Get minimum and maximum values for range
       Scanner kbScan = new Scanner(System.in);
