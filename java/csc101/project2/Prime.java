@@ -2,7 +2,7 @@
  *
  * | Andrew Cashner, `acashner@student.monroecc.edu`
  * | CSC101, Project 2
- * | October 2024
+ * | 2024/10/08
  *
  * ## Description
  *
@@ -27,46 +27,62 @@ class Prime {
       System.out.print("Enter the maximum: ");
       int max = kbScan.nextInt();
 
-      // Validate input
-      //   - The range must extend into the positive range
-      //   - The user can enter a minimum below 2 but we will actually
-      //     start at 2 since 0 and 1 are not primes and negatives are
-      //     impossible
-      //   - Therefore we check if max is greater than min and greater than 2
-      boolean isValidInput = max >= 2 && max > min;
-      if (!isValidInput) {
-          System.err.println("Invalid range");
-          System.exit(1);
-      }
-
-      // Reset minimum if needed: 0 and 1 are not primes
-      int realMin = min > 2 ? min : 2;
+      exitIfInputInvalid(min, max);
 
       // Calculate primes and print results as we go; count primes found
-      System.out.print("Primes: ");
+      // - Check every integer value between min and max
+      // - For each one, check for divisors between 2 and itself - 1; if any
+      //    divide evenly, this number is not prime.
       int primeCount = 0; 
-      
-      // Check every integer value between min and max
-      // For each one, check for divisors between 2 and itself - 1; if any
-      // divide evenly, this number is not prime.
-      for (int current = realMin; current <= max; ++current) {
+      String primes = new String();
 
-         boolean hasFactor = false;
-         for (int i = 2; !hasFactor && i < current; ++i) {
-             hasFactor = current % i == 0;
-         }
-
-         if (!hasFactor) {
-            System.out.printf("%d ", current);
+      for (int current = validMinimum(min); current <= max; ++current) {
+         if (isPrime(current)) {
+            primes += String.format("%d ", current);
             ++primeCount;
          }
       }
 
-      // Report number of primes found
+      System.out.printf("\nPrimes: %s\n", primes);
+      System.out.print(primeReport(primeCount, min, max));
+      System.out.println("Until next prime...");
+   }
+
+   // Validate input
+   //   - The range must extend into the positive range
+   //   - The user can enter a minimum below 2 but we will actually
+   //     start at 2 since 0 and 1 are not primes and negatives are
+   //     impossible
+   //   - Therefore we check if max is greater than min and greater than 2
+   public static void exitIfInputInvalid(int min, int max) {
+      boolean isValidInput = max >= 2 && max > min;
+      if (!isValidInput) {
+         System.err.println("Invalid range");
+         System.exit(1);
+      }
+   }
+
+   // Reset minimum if needed: 0 and 1 are not primes
+   public static int validMinimum(int min) {
+      return min > 2 ? min : 2;
+   }
+
+   // Does the given integer have any factors other than 1 and itself?
+   // If not, it is prime
+   public static boolean isPrime(int value) {
+      boolean hasFactor = false;
+      for (int i = 2; !hasFactor && i < value; ++i) {
+         hasFactor = value % i == 0;
+      }
+      return !hasFactor;
+   }
+
+   // Report number of primes found
+   public static String primeReport(int primeCount, int min, int max) {
+
       String plural = primeCount == 1 ? "" : "s";
 
-      System.out.printf("\nFound %d prime number%s between %d and %d.\n", 
+      return String.format("Found %d prime number%s between %d and %d.\n", 
             primeCount, plural, min, max);
-      System.out.println("Until next prime...");
    }
 }

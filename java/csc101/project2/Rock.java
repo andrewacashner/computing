@@ -2,7 +2,7 @@
  *
  * | Andrew Cashner, `acashner@student.monroecc.edu`
  * | CSC 101, Project 2
- * | 2024/10/02
+ * | 2024/10/08
  *
  * ## Description
  *
@@ -18,14 +18,6 @@
  *
  * If both choose the same item, the result is a tie.
  * Rock beats Scissors, Scissors beats Paper, Paper beats Rock.
- *
- * ### Limitations
- *
- * This program would be much better if I could use an enum with values ROCK,
- * PAPER, and SCISSORS, for both comparison values and output strings.
- *
- * As with the other programs, repeated code should instead be made into
- * function calls.
  */
 
 import java.util.Scanner;
@@ -33,94 +25,60 @@ import java.util.Random;
 
 class Rock {
    public static void main(String[] args) {
-      final int ROCK       = 0;
-      final int PAPER      = 1;
-      final int SCISSORS   = 2;
-      final int WEAPON_MAX = 3;
 
       // Welcome, Get user input
       System.out.print("ROCK PAPER SCISSORS\n");
 
       Scanner kbScan = new Scanner(System.in);
-
-      System.out.print("How many winning rounds are needed to win the game? ");
-      int maxRound = kbScan.nextInt();
-
-      System.out.printf("Okay, first to win %d rounds wins!\n", maxRound);
-      System.out.print("Each round, choose Rock, Paper, or Scissors: Press 'r', 'p', or 's'\n\n");
+      int maxRound = getMaxRounds(kbScan);
+      System.out.print(instructions(maxRound));
 
       Random randomizer = new Random();
       int userWins = 0;
       int computerWins = 0;
       int ties = 0;
-      int round = 0;
-
       String userInput = new String();
 
       // Game loop: Keep playing until someone wins or user presses q; 
       // count rounds
-      while (!userInput.equals("q") &&
-            userWins < maxRound 
-            && computerWins < maxRound) {
+      for (int round = 1;
+            !userInput.equals("q") &&
+            userWins < maxRound && computerWins < maxRound;
+            ++round) {
 
-         ++round; // Count rounds from 1
-         System.out.printf(" ~~~ ROUND %d ~~~\n\n", round);
+         // Get and validate user's choice
+         System.out.printf(roundHeader(round));
+         userInput = getUserCommand(kbScan);
 
-         // Get user choice
-         System.out.print("Select r, p, or s (Press q to quit): ");
-         userInput = kbScan.next().toLowerCase();
-
-         int userWeapon;
-         switch (userInput) {
-            case "r":
-               userWeapon = ROCK;
-               break;
-            case "p":
-               userWeapon = PAPER;
-               break;
-            case "s":
-               userWeapon = SCISSORS;
-               break;
-            default:
-               System.out.printf("Invalid input '%s': Try again!\n\n", 
-                     userInput);
-               --round; // Redo this round
-               continue;
+         Weapon userWeapon;
+         try {
+            userWeapon = Weapon.fromAbbrev(userInput.charAt(0));
+         } catch (Error e) { 
+            // Redo this round if invalid input
+            System.out.printf("%s: Try again!\n\n", e.getMessage());
+            --round; 
+            continue;
          }
 
-         String userWeaponName = switch (userWeapon) {
-            case ROCK  -> "Rock";
-            case PAPER -> "Paper";
-            default    -> "Scissors";
-         };
-
-
-         // Make computer choice (random)
-         int computerWeapon = randomizer.nextInt(WEAPON_MAX);
-
-         String computerWeaponName = switch (computerWeapon) {
-            case ROCK  -> "Rock";
-            case PAPER -> "Paper";
-            default    -> "Scissors";
-         };
-
+         // Make and report computer's choice 
+         Weapon computerWeapon = Weapon.random(randomizer);
          System.out.printf("\nYou chose %s, I chose %s\n", 
-              userWeaponName, computerWeaponName);
+               userWeapon, computerWeapon);
 
          // Evaluate contest and report results
          if (userWeapon == computerWeapon) {
             ++ties;
             System.out.print("Tie!\n\n");
-         } else if ((userWeapon == ROCK     && computerWeapon == SCISSORS) ||
-                    (userWeapon == PAPER    && computerWeapon == ROCK)     ||
-                    (userWeapon == SCISSORS && computerWeapon == PAPER)) {
+
+         } else if (userWeapon.beats(computerWeapon)) {
             ++userWins;
             System.out.printf("%s beats %s: You win!\n\n", 
-                  userWeaponName, computerWeaponName);
+                  userWeapon, computerWeapon);
+
          } else {
             ++computerWins;
             System.out.printf("%s beats %s: You lose!\n\n",
-                  computerWeaponName, userWeaponName);
+                  computerWeapon, userWeapon);
          }
 
          // Update game stats
@@ -129,15 +87,84 @@ class Rock {
                round, userWins, computerWins, ties);
       }
 
-      // Evaluate overall winner
-      if (userWins > computerWins) {
-         System.out.print("YOU WON THE GAME!\n\n");
-      } else {
-         System.out.print("YOU LOST THE GAME!\n\n");
-      }
-
+      // Evaluate and report overall winner
+      System.out.print(gameResult(userWins, computerWins));
       System.out.print("Thank you for playing Rock, Paper, Scissors!\n");
    }
+
+   // The Weapon enum makes it possible to create Weapon choices from user
+   // input, compare them, and to convert them to strings for output
+   public static enum Weapon {
+      ROCK      ("Rock"), 
+      PAPER     ("Paper"),
+      SCISSORS  ("Scissors");
+
+      private String label;
+
+      private Weapon(String label) {
+         this.label = label;
+      }
+
+      // Select Weapon from user input
+      static Weapon fromAbbrev(char abbrev) {
+         return switch (abbrev) {
+            case 'r' -> ROCK;
+            case 'p' -> PAPER;
+            case 's' -> SCISSORS;
+            default -> 
+               throw new Error("Unrecognized weapon abbreviation");
+         };
+      }
+
+      // Select random Weapon
+      static Weapon random(Random randomizer) {
+         int weaponIndex = randomizer.nextInt(Weapon.values().length);
+         return Weapon.values()[weaponIndex];
+      }
+
+      public String toString() {
+         return this.label;
+      }
+
+      // Does this Weapon win versus the given one?
+      public boolean beats(Weapon opponent) {
+         return 
+            (this == ROCK     && opponent == SCISSORS) ||
+            (this == PAPER    && opponent == ROCK)     ||
+            (this == SCISSORS && opponent == PAPER);
+      }
+   }
+
+   // Get user input for number of rounds to play
+   public static int getMaxRounds(Scanner kbScan) {
+      System.out.print("How many winning rounds are needed to win the game? ");
+      return kbScan.nextInt();
+   }
+
+   // Print game instructions including number of rounds from user
+   public static String instructions(int rounds) {
+      return String.format("Okay, first to win %d rounds wins!\n", rounds)
+         + "Each round, choose Rock, Paper, or Scissors: "
+         + "Press 'r', 'p', or 's'\n\n";
+   }
+
+   public static String roundHeader(int round) {
+      return String.format(" ~~~ ROUND %d ~~~\n\n", round);
+   }
+   
+   // Get user command for rock, paper, or scissors (or quit)
+   public static String getUserCommand(Scanner kbScan) {
+      System.out.print("Select r, p, or s (Press q to quit): ");
+      return kbScan.next().toLowerCase();
+   }
+  
+   // Concluding message reporting who won
+   public static String gameResult(int userWins, int computerWins) {
+      String outcome = userWins > computerWins ? "WON" : "LOST";
+      return String.format("YOU %s THE GAME!\n\n", outcome);
+   }
+
+
 }
 
 

@@ -40,29 +40,7 @@
 import java.util.Scanner;
 
 class Discount {
-
-   // Create table row with three columns of width 30, 10, and 10
-   // Format currency consistently
-   static String receiptRow(String description, String details, double price) {
-       return String.format("%30s %10s %10s\n", 
-               description, 
-               details, 
-               String.format("$%.2f", price));
-   }
-
-   // Row with only label (e.g., for section heading)
-   static String receiptRow(String description) {
-       return String.format("%30s\n", description);
-   }
-
-   // Row showing number of boxes ordered and cost of boxes
-   static String receiptRowBoxes(String description, int amount, double price) {
-       return Discount.receiptRow("", 
-               String.format("%3d %6s", amount, description),
-               price);
-   }
-
-
+   
    public static void main(String[] args) {
       // Constants
       final double PRICE_PER_BAG_USD = 5.50;
@@ -140,39 +118,38 @@ class Discount {
     
       double totalPriceUSD = coffeePriceUSD + shippingPriceUSD;
 
-
-      // Report order details in a receipt table: Create as a single string
-      String receipt = new String("\n");
-
-      receipt += Discount.receiptRow("Number of Bags Ordered:", 
-                  String.format("%d", bagsOrdered), 
-                  coffeePriceFullRateUSD);
-
+      // Report order details in a receipt table
+      // Three columns of width 30, 10, and 10
+      System.out.printf("\n%30s %10d $%10.2f\n",
+            "Number of Bags Ordered:", bagsOrdered, coffeePriceFullRateUSD);
+            
       if (discountPercent > 0) {
-         receipt += Discount.receiptRow("Discount:", 
-                     String.format("%d%%", discountPercent),
-                     discountAmountUSD);
+         System.out.printf("%30s %9d%% $%10.2f\n",
+               "Discount:", discountPercent, discountAmountUSD);
       }
 
       // Only show boxes that were used
-      receipt += Discount.receiptRow("Boxes Used:");
+      System.out.printf("%30s\n", "Boxes Used:");
 
       if (largeBoxes > 0) {
-         receipt += Discount.receiptRowBoxes("Large", largeBoxes, largeBoxPrice);
+         System.out.printf("%30s %2d%8s $%10.2f\n", "", 
+               largeBoxes, "Large",   largeBoxPrice);
       }
 
       if (mediumBoxes > 0) {
-          receipt += Discount.receiptRowBoxes("Medium", mediumBoxes, mediumBoxPrice);
+         System.out.printf("%30s %2d%8s $%10.2f\n", "",
+               mediumBoxes, "Medium", mediumBoxPrice);
       }
 
       if (smallBoxes > 0) {
-          receipt += Discount.receiptRowBoxes("Small", smallBoxes, smallBoxPrice);
+         System.out.printf("%30s %2d%8s $%10.2f\n", "",
+               smallBoxes, "Small", smallBoxPrice);
       }
 
-      receipt += Discount.receiptRow("Total Price:", "", totalPriceUSD);
+      System.out.printf("\n%30s %10s $%10.2f\n",
+            "Total Price", "", totalPriceUSD);
 
-      // Print results
-      System.out.print(receipt);
-      System.out.print("\nThank you for shopping at the Discount Coffee Store!\n");
+      System.out.print(
+            "\nThank you for shopping at the Discount Coffee Store!\n");
    }
 }
