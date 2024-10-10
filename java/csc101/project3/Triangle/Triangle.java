@@ -120,7 +120,7 @@ public class Triangle {
          double perimeter) {
 
       String tableRule = 
-         new String("-----------------------------------------------\n");
+         new String("-------------------------------------\n");
 
       String table = tableRule + 
          tableRow("Area", area) +
