@@ -20,17 +20,20 @@ class Triangle {
     * @param args (Unused) command-line arguments
     */
    public static void main(String[] args) {
-      System.out.println("TRIANGLE CALCULATOR");
-      System.out.println("Calculate area, hypotenuse, and perimeter given the length of the two shorter sides of a triangle.");
+      System.out.print("TRIANGLE CALCULATOR\n");
+      System.out.print(
+            "Given the length of the two shorter sides of a triangle,\n"
+            + "calculate area, hypotenuse, and perimeter.\n\n");
 
       Scanner kbScan = new Scanner(System.in);
       String input = new String("y");
 
       while (input.equals("y")) {
          // Get user input
-         System.out.print("Enter the length of the two shorter sides of a triangle:");
-         double sideA = kbScan.nextInt();
-         double sideB = kbScan.nextInt();
+         System.out.print("Enter the lengths of two sides of a triangle: ");
+         double sideA = kbScan.nextDouble();
+         double sideB = kbScan.nextDouble();
+         kbScan.nextLine(); // Clear newline from buffer
 
          // Do calculations
          double area = triangleArea(sideA, sideB);
@@ -38,31 +41,93 @@ class Triangle {
          double perimeter = trianglePerimeter(sideA, sideB);
 
          // Report results as a table
-         System.out.print(triangleInfoTable(area, hypotenuse, perimeter));
+         System.out.print(triangleTable(area, hypotenuse, perimeter));
 
-         System.out.print("Tri again? Press y (or any other key to quit): ");
+         System.out.print("\nTri again? Press y (or any other key to quit): ");
+         input = kbScan.nextLine();
       }
 
-      System.out.println("Thank you for using the Triangle Calculator.");
+      System.out.print("\nThank you for using the Triangle Calculator.\n");
    }
 
-   public static double triangleArea(double sideA, sideB) {
-      double area;
-      return area;
+   /**
+    * Calculates the area of a right triangle.
+    * For a triangle with the two shorter sides a and b, area = ab/2.
+    *
+    * @param sideA One leg
+    * @param sideB The other leg
+    *
+    * @return The area
+    */
+   public static double triangleArea(double sideA, double sideB) {
+      return sideA * sideB / 2;
    }
 
-   public static double hypotenuse(double sideA, sideB) {
-      double hypotenuse;
-      return hypotenuse;
+   /**
+    * Calculates the length of the hypotenuse of a right triangle.
+    * According to the Pythagorean theorem, for a right triangle with the two
+    * shorter sides a and b, <code>h^2 = a^2 + b^2</code>, 
+    * therefore <code>h = sqrt(a^2 + b^2)</code>.
+    *
+    * @param sideA 
+    * @param sideB 
+    *
+    * @return Length of hypotenuse
+    */
+   public static double hypotenuse(double sideA, double sideB) {
+      return Math.sqrt(Math.pow(sideA, 2) + Math.pow(sideB, 2));
    }
 
-   public static double trianglePerimter(double sideA, sideB) {
-      double perimeter;
-      return perimeter;
+   /**
+    * Calculates the perimeter of a right triangle given the two shorter
+    * sides.
+    * The perimeter is the sum of the lengths of the sides.
+    *
+    * @param sideA 
+    * @param sideB 
+    *
+    * @return Perimeter length
+    */
+   public static double trianglePerimeter(double sideA, double sideB) {
+      return sideA + sideB + hypotenuse(sideA, sideB);
    }
 
-   public static String triangleTable(double area, hypotenuse, perimeter) {
-      String table = new String();
+   /** 
+    * Single row of the two-column triangle data table.
+    *
+    * @param label Description (left column)
+    * @param value Numeric value (right column)
+    
+    * @return Row including newline
+   
+    * @see triangleTable
+    */
+   public static String tableRow(String label, double value) {
+      return String.format("| %-15s | %15.4f |\n", label, value);
+   }
+
+   /**
+    * Create a table showing the area, hypotenuse, and perimeter of a right
+    * triangle.
+    *
+    * @param area
+    * @param hypotenuse
+    * @param perimeter
+    *
+    * @return Table as a string
+    */
+   public static String triangleTable(double area, double hypotenuse, 
+         double perimeter) {
+
+      String tableRule = 
+         new String("-----------------------------------------------\n");
+
+      String table = tableRule + 
+         tableRow("Area", area) +
+         tableRow("Hypotenuse", hypotenuse) +
+         tableRow("Perimeter", perimeter) +
+         tableRule;
+
       return table;
    }
 
