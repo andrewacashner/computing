@@ -9,7 +9,7 @@ import java.util.Scanner;
  * @author Andrew Cashner, <code>acashner@student.monroecc.edu</code>
  * @version 2024/10/10 (CSC 101, Project 3)
  */
-class Triangle {
+public class Triangle {
    /**
     * Receive two user inputs as doubles for the two smaller sides of a right
     * triangle.
@@ -69,8 +69,8 @@ class Triangle {
     * shorter sides a and b, <code>h^2 = a^2 + b^2</code>, 
     * therefore <code>h = sqrt(a^2 + b^2)</code>.
     *
-    * @param sideA 
-    * @param sideB 
+    * @param sideA One side
+    * @param sideB The other side
     *
     * @return Length of hypotenuse
     */
@@ -83,8 +83,8 @@ class Triangle {
     * sides.
     * The perimeter is the sum of the lengths of the sides.
     *
-    * @param sideA 
-    * @param sideB 
+    * @param sideA One side
+    * @param sideB The other side
     *
     * @return Perimeter length
     */
@@ -110,9 +110,9 @@ class Triangle {
     * Create a table showing the area, hypotenuse, and perimeter of a right
     * triangle.
     *
-    * @param area
-    * @param hypotenuse
-    * @param perimeter
+    * @param area Triangle area
+    * @param hypotenuse Triangle hypotenuse
+    * @param perimeter Triangle perimeter
     *
     * @return Table as a string
     */
