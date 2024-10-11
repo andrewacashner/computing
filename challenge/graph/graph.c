@@ -1,3 +1,13 @@
+/* Rudimentary graphing program
+ * 
+ * Graphs one of a preset library of functions to the terminal.
+ * Reads the functions from user input (but only to match them to one
+ * already programmed).
+ * Plots the functions for integer values between X_MIN and X_MAX.
+ *
+ * Andrew Cashner, 2024/10/11
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -6,8 +16,8 @@
 
 #define MAX_CHAR 80
 
-#define MAX_ROW 40
-#define MAX_COL 40
+#define MAX_ROW 25
+#define MAX_COL 25
 
 #define X_ORIGIN MAX_ROW / 2
 #define X_MIN -X_ORIGIN
@@ -19,7 +29,7 @@
 
 #define INCREMENT 1
 
-#define BITMAP_COORD(x, y) bitmap[y][x]
+#define GRAPH_COORD(x, y) graph[y][x]
 
 char *read_input(char*);
 int y_is_x(int);
@@ -27,32 +37,27 @@ int y_is_x_squared(int);
 int y_is_x_cubed(int);
 
 int (*select_function(char*))(int);
+void set_graph(bool[MAX_ROW][MAX_COL], int(*)(int));
 void print_graph(char*, bool[MAX_ROW][MAX_COL]);
 
 int main(int argc, char *argv[]) {
     char input[MAX_CHAR];
-    bool bitmap[MAX_ROW][MAX_COL] = {{false}};
+    bool graph[MAX_ROW][MAX_COL] = {{false}};
     int (*fn)(int);
 
     read_input(input);
     fn = select_function(input);
-
-    for (int x = X_MIN; x < X_MAX; x += INCREMENT) {
-        int y = (*fn)(x);
-        printf("y(%d) = %d\n", x, y);
-
-        if (abs(y) < Y_MAX) {
-            printf("Enter value %d at array[%d][%d]\n",
-                    y, X_ORIGIN + x, Y_ORIGIN - y);
-            bitmap[Y_ORIGIN - y][X_ORIGIN + x] = true;
-        } else {
-            printf("Y value %d out of range\n", y);
-        }
-    }
-
-    print_graph(input, bitmap);
+    set_graph(graph, fn);
+    print_graph(input, graph);
 
     return 0;
+}
+
+char *read_input(char *buffer) {
+    printf("y = ");
+    fgets(buffer, sizeof(buffer), stdin);
+    buffer[strlen(buffer) - 1] = '\0';
+    return buffer;
 }
 
 int y_is_x(int x) {
@@ -91,35 +96,46 @@ int (*select_function(char *fn_text))(int) {
     return fn;
 }
 
-char *read_input(char *buffer) {
-    printf("y = ");
-    fgets(buffer, sizeof(buffer), stdin);
-    buffer[strlen(buffer) - 1] = '\0';
-    return buffer;
+void set_graph(bool graph[MAX_ROW][MAX_COL], int (*fn)(int)) {
+    for (int x = X_MIN; x < X_MAX; x += INCREMENT) {
+        int y = (*fn)(x);
+
+        if (abs(y) < Y_MAX) {
+            GRAPH_COORD(X_ORIGIN + x, Y_ORIGIN - y) = true;
+        } 
+    }
 }
 
-void print_graph(char *function_name, bool bitmap[MAX_ROW][MAX_COL]) {
+void print_graph(char *function_name, bool graph[MAX_ROW][MAX_COL]) {
+    enum graph_point_type { SPACE, ORIGIN, X_AXIS, Y_AXIS, POINT } type;
 
-    char *this_char;
+    // Print 3 x chars for every 1 y for semi-square output
+    char *graph_point_str[] = {
+        "   ", // SPACE
+        " + ", // ORIGIN
+        "---", // X_AXIS
+        " | ", // Y_AXIS
+        " * "  // POINT
+    };
 
     for (int y = 0; y < MAX_ROW; ++y) {
         for (int x = 0; x < MAX_COL; ++x) {
-            // Print 3 x chars for every 1 y for semi-square output
-            if (BITMAP_COORD(x, y) == true) {
-                this_char = " * ";
+            if (GRAPH_COORD(x, y) == true) {
+                type = POINT;
             } else if (y == X_ORIGIN && x == Y_ORIGIN) {
-                this_char = " + ";
+                type = ORIGIN;
             } else if (y == X_ORIGIN) {
-                this_char = "---";
+                type = X_AXIS;
             } else if (x == Y_ORIGIN) {
-                this_char = " | ";
+                type = Y_AXIS;
             } else {
-                this_char = "   ";
+                type = SPACE;
             }
-            printf("%s", this_char);
+            printf("%s", graph_point_str[type]);
         }
         printf("\n");
     }
+
     printf("y = %s\n", function_name);
 }
 
