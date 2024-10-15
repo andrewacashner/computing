@@ -27,13 +27,17 @@ void read_input(char*, int, FILE*);
 Node_ptr Node_create(char*);
 Queue_ptr Queue_create(void);
 Queue_ptr Queue_create_from_words(char*);
+
 Queue_ptr Queue_append(Queue_ptr, Node_ptr);
 Queue_ptr Queue_append_new(Queue_ptr, char *);
 Node_ptr Queue_pop(Queue_ptr);
+
 void Node_destroy(Node_ptr);
 void Queue_destroy(Queue_ptr);
 
 int Queue_length(Queue_ptr);
+
+void Node_print(Node_ptr);
 void Queue_print(Queue_ptr);
 
 int main(void) {

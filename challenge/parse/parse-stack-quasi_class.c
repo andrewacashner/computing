@@ -25,6 +25,11 @@ typedef struct stack {
     void (*print)(stack_ptr this);
 } stack;
 
+typedef struct Stack {
+    int (*length)(stack_ptr this);
+//    void (*print)(stack_ptr this) = stack_print;
+} Stack;
+
 void read_input(char*, int, FILE*);
 
 node_ptr node_create(char*);
@@ -40,6 +45,7 @@ int stack_length(stack_ptr);
 void stack_print(stack_ptr);
 
 int main(void) {
+    Stack->length = stack_length;
 
     char line[MAX_CHAR_INPUT];
     read_input(line, MAX_CHAR_INPUT, stdin);
@@ -48,6 +54,7 @@ int main(void) {
     stack_ptr expression_stack = stack_create_from_words(line);
 
     printf("Found %d tokens\n", expression_stack->length(expression_stack));
+    printf("Found %d tokens\n", Stack.length(expression_stack));
 
     expression_stack->print(expression_stack);
 
