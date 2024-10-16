@@ -1,0 +1,17 @@
+(+ 1 (- 2 3) (* 4 (pow x 2)))
+
+root
+    +
+        1
+        -
+            2
+            3
+        *
+            4
+            pow
+                x
+                2
+
+( means new child
+each new element before ) means new sibling
+) means end of child tree

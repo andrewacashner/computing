@@ -1,0 +1,19 @@
+(+ 1 (- 2 3) (* 4 (pow x 2)))
+
+root 
+    +
+        1
+        -
+            2
+            3
+        *
+            4
+            pow
+                x
+                2
+
+( => start tree, save previous tree
+first element => first child
+successive elements before ) => siblings of first child
+) => end of tree, go back to previous tree
+
