@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define MAX_CHAR_INPUT 80
 #define MAX_CHAR_ATOM 20
@@ -166,17 +167,18 @@ void Tree_print_inorder_xml(Node_ptr root, int indent_level) {
 void Tree_print_inorder_lisp(Node_ptr root) {
     Node_ptr this = root;
     if (this) {
-        printf("(");
         Node_print(this);
         if (this->child) {
-            printf(" ");
+            printf(" c[");
             Tree_print_inorder_lisp(this->child);
         }
         if (this->sibling) {
-            printf(" ");
+            printf(" s");
             Tree_print_inorder_lisp(this->sibling);
+        } 
+        if (this->child) {
+            printf("]");
         }
-        printf(")");
     } 
 }
 
@@ -193,6 +195,15 @@ void Tree_delete(Node_ptr tree) {
     }
 }
 
+void strip_trailing_parens(char *word) {
+    while (word[strlen(word) - 1] == ')') {
+        word[strlen(word) - 1] = '\0';
+    }
+}
+
+// TODO this is not correct
+// Need to account for close parens
+// Need to correctly distinguish child, sibling, sibling-of-child
 Node_ptr Tree_create_from_tokens(char *input) {
     const char *WHITESPACE = "  \t\n";
     Node_ptr tree = Tree_create();
@@ -201,19 +212,30 @@ Node_ptr Tree_create_from_tokens(char *input) {
             next_token != NULL;
             next_token = strtok(NULL, WHITESPACE)) {
 
-
-        while (next_token[strlen(next_token) - 1] == ')') {
-            next_token[strlen(next_token) - 1] = '\0';
+        bool is_child = next_token[0] == '(';
+        if (is_child) {
+            ++next_token;
         }
+        strip_trailing_parens(next_token);
+        Node_ptr new_node = Node_create_from_data(next_token);
+        Node_ptr current;
 
-        // TODO this is not the right way to add to the tree
-        if (next_token[0] == '(') {
-            Node_ptr new_node = Node_create_from_data(&next_token[1]);
-            tree = Tree_append_child(tree, new_node);
+        if (!tree->child) {
+            tree->child = new_node;
+        } else if (is_child) {
+            current = Tree_deepest_child(tree);
+            current->child = new_node;
         } else {
-            Node_ptr new_node = Node_create_from_data(next_token);
-            tree = Tree_append_sibling_to_last_child(tree, new_node);
+            Tree_append_sibling(tree->child, new_node);
         }
+/*
+        Node_ptr current = Tree_deepest_child(tree);
+        if (is_child) {
+            current->child = new_node;
+        } else {
+            current->sibling = new_node;
+        }
+        */
     }
     return tree;
 }
