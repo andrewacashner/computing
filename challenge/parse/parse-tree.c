@@ -20,34 +20,37 @@ typedef struct Node {
 void read_input(char*, int, FILE*);
 Node_ptr Node_create(void);
 Node_ptr Node_create_from_data(char*);
-Node_ptr Tree_connect(Node_ptr, Node_ptr, Node_ptr);
+
+Node_ptr Tree_create(void);
+Node_ptr Tree_create_from_tokens(char*);
 Node_ptr Tree_deepest_child(Node_ptr);
+Node_ptr Tree_append_sibling(Node_ptr, Node_ptr);
+Node_ptr Tree_append_child(Node_ptr, Node_ptr);
 void Tree_print_inorder(Node_ptr);
 void Tree_delete(Node_ptr);
 
 int main(void) {
-//    char line[MAX_CHAR_INPUT];
-//    read_input(line, MAX_CHAR_INPUT, stdin);
-//    printf("%s\n", line);
-
+    char line[MAX_CHAR_INPUT];
+    read_input(line, MAX_CHAR_INPUT, stdin);
+    printf("%s\n", line);
+/*
     Node_ptr left = Node_create_from_data("left");
     Node_ptr right = Node_create_from_data("right");
-    Node_ptr tree = Node_create();
-    tree = Tree_connect(tree, left, right);
+    Node_ptr tree = Tree_create();
+    tree = Tree_append_child(tree, left);
+    left = Tree_append_sibling(left, right);
 
-    Node_ptr branch = Node_create();
-    branch = Tree_connect(branch,
-            Node_create_from_data("left 2"), 
-            Node_create_from_data("right 2"));
+    Node_ptr left2 = Node_create_from_data("left2");
+    tree = Tree_append_child(tree, left2);
+    left2 = Tree_append_sibling(left2, Node_create_from_data("right2"));
 
-    Tree_deepest_child(tree)->child = branch;
-
-    // TODO print hierarchy
-    // FN: add to last child
-    // FN: add to last sibling
-    
     Tree_print_inorder(tree);
     Tree_delete(tree);
+*/
+    Node_ptr input_tree = Tree_create_from_tokens(line);
+    Tree_print_inorder(input_tree);
+    Tree_delete(input_tree);
+
     return 0;
 }
 
@@ -70,13 +73,11 @@ Node_ptr Node_create_from_data(char *data) {
     return new_node;
 }
 
-Node_ptr Tree_connect(Node_ptr tree, Node_ptr child, Node_ptr sibling) {
-    if (tree && !tree->child && !tree->sibling) {
-        tree->child = child;
-        tree->sibling = sibling;
-    }
+Node_ptr Tree_create(void) {
+    Node_ptr tree = Node_create();
     return tree;
 }
+
 
 Node_ptr Tree_deepest_child(Node_ptr root) {
     Node_ptr this = root;
@@ -94,22 +95,94 @@ Node_ptr Tree_deepest_sibling(Node_ptr root) {
     return this;
 }
 
+Node_ptr Tree_append_child(Node_ptr root, Node_ptr child) {
+    if (root) {
+        Node_ptr last_child = Tree_deepest_child(root);
+        last_child->child = child;
+    }
+    return root;
+}
+
+Node_ptr Tree_append_sibling(Node_ptr root, Node_ptr sibling) {
+    if (root) {
+        Node_ptr last_sibling = Tree_deepest_sibling(root);
+        last_sibling->sibling = sibling;
+    }
+    return root;
+}
+
+Node_ptr Tree_append_sibling_to_last_child(Node_ptr root, 
+        Node_ptr sibling) {
+
+    if (root) {
+        Node_ptr last_child = Tree_deepest_child(root);
+        Node_ptr last_sibling = Tree_deepest_sibling(last_child);
+        last_sibling->sibling = sibling;
+    }
+    return root;
+}
+
 void Node_print(Node_ptr node) {
     if (node) {
         printf("%s", node->data);
     }
 }
 
-void Tree_print_inorder(Node_ptr root) {
+void Tree_print_inorder_xml(Node_ptr root, int indent_level) {
+    int shiftwidth = 2;
     Node_ptr this = root;
     if (this) {
+        if (strlen(this->data) == 0) {
+            printf("<root>");
+        } else {
+            printf("\n%*s<el>", indent_level, "");
+        }
+
         Node_print(this);
-        printf("    ");
-        Tree_print_inorder(this->child);
-        printf("\n    ");
-        Tree_print_inorder(this->sibling);
-        printf("\n");
+       
+        if (this->child) {
+            Tree_print_inorder_xml(this->child, 
+                    indent_level + shiftwidth);
+        }
+
+        if (strlen(this->data) == 0) {
+            printf("</root>");
+        } else {
+            printf("</el>");
+        }
+
+        if (this->sibling) {
+            Tree_print_inorder_xml(this->sibling, indent_level);
+        }
+
+        if (!this->child && !this->sibling) {
+            printf("\n%*s", indent_level - shiftwidth, "");
+        }
+
     }
+}
+
+// TODO this is not correct lisp output
+void Tree_print_inorder_lisp(Node_ptr root) {
+    Node_ptr this = root;
+    if (this) {
+        printf("(");
+        Node_print(this);
+        if (this->child) {
+            printf(" ");
+            Tree_print_inorder_lisp(this->child);
+        }
+        if (this->sibling) {
+            printf(" ");
+            Tree_print_inorder_lisp(this->sibling);
+        }
+        printf(")");
+    } 
+}
+
+void Tree_print_inorder(Node_ptr root) {
+    Tree_print_inorder_lisp(root);
+    printf("\n");
 }
 
 void Tree_delete(Node_ptr tree) {
@@ -120,4 +193,27 @@ void Tree_delete(Node_ptr tree) {
     }
 }
 
+Node_ptr Tree_create_from_tokens(char *input) {
+    const char *WHITESPACE = "  \t\n";
+    Node_ptr tree = Tree_create();
 
+    for (char *next_token = strtok(input, WHITESPACE);
+            next_token != NULL;
+            next_token = strtok(NULL, WHITESPACE)) {
+
+
+        while (next_token[strlen(next_token) - 1] == ')') {
+            next_token[strlen(next_token) - 1] = '\0';
+        }
+
+        // TODO this is not the right way to add to the tree
+        if (next_token[0] == '(') {
+            Node_ptr new_node = Node_create_from_data(&next_token[1]);
+            tree = Tree_append_child(tree, new_node);
+        } else {
+            Node_ptr new_node = Node_create_from_data(next_token);
+            tree = Tree_append_sibling_to_last_child(tree, new_node);
+        }
+    }
+    return tree;
+}
