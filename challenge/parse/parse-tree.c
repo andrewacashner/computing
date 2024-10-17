@@ -2,6 +2,12 @@
  * Andrew Cashner, 2024/10/15
  */
 
+#ifdef DEBUG
+    #define DEBUG_PRINTF printf
+#else
+    #define DEBUG_PRINTF(...) {}
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,6 +18,7 @@
 
 typedef struct Node *Node_ptr;
 typedef struct Node {
+    int level;
     char data[MAX_CHAR_ATOM];
     bool is_root;
     Node_ptr child;
@@ -24,35 +31,21 @@ void read_input(char*, int, FILE*);
 Node_ptr Node_create(void);
 Node_ptr Node_create_from_data(char*);
 
-Node_ptr Tree_create(void);
+Node_ptr Tree_create(int);
 Node_ptr Tree_create_from_tokens(char*);
 Node_ptr Tree_deepest_child(Node_ptr);
 Node_ptr Tree_append_sibling(Node_ptr, Node_ptr);
 Node_ptr Tree_append_child(Node_ptr, Node_ptr);
 void Node_print(Node_ptr);
-void Tree_print_inorder(Node_ptr);
 void Tree_delete(Node_ptr);
 
 int main(void) {
     char line[MAX_CHAR_INPUT];
     read_input(line, MAX_CHAR_INPUT, stdin);
     printf("%s\n", line);
-/*
-    Node_ptr left = Node_create_from_data("left");
-    Node_ptr right = Node_create_from_data("right");
-    Node_ptr tree = Tree_create();
-    tree = Tree_append_child(tree, left);
-    left = Tree_append_sibling(left, right);
 
-    Node_ptr left2 = Node_create_from_data("left2");
-    tree = Tree_append_child(tree, left2);
-    left2 = Tree_append_sibling(left2, Node_create_from_data("right2"));
-
-    Tree_print_inorder(tree);
-    Tree_delete(tree);
-*/
     Node_ptr input_tree = Tree_create_from_tokens(line);
-//    Tree_print_inorder(input_tree);
+
     Node_print(input_tree); 
     printf("\n");
     Tree_delete(input_tree);
@@ -68,6 +61,7 @@ void read_input(char* buffer, int max_char, FILE *infile) {
 Node_ptr Node_create(void) {
     Node_ptr new_node = malloc(sizeof(Node));
     strcpy(new_node->data, "");
+    new_node->level = -1;
     new_node->is_root = false;
     new_node->child = NULL;
     new_node->sibling = NULL;
@@ -81,8 +75,9 @@ Node_ptr Node_create_from_data(char *data) {
     return new_node;
 }
 
-Node_ptr Tree_create(void) {
+Node_ptr Tree_create(int level) {
     Node_ptr tree = Node_create();
+    tree->level = level; // TODO REMOVE
     tree->is_root = true;
     return tree;
 }
@@ -90,6 +85,7 @@ Node_ptr Tree_create(void) {
 void Node_print(Node_ptr node) {
     if (node) {
         if (node->is_root) {
+            DEBUG_PRINTF("[%d] ", node->level);
             if (node->parent) {
                 if (!node->parent->is_root) {
                     printf(" ");
@@ -100,6 +96,7 @@ void Node_print(Node_ptr node) {
             printf("%s", node->data);
         }
         if (node->child) {
+            DEBUG_PRINTF("c");
             Node_print(node->child);
         }
         if (node->is_root && node->parent) {
@@ -107,66 +104,10 @@ void Node_print(Node_ptr node) {
         }
         if (node->sibling) {
             printf(" ");
+            DEBUG_PRINTF("s");
             Node_print(node->sibling);
         } 
     }
-}
-
-void Tree_print_inorder_xml(Node_ptr root, int indent_level) {
-    int shiftwidth = 2;
-    Node_ptr this = root;
-    if (this) {
-        if (strlen(this->data) == 0) {
-            printf("<root>");
-        } else {
-            printf("\n%*s<el>", indent_level, "");
-        }
-
-        Node_print(this);
-       
-        if (this->child) {
-            Tree_print_inorder_xml(this->child, 
-                    indent_level + shiftwidth);
-        }
-
-        if (strlen(this->data) == 0) {
-            printf("</root>");
-        } else {
-            printf("</el>");
-        }
-
-        if (this->sibling) {
-            Tree_print_inorder_xml(this->sibling, indent_level);
-        }
-
-        if (!this->child && !this->sibling) {
-            printf("\n%*s", indent_level - shiftwidth, "");
-        }
-
-    }
-}
-
-void Tree_print_inorder_lisp(Node_ptr root) {
-    Node_ptr this = root;
-    if (this) {
-        Node_print(this);
-        if (this->child) {
-            printf(" c[");
-            Tree_print_inorder_lisp(this->child);
-        }
-        if (this->sibling) {
-            printf(" s");
-            Tree_print_inorder_lisp(this->sibling);
-        } 
-        if (this->child) {
-            printf("]");
-        }
-    } 
-}
-
-void Tree_print_inorder(Node_ptr root) {
-    Tree_print_inorder_lisp(root);
-    printf("\n");
 }
 
 void Tree_delete(Node_ptr tree) {
@@ -203,9 +144,11 @@ Node_ptr Tree_add_child(Node_ptr root, Node_ptr child) {
 }
 
 Node_ptr Tree_create_from_tokens(char *input) {
+    int level = 0;
+
     const char *WHITESPACE = "  \t\n";
 
-    Node_ptr tree = Tree_create();
+    Node_ptr tree = Tree_create(++level);
     
     Node_ptr current = tree;
 
@@ -218,7 +161,7 @@ Node_ptr Tree_create_from_tokens(char *input) {
         if (token[0] == '(') {
             // Start of new expression:
             // The new node will be the parent of a new subtree
-            Node_ptr subtree = Tree_create();
+            Node_ptr subtree = Tree_create(++level);
 
             strcpy(new_node->data, token + 1); // Skip paren char
             Tree_add_child(subtree, new_node);
@@ -233,6 +176,18 @@ Node_ptr Tree_create_from_tokens(char *input) {
             strcpy(new_node->data, token); 
 
             Tree_add_child(current, new_node);
+            /*
+            if (current->is_root && !current->child) {
+                current->child = new_node;
+                new_node->parent = current; 
+                current = new_node;
+            } else {
+                current->sibling = new_node;
+                new_node->parent = current->parent;
+                current = new_node;
+            }
+            //            current = new_node;
+            */
             // Don't reset current because subsequent siblings will all
             // descend from the same parent as this one
         } 
@@ -246,6 +201,7 @@ Node_ptr Tree_create_from_tokens(char *input) {
 
             // Return to parent node of this chain of siblings
             current = current->parent;
+            --level; 
         } 
     }
     return tree;
@@ -255,3 +211,4 @@ void Node_debug(Node_ptr node) {
     printf("   node text: %s\n", node->data);
     printf("   parent text: %s\n", node->parent->data);
 }
+
