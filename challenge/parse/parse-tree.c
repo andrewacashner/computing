@@ -91,7 +91,10 @@ Node_ptr Tree_create(void) {
 void Node_print(Node_ptr node) {
     if (node) {
         if (node->is_root) {
-            printf(" ("); // TODO no space at very start
+            if (node->parent && !node->parent->is_root) {
+                printf(" ");
+            }
+            printf("("); // TODO no space at very start
         } else {
             printf("%s", node->data);
         }
@@ -204,7 +207,6 @@ Node_ptr Tree_create_from_tokens(char *input) {
     const char *WHITESPACE = "  \t\n";
 
     Node_ptr tree = Tree_create();
-    strcpy(tree->data, "ROOT");
     
     Node_ptr current = tree;
 
