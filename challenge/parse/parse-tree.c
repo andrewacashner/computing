@@ -14,7 +14,6 @@ typedef struct Node *Node_ptr;
 typedef struct Node {
     char data[MAX_CHAR_ATOM];
     bool is_root;
-    int level;
     Node_ptr child;
     Node_ptr sibling;
     Node_ptr parent;
@@ -91,23 +90,25 @@ Node_ptr Tree_create(void) {
 void Node_print(Node_ptr node) {
     if (node) {
         if (node->is_root) {
-            if (node->parent && !node->parent->is_root) {
-                printf(" ");
+            if (node->parent) {
+                if (!node->parent->is_root) {
+                    printf(" ");
+                }
+                printf("(");
             }
-            printf("("); // TODO no space at very start
         } else {
             printf("%s", node->data);
         }
         if (node->child) {
             Node_print(node->child);
         }
+        if (node->is_root && node->parent) {
+            printf(")");
+        }
         if (node->sibling) {
             printf(" ");
             Node_print(node->sibling);
         } 
-        if (node->is_root) {
-            printf(")");
-        }
     }
 }
 
@@ -188,10 +189,8 @@ void strip_trailing_parens(char *word) {
 Node_ptr Tree_add_child(Node_ptr root, Node_ptr child) {
     if (root && child) {
         if (!root->child) {
-            printf("Add first child\n");
             root->child = child;
         } else {
-            printf("Add additional child (=sibling)\n");
             Node_ptr current = root->child;
             while (current->sibling) {
                 current = current->sibling;
@@ -219,8 +218,6 @@ Node_ptr Tree_create_from_tokens(char *input) {
         if (token[0] == '(') {
             // Start of new expression:
             // The new node will be the parent of a new subtree
-            printf("Found open paren\n");
-
             Node_ptr subtree = Tree_create();
 
             strcpy(new_node->data, token + 1); // Skip paren char
@@ -230,35 +227,31 @@ Node_ptr Tree_create_from_tokens(char *input) {
 
             current = subtree;
 
-            printf("   new node text: %s\n", new_node->data);
-            printf("   parent text: %s\n", new_node->parent->data);
-            printf("   current text: %s\n", current->data);
-
         } else {
-            printf("Found another child (=sibling) \n");
-            
+            // Continuation of expression:
+            // More siblings of first child (= children of current)
             strcpy(new_node->data, token); 
-            Tree_add_child(current->parent, new_node);
-            current = new_node;
 
-            printf("   new node text: %s\n", new_node->data);
-            printf("   parent text: %s\n", new_node->parent->data);
-            printf("   current text: %s\n", current->data);
+            Tree_add_child(current, new_node);
+            // Don't reset current because subsequent siblings will all
+            // descend from the same parent as this one
         } 
         
         // Always check for end paren
         if (new_node->data[strlen(new_node->data) - 1] == ')') {
+            strip_trailing_parens(new_node->data);
 
-            // Trim trailing paren
-            new_node->data[strlen(new_node->data) - 1] = '\0';
+            // TODO Put close parens back into the input stream
+            // if endsWith(close-paren) { token = ")"; }
 
             // Return to parent node of this chain of siblings
             current = current->parent;
-
-            printf("Found close paren\n");
-            printf("   parent text: %s\n", new_node->parent->data);
-            printf("   current text: %s\n", current->data);
         } 
     }
     return tree;
+}
+
+void Node_debug(Node_ptr node) {
+    printf("   node text: %s\n", node->data);
+    printf("   parent text: %s\n", node->parent->data);
 }
