@@ -1,80 +1,14 @@
-/* Read tokens of an expression into a queue
- * Andrew Cashner, 2024/10/15 
+/* Queue
+ * Andrew Cashner, 2024/10/18
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../include/queue.h"
 
-#define MAX_CHAR_INPUT 80
-#define MAX_CHAR_ATOM 20
-
-typedef struct Node *Node_ptr;
-typedef struct Node {
-    char data[MAX_CHAR_ATOM];
-    Node_ptr prev;
-    Node_ptr next;
-} Node;
-
-typedef struct Queue *Queue_ptr;
-typedef struct Queue {
-    Node_ptr first;
-    Node_ptr last;
-} Queue;
-
-void read_input(char*, int, FILE*);
-
-Node_ptr Node_create(char*);
-Queue_ptr Queue_create(void);
-Queue_ptr Queue_create_from_words(char*);
-
-Queue_ptr Queue_append(Queue_ptr, Node_ptr);
-Queue_ptr Queue_append_new(Queue_ptr, char *);
-Node_ptr Queue_pop(Queue_ptr);
-
-void Node_destroy(Node_ptr);
-void Queue_destroy(Queue_ptr);
-
-int Queue_length(Queue_ptr);
-
-void Node_print(Node_ptr);
-void Queue_print(Queue_ptr);
-char *Queue_to_string(Queue_ptr);
-
-int main(void) {
-
-    char line[MAX_CHAR_INPUT];
-    read_input(line, MAX_CHAR_INPUT, stdin);
-    printf("%s\n", line);
-
-    Queue_ptr expression_queue = Queue_create_from_words(line);
-
-    printf("Found %d tokens\n", Queue_length(expression_queue));
-    printf("Current queue: ");
-    Queue_print(expression_queue);
-
-    Node_ptr last = Queue_pop(expression_queue);
-    printf("Last token was %s\n", last->data);
-    Node_destroy(last);
-    
-    printf("Current queue: ");
-//    Queue_print(expression_queue);
-    char *readout = Queue_to_string(expression_queue);
-    printf("%s\n", readout);
-    free(readout);
-
-    Queue_destroy(expression_queue);
-
-    return 0;
-}
-
-void read_input(char* buffer, int max_char, FILE *infile) {
-    fgets(buffer, sizeof(char) * max_char, infile);
-    buffer[strlen(buffer) - 1] = '\0';
-}
-
-Node_ptr Node_create(char *new_data) {
-    Node_ptr new_node = malloc(sizeof(Node));
+Queue_Node_ptr Queue_Node_create(char *new_data) {
+    Queue_Node_ptr new_node = malloc(sizeof(Queue_Node));
     strcpy(new_node->data, new_data);
     new_node->prev = NULL;
     new_node->next = NULL;
@@ -106,7 +40,7 @@ Queue_ptr Queue_create_from_words(char *input) {
     return new_queue;
 }
 
-Queue_ptr Queue_append(Queue_ptr queue, Node_ptr new_node)  {
+Queue_ptr Queue_append(Queue_ptr queue, Queue_Node_ptr new_node)  {
     if (queue && new_node) {
         if (!queue->first) {
             new_node->next = NULL;
@@ -124,14 +58,14 @@ Queue_ptr Queue_append(Queue_ptr queue, Node_ptr new_node)  {
 }
 
 Queue_ptr Queue_append_new(Queue_ptr queue, char *new_data) {
-    Node_ptr new_node = Node_create(new_data);
+    Queue_Node_ptr new_node = Queue_Node_create(new_data);
     Queue_append(queue, new_node);
     return queue;
 }
 
 
-Node_ptr Queue_pop(Queue_ptr queue) {
-    Node_ptr last_node = NULL;
+Queue_Node_ptr Queue_pop(Queue_ptr queue) {
+    Queue_Node_ptr last_node = NULL;
     if (queue && queue->last) {
         last_node = queue->last;
         queue->last = queue->last->prev;
@@ -141,16 +75,16 @@ Node_ptr Queue_pop(Queue_ptr queue) {
 }
 
 
-void Node_destroy(Node_ptr head) {
+void Queue_Node_destroy(Queue_Node_ptr head) {
     if (head) {
-        Node_destroy(head->next);
+        Queue_Node_destroy(head->next);
         free(head);
     }
 }
 
 void Queue_destroy(Queue_ptr queue) {
     if (queue) {
-        Node_destroy(queue->first);
+        Queue_Node_destroy(queue->first);
         free(queue);
     }
 }
@@ -158,7 +92,7 @@ void Queue_destroy(Queue_ptr queue) {
 int Queue_length(Queue_ptr queue) {
     int count = 0;
     if (queue && queue->first) {
-        for (Node_ptr node = queue->first;
+        for (Queue_Node_ptr node = queue->first;
                 node; 
                 node = node->next) {
             ++count;
@@ -167,20 +101,20 @@ int Queue_length(Queue_ptr queue) {
     return count;
 }
 
-void Node_print(Node_ptr node) {
+void Queue_Node_print(Queue_Node_ptr node) {
     if (node) {
         printf("%s", node->data);
         if (node->next) {
             printf(" ");
         }
-        Node_print(node->next);
+        Queue_Node_print(node->next);
     }
 }
 
 void Queue_print(Queue_ptr queue) {
     if (queue) {
-        Node_ptr node = queue->first;
-        Node_print(node);
+        Queue_Node_ptr node = queue->first;
+        Queue_Node_print(node);
     }
     printf("\n");
 }
@@ -189,7 +123,7 @@ char *Queue_to_string(Queue_ptr queue) {
     int queue_length = Queue_length(queue);
 
     // Room for the data cell of every queue member + spaces between
-    int buffer_length = sizeof(char) * MAX_CHAR_ATOM * queue_length
+    int buffer_length = sizeof(char) * QUEUE_MAX_CHAR_ATOM * queue_length
                         + sizeof(char) * (queue_length - 1);
 
     char *buffer = malloc(buffer_length);
@@ -197,7 +131,7 @@ char *Queue_to_string(Queue_ptr queue) {
     char *buffer_tail = buffer;
     
     if (queue) {
-        for (Node_ptr this_node = queue->first; 
+        for (Queue_Node_ptr this_node = queue->first; 
                 this_node; 
                 this_node = this_node->next) {
 
