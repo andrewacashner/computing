@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include "include/queue.h"
 #include "include/tree.h"
+#include "include/function.h"
 
 #define MAX_CHAR_INPUT 80
 
@@ -16,16 +17,36 @@ Queue_ptr Queue_tokens_from_string(char*);
 Tree_Node_ptr Tree_create_from_tokens(Queue_ptr);
 
 int main(void) {
+    // Read expression from standard input
     char line[MAX_CHAR_INPUT];
     read_input(line, MAX_CHAR_INPUT, stdin);
     printf("%s\n", line);
 
+    // Parse input into queue of tokens
+    // TODO Validate input (including matching parens)
     Queue_ptr tokens = Queue_tokens_from_string(line);
+
+    // Parse token queue into binary tree of s-expressions
     Tree_Node_ptr input_tree = Tree_create_from_tokens(tokens);
 
+    // Test tree
     Tree_Node_print(input_tree); 
     printf("\n");
 
+    // TODO Evaluate tree (find matching functions) minus variable
+    //      - new 'evaluate' function (in function.c) that evaluates a
+    //      subtree 
+    //      - add a field to the tree nodes for the function signature;
+    //      the first time, just set these
+    //          - the second time when plugging in x, only lookup the value
+    //          if that field is null (i.e., for X values)? 
+    //          - (Create a local "closure" lookup table with the value for
+    //          X?)
+    // TODO For a range of x values, find y and store results in a matrix
+    // TODO Create a bitmap from the matrix data
+    // TODO (Maybe) display the bitmap
+  
+    // Clean up
     Queue_destroy(tokens);
     Tree_destroy(input_tree);
 
