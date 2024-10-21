@@ -1,8 +1,6 @@
 /* Call a function by name from a table of functions
- * Andrew Cashner, 2024/10/18
+ * Andrew Cashner, 2024/10/21
  *
- * TODO
- * not just ints?
  */
 
 #include <stdio.h>
@@ -13,12 +11,11 @@
 #define MAX_CHAR_ATOM 20
 #define MAX_CHAR_INPUT 80
 #define MAX_ARGS 10
-#define INF MAX_ARGS
-#define FUNCTION_COUNT 6
 
-typedef double (*generic_function_ptr)(int, double[]);
+double evaluate(char *input);
 
 double apply(double (*fn)(double, double), int argc, double argv[]);
+
 double add(int, double[]);
 double subtract(int, double[]);
 double multiply(int, double[]);
@@ -26,6 +23,7 @@ double divide(int, double[]);
 double absolute_value(int, double[]);
 double exponent(int, double[]);
 
+typedef double (*generic_function_ptr)(int, double[]);
 
 typedef struct Function_sig *Function_sig_ptr;
 typedef struct Function_sig {
@@ -72,20 +70,33 @@ Function_sig _function_table[] = {
         .symbol = "expt",
         .function = (generic_function_ptr)exponent,
         .required_args = 2
+    },
+    {
+        .name = "FUNCTION_TABLE_END"
     }
 };
 
 int main(void) {
-    char buffer[MAX_CHAR_INPUT];
-    fgets(buffer, sizeof(buffer), stdin);
-    buffer[strlen(buffer) - 1] = '\0';
-    char *input = buffer;
+    char input[MAX_CHAR_INPUT];
+    fgets(input, sizeof(input), stdin);
+    input[strlen(input) - 1] = '\0';
+   
+    double result = evaluate(input);
+    printf("%s\n=> %f\n", input, result);
+    
+    return 0;
+}
 
-    if (input[0] == '(' && input[strlen(input) - 1] == ')') {
-        input[strlen(input) - 1] = '\0';
-        ++input;
+double evaluate(char *input) {
+    char buffer[MAX_CHAR_INPUT];
+    char *buffer_ptr = buffer;
+    strcpy(buffer, input);
+
+    if (buffer[0] == '(' && buffer[strlen(buffer) - 1] == ')') {
+        buffer[strlen(buffer) - 1] = '\0';
+        ++buffer_ptr;
     } else {
-        fprintf(stderr, "Expression must be enclosed in parentheses\n");
+        fprintf(stderr, "Unbalanced or missing parentheses\n");
         exit(EXIT_FAILURE);
     }
   
@@ -93,7 +104,7 @@ int main(void) {
     int arg_count = -1;
     char *input_function_name;
 
-    for (char *token = strtok(input, " ");
+    for (char *token = strtok(buffer_ptr, " ");
             token;
             token = strtok(NULL, " ")) {
 
@@ -119,23 +130,21 @@ int main(void) {
     int required_args = match_sig->required_args;
 
     // Test arguments
-    if (required_args != INF && arg_count != required_args) {
+    if (required_args != MAX_ARGS && arg_count != required_args) {
         fprintf(stderr, "Wrong number of arguments to function %s (%d required, %d supplied)\n", name, required_args, arg_count);
         exit(EXIT_FAILURE);
     }
 
-    printf("Apply function %s to %d arguments: ", name, required_args);
-
-    for (int i = 0; i < arg_count; ++i) {
-        printf("%f ", args[i]);
-    }
-    printf("\n");
+//    printf("Apply function %s to %d arguments: ", name, required_args);
+//    for (int i = 0; i < arg_count; ++i) {
+//        printf("%f ", args[i]);
+//    }
+//    printf("\n");
 
     // Calculate and report result
     double result = (*fn)(arg_count, args);
-    printf("=> %f\n", result);
 
-    return 0;
+    return result;
 }
 
 double apply(double (*fn)(double, double), int argc, double argv[]) {
@@ -191,7 +200,7 @@ Function_sig_ptr lookup_function(Function_sig table[], char *symbol) {
 
     Function_sig_ptr found = NULL;
 
-    for (int i = 0; i < FUNCTION_COUNT; ++i) {
+    for (int i = 0; strcmp(table[i].name, "FUNCTION_TABLE_END") != 0; ++i) {
         if (strcmp(table[i].symbol, symbol) == 0) {
             found = &table[i];
             break;
