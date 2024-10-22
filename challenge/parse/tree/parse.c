@@ -16,6 +16,7 @@ void read_input(char*, int, FILE*);
 Queue_ptr Queue_tokens_from_string(char*);
 Tree_Node_ptr Tree_create_from_tokens(Queue_ptr);
 Tree_Node_ptr Tree_compile(Tree_Node_ptr);
+Tree_Node_ptr Tree_substitute_var(Tree_Node_ptr, char*, double);
 
 int main(void) {
     // Read expression from standard input
@@ -48,6 +49,8 @@ int main(void) {
     // TODO (Maybe) display the bitmap
  
     input_tree = Tree_compile(input_tree);
+    input_tree = Tree_substitute_var(input_tree, "x", 1);
+    Tree_Node_print(input_tree);
 
     // Clean up
     Queue_destroy(tokens);
@@ -204,4 +207,65 @@ Tree_Node_ptr Tree_compile(Tree_Node_ptr tree) {
     return tree;
 }
 
-// TODO evaluate tree substituting for uncompiled values
+// Substitute a given numeric value for a given variable in the tree.
+Tree_Node_ptr Tree_substitute_var(Tree_Node_ptr tree,
+        char *variable_name, double variable_value) {
+
+    if (tree) {
+        if (!tree->is_compiled && strcmp(tree->data, variable_name) == 0) {
+            tree->numeric_value = variable_value;
+            tree->is_compiled = true;
+        }
+        tree->child = Tree_substitute_var(tree->child, 
+                variable_name, variable_value);
+        tree->sibling = Tree_substitute_var(tree->sibling, 
+                variable_name, variable_value);
+    }
+    return tree;
+}
+
+
+// // TODO evaluate tree substituting for uncompiled values
+// double Tree_evaluate_for(Tree_Node_ptr tree, char *variable_name, 
+//         double variable_value) {
+// 
+//     tree = Tree_substitute_var(tree, variable_name, variable_value);
+//     double result = Tree_evaluate(tree);
+//     return result;
+// }
+
+// // TODO Evaluate fully-compiled tree (first subtrees then main tree)
+// double Tree_evaluate(Tree_Node_ptr tree) {
+//     Tree_Node_ptr current;
+// 
+//     if (tree && tree->is_compiled) {
+//         if (tree->is_root && tree->child) {
+//             current = tree->child;
+// 
+//             generic_function_ptr fn = current->function;
+//             double args[siblings];
+// 
+//             if (fn) {
+//                 int siblings = sibling_count(current);
+// 
+//                 for (int i = 0; i < siblings; ++i) {
+//                     if (current->is_root) {
+//                         subtree_result = Tree_evaluate(current);
+//                     } else if (current->is_compiled) {
+//                             args[i] = current->numeric_value;
+//                         } // TODO else error
+//                     }
+//                     current = current->sibling;
+//                 }
+// 
+//                 subtree_result = (*fn)(siblings, args);
+//             } else {
+//                 fprintf(stderr, "Unrecognized function \"%s\"\n", current->data);
+//                 // TODO what to do about it?
+//             }
+//         }
+//     }
+// 
+//     return result;
+// }
+

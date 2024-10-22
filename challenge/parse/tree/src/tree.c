@@ -66,6 +66,13 @@ void Tree_Node_print(Tree_Node_ptr node) {
             }
         } else {
             printf("%s", node->data);
+            if (node->is_compiled) {
+                if (node->function_sig != NULL) {
+                    DEBUG_PRINTF("  function: %s\n", node->function_sig->name);
+                } else {
+                    DEBUG_PRINTF("  numeric_value: %f\n", node->numeric_value);
+                }
+            }
         }
         if (node->child) {
             DEBUG_PRINTF("c");
