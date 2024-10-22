@@ -9,6 +9,48 @@
 #include <math.h>
 #include "../include/function.h"
 
+Function_sig function_table[] = {
+    {   .name = "add",
+        .symbol = "+",
+        .function = (generic_function_ptr)add,
+        .required_args = FUNCTION_MAX_ARGS
+    },
+    {
+        .name = "subtract",
+        .symbol = "-",
+        .function = (generic_function_ptr)subtract,
+        .required_args = FUNCTION_MAX_ARGS
+    },
+    {
+        .name = "multiply",
+        .symbol = "*",
+        .function = (generic_function_ptr)multiply,
+        .required_args = FUNCTION_MAX_ARGS
+    },
+    {
+        .name = "divide",
+        .symbol = "/",
+        .function = (generic_function_ptr)divide,
+        .required_args = FUNCTION_MAX_ARGS
+    },
+    {
+        .name = "absolute value",
+        .symbol = "abs",
+        .function = (generic_function_ptr)absolute_value,
+        .required_args = 1
+    },
+    {
+        .name = "exponent",
+        .symbol = "expt",
+        .function = (generic_function_ptr)exponent,
+        .required_args = 2
+    },
+    {
+        .name = "FUNCTION_TABLE_END"
+    }
+};
+
+
 double evaluate(char *input) {
     char buffer[FUNCTION_MAX_CHAR_INPUT];
     char *buffer_ptr = buffer;
@@ -41,7 +83,7 @@ double evaluate(char *input) {
     // Parse them
     // Compare to fn table
     Function_sig_ptr match_sig = 
-        lookup_function(function_table, input_function_name);
+        lookup_function(input_function_name);
 
     if (!match_sig) {
         fprintf(stderr, "Unrecognized function %s\n", input_function_name);
@@ -112,14 +154,18 @@ double exponent(int argc, double argv[]) {
     return pow(argv[0], argv[1]);
 }
 
-Function_sig_ptr lookup_function(Function_sig table[], char *symbol) {
+Function_sig_ptr lookup_function(char *symbol) {
 
     Function_sig_ptr found = NULL;
 
-    for (int i = 0; strcmp(table[i].name, "FUNCTION_TABLE_END") != 0; ++i) {
-        if (strcmp(table[i].symbol, symbol) == 0) {
-            found = &table[i];
-            break;
+    if (atof(symbol) == 0) { // Not a number, must be symbol 
+        for (int i = 0; 
+                strcmp(function_table[i].name, "FUNCTION_TABLE_END") != 0; 
+                ++i) {
+            if (strcmp(function_table[i].symbol, symbol) == 0) {
+                found = &function_table[i];
+                break;
+            }
         }
     }
     return found;

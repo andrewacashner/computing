@@ -11,6 +11,7 @@
 Tree_Node_ptr Tree_Node_create(void) {
     Tree_Node_ptr new_node = malloc(sizeof(Tree_Node));
     strcpy(new_node->data, "");
+    new_node->function_sig = NULL;
     new_node->level = -1;
     new_node->is_root = false;
     new_node->child = NULL;

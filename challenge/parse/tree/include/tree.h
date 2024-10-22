@@ -1,6 +1,8 @@
 #ifndef TREE_H
 #define TREE_H
 
+#include "function.h"
+
 #ifdef DEBUG
     #define DEBUG_PRINTF printf
 #else
@@ -11,9 +13,10 @@
 
 typedef struct Tree_Node *Tree_Node_ptr;
 typedef struct Tree_Node {
-    int level;
     char data[TREE_MAX_CHAR_ATOM];
+    Function_sig_ptr function_sig;
     bool is_root;
+    int level;
     Tree_Node_ptr child;
     Tree_Node_ptr sibling;
     Tree_Node_ptr parent;

@@ -15,6 +15,7 @@
 void read_input(char*, int, FILE*);
 Queue_ptr Queue_tokens_from_string(char*);
 Tree_Node_ptr Tree_create_from_tokens(Queue_ptr);
+Tree_Node_ptr Tree_compile(Tree_Node_ptr);
 
 int main(void) {
     // Read expression from standard input
@@ -45,7 +46,9 @@ int main(void) {
     // TODO For a range of x values, find y and store results in a matrix
     // TODO Create a bitmap from the matrix data
     // TODO (Maybe) display the bitmap
-  
+ 
+    input_tree = Tree_compile(input_tree);
+
     // Clean up
     Queue_destroy(tokens);
     Tree_destroy(input_tree);
@@ -142,6 +145,30 @@ Tree_Node_ptr Tree_create_from_tokens(Queue_ptr tokens) {
             // Don't reset current because subsequent siblings will all
             // descend from the same parent as this one
         } 
+    }
+    return tree;
+}
+
+// TODO check number of siblings to check arguments of found functions
+Tree_Node_ptr Tree_compile(Tree_Node_ptr tree) {
+    if (tree) {
+        if (tree->is_root && tree->child) {
+            Function_sig_ptr fn_match = 
+                lookup_function(tree->child->data);
+
+            if (fn_match) {
+                tree->child->function_sig = fn_match;
+                DEBUG_PRINTF("Found function \"%s\"\n", fn_match->name);
+            } else {
+                DEBUG_PRINTF("No match found for symbol \"%s\"\n", tree->child->data);
+            }
+        } 
+        if (tree->child) {
+            tree->child = Tree_compile(tree->child);
+        }
+        if (tree->sibling) {
+            tree->sibling = Tree_compile(tree->sibling);
+        }
     }
     return tree;
 }

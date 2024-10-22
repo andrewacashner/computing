@@ -26,47 +26,6 @@ typedef struct Function_sig {
     int required_args;
 } Function_sig;
 
-Function_sig_ptr lookup_function(Function_sig[], char*);
-
-Function_sig function_table[] = {
-    {   .name = "add",
-        .symbol = "+",
-        .function = (generic_function_ptr)add,
-        .required_args = FUNCTION_MAX_ARGS
-    },
-    {
-        .name = "subtract",
-        .symbol = "-",
-        .function = (generic_function_ptr)subtract,
-        .required_args = FUNCTION_MAX_ARGS
-    },
-    {
-        .name = "multiply",
-        .symbol = "*",
-        .function = (generic_function_ptr)multiply,
-        .required_args = FUNCTION_MAX_ARGS
-    },
-    {
-        .name = "divide",
-        .symbol = "/",
-        .function = (generic_function_ptr)divide,
-        .required_args = FUNCTION_MAX_ARGS
-    },
-    {
-        .name = "absolute value",
-        .symbol = "abs",
-        .function = (generic_function_ptr)absolute_value,
-        .required_args = 1
-    },
-    {
-        .name = "exponent",
-        .symbol = "expt",
-        .function = (generic_function_ptr)exponent,
-        .required_args = 2
-    },
-    {
-        .name = "FUNCTION_TABLE_END"
-    }
-};
+Function_sig_ptr lookup_function(char*);
 
 #endif // FUNCTION_H

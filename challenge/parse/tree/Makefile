@@ -6,20 +6,25 @@ obj = $(addprefix obj/,$(notdir $(lib:%.c=%.o)))
 main = $(prog).c
 bin = bin/$(prog)
 
-gcc = gcc -std=c17 -Wall -pedantic
+CFLAGS = -std=c17 -Wall -pedantic
 
-.PHONY : all run clean
+# to debug, run 'make mode=debug'
+ifeq ($(mode), debug)
+	CFLAGS += -DDEBUG
+endif
+
+.PHONY : all debug run clean
 
 all : $(bin)
 
 $(bin) : $(main) $(obj) | $(dirs)
-	$(gcc) -o $(bin) $(obj) $(main)
+	gcc $(CFLAGS) -o $(bin) $(obj) $(main) -lm
 
 $(dirs) :
 	mkdir -p $(dirs)
 
 obj/%.o : src/%.c | $(dirs)
-	$(gcc) -c -o $@ $<
+	gcc $(CFLAGS) -c -o $@ $< -lm
 
 run : 
 	./$(bin)
