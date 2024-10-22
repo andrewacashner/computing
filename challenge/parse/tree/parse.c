@@ -149,20 +149,51 @@ Tree_Node_ptr Tree_create_from_tokens(Queue_ptr tokens) {
     return tree;
 }
 
-// TODO check number of siblings to check arguments of found functions
+// TODO break off into subfunctions? e.g., Tree_Node_compile
+// TODO what to do when bad number of arguments found? (can't just return
+// NULL, because we need to keep the reference to the tree to free it later)
+//
 Tree_Node_ptr Tree_compile(Tree_Node_ptr tree) {
     if (tree) {
-        if (tree->is_root && tree->child) {
-            Function_sig_ptr fn_match = 
-                lookup_function(tree->child->data);
+        if (tree->is_root) {
+            if (tree->child) {
+                Function_sig_ptr fn_match = 
+                    lookup_function(tree->child->data);
 
-            if (fn_match) {
-                tree->child->function_sig = fn_match;
-                DEBUG_PRINTF("Found function \"%s\"\n", fn_match->name);
-            } else {
-                DEBUG_PRINTF("No match found for symbol \"%s\"\n", tree->child->data);
+                if (fn_match) {
+                    tree->child->function_sig = fn_match;
+                    DEBUG_PRINTF("Found function \"%s\"\n", fn_match->name);
+                    tree->child->is_compiled = true;
+
+                    int siblings = sibling_count(tree->child);
+                    DEBUG_PRINTF("Found %d arguments to \"%s\"\n",
+                            siblings, fn_match->name);
+                
+                    if (!Function_sig_is_variadic(fn_match) &&
+                            !Function_sig_matches_args(fn_match, siblings)) {
+
+                        fprintf(stderr, "Function \"%s\" requires %d arguments, but %d provided\n", 
+                                fn_match->name, fn_match->required_args, siblings);
+                    }
+
+                } else {
+                    DEBUG_PRINTF("No match found for symbol \"%s\"\n", tree->child->data);
+                }
+                tree->is_compiled = true;
             }
-        } 
+        } else if (!tree->is_compiled) {
+            char *post_convert_ptr = tree->data;
+            double numeric_value = strtof(tree->data, &post_convert_ptr);
+
+            if (post_convert_ptr != tree->data) {
+                DEBUG_PRINTF("Found number %f\n", numeric_value);
+                tree->numeric_value = numeric_value;
+                tree->is_compiled = true;
+            } else {
+                DEBUG_PRINTF("Found non-number %s\n", tree->data);
+            }
+        }
+
         if (tree->child) {
             tree->child = Tree_compile(tree->child);
         }
@@ -172,3 +203,5 @@ Tree_Node_ptr Tree_compile(Tree_Node_ptr tree) {
     }
     return tree;
 }
+
+// TODO evaluate tree substituting for uncompiled values

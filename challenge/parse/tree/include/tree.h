@@ -15,7 +15,9 @@ typedef struct Tree_Node *Tree_Node_ptr;
 typedef struct Tree_Node {
     char data[TREE_MAX_CHAR_ATOM];
     Function_sig_ptr function_sig;
+    double numeric_value;
     bool is_root;
+    bool is_compiled;
     int level;
     Tree_Node_ptr child;
     Tree_Node_ptr sibling;
@@ -34,5 +36,7 @@ void Tree_Node_print(Tree_Node_ptr);
 void Tree_destroy(Tree_Node_ptr);
 
 void Tree_Node_debug(Tree_Node_ptr);
+
+int sibling_count(Tree_Node_ptr);
 
 #endif // TREE_H

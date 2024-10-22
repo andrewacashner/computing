@@ -13,25 +13,25 @@ Function_sig function_table[] = {
     {   .name = "add",
         .symbol = "+",
         .function = (generic_function_ptr)add,
-        .required_args = FUNCTION_MAX_ARGS
+        .required_args = FUNCTION_VAR_ARGS
     },
     {
         .name = "subtract",
         .symbol = "-",
         .function = (generic_function_ptr)subtract,
-        .required_args = FUNCTION_MAX_ARGS
+        .required_args = FUNCTION_VAR_ARGS
     },
     {
         .name = "multiply",
         .symbol = "*",
         .function = (generic_function_ptr)multiply,
-        .required_args = FUNCTION_MAX_ARGS
+        .required_args = FUNCTION_VAR_ARGS
     },
     {
         .name = "divide",
         .symbol = "/",
         .function = (generic_function_ptr)divide,
-        .required_args = FUNCTION_MAX_ARGS
+        .required_args = FUNCTION_VAR_ARGS
     },
     {
         .name = "absolute value",
@@ -94,7 +94,8 @@ double evaluate(char *input) {
     int required_args = match_sig->required_args;
 
     // Test arguments
-    if (required_args != FUNCTION_MAX_ARGS && arg_count != required_args) {
+    if (!Function_sig_is_variadic(match_sig) 
+            && !Function_sig_matches_args(match_sig, arg_count)) {
         fprintf(stderr, "Wrong number of arguments to function %s (%d required, %d supplied)\n", name, required_args, arg_count);
         exit(EXIT_FAILURE);
     }
@@ -171,3 +172,10 @@ Function_sig_ptr lookup_function(char *symbol) {
     return found;
 }
 
+bool Function_sig_is_variadic(Function_sig_ptr sig) {
+    return sig->required_args == FUNCTION_VAR_ARGS;
+}
+
+bool Function_sig_matches_args(Function_sig_ptr sig, int args) {
+    return sig->required_args == args;
+}

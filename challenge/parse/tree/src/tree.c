@@ -12,8 +12,10 @@ Tree_Node_ptr Tree_Node_create(void) {
     Tree_Node_ptr new_node = malloc(sizeof(Tree_Node));
     strcpy(new_node->data, "");
     new_node->function_sig = NULL;
+    new_node->numeric_value = 0;
     new_node->level = -1;
     new_node->is_root = false;
+    new_node->is_compiled = false;
     new_node->child = NULL;
     new_node->sibling = NULL;
     new_node->parent = NULL;
@@ -91,5 +93,17 @@ void Tree_destroy(Tree_Node_ptr tree) {
 void Tree_Node_debug(Tree_Node_ptr node) {
     printf("   node text: %s\n", node->data);
     printf("   parent text: %s\n", node->parent->data);
+}
+
+int sibling_count(Tree_Node_ptr node) {
+    int count = 0;
+    if (node && node->sibling) {
+        for (Tree_Node_ptr current = node->sibling;
+                current; 
+                current = current->sibling) {
+            ++count;
+        }
+    }
+    return count;
 }
 
