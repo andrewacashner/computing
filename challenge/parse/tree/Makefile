@@ -1,4 +1,4 @@
-prog = parse
+prog = graph
 dirs = obj bin
 
 lib = $(wildcard src/*.c)

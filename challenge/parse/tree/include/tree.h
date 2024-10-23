@@ -37,6 +37,7 @@ void Tree_destroy(Tree_Node_ptr);
 
 void Tree_Node_debug(Tree_Node_ptr);
 
-int sibling_count(Tree_Node_ptr);
+int Tree_sibling_count(Tree_Node_ptr);
+int Tree_child_count(Tree_Node_ptr);
 
 #endif // TREE_H

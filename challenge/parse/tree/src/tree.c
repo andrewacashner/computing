@@ -102,7 +102,7 @@ void Tree_Node_debug(Tree_Node_ptr node) {
     printf("   parent text: %s\n", node->parent->data);
 }
 
-int sibling_count(Tree_Node_ptr node) {
+int Tree_sibling_count(Tree_Node_ptr node) {
     int count = 0;
     if (node && node->sibling) {
         for (Tree_Node_ptr current = node->sibling;
@@ -110,6 +110,15 @@ int sibling_count(Tree_Node_ptr node) {
                 current = current->sibling) {
             ++count;
         }
+    }
+    return count;
+}
+
+int Tree_child_count(Tree_Node_ptr node) {
+    int count = 0;
+    if (node && node->child) {
+        // Same as sibling count but including the first child
+        count = 1 + Tree_sibling_count(node->child);
     }
     return count;
 }
