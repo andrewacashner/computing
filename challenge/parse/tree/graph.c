@@ -38,6 +38,7 @@ const char *USAGE =
 
 int main(int argc, char *argv[]) {
     // TODO or receive input in form (lambda (x) (expr)) ?
+    // TODO better command-line arg parsing with flags
     if (argc < 6) {
         fprintf(stderr, USAGE);
         exit(EXIT_FAILURE);
@@ -51,13 +52,22 @@ int main(int argc, char *argv[]) {
     DEBUG_PRINTF("Input: (lambda (%s) %s)\n", variable_name, expression);
     DEBUG_PRINTF("Evaluate from %f to %f at interval of %f\n", min, max, increment);
 
+    if (min >= max || increment <= 0) {
+        fprintf(stderr, "Invalid bounds\n");
+        exit(EXIT_FAILURE);
+    }
+
     // Parse input into queue of tokens
-    // TODO Validate input expression (including matching parens, variable)
-    // TODO Validate min, max, increment
     Queue_ptr tokens = Queue_tokens_from_string(expression);
 
     // Parse token queue into binary tree of s-expressions
     Tree_Node_ptr input_tree = Tree_create_from_tokens(tokens);
+    if (!input_tree) {
+        fprintf(stderr, "Problem creating tree\n");
+        Queue_destroy(tokens);
+        exit(EXIT_FAILURE);
+    }
+
 #ifdef DEBUG
     Tree_Node_print(input_tree); 
     printf("\n");
@@ -142,17 +152,18 @@ void strip_trailing_parens(char *word) {
 }
 
 bool token_is_open_paren(Queue_Node_ptr token) {
-    return strcmp(token->data, "(") == 0;
+    return token->data[0] == '(';
 }
 
 bool token_is_close_paren(Queue_Node_ptr token) {
-    return strcmp(token->data, ")") == 0;
+    return token->data[0] == ')';
 }
 
 Tree_Node_ptr Tree_create_from_tokens(Queue_ptr tokens) {
     int level = 0;
 
-    Tree_Node_ptr tree = Tree_create(++level);
+    // TODO are we creating one level too many?
+    Tree_Node_ptr tree = Tree_create(level);
     Tree_Node_ptr current = tree;
 
     for (Queue_Node_ptr token = tokens->first;
@@ -162,7 +173,8 @@ Tree_Node_ptr Tree_create_from_tokens(Queue_ptr tokens) {
         if (token_is_open_paren(token)) {
             // Start of new expression:
             // The new node will be the parent of a new subtree
-            Tree_Node_ptr subtree = Tree_create(++level);
+            Tree_Node_ptr subtree = Tree_create(level);
+            ++level;
             Tree_add_child(current, subtree);
             current = subtree;
 
@@ -181,7 +193,16 @@ Tree_Node_ptr Tree_create_from_tokens(Queue_ptr tokens) {
             // descend from the same parent as this one
         } 
     }
-    return tree;
+
+    // TODO is this sufficient to catch all errors with unmatched parens?
+    if (level != 0) {
+        DEBUG_PRINTF("end level: %d\n", level);
+        fprintf(stderr, "Warning: Unbalanced parentheses\n");
+        Tree_destroy(tree);
+        return NULL;
+    } else {
+        return tree;
+    }
 }
 
 // TODO break off into subfunctions? e.g., Tree_Node_compile
