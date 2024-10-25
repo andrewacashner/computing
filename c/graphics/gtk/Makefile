@@ -10,9 +10,8 @@ out = $(addprefix bin/,$(notdir $(basename $(in))))
 all : $(out)
 
 bin/% : %.c | $(dirs)
-	gcc `pkg-config --cflags gtk+-3.0` \
-		-Wall -pedantic -o $@ $< \
-		`pkg-config --libs gtk+-3.0`
+	gcc -Wall -pedantic -o $@ $< \
+		`pkg-config gtk+-3.0 --cflags --libs`
 
 $(dirs) :
 	mkdir -p $(dirs)
