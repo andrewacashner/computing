@@ -1,142 +1,360 @@
-/* Rudimentary graphing program
- * 
- * Graphs one of a preset library of functions to the terminal.
- * Reads the functions from user input (but only to match them to one
- * already programmed).
- * Plots the functions for integer values between X_MIN and X_MAX.
+/* Graphing calculator
+ * Andrew Cashner
  *
- * Andrew Cashner, 2024/10/11
+ * # CHANGELOG
+ * 2024/10/18 - Begun
+ * 2024/10/23 - Successful parsing of input expression to a tree and
+ *              evaluating it for a range of inputs
  */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
-#include <math.h>
+#include <stdbool.h>
+#include "include/queue.h"
+#include "include/tree.h"
+#include "include/function.h"
 
-#define MAX_CHAR 80
+#define MAX_CHAR_INPUT 80
 
-#define MAX_ROW 25
-#define MAX_COL 25
+typedef struct Coord {
+    double x;
+    double y;
+} Coord;
 
-#define X_ORIGIN MAX_ROW / 2
-#define X_MIN -X_ORIGIN
-#define X_MAX X_ORIGIN
+void read_input(char*, int, FILE*);
+Queue_ptr Queue_tokens_from_string(char*);
+Tree_Node_ptr Tree_create_from_tokens(Queue_ptr);
+Tree_Node_ptr Tree_compile(Tree_Node_ptr);
+Tree_Node_ptr Tree_substitute_var(Tree_Node_ptr, char*, double);
+double Tree_evaluate_for(Tree_Node_ptr, char *, double);
+double Tree_evaluate(Tree_Node_ptr);
+void populate_range_values(Coord[], Tree_Node_ptr, char*, 
+        double, double, double, int);
+void Coord_array_print(Coord[], int);
 
-#define Y_ORIGIN MAX_COL / 2 
-#define Y_MIN -Y_ORIGIN
-#define Y_MAX Y_ORIGIN
-
-#define INCREMENT 1
-
-#define GRAPH_COORD(x, y) graph[y][x]
-
-char *read_input(char*);
-int y_is_x(int);
-int y_is_x_squared(int);
-int y_is_x_cubed(int);
-
-int (*select_function(char*))(int);
-void set_graph(bool[MAX_ROW][MAX_COL], int(*)(int));
-void print_graph(char*, bool[MAX_ROW][MAX_COL]);
+const char *USAGE = 
+    "Usage: graph VARIABLE_NAME \"(EXPRESSION)\" MIN MAX INCREMENT\n";
 
 int main(int argc, char *argv[]) {
-    char input[MAX_CHAR];
-    bool graph[MAX_ROW][MAX_COL] = {{false}};
-    int (*fn)(int);
+    // TODO or receive input in form (lambda (x) (expr)) ?
+    // TODO better command-line arg parsing with flags
+    if (argc < 6) {
+        fprintf(stderr, USAGE);
+        exit(EXIT_FAILURE);
+    }
+    char *variable_name = argv[1];
+    char *expression = argv[2];
+    double min = strtof(argv[3], NULL);
+    double max = strtof(argv[4], NULL);
+    double increment = strtof(argv[5], NULL);
 
-    read_input(input);
-    fn = select_function(input);
-    set_graph(graph, fn);
-    print_graph(input, graph);
+    DEBUG_PRINTF("Input: (lambda (%s) %s)\n", variable_name, expression);
+    DEBUG_PRINTF("Evaluate from %f to %f at interval of %f\n", min, max, increment);
+
+    if (min >= max || increment <= 0) {
+        fprintf(stderr, "Invalid bounds\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Parse input into queue of tokens
+    Queue_ptr tokens = Queue_tokens_from_string(expression);
+
+    // Parse token queue into binary tree of s-expressions
+    Tree_Node_ptr input_tree = Tree_create_from_tokens(tokens);
+    if (!input_tree) {
+        fprintf(stderr, "Problem creating tree\n");
+        Queue_destroy(tokens);
+        exit(EXIT_FAILURE);
+    }
+
+#ifdef DEBUG
+    Tree_Node_print(input_tree); 
+    printf("\n");
+#endif
+
+    // Precompile tree (set values for functions and constants except for
+    // unknown variable) 
+    // TODO specify variable NOT to compile so we don't have multiple
+    // uncompiled vars 
+    input_tree = Tree_compile(input_tree);
+#ifdef DEBUG
+    Tree_Node_print(input_tree);
+#endif
+
+    // Populate matrix with (x, y) pairs in a given domain
+    int iterations = (int)((max - min) / increment);
+    DEBUG_PRINTF("Calculating %d iterations\n", iterations);
+
+    Coord values[iterations];
+    populate_range_values(values, input_tree, variable_name, 
+            min, max, increment, iterations);
+    Coord_array_print(values, iterations);
+
+    // TODO Create a bitmap from the matrix data
+    // TODO (Maybe) display the bitmap
+   
+    // Clean up
+    Queue_destroy(tokens);
+    Tree_destroy(input_tree);
 
     return 0;
 }
 
-char *read_input(char *buffer) {
-    printf("y = ");
-    fgets(buffer, sizeof(buffer), stdin);
+void read_input(char* buffer, int max_char, FILE *infile) {
+    fgets(buffer, sizeof(char) * max_char, infile);
     buffer[strlen(buffer) - 1] = '\0';
-    return buffer;
 }
 
-int y_is_x(int x) {
-    int y = x;
-    return y;
-}
-
-int y_is_x_squared(int x) {
-    int y = pow(x, 2);
-    return y;
-}
-
-int y_is_x_cubed(int x) {
-    int y = pow(x, 3);
-    return y;
-}
-
-int (*select_function(char *fn_text))(int) {
-    int (*fn)(int);
-
-    bool string_matches(char *s1, char *s2) {
-        return strcmp(s1, s2) == 0;
+void strcpy_filter_parens(char *dest, char *src) {
+    int dest_i = 0;
+    for (int i = 0; src[i] != '\0'; ++i) {
+        if (src[i] != '(' && src[i] != ')') {
+            dest[dest_i] = src[i];
+            ++dest_i;
+        }
     }
+    dest[dest_i] = '\0';
+}
 
-    if (string_matches(fn_text, "x")) {
-        fn = y_is_x;
-    } else if (string_matches(fn_text, "x^2")) {
-        fn = y_is_x_squared;
-    } else if (string_matches(fn_text, "x^3")) {
-        fn = y_is_x_cubed;
-    } else {
-        fprintf(stderr, "Unknown function y = %s\n", fn_text);
-        exit(EXIT_FAILURE);
-    }
+Queue_ptr Queue_tokens_from_string(char *input) {
+    const char *WHITESPACE = "  \t\n";
     
-    return fn;
+    Queue_ptr new_queue = Queue_create();
+
+    char buffer[MAX_CHAR_INPUT];
+    strcpy(buffer, input);
+
+    for (char *token = strtok(buffer, WHITESPACE);
+            token;
+            token = strtok(NULL, WHITESPACE)) {
+
+        char new_data[QUEUE_MAX_CHAR_ATOM];
+        strcpy_filter_parens(new_data, token);
+
+        for (int i = 0; token[i] == '('; ++i) {
+            Queue_append_new(new_queue, "(");
+        }
+     
+      Queue_append_new(new_queue, new_data);
+
+        for (int i = strlen(token) - 1; token[i] == ')'; --i) {
+            Queue_append_new(new_queue, ")");
+        }
+    }
+    return new_queue;
 }
 
-void set_graph(bool graph[MAX_ROW][MAX_COL], int (*fn)(int)) {
-    for (int x = X_MIN; x < X_MAX; x += INCREMENT) {
-        int y = (*fn)(x);
+void strip_trailing_parens(char *word) {
+    while (word[strlen(word) - 1] == ')') {
+        word[strlen(word) - 1] = '\0';
+    }
+}
 
-        if (abs(y) < Y_MAX) {
-            GRAPH_COORD(X_ORIGIN + x, Y_ORIGIN - y) = true;
+bool token_is_open_paren(Queue_Node_ptr token) {
+    return token->data[0] == '(';
+}
+
+bool token_is_close_paren(Queue_Node_ptr token) {
+    return token->data[0] == ')';
+}
+
+Tree_Node_ptr Tree_create_from_tokens(Queue_ptr tokens) {
+    int level = 0;
+
+    // TODO are we creating one level too many?
+    Tree_Node_ptr tree = Tree_create(level);
+    Tree_Node_ptr current = tree;
+
+    for (Queue_Node_ptr token = tokens->first;
+            token;
+            token = token->next) {
+
+        if (token_is_open_paren(token)) {
+            // Start of new expression:
+            // The new node will be the parent of a new subtree
+            Tree_Node_ptr subtree = Tree_create(level);
+            ++level;
+            Tree_add_child(current, subtree);
+            current = subtree;
+
+        } else if (token_is_close_paren(token)) {
+            // Return to parent node of this chain of siblings
+            current = current->parent;
+            --level; 
+
+        } else {
+            // Continuation of expression:
+            // More siblings of first child (= children of current)
+            Tree_Node_ptr new_node = Tree_Node_create_from_data(token->data);
+            Tree_add_child(current, new_node);
+            
+            // Don't reset current because subsequent siblings will all
+            // descend from the same parent as this one
         } 
     }
-}
 
-void print_graph(char *function_name, bool graph[MAX_ROW][MAX_COL]) {
-    enum graph_point_type { SPACE, ORIGIN, X_AXIS, Y_AXIS, POINT } type;
-
-    // Print 3 x chars for every 1 y for semi-square output
-    char *graph_point_str[] = {
-        "   ", // SPACE
-        " + ", // ORIGIN
-        "---", // X_AXIS
-        " | ", // Y_AXIS
-        " * "  // POINT
-    };
-
-    for (int y = 0; y < MAX_ROW; ++y) {
-        for (int x = 0; x < MAX_COL; ++x) {
-            if (GRAPH_COORD(x, y) == true) {
-                type = POINT;
-            } else if (y == X_ORIGIN && x == Y_ORIGIN) {
-                type = ORIGIN;
-            } else if (y == X_ORIGIN) {
-                type = X_AXIS;
-            } else if (x == Y_ORIGIN) {
-                type = Y_AXIS;
-            } else {
-                type = SPACE;
-            }
-            printf("%s", graph_point_str[type]);
-        }
-        printf("\n");
+    // TODO is this sufficient to catch all errors with unmatched parens?
+    if (level != 0) {
+        DEBUG_PRINTF("end level: %d\n", level);
+        fprintf(stderr, "Warning: Unbalanced parentheses\n");
+        Tree_destroy(tree);
+        return NULL;
+    } else {
+        return tree;
     }
+}
 
-    printf("y = %s\n", function_name);
+// TODO break off into subfunctions? e.g., Tree_Node_compile
+// TODO what to do when bad number of arguments found? (can't just return
+// NULL, because we need to keep the reference to the tree to free it later)
+//
+Tree_Node_ptr Tree_compile(Tree_Node_ptr tree) {
+    if (tree) {
+        if (tree->is_root) {
+            if (tree->child) {
+                Function_sig_ptr fn_match = 
+                    lookup_function(tree->child->data);
+
+                if (fn_match) {
+                    tree->child->function_sig = fn_match;
+                    DEBUG_PRINTF("Found function \"%s\"\n", fn_match->name);
+                    tree->child->is_compiled = true;
+
+                    int siblings = Tree_sibling_count(tree->child);
+                    DEBUG_PRINTF("Found %d arguments to \"%s\"\n",
+                            siblings, fn_match->name);
+                
+                    if (!Function_sig_is_variadic(fn_match) &&
+                            !Function_sig_matches_args(fn_match, siblings)) {
+
+                        fprintf(stderr, "Function \"%s\" requires %d arguments, but %d provided\n", 
+                                fn_match->name, fn_match->required_args, siblings);
+                    }
+
+                } else {
+                    DEBUG_PRINTF("No match found for symbol \"%s\"\n", tree->child->data);
+                }
+                tree->is_compiled = true;
+            }
+        } else if (!tree->is_compiled) {
+            char *post_convert_ptr = tree->data;
+            double numeric_value = strtof(tree->data, &post_convert_ptr);
+
+            if (post_convert_ptr != tree->data) {
+                DEBUG_PRINTF("Found number %f\n", numeric_value);
+                tree->numeric_value = numeric_value;
+                tree->is_compiled = true;
+            } else {
+                DEBUG_PRINTF("Found non-number %s\n", tree->data);
+            }
+        }
+
+        if (tree->child) {
+            tree->child = Tree_compile(tree->child);
+        }
+        if (tree->sibling) {
+            tree->sibling = Tree_compile(tree->sibling);
+        }
+    }
+    return tree;
+}
+
+// Substitute a given numeric value for a given variable in the tree.
+Tree_Node_ptr Tree_substitute_var(Tree_Node_ptr tree,
+        char *variable_name, double variable_value) {
+
+    if (tree) {
+        if (strcmp(tree->data, variable_name) == 0) {
+            tree->numeric_value = variable_value;
+            DEBUG_PRINTF("Substituted value %f for %s at level %d\n", 
+                    variable_value, variable_name, tree->level);
+        }
+        tree->child = Tree_substitute_var(tree->child, 
+                variable_name, variable_value);
+        tree->sibling = Tree_substitute_var(tree->sibling, 
+                variable_name, variable_value);
+    }
+    return tree;
 }
 
 
+// TODO evaluate tree substituting for uncompiled values
+double Tree_evaluate_for(Tree_Node_ptr tree, char *variable_name, 
+        double variable_value) {
+
+    tree = Tree_substitute_var(tree, variable_name, variable_value);
+#ifdef DEBUG
+    DEBUG_PRINTF("Evaluate tree for %s = %f\n", variable_name, variable_value);
+    Tree_Node_print(tree);
+#endif
+    double result = Tree_evaluate(tree);
+    return result;
+}
+
+// TODO Evaluate fully-compiled tree (first subtrees then main tree)
+double Tree_evaluate(Tree_Node_ptr tree) {
+    double result = 0;
+
+    if (tree && tree->is_compiled) {
+        if (tree->is_root && tree->child && tree->child->function_sig) {
+
+            generic_function_ptr fn = tree->child->function_sig->function;
+            int arg_count = Tree_sibling_count(tree->child);
+
+             DEBUG_PRINTF("Found function \"%s\"  at level %d with %d args\n", 
+                     tree->child->function_sig->name, tree->level, arg_count);
+
+             if (fn && arg_count > 0) {
+                 double args[arg_count];
+
+                 Tree_Node_ptr current = tree->child->sibling;
+                 for (int i = 0; i < arg_count && current; ++i) {
+
+                     if (current->is_root) {
+                         args[i] = Tree_evaluate(current);
+                     } else {
+                         args[i] = current->numeric_value;
+                     }
+                     DEBUG_PRINTF("Evaluated arg %d = %f\n", i, args[i]);
+
+                     current = current->sibling;
+                 }
+
+                 result = (*fn)(arg_count, args);
+             } else {
+                 fprintf(stderr, "Faulty expression tree\n");
+             }
+        } else {
+            result = Tree_evaluate(tree->child);
+        }
+    }
+    return result;
+}
+
+void populate_range_values(Coord values[], Tree_Node_ptr tree, 
+        char *variable, double min, double max, double increment, 
+        int iterations) {
+
+    double x = min;
+    for (int i = 0; i < iterations; ++i) {
+        values[i].x = x;
+        values[i].y = Tree_evaluate_for(tree, variable, x);
+        DEBUG_PRINTF("Calculated y = %f for x = %f\n", values[i].y, x);
+        x += increment;
+    }
+}
+
+void Coord_print(Coord coord) {
+    printf("(%f . %f)", coord.x, coord.y);
+}
+
+void Coord_array_print(Coord coord[], int length) {
+    for (int i = 0; i < length; ++i) {
+        Coord_print(coord[i]);
+        if (i < length - 1) {
+            printf(" ");
+        }
+    }
+    printf("\n");
+}
