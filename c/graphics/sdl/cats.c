@@ -34,7 +34,7 @@ int main(void)
         return(3);
     }
 
-    surface = SDL_LoadBMP("img/cat.bmp");
+    surface = SDL_LoadBMP("img/cats.bmp");
     if (!surface) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                 "Couldn't create surface from image: %s", SDL_GetError());
