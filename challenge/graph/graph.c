@@ -188,9 +188,11 @@ Tree_Node_ptr Tree_create_from_tokens(Queue_ptr tokens) {
             // More siblings of first child (= children of current)
             Tree_Node_ptr new_node = Tree_Node_create_from_data(token->data);
             Tree_add_child(current, new_node);
-            
+
             // Don't reset current because subsequent siblings will all
             // descend from the same parent as this one
+            // TODO but are we iterating needlessly over the siblings when
+            // adding a child, when we could just be moving 'current'?
         } 
     }
 
@@ -211,12 +213,13 @@ Tree_Node_ptr Tree_create_from_tokens(Queue_ptr tokens) {
 //
 Tree_Node_ptr Tree_compile(Tree_Node_ptr tree) {
     if (tree) {
-        if (tree->is_root) {
+        if (Tree_Node_is_root(tree)) {
             if (tree->child) {
                 Function_sig_ptr fn_match = 
                     lookup_function(tree->child->data);
 
                 if (fn_match) {
+                    tree->child->type = FUNCTION;
                     tree->child->function_sig = fn_match;
                     DEBUG_PRINTF("Found function \"%s\"\n", fn_match->name);
                     tree->child->is_compiled = true;
@@ -242,10 +245,12 @@ Tree_Node_ptr Tree_compile(Tree_Node_ptr tree) {
             double numeric_value = strtof(tree->data, &post_convert_ptr);
 
             if (post_convert_ptr != tree->data) {
+                tree->type = NUMBER;
                 DEBUG_PRINTF("Found number %f\n", numeric_value);
                 tree->numeric_value = numeric_value;
                 tree->is_compiled = true;
             } else {
+                tree->type = VARIABLE;
                 DEBUG_PRINTF("Found non-number %s\n", tree->data);
             }
         }
@@ -265,7 +270,8 @@ Tree_Node_ptr Tree_substitute_var(Tree_Node_ptr tree,
         char *variable_name, double variable_value) {
 
     if (tree) {
-        if (strcmp(tree->data, variable_name) == 0) {
+        if (Tree_Node_is_variable(tree, variable_name)) {
+
             tree->numeric_value = variable_value;
             DEBUG_PRINTF("Substituted value %f for %s at level %d\n", 
                     variable_value, variable_name, tree->level);
@@ -297,7 +303,7 @@ double Tree_evaluate(Tree_Node_ptr tree) {
     double result = 0;
 
     if (tree && tree->is_compiled) {
-        if (tree->is_root && tree->child && tree->child->function_sig) {
+        if (Tree_Node_is_root(tree) && Tree_Node_is_function(tree->child)) {
 
             generic_function_ptr fn = tree->child->function_sig->function;
             int arg_count = Tree_sibling_count(tree->child);
@@ -311,7 +317,7 @@ double Tree_evaluate(Tree_Node_ptr tree) {
                  Tree_Node_ptr current = tree->child->sibling;
                  for (int i = 0; i < arg_count && current; ++i) {
 
-                     if (current->is_root) {
+                     if (Tree_Node_is_root(current)) {
                          args[i] = Tree_evaluate(current);
                      } else {
                          args[i] = current->numeric_value;

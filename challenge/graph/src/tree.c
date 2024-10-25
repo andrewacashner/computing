@@ -14,7 +14,7 @@ Tree_Node_ptr Tree_Node_create(void) {
     new_node->function_sig = NULL;
     new_node->numeric_value = 0;
     new_node->level = -1;
-    new_node->is_root = false;
+    new_node->type = UNKNOWN;
     new_node->is_compiled = false;
     new_node->child = NULL;
     new_node->sibling = NULL;
@@ -28,10 +28,23 @@ Tree_Node_ptr Tree_Node_create_from_data(char *data) {
     return new_node;
 }
 
+bool Tree_Node_is_root(Tree_Node_ptr node) {
+    return node && node->type == ROOT;
+}
+
+bool Tree_Node_is_variable(Tree_Node_ptr node, char *name) {
+    return node && node->type == VARIABLE
+        && strcmp(node->data, name) == 0;
+}
+
+bool Tree_Node_is_function(Tree_Node_ptr node) {
+    return node && node->type == FUNCTION && node->function_sig; 
+}
+
 Tree_Node_ptr Tree_create(int level) {
     Tree_Node_ptr tree = Tree_Node_create();
     tree->level = level; 
-    tree->is_root = true;
+    tree->type = ROOT;
     return tree;
 }
 
@@ -56,10 +69,10 @@ Tree_Node_ptr Tree_add_child(Tree_Node_ptr root, Tree_Node_ptr child) {
 
 void Tree_Node_print(Tree_Node_ptr node) {
     if (node) {
-        if (node->is_root) {
+        if (Tree_Node_is_root(node)) {
             DEBUG_PRINTF("[%d] ", node->level);
             if (node->parent) {
-                if (!node->parent->is_root) {
+                if (!Tree_Node_is_root(node->parent)) {
                     printf(" ");
                 }
                 printf("(");
@@ -78,7 +91,7 @@ void Tree_Node_print(Tree_Node_ptr node) {
             DEBUG_PRINTF("c");
             Tree_Node_print(node->child);
         }
-        if (node->is_root && node->parent) {
+        if (Tree_Node_is_root(node) && node->parent) {
             printf(")");
         }
         if (node->sibling) {
