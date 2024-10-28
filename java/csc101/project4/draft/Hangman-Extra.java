@@ -1,10 +1,3 @@
-// TODO
-// - way to evaluate if the full word has been guessed
-// - sort letters guessed in display
-// - don't put duplicate letters guessed in that display
-// - (display a hangman!)
-//
-
 import java.util.Scanner;
 
 /**
@@ -38,11 +31,13 @@ public class Hangman {
       String lettersGuessed = new String();
 
       String input = new String();
+      String hangman = new String();
 
       // Game loop till too many wrong guesses:
       while (!input.equals("!") && wrongGuesses < maxWrongGuesses) {
          // Show prompt
-         String display = display(answer, lettersGuessed, 
+         hangman = drawHangman(hangman, wrongGuesses);
+         String display = display(hangman, answer, lettersGuessed, 
                wrongGuesses, maxWrongGuesses);
          System.out.print(display);
          System.out.print("Guess a letter (or ! to quit): ");
@@ -102,16 +97,39 @@ public class Hangman {
       return blanks.toString();
    }
 
-   public static String display(String answer, String lettersGuessed,
+//        😵
+//      💪👔🤳
+//        👖
+//       👟👟
+//
+   static String drawHangman(String currentHangman, int wrongGuesses) {
+      final String GALLOWS = "-------¬\n";
+      final String[] HANGMAN = {
+         "|      😵\n",
+         "|    💪", 
+         "👔",
+         "🤳\n",
+         "|      👖\n",
+         "|     👟",
+         "👟\n"
+      };
+
+      String nextPart = new String();
+
+      if (wrongGuesses < HANGMAN.length) {
+         nextPart = HANGMAN[wrongGuesses];
+      } 
+         // nextPart = wrongGuesses % 2 > 0 ? "|  |" : "  |\n";
+      return currentHangman + nextPart;
+   }
+     
+
+   public static String display(String hangman, 
+         String answer, String lettersGuessed,
          int wrongGuesses, int maxWrongGuesses) {
-
       String blanks = blanks(answer, lettersGuessed);
-      String guesses = String.format("Letters guessed: %s", 
-            lettersGuessed.sort().toString());
-      String score = String.format("Guesses remaining: %d", 
-            maxWrongGuesses - wrongGuesses);
-
-      return String.format("%-20s\n%-20s\n%-20s\n", blanks, guesses, score);
+      String guesses = String.format("Letters guessed: %s\n", lettersGuessed.toString());
+      return String.format("%-20s%s\n%s\n", blanks, guesses, hangman);
    }
 
 }
