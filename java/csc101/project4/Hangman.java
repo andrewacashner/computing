@@ -41,6 +41,7 @@ public class Hangman {
       String lettersGuessed = new String();
 
       String input = new String();
+      boolean[] found = new boolean[answer.length()];
 
       // Game loop till too many wrong guesses:
       while (!input.equals("!") 
@@ -48,7 +49,7 @@ public class Hangman {
             && wrongGuesses < maxWrongGuesses) {
 
          // Show prompt
-         System.out.print(display(answer, lettersGuessed, 
+         System.out.print(display(answer, found, lettersGuessed, 
                wrongGuesses, maxWrongGuesses));
 
          System.out.print("\nGuess a letter (or ! to quit): ");
@@ -64,6 +65,7 @@ public class Hangman {
             ++wrongGuesses;
             System.out.println("Wrong!");
          } else {
+            recordFoundLetter(found, guess, answer);
             System.out.println("Right!");
          }
 
@@ -71,7 +73,7 @@ public class Hangman {
          // Revise prompt, update score, list of guesses
       }
 
-      System.out.println(blanks(answer, lettersGuessed));
+      System.out.println(blanks(answer, found));
       System.out.printf("\nThe word was %s.\n", answer.toUpperCase());
 
       // Report result of game
@@ -80,9 +82,25 @@ public class Hangman {
 
    static String recordGuess(String lettersGuessed, char guess) {
       if (!contains(lettersGuessed, guess)) {
-         lettersGuessed += Character.toString(guess);
+         String addition = Character.toString(guess);
+
+         if (lettersGuessed.length() < 1 ||
+               guess > lettersGuessed.charAt(lettersGuessed.length() - 1)) {
+            lettersGuessed += addition;
+         } else {
+            lettersGuessed = addition + lettersGuessed;
+         }
       }
       return lettersGuessed;
+   }
+   
+   static void recordFoundLetter(boolean[] found, char letter, 
+         String answer) { 
+      for (int i = 0; i < found.length; ++i) {
+         if (answer.charAt(i) == letter) {
+            found[i] = true;
+         }
+      }
    }
 
    static boolean contains(String str, char guess) {
@@ -93,33 +111,21 @@ public class Hangman {
       return contains(answer, guess);
    }
 
-   static char matchOrBlank(String word, String lettersToShow, int i) {
+   static String blanks(String word, boolean[] found) {
       final char BLANK = '_';
-      
-      char thisChar = word.charAt(i);
-      char displayChar = BLANK;
-  
-      if (lettersToShow.contains(Character.toString(thisChar))) {
-         displayChar = thisChar;
-      } 
-
-      return displayChar;
-   }
-
-   static String blanks(String word, String lettersToShow) {
       StringBuilder blanks = new StringBuilder();
-
-      for (int i = 0; i < word.length(); ++i) {
-         char newChar = matchOrBlank(word, lettersToShow, i);
-         blanks.append(String.format("%c ", newChar));
+      for (int i = 0; i < found.length; ++i) {
+         char next = found[i] ? word.charAt(i) : BLANK;
+         blanks.append(next);
       }
       return blanks.toString();
    }
 
-   public static String display(String answer, String lettersGuessed,
+   public static String display(String answer, boolean[] found,
+         String lettersGuessed,
          int wrongGuesses, int maxWrongGuesses) {
 
-      String blanks = blanks(answer, lettersGuessed);
+      String blanks = blanks(answer, found);
       String guesses = String.format("Letters guessed: %s", 
             lettersGuessed.toString());
       String score = String.format("Guesses remaining: %d", 
@@ -145,4 +151,5 @@ public class Hangman {
       return every(letters);
    }
 
+   
 }
