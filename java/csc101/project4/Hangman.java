@@ -1,8 +1,11 @@
 // TODO
 // - way to evaluate if the full word has been guessed
-// - sort letters guessed in display
-// - don't put duplicate letters guessed in that display
-// - (display a hangman!)
+// - (sort letters guessed in display)
+// - (repeated letter is wrong even if the letter is right)
+// - (show display once more when complete)
+// - (BONUS):
+//    - (display a hangman!)
+//    - (get answer from random entry in (online) dictionary
 //
 
 import java.util.Scanner;
@@ -40,12 +43,15 @@ public class Hangman {
       String input = new String();
 
       // Game loop till too many wrong guesses:
-      while (!input.equals("!") && wrongGuesses < maxWrongGuesses) {
+      while (!input.equals("!") 
+            && !isGuessed(answer, lettersGuessed)
+            && wrongGuesses < maxWrongGuesses) {
+
          // Show prompt
-         String display = display(answer, lettersGuessed, 
-               wrongGuesses, maxWrongGuesses);
-         System.out.print(display);
-         System.out.print("Guess a letter (or ! to quit): ");
+         System.out.print(display(answer, lettersGuessed, 
+               wrongGuesses, maxWrongGuesses));
+
+         System.out.print("\nGuess a letter (or ! to quit): ");
          input = kbScan.next();
          char guess = input.charAt(0);
          if (guess == '!') {
@@ -56,23 +62,31 @@ public class Hangman {
          lettersGuessed = recordGuess(lettersGuessed, guess);
          if (!isCorrectGuess(guess, answer)) {
             ++wrongGuesses;
+            System.out.println("Wrong!");
+         } else {
+            System.out.println("Right!");
          }
 
          // Report result of guess
          // Revise prompt, update score, list of guesses
-
       }
+
+      System.out.println(blanks(answer, lettersGuessed));
+      System.out.printf("\nThe word was %s.\n", answer.toUpperCase());
 
       // Report result of game
       System.out.println("Thank you for playing Hangman!");
    }
 
    static String recordGuess(String lettersGuessed, char guess) {
-      return lettersGuessed + Character.toString(guess);
+      if (!contains(lettersGuessed, guess)) {
+         lettersGuessed += Character.toString(guess);
+      }
+      return lettersGuessed;
    }
 
    static boolean contains(String str, char guess) {
-      return str.indexOf(guess) > 0;
+      return str.indexOf(guess) >= 0;
    }
 
    static boolean isCorrectGuess(char guess, String answer) {
@@ -107,11 +121,28 @@ public class Hangman {
 
       String blanks = blanks(answer, lettersGuessed);
       String guesses = String.format("Letters guessed: %s", 
-            lettersGuessed.sort().toString());
+            lettersGuessed.toString());
       String score = String.format("Guesses remaining: %d", 
             maxWrongGuesses - wrongGuesses);
 
-      return String.format("%-20s\n%-20s\n%-20s\n", blanks, guesses, score);
+      return String.format("\n%-20s\n%-20s\n%-20s\n", blanks, guesses, score);
+   }
+
+   static boolean every(boolean[] ls) {
+      boolean result = true;
+      for (int i = 0; i < ls.length && result; ++i) {
+         result = ls[i];
+      }
+      return result;
+   }
+
+   public static boolean isGuessed(String answer, String lettersGuessed) {
+      boolean[] letters = new boolean[answer.length()];
+
+      for (int i = 0; i < answer.length(); ++i) {
+         letters[i] = contains(lettersGuessed, answer.charAt(i));
+      }
+      return every(letters);
    }
 
 }
