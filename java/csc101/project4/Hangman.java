@@ -1,20 +1,17 @@
-// TODO
-// - way to evaluate if the full word has been guessed
-// - (BONUS):
-//    - (display a hangman!)
-//    - (get answer from random entry in (online) dictionary
-//
-
 import java.util.Scanner;
 
 /**
- * Hangman Game
+ * Hangman Game (without the hangman!)
+ *
+ * Given a mystery word and a maximum number of wrong guesses, run a word
+ * guessing game where the user guesses one letter at a time.
  *
  * @author Andrew Cashner, <code>acashner@student.monroecc.edu</code>
  * @version 2024/10/25 (CSC 101, Project 4)
  */
 public class Hangman {
    /** 
+    * Hangman game.
     * Ask user for secret word and number of allowed wrong guesses.
     * In the main game loop, set up the game board and prompt the user to
     * guess, check the answer, and update the display with the result, until
@@ -275,7 +272,7 @@ public class Hangman {
     * @param lettersGuessed String containing letters already guessed
     * @return String displaying game state
     */
-   public static String display(String answer, boolean[] found,
+   static String display(String answer, boolean[] found,
          String lettersGuessed,
          int wrongGuesses, int maxWrongGuesses) {
 
