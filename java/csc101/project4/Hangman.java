@@ -6,8 +6,17 @@ import java.util.Scanner;
  * Given a mystery word and a maximum number of wrong guesses, run a word
  * guessing game where the user guesses one letter at a time.
  *
+ * We implement this using two arrays of boolean values matching the alphabet
+ * letters a through z. The first letter catalog records letters in the
+ * mystery word that still remain to be found; as each letter is found, those
+ * entries are marked false. The second letter catalog records the letters
+ * that have already been guessed; as each letter is guessed, that entry is
+ * marked true.
+ * The user wins when there are no more true values in the lettersToFind
+ * catalog, because all have been found.
+ *
  * @author Andrew Cashner, <code>acashner@student.monroecc.edu</code>
- * @version 2024/10/25 (CSC 101, Project 4)
+ * @version 2024/10/30 (CSC 101, Project 4)
  */
 public class Hangman {
    /** 
@@ -33,251 +42,246 @@ public class Hangman {
       int maxWrongGuesses = kbScan.nextInt();
 
       int wrongGuesses = 0;
-      String lettersGuessed = new String();
 
       String input = new String();
-      boolean[] found = new boolean[answer.length()];
-
+      boolean[] lettersToFind = letterCatalog(answer);
+      boolean[] lettersGuessed = letterCatalog();
+     
       // Game loop till too many wrong guesses:
       while (!input.equals("!") 
-            && !isGuessed(answer, lettersGuessed)
+            && !foundFullWord(lettersToFind)
             && wrongGuesses < maxWrongGuesses) {
 
          // Show prompt with score, list of guesses, blanks
-         System.out.print(display(answer, found, lettersGuessed, 
+         System.out.print(display(answer, lettersToFind, lettersGuessed, 
                wrongGuesses, maxWrongGuesses));
 
          System.out.print("\nGuess a letter (or ! to quit): ");
          input = kbScan.next();
-         char guess = Character.toLowerCase(firstChar(input));
+         char guess = Character.toLowerCase(input.charAt(0));
+
+         // Check for quit or unusable input
          if (guess == '!') {
+            continue;
+         } else if (!isValidInput(guess)) {
+            System.out.println("Invalid input: Try again with a letter a-z");
             continue;
          }
 
          // Evaluate guess, Report result
-         if (!isCorrectGuess(guess, answer, lettersGuessed)) {
+         if (isCorrectGuess(guess, lettersToFind)) {
+            recordFoundLetter(lettersToFind, guess);
+            System.out.println("Right!");
+         } else {
             ++wrongGuesses;
             System.out.println("Try again!");
-         } else {
-            found = recordFoundLetter(found, guess, answer);
-            System.out.println("Right!");
-         }
-         lettersGuessed = recordGuess(lettersGuessed, guess);
+         } 
+         recordGuess(lettersGuessed, guess);
       }
 
-      System.out.println(blanks(answer, found));
-      System.out.printf("\nThe word was %s.\n", answer.toUpperCase());
-
       // Report result of game
+      System.out.println(blanks(answer, lettersToFind));
+      System.out.printf("\nThe word was %s.\n", answer.toUpperCase());
+      
       System.out.println("Thank you for playing Hangman!");
    }
 
    /**
-    * Return the first character of a string, or 0 if the string is empty.
+    * Is this character in the valid range ('a' through 'z')?
     *
-    * @param str The string
-    * @return Its first character
+    * @param c Character to test
+    * @return True if character is valid
     */
-   static char firstChar(String str) {
-      char first = 0;
-      if (str.length() > 0) {
-         first = str.charAt(0);
-      } 
-      return first;
-   }
-
-   /** Return the last character of a string, or 0 if the string is empty.
-    *
-    * @param str The string
-    * @return Its last character
-    */
-   static char lastChar(String str) {
-      char last = 0;
-      if (str.length() > 0) {
-         last = str.charAt(str.length() - 1);
-      } 
-      return last;
+   static boolean isValidInput(char c) {
+      return c >= 'a' && c <= 'z';
    }
 
    /**
-    * Is every element in the array true?
+    * Get catalog index of a character to lookup in a boolean array created
+    * with letterCatalog().
     *
-    * @param ls Array of booleans
-    * @return True if all are true; false if any are false
+    * @param c Character to lookup
+    * @return Index relative to (int)'a'
     */
-   static boolean every(boolean[] ls) {
-      boolean result = true;
-      for (int i = 0; i < ls.length && result; ++i) {
-         result = ls[i];
+   static int charToIndex(char c) {
+      return (int)c - (int)'a';
+   }
+
+   /**
+    * Get the character reference by an index of the letter catalog.
+    *
+    * @param i Integer intex (offset from (int)'a')
+    * @return Character in the catalog
+    */
+   static char charFromIndex(int i) {
+      return (char)(i + (int)'a');
+   }
+
+   /**
+    * Create an empty catalog of boolean values matching alphabet letters
+    * a-z. Initialized by default to all false.
+    *
+    * @return Boolean array, length of the basic alphabet (plain ASCII)
+    */
+   static boolean[] letterCatalog() {
+      return new boolean[(int)'z' - (int)'a' + 1];
+   }
+
+   /**
+    * Create and populate a catalog of boolean values matching alphabet
+    * letters matching those in the given word. All letters in that word will
+    * be marked true in the catalog.
+    *
+    * @param word String whose letters are to be cataloged
+    * @return Boolean array with positions set to true to match letters in
+    *       word
+    */
+   static boolean[] letterCatalog(String word) {
+      boolean[] catalog = letterCatalog();
+      for (int i = 0; i < word.length(); ++i) {
+         int index = charToIndex(word.charAt(i));
+         if (index > 0 && index < catalog.length) {
+            catalog[index] = true;
+         }
       }
-      return result;
+      return catalog;
    }
 
    /**
-    * Has the user found the full word yet? I.e., are all the letters in
-    * 'answer' now in 'lettersGuessed'?
+    * Lookup the boolean value for a single character in the letter catalog.
     *
-    * @param answer String the user is trying to guess
-    * @param lettersGuessed String containing characters the user has already
-    *               guessed
-    * @return True if all the characters in answer have been guessed
+    * @param catalog Boolean array matching alphabet letters
+    * @param c Character to lookup
+    * @return Boolean value for that letter
     */
-   public static boolean isGuessed(String answer, String lettersGuessed) {
-      boolean[] letters = new boolean[answer.length()];
+   static boolean catalogValue(boolean[] catalog, char c) {
+      return catalog[charToIndex(c)];
+   }
 
-      for (int i = 0; i < answer.length(); ++i) {
-         letters[i] = contains(lettersGuessed, answer.charAt(i));
+   /**
+    * Set the value of the letter catalog for a given letter to a given
+    * value.
+    *
+    * @param catalog Boolean array matching alphabet letters
+    * @param c Character whose value is to be set
+    * @param value Value to set it to
+    */
+   static void setCatalogValue(boolean[] catalog, char c, 
+         boolean value) {
+      catalog[charToIndex(c)] = value;
+   }
+
+   /** 
+    * Has the user found the full word yet? I.e., have all the letters in the
+    * answer been marked false in the lettersToFind catalog?
+    *
+    * @param lettersToFind Boolean array with catalog of letters, 
+    *           marked true if not yet found
+    * @return True if there are no more characters left to find
+    */
+   public static boolean foundFullWord(boolean[] lettersToFind) {
+      boolean anyLeftToFind = false;
+
+      for (int i = 0; i < lettersToFind.length && !anyLeftToFind; ++i) {
+         if (lettersToFind[i]) {
+            anyLeftToFind = true;
+         }
       }
-      return every(letters);
+      return !anyLeftToFind;
    }
 
-   /**
-    * Does this string contain the given char? (DIY version of existing
-    * library function)
-    *
-    * @param str String to search
-    * @param match Character to search for
-    * @return True if string contains the character
-    */
-   static boolean contains(String str, char match) {
-      return str.indexOf(match) >= 0;
-   }
-  
-   /**
-    * Is this a correct letter guess? It is correct if the character guessed
-    * is in the answer word and has not already been guessed.
+   /** 
+    * Is this a correct letter guess? 
+    * Yes, if the guess is still marked as "to be found" in the letter
+    * catalog. (That means if it was previously found the result will be
+    * false.)
     *
     * @param guess Character guessed
-    * @param answer String of answer word
-    * @param lettersGuessed String with letters already guessed
-    * @return True if it meets the criteria above
+    * @param lettersToFind Boolean array letter catalog
+    * @return True if the letter was just found
     */
-   static boolean isCorrectGuess(char guess, String answer, 
-         String lettersGuessed) {
-      return contains(answer, guess) && !contains(lettersGuessed, guess);
+   static boolean isCorrectGuess(char guess, boolean[] lettersToFind) {
+      return catalogValue(lettersToFind, guess);
    }
 
-   /**
-    * Return an updated array of booleans indicating which letters have been
-    * found in the answer word.
+   /** 
+    * Update the letter catalog to indicate that a new character has been
+    * found.
     *
-    * @param found Current array of booleans
+    * @param lettersToFind Boolean array of letters still to be found
     * @param letter Character that was found
-    * @param answer String of the answer word
-    * @return New array of booleans with updated content
     */
-   static boolean[] recordFoundLetter(boolean[] found, char letter, 
-         String answer) { 
-      boolean[] updated = new boolean[found.length];
-
-      for (int i = 0; i < found.length; ++i) {
-         updated[i] = answer.charAt(i) == letter ? true : found[i];
-      }
-      return updated;
+   static void recordFoundLetter(boolean[] lettersToFind, char letter) { 
+      setCatalogValue(lettersToFind, letter, false);
    }
 
-   /**
-    * Insert a character into a string (StringBuilder) in sorted order.
-    * We are assuming the string is already sorted.
+   /** 
+    * Record the guessed character in the catalog of letters guessed.
     *
-    * @param str Sorted string
-    * @param newChar Character to insert
-    * @return StringBuilder with character inserted
-    */
-   static StringBuilder insertSorted(String str, char newChar) {
-      StringBuilder updated = new StringBuilder();
-
-      boolean found = false;
-      for (int i = 0; i < str.length(); ++i) {
-         char thisChar = str.charAt(i);
-
-         // Is this the appropriate place to insert?
-         // If so, insert and then copy the current character;
-         // Otherwise just copy.
-         // Once inserted, don't keep testing for insertion.
-         if (newChar < thisChar && !found) {
-            updated.append(newChar);
-            found = true;
-         } 
-         updated.append(thisChar);
-      } 
-      // If we didn't find a place to insert, the new char must go at the
-      // end.
-      if (!found) {
-         updated.append(newChar);
-      }
-      return updated;
-   }
-
-   /**
-    * Add the guessed character to the list of letters guessed, skipping
-    * duplicates and keeping the list sorted alphabetically.
-    *
-    * @param lettersGuessed String with characters guessed
+    * @param lettersGuessed Boolean array catalog of letters already guessed
     * @param guess Character guessed
-    * @return New string with updated letters guessed
     */
-   static String recordGuess(String lettersGuessed, char guess) {
-      StringBuilder updated = new StringBuilder();
-
-      // Ignore duplicates
-      if (contains(lettersGuessed, guess)) {
-         updated.append(lettersGuessed);
-
-      } else if (lettersGuessed.length() < 1) {
-         updated.append(guess);
-
-      } else if (guess < firstChar(lettersGuessed)) {
-         updated.append(guess);
-         updated.append(lettersGuessed);
-
-      } else if (guess > lastChar(lettersGuessed)) {
-         updated.append(lettersGuessed);
-         updated.append(guess);
-
-      } else {
-         updated = insertSorted(lettersGuessed, guess);
-      }
-
-      return updated.toString();
+   static void recordGuess(boolean[] lettersGuessed, char guess) {
+      setCatalogValue(lettersGuessed, guess, true);
    }
   
-   /**
+   /** 
     * Create a string to display the mystery word, showing letters that have
     * been guessed and blanks for the rest.
     *
     * @param word The mystery word
-    * @param found Array of booleans matching the characters of 'word'
+    * @param lettersToFind Boolean array catalog of letters still not 
+    *           found in the word
     * @return String with blanks or letters found.
     */
-   static String blanks(String word, boolean[] found) {
+   static String blanks(String word, boolean[] lettersToFind) {
       final char BLANK = '_';
       StringBuilder blanks = new StringBuilder();
-      for (int i = 0; i < found.length; ++i) {
-         char next = found[i] ? word.charAt(i) : BLANK;
+      for (int i = 0; i < word.length(); ++i) {
+         char thisChar = word.charAt(i);
+         char next = catalogValue(lettersToFind, thisChar) 
+                        ? BLANK : thisChar;
          blanks.append(next);
       }
       return blanks.toString();
    }
 
    /**
+    * Create a string containing all the letters that have been guessed in
+    * the catalog.
+    *
+    * @param catalog Boolean array matching alphabet characters
+    * @return String with all letters marked as true in the catalog
+    */
+   static String reportGuessed(boolean[] catalog) {
+      StringBuilder report = new StringBuilder();
+      for (int i = 0; i < catalog.length; ++i) {
+         if (catalog[i]) {
+            report.append(charFromIndex(i));
+         }
+      }
+      return report.toString();
+   }
+
+   /** 
     * Create a string with the main game display (i.e., render the current
     * game state): includes the current state of the mystery word (blanks or
     * correctly guessed letters), number of guesses remaining, and letters
     * already guessed.
     *
     * @param answer The mystery word
-    * @param found Array of booleans matching the characters of the mystery
-    *               word, indicating which have been guessed
-    * @param lettersGuessed String containing letters already guessed
+    * @param lettersToFind Boolean array catalog of letters in mystery word
+    *           still to be found
+    * @param lettersGuessed Boolean array catalog of letters already guessed
     * @return String displaying game state
     */
-   static String display(String answer, boolean[] found,
-         String lettersGuessed,
+   static String display(String answer, boolean[] lettersToFind,
+         boolean[] lettersGuessed,
          int wrongGuesses, int maxWrongGuesses) {
 
-      String blanks = blanks(answer, found);
-      String guesses = String.format("Letters guessed: %s", lettersGuessed);
+      String blanks = blanks(answer, lettersToFind);
+      String guesses = String.format("Letters guessed: %s", 
+            reportGuessed(lettersGuessed));
       String score = String.format("Guesses remaining: %d", 
             maxWrongGuesses - wrongGuesses);
 
