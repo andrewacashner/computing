@@ -14,7 +14,7 @@ public class RandomFrequency {
     *
     * NB: Use 1 as seed for random-number generator for classroom purposes.
     *
-    * @param (Unused) Command-line arguments
+    * @param args (Unused) Command-line arguments
     */
    public static void main(String[] args) {
       final int MIN = 1;
