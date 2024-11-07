@@ -206,6 +206,7 @@ class Password {
 
       if (!this.validContentLength()) {
          valid = false;
+         System.out.print("\nPassword is INVALID.\n");
          System.out.format("Must be between %d and %d characters long\n", 
                PASSWORD_LENGTH_MIN, PASSWORD_LENGTH_MAX);
       }
@@ -236,7 +237,7 @@ class Password {
       } 
 
       if (valid) {
-         System.out.print("Success: Password is valid!\n");
+         System.out.print("Success: Password is VALID!\n");
       }
    }
 }
