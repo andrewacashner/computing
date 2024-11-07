@@ -114,7 +114,7 @@ class LetterCatalog {
       this();
       for (int i = 0; i < word.length(); ++i) {
          int index = charToIndex(word.charAt(i));
-         if (index > 0 && index < catalog.length) {
+         if (index >= 0 && index < catalog.length) {
             catalog[index] = true;
          }
       }
