@@ -1,5 +1,3 @@
-import java.util.Scanner;
-
 /**
  * This class models a polynomial function.
  * It records the degree (highest exponent) of the function and the
@@ -15,6 +13,33 @@ import java.util.Scanner;
  * @version 2024/11/12 (CSC 101, Project 5)
  */
 public class Polynomial {
+
+   /** For testing */
+   public static void main(String[] args) {
+      if (args.length < 1) {
+         System.err.println("Usage: java Polynomial \"c0 c1 c2 c3 ...\"");
+         return;
+      }
+      
+      String input = args[0];
+      Polynomial fn = new Polynomial(input);
+      System.out.println(fn);
+
+      Polynomial a = new Polynomial("1 2 3");
+      Polynomial b = new Polynomial("1 1 1 1");
+      Polynomial c = a.add(b);
+      System.out.println(c);
+
+      Polynomial d = c.derivative();
+      System.out.println(d);
+
+      Polynomial e = new Polynomial("2 2 2");
+      System.out.println(e);
+
+      for (double x = 0; x < 5.0; ++x) {
+         System.out.printf("f(%.0f) = %.4f\n", x, e.evaluate(x));
+      }
+   }
 
    /** Highest exponent of the expression */
    private int degree;
@@ -36,7 +61,7 @@ public class Polynomial {
 
    /** The default expression is f(x) = 0. */
    public Polynomial() {
-      this({ 0.0 });
+      this(new double[1]);
    }
 
    /** 
@@ -46,7 +71,7 @@ public class Polynomial {
     * @param coefficients String with coefficients in ascending order
     */
    public Polynomial(String coefficients) {
-      this(this.parseCoeff(coefficients));
+      this(Polynomial.parseCoeff(coefficients));
    }
 
    /**
@@ -61,7 +86,8 @@ public class Polynomial {
       if (exponent <= this.degree) {
          coefficient = this.coefficients[exponent];
       } 
-      return coefficient; }
+      return coefficient; 
+   }
 
    /**
     * Access the degree.
@@ -99,30 +125,39 @@ public class Polynomial {
     *
     * TODO ignore multiple trailing zeros; set degree based on last non-zero
     * term ignoring those after
+   // TODO not working correctly, also cumbersome
     *
     * @param coefficients String with coefficient values, separated by spaces
     * @return Array of coefficient values
     */
-   private double[] parseCoeff(String coefficientStr) {
-      Scanner inputScan = new Scanner(coefficients);
+   private static double[] parseCoeff(String input) {
+      String[] tokens = input.trim().split("\\s+");
+      double[] coefficients = new double[tokens.length];
 
-      int termCount = 0;
-      while (inputScan.hasNextDouble()) {
-         ++termCount;
+      for (int i = 0; i < tokens.length; ++i) {
+         coefficients[i] = Double.parseDouble(tokens[i]);
       }
 
-      double[] coefficients = new double[termCount];
+      double[] trimmed = Polynomial.stripTrailingZeros(coefficients);
+      return trimmed;
+   }
 
-      for (int i = 0; i < termCount; ++i) {
-         double next = inputScan.nextDouble();
-         // Ignore trailing zero
-         if (next == 0 && i = termCount - 1) {
-            continue;
-         }
-         coefficients[i] = next;
+   private static int lastNonZero(double[] nums) {
+      int last;
+      for (last = nums.length - 1; last >= 0 && nums[last] == 0; --last) {
+         // Just find last non-zero array member
+      }
+      return last;
+   }
+
+   private static double[] stripTrailingZeros(double[] nums) {
+      int trimmedLength = Polynomial.lastNonZero(nums) + 1;
+      double[] trimmed = new double[trimmedLength];
+      for (int i = 0; i < trimmedLength; ++i) {
+         trimmed[i] = nums[i];
       }
 
-      return coefficients;
+      return trimmed;
    }
 
    /**
@@ -161,7 +196,7 @@ public class Polynomial {
          coefficients[i] = this.getCoeff(i) + other.getCoeff(i);
       }
 
-      return this(coefficients);
+      return new Polynomial(coefficients);
    }
 
    /**
@@ -177,18 +212,22 @@ public class Polynomial {
       } else {
          for (int i = 0; i < this.degree + 1; ++i) {
             double thisCoeff = this.coefficients[i];
-            if (i > 0) {
-               if (thisCoeff > 0) {
-               output.append("+ ");
-               } else {
-                  output.append("- ");
-               }
-            }
-            
-            output.append("%.2f", coeff);
-           
-            if (i > 0) {
-               output.append("x^%d", i);
+            if (thisCoeff > 0) {
+                  String nextTerm = String.format("%.2f%s%s",
+                        thisCoeff,
+                        i > 0 ? "x" : "",
+                        i > 1 ? String.format("^%d", i) : "");
+
+                  // TODO avoid '1.00x'
+               String operation = "";
+               if (i < this.degree) {
+                  if (this.coefficients[i + 1] > 0) {
+                     operation = " + ";
+                  } else {
+                     operation = " - ";
+                  }
+               } 
+               output.append(nextTerm + operation);
             }
          }
       }
@@ -213,6 +252,8 @@ public class Polynomial {
 
    /**
     * Return a new Polynomial that is a derivative of this polynomial.
+    * This class only allows non-negative integer exponents so we don't need
+    * to deal with the derivative of 1/x.
     *
     * @return New Polynomial
     */
@@ -220,9 +261,9 @@ public class Polynomial {
       double[] derivCoefficients = new double[this.coefficients.length];
 
       for (int i = 1; i < this.degree + 1; ++i) {
-         derivCoefficients[i - 1] = this.getCoeff(i) * i
+         derivCoefficients[i - 1] = this.getCoeff(i) * i;
       }
-      return this(derivCoefficients);
+      return new Polynomial(derivCoefficients);
    }
 
    /**
@@ -236,7 +277,7 @@ public class Polynomial {
     *           1000 iterations
     */
    public double findRoot(double guess) {
-      double root;
+      double root = 0;
       // TODO START
       // throw new IllegalStateException("Did not converge within 1000
       // iterations");
