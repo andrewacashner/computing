@@ -16,7 +16,12 @@ import java.util.Arrays;
  */
 public class Polynomial {
 
-   /** For testing */
+   /** 
+    * Main method for testing 
+    *
+    * @param args Command-line arguments: Requires a string of numbers
+    *   representing coefficients for exponents in ascending order
+    * */
    public static void main(String[] args) {
       if (args.length < 1) {
          System.err.println("Usage: java Polynomial \"c0 c1 c2 c3 ...\"");
@@ -25,42 +30,64 @@ public class Polynomial {
 
       String input = args[0];
       Polynomial fn = new Polynomial(input);
-      System.out.println(fn);
+      System.out.printf("Created polynomial %s\n", fn);
 
       for (double x = 0; x < 5.0; ++x) {
-         System.out.printf("f(%.0f) = %.4f\n", x, fn.evaluate(x));
+         System.out.printf("Evaluate f(%.0f) = %.4f\n", x, fn.evaluate(x));
       }
 
-      Polynomial a = new Polynomial("1 2 3");
-      System.out.println("Degree: " + a.getDegree());
-      System.out.println(Arrays.toString(a.coefficients));
-      System.out.println(a);
+      Polynomial empty = new Polynomial();
+      System.out.println(empty.toString("empty", "x"));
 
+      Polynomial a = new Polynomial("1 2 3");
       Polynomial b = new Polynomial("1 1 1 1");
-      System.out.println(b);
       Polynomial c = a.add(b);
-      System.out.println(c);
+      System.out.printf("Add:\n     %s\n   + %s\n   = %s\n", 
+            a.toString("a", "x"),
+            b.toString("b", "x"),
+            c.toString("c", "x"));
 
       Polynomial d = fn.derivative();
-      System.out.println(d);
+      System.out.printf("Derivative of user fn: %s\n", 
+            d.toString("f'", "x"));
+
+      Polynomial e = new Polynomial("-4.5 1.5 1");
+      double root = e.findRoot(5);
+      System.out.printf("Root of polynomial {%s} ≈ %.6f\n", e, root);
+
    }
 
+   // INSTANCE MEMBERS
    /** Highest exponent of the expression */
    private int degree;
 
    /** Array of coefficients in ascending order of exponents */
    private double[] coefficients;
 
+   // STATIC MEMBERS
+
+   /** Maximum number of iterations of Newton-Raphson method */
+   private static final int MAX_ROOT_ITERATIONS = 1000;
+
+   /** 
+    * Acceptable precision (difference between successive iterations of
+    * Newton-Raphson method) for finding the root
+    */
+   private static final double ROOT_PRECISION = 0.00001;
+
    /** 
     * Create a polynomial from an array of coefficients. The degree is one
-    * less than the length of the array.
+    * less than the length of the array. By calling setCoeff, we also trim
+    * the coefficient array to remove trailing zeros.
     *
     * @param coefficients Array of doubles for coefficients to exponents in
     *           ascending order
     */
-   private Polynomial(double[] coefficients) {
-      this.setCoeff(coefficients);
-      this.setDegree(this.coefficients.length - 1);
+   private Polynomial(double[] rawCoefficients) {
+      setCoeff(rawCoefficients);
+      
+      // Use the trimmed array length to find the degree
+      setDegree(this.coefficients);
    }
 
    /** The default expression is f(x) = 0. */
@@ -75,7 +102,7 @@ public class Polynomial {
     * @param coefficients String with coefficients in ascending order
     */
    public Polynomial(String coefficients) {
-      this(Polynomial.parseCoeff(coefficients));
+      this(parseCoeff(coefficients));
       
    }
 
@@ -105,29 +132,39 @@ public class Polynomial {
    }
 
    /**
-    * Set the degree.
+    * Set the degree to one less than the length of the coefficient array.
     *
-    * @param degree Desired degree value
+    * @param degree Double array of coefficients
     */
-   private void setDegree(int degree) {
-      this.degree = degree;
+   private void setDegree(double[] coefficients) {
+      this.degree = coefficients.length - 1;
    }
 
+   // CREATE LIST OF COEFFICIENTS
    /**
-    * Set the given coefficient array as the one used in the object.
-    * The array is not copied.
+    * Assign a new array of coefficients with trailing zeros stripped.
     *
     * @param coefficients Double array of coefficient values
     */
    private void setCoeff(double[] coefficients) {
-      this.coefficients = Polynomial.stripTrailingZeros(coefficients);
+      this.coefficients = stripTrailingZeros(coefficients);
+   }
+
+   /**
+    * Set the coefficient array to a new array of values derived from the
+    * given string.
+    *
+    * @param coefficientStr A string with space-separated values for the
+    *           coefficients for exponents in ascending order
+    */
+   public void setCoeff(String coefficientStr) {
+      this.setCoeff(parseCoeff(coefficientStr));
    }
 
    /**
     * Given a string with coefficient values for exponents in ascending
     * order, parse the values and store them in our array of coefficient
     * values. 
-    * Ignore trailing zero.
     *
     * @param coefficients String with coefficient values, separated by spaces
     * @return Array of coefficient values
@@ -143,6 +180,12 @@ public class Polynomial {
       return coefficients;
    }
 
+   /**
+    * Return the index of the first nonzero term of an array of numbers.
+    *
+    * @param nums Double array 
+    * @return Index of first nonzero term
+    */
    private int firstNonZero(double[] nums) {
       int start = 0;
       int i;
@@ -153,10 +196,17 @@ public class Polynomial {
       return start;
    }
 
+   /**
+    * Return the index of the last nonzero term of an array of numbers, with
+    * a minimum of 0.
+    *
+    * @param nums Double array
+    * @return Index of last nonzero term
+    */
    private static int lastNonZero(double[] nums) {
       int last = nums.length - 1;
       int i;
-      for (i = last; i >= 0 && nums[i] == 0; --i) {
+      for (i = last; i > 0 && nums[i] == 0; --i) {
          // Just find last nonzero index
       }
       last = i;
@@ -164,33 +214,34 @@ public class Polynomial {
       return last;
    }
 
-   private static double[] stripTrailingZeros(double[] nums) {
-      int trimmedLength = Polynomial.lastNonZero(nums) + 1;
-      double[] trimmed = new double[trimmedLength];
-      for (int i = 0; i < trimmedLength; ++i) {
-         trimmed[i] = nums[i];
-      }
-
-      return trimmed;
-   }
-
    /**
-    * Set the coefficient array to a new array of values derived from the
-    * given string.
+    * Return a new array of numbers with a run of one or more zeros at the
+    * end removed.
     *
-    * @param coefficientStr A string with space-separated values for the
-    *           coefficients for exponents in ascending order
+    * @param nums Double array
+    * @return New shorter array without the trailing zeros
     */
-   public void setCoeff(String coefficientStr) {
-      this.setCoeff(Polynomial.parseCoeff(coefficientStr));
+   private static double[] stripTrailingZeros(double[] nums) {
+      if (nums[nums.length - 1] != 0) {
+         return nums;
+      } else {
+         int trimmedLength = lastNonZero(nums) + 1;
+         double[] trimmed = new double[trimmedLength];
+         for (int i = 0; i < trimmedLength; ++i) {
+            trimmed[i] = nums[i];
+         }
+         return trimmed;
+      }
    }
 
+   // ADDING POLYNOMIALS
    /**
     * Return the higher of two polynomials, that is, the one with a higher
     * degree.
     *
     * @param a First polynomial
     * @param b Second polynomial
+    * @return Reference to the polynomial with higher degree
     */
    private static Polynomial higher(Polynomial a, Polynomial b) {
       return a.getDegree() > b.getDegree() ? a : b;
@@ -203,7 +254,7 @@ public class Polynomial {
     * @return New Polynomial
     */
    public Polynomial add(Polynomial other) {
-      int length = Polynomial.higher(this, other).getDegree() + 1;
+      int length = higher(this, other).getDegree() + 1;
       double[] coefficients = new double[length];
 
       for (int i = 0; i < length; ++i) {
@@ -213,15 +264,44 @@ public class Polynomial {
       return new Polynomial(coefficients);
    }
 
-   private String varToString(int exponent) {
-      return exponent > 0 ? "x" : "";
+   // STRING CONVERSION
+   /** 
+    * A term only includes the variable if exponent is greater than zero.
+    *
+    * @param exponent Integer exponent
+    * @param varName String, name of variable
+    * @return String for variable
+    */
+   private String varToString(int exponent, String varName) {
+      return exponent > 0 ? varName : "";
    }
 
+   /**
+    * Only show exponents greater than 1.
+    *
+    * @param exponent Integer exponent
+    * @return String for exponent
+    */
    private String expToString(int exponent) {
       return exponent > 1 ? String.format("^%d", exponent) : "";
    }
 
-   private String coeffToString(int exponent) {
+   /**
+    * Convert a single coefficient value to a string, using this format:
+    * <ol>
+    * <li>Initial values appear alone; negative initial values have preceding
+    * negative sign.</li>
+    * <li>Successive values are separated by "+" or "-" dependent on the
+    * value of the next value.</li>
+    * <li>Coefficients of 1 for exponents more than zero are omitted.</li>
+    * <li>Variables with exponents of zero are omitted.</li>
+    * </ol>
+    *
+    * @param exponent Integer value of this coefficient's exponent
+    * @param varName String, name of variable used in this function
+    * @return String representation of coefficient and variable
+    */
+   private String coeffToString(int exponent, String varName) {
       
       String output = new String();
       double coeff = this.getCoeff(exponent);
@@ -238,11 +318,26 @@ public class Polynomial {
             digits = String.format("%.2f", absCoeff);
          }
 
-         return digits + varToString(exponent) + expToString(exponent);
+         return digits + 
+            varToString(exponent, varName) + 
+            expToString(exponent);
       }
       return output;
    }
 
+   /**
+    * Return a list of string operator symbols to prefix to each element in a
+    * numeric array. (Equivalent to mapping an operatorString function over
+    * the array.)
+    * <p>
+    * We treat the first item differently because it doesn't have
+    * the preceding <code>" + "</code> and if negative, the sign is
+    * immediately next to the coefficient.
+    * </p>
+    *
+    * @param nums Double array
+    * @return String array of operator symbols
+    */
    private String[] operators(double[] nums) {
       String[] operatorList = new String[nums.length];
 
@@ -257,13 +352,19 @@ public class Polynomial {
    }
 
    /**
-    * Return string representation of the polynomial.
-    *
-    * @return String
+    * Return string representation of the polynomial. A polynomial with
+    * coefficients <code>[-1, 1, -2, 0, 3]</code> and given functionName
+    * "f" and variable "x" will return
+    * <code>"f(x) = -1 + x - 2x^2 + 3x^4"</code>.
+    * 
+    * @param functionName String name of function
+    * @param varName String name of variable
+    * @return String representation
     */
-   public String toString() {
+   public String toString(String functionName, String varName) {
       
-      StringBuilder output = new StringBuilder("f(x) = ");
+      StringBuilder output = new StringBuilder(
+            String.format("%s(%s) = ", functionName, varName));
 
       int degree = this.getDegree();
 
@@ -274,12 +375,23 @@ public class Polynomial {
 
          int start = this.firstNonZero(this.coefficients);
          for (int i = start; i < this.coefficients.length; ++i) {
-            if (this.getCoeff(i) != 0 && operatorList[i] != null) {
-               output.append(operatorList[i] + this.coeffToString(i));
+
+            if (this.getCoeff(i) != 0) {
+               output.append(operatorList[i] + 
+                     this.coeffToString(i, varName));
             }
          }
       }
       return output.toString();
+   }
+
+   /**
+    * Default string representation uses function name f(x).
+    *
+    * @return String representation
+    */
+   public String toString() {
+      return this.toString("f", "x");
    }
 
    /**
@@ -311,7 +423,6 @@ public class Polynomial {
 
       for (int i = 0; i < this.getDegree(); ++i) {
          derivCoefficients[i] = this.getCoeff(i + 1) * (i + 1);
-         
       }
       
       return new Polynomial(derivCoefficients);
@@ -328,11 +439,39 @@ public class Polynomial {
     *           1000 iterations
     */
    public double findRoot(double guess) {
-      double root = 0;
-      // TODO START
-      // throw new IllegalStateException("Did not converge within 1000
-      // iterations");
-      return root;
+      return this.findRoot(guess, 0, MAX_ROOT_ITERATIONS, ROOT_PRECISION);
    }
 
+   /**
+    * Calculate the root using the Newton-Raphson method with the given
+    * initial guess, iterating until the desired accuracy.
+    *
+    * @param guess Double initial guess value
+    * @param iteration How many iterations have we done?
+    * @param maxIterations Maximum number of iterations before giving up
+    * @param precision Desired precision (difference between one guess and
+    *           the next)
+    *
+    * @return Double root (next guess)
+    *
+    * @throws IllegalStateException if the method does not converge within
+    *           max number of iterations
+    */
+   private double findRoot(double guess, int iteration, 
+         int maxIterations, double precision) {
+
+      if (iteration > maxIterations) {
+         throw new IllegalStateException(
+               "Did not converge within 1000 iterations");
+      }
+
+      double root = 
+         guess - this.evaluate(guess) / this.derivative().evaluate(guess);
+
+      if (Math.abs(guess - root) < precision) {
+         return root;
+      } else {
+         return this.findRoot(root, iteration + 1, maxIterations, precision);
+      }
+   }
 }
