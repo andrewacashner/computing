@@ -16,26 +16,30 @@ import java.util.Arrays;
  */
 public class Polynomial {
 
+   private static void debugPrint(String msg) {
+      // System.err.printf(msg);
+   }
+
    /** For testing */
    public static void main(String[] args) {
       if (args.length < 1) {
          System.err.println("Usage: java Polynomial \"c0 c1 c2 c3 ...\"");
          return;
       }
-      
-     String input = args[0];
-     Polynomial fn = new Polynomial(input);
-     System.out.println(fn);
 
-     // for (double x = 0; x < 5.0; ++x) {
-     //    System.out.printf("f(%.0f) = %.4f\n", x, fn.evaluate(x));
-     // }
+      String input = args[0];
+      Polynomial fn = new Polynomial(input);
+      System.out.println(fn);
+
+      for (double x = 0; x < 5.0; ++x) {
+         System.out.printf("f(%.0f) = %.4f\n", x, fn.evaluate(x));
+      }
 
       Polynomial a = new Polynomial("1 2 3");
       System.out.println("Degree: " + a.getDegree());
       System.out.println(Arrays.toString(a.coefficients));
       System.out.println(a);
-      
+
       Polynomial b = new Polynomial("1 1 1 1");
       System.out.println(b);
       Polynomial c = a.add(b);
@@ -60,8 +64,9 @@ public class Polynomial {
     */
    private Polynomial(double[] coefficients) {
       this.setCoeff(coefficients);
-      this.setDegree(coefficients.length - 1);
-      System.out.printf("Called private constructor with double array %s\n", Arrays.toString(coefficients));
+      this.setDegree(this.coefficients.length - 1);
+      Polynomial.debugPrint(String.format("Called private constructor with double array %s\n", Arrays.toString(coefficients)));
+      Polynomial.debugPrint(String.format("Constructor stored trimmed array %s\n", Arrays.toString(this.coefficients)));
    }
 
    /** The default expression is f(x) = 0. */
@@ -77,8 +82,7 @@ public class Polynomial {
     */
    public Polynomial(String coefficients) {
       this(Polynomial.parseCoeff(coefficients));
-      double[] coeff = Polynomial.parseCoeff(coefficients);
-      System.out.printf("Create polynomial from array %s\n", Arrays.toString(coeff));
+      Polynomial.debugPrint(String.format("Create polynomial from array %s\n", Arrays.toString(this.coefficients)));
    }
 
    /**
@@ -90,9 +94,8 @@ public class Polynomial {
     */
    public double getCoeff(int exponent) {
       double coefficient = 0;
-      System.out.printf("Try to get coeff for exp %d\n", exponent);
-//      if (exponent <= this.getDegree()) {
-      if (exponent < this.coefficients.length - 1) {
+      Polynomial.debugPrint(String.format("Try to get coeff for exp %d\n", exponent));
+      if (exponent <= this.getDegree()) {
          coefficient = this.coefficients[exponent];
       } 
       return coefficient; 
@@ -123,9 +126,8 @@ public class Polynomial {
     * @param coefficients Double array of coefficient values
     */
    private void setCoeff(double[] coefficients) {
-      System.out.printf("setCoeff");
       this.coefficients = Polynomial.stripTrailingZeros(coefficients);
-      System.out.printf("set coeff to %s\n", Arrays.toString(this.coefficients));
+      Polynomial.debugPrint(String.format("set coeff to %s\n", Arrays.toString(this.coefficients)));
    }
 
    /**
@@ -133,10 +135,6 @@ public class Polynomial {
     * order, parse the values and store them in our array of coefficient
     * values. 
     * Ignore trailing zero.
-    *
-    * TODO ignore multiple trailing zeros; set degree based on last non-zero
-    * term ignoring those after
-   // TODO not working correctly, also cumbersome
     *
     * @param coefficients String with coefficient values, separated by spaces
     * @return Array of coefficient values
@@ -149,21 +147,29 @@ public class Polynomial {
          coefficients[i] = Double.parseDouble(tokens[i]);
       }
 
-      System.out.printf("Parsed coefficients to array %s\n", Arrays.toString(coefficients));
+      Polynomial.debugPrint(String.format("Parsed coefficients to array %s\n", Arrays.toString(coefficients)));
 
       return coefficients;
    }
 
-   private static int lastNonZero(double[] nums) {
-      boolean isZero = true;
-      int last = nums.length - 1;
-      for (int i = last; i >= 0 && isZero; --i) {
-         isZero = nums[i] == 0; 
-         if (!isZero) { // TODO is this right?
-            last = i;
-         }
+   private int firstNonZero(double[] nums) {
+      int start = 0;
+      int i;
+      for (i = 0; i < nums.length && nums[i] == 0; ++i) {
+         // Just find first nonzero term
       }
-      System.out.printf("Last non zero at index %d\n", last);
+      start = i;
+      return start;
+   }
+
+   private static int lastNonZero(double[] nums) {
+      int last = nums.length - 1;
+      int i;
+      for (i = last; i >= 0 && nums[i] == 0; --i) {
+         // Just find last nonzero index
+      }
+      last = i;
+      Polynomial.debugPrint(String.format("Last non zero at index %d\n", last));
       return last;
    }
 
@@ -173,7 +179,7 @@ public class Polynomial {
       for (int i = 0; i < trimmedLength; ++i) {
          trimmed[i] = nums[i];
       }
-      System.out.printf("Trimmed array to length %d\n", trimmedLength);
+      Polynomial.debugPrint(String.format("Trimmed array to length %d\n", trimmedLength));
 
       return trimmed;
    }
@@ -218,13 +224,14 @@ public class Polynomial {
    }
 
    private String coeffToString(int exponent) {
-      System.out.printf("--- coeffToString (%d)\n", exponent);
+      Polynomial.debugPrint(String.format("--- coeffToString (%d)\n", exponent));
       String output = new String();
       double coeff = this.getCoeff(exponent);
 
       if (coeff != 0) {
          String digitFormat = coeff == Math.floor(coeff) ? "%.0f" : "%.2f";
-         String digits = String.format(digitFormat, Math.abs(coeff));
+         String digits = Math.abs(coeff) == 1 && exponent > 0 ? "" : 
+            String.format(digitFormat, Math.abs(coeff));
 
          String variable = exponent > 0 ? "x" : "";
          String power = exponent > 1 ? String.format("^%d", exponent) : "";
@@ -234,13 +241,30 @@ public class Polynomial {
       return output;
    }
 
+
+
+
+   private String[] operators(double[] nums) {
+      String[] operatorList = new String[nums.length];
+
+      int start = this.firstNonZero(nums);
+      operatorList[start] = nums[start] > 0 ? "" : "-";
+
+      for (int i = start + 1; i < nums.length; ++i) {
+         operatorList[i] = nums[i] > 0 ? " + " : " - ";
+      }
+
+      Polynomial.debugPrint(String.format("Made this list of operators: %s\n", Arrays.toString(operatorList)));
+      return operatorList;
+   }
+
    /**
     * Return string representation of the polynomial.
     *
     * @return String
     */
    public String toString() {
-      System.out.printf("--- toString: \n");
+      Polynomial.debugPrint(String.format("--- toString: \n"));
       StringBuilder output = new StringBuilder("f(x) = ");
 
       int degree = this.getDegree();
@@ -248,24 +272,23 @@ public class Polynomial {
       if (degree == 0) {
          output.append("0");
       } else {
-         int start;
-         for (start = 0; 
-               start < degree + 1 && this.getCoeff(start) == 0; 
-               ++start) {
-            // Just find first non-zero term
+         String[] operatorList = this.operators(this.coefficients);
+
+         String[] coeffStr = new String[this.coefficients.length];
+         for (int i = 0; i < this.coefficients.length; ++i) {
+            if (this.getCoeff(i) != 0) {
+               coeffStr[i] = this.coeffToString(i);
+            }
          }
 
-         for (int i = start; i < degree + 1; ++i) {
-            double thisCoeff = this.getCoeff(i);
-            String operator = "";
-            // TODO not working
-            if (i == start) {
-               operator = thisCoeff < 0 ? "-" : "";
-            } else {
-               operator = thisCoeff < 0 ? " - " : " + ";
+         int start = this.firstNonZero(this.coefficients);
+         for (int i = start; 
+               i < operatorList.length && i < coeffStr.length; 
+               ++i) {
+            if (operatorList[i] != null && coeffStr[i] != null) {
+               output.append(operatorList[i] + coeffStr[i]);
             }
-            output.append(operator + this.coeffToString(i));
-         }
+          }
       }
       return output.toString();
    }
@@ -286,7 +309,6 @@ public class Polynomial {
       return result;
    }
 
-   // TODO not working
    /**
     * Return a new Polynomial that is a derivative of this polynomial.
     * This class only allows non-negative integer exponents so we don't need
@@ -295,13 +317,16 @@ public class Polynomial {
     * @return New Polynomial
     */
    public Polynomial derivative() {
-      double[] derivCoefficients = new double[this.getDegree()];
+      // The x^0 term disappears so the derivative has one less coefficient
+      double[] derivCoefficients = new double[this.getDegree()]; 
+
+      Polynomial.debugPrint(String.format("derivative: start from index 0, go to index %d\n    Process coefficient array %s\n", this.getDegree(), Arrays.toString(this.coefficients)));
 
       for (int i = 0; i < this.getDegree(); ++i) {
-         derivCoefficients[i] = this.getCoeff(i + 1) * i;
-         System.out.printf("deriv: setting new coeff to %.2f at index %d\n", derivCoefficients[i], i);
+         derivCoefficients[i] = this.getCoeff(i + 1) * (i + 1);
+         Polynomial.debugPrint(String.format("deriv: setting new coeff to %.2f at index %d\n", derivCoefficients[i], i));
       }
-      System.out.printf("deriv: create new polynomial with coefficients %s\n", Arrays.toString(derivCoefficients));
+      Polynomial.debugPrint(String.format("deriv: create new polynomial with coefficients %s\n", Arrays.toString(derivCoefficients)));
       return new Polynomial(derivCoefficients);
    }
 
