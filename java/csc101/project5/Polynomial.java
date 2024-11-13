@@ -61,8 +61,6 @@ public class Polynomial {
    private Polynomial(double[] coefficients) {
       this.setCoeff(coefficients);
       this.setDegree(this.coefficients.length - 1);
-      
-      
    }
 
    /** The default expression is f(x) = 0. */
@@ -123,7 +121,6 @@ public class Polynomial {
     */
    private void setCoeff(double[] coefficients) {
       this.coefficients = Polynomial.stripTrailingZeros(coefficients);
-      
    }
 
    /**
@@ -142,8 +139,6 @@ public class Polynomial {
       for (int i = 0; i < tokens.length; ++i) {
          coefficients[i] = Double.parseDouble(tokens[i]);
       }
-
-      
 
       return coefficients;
    }
@@ -175,7 +170,6 @@ public class Polynomial {
       for (int i = 0; i < trimmedLength; ++i) {
          trimmed[i] = nums[i];
       }
-      
 
       return trimmed;
    }
@@ -219,26 +213,35 @@ public class Polynomial {
       return new Polynomial(coefficients);
    }
 
+   private String varToString(int exponent) {
+      return exponent > 0 ? "x" : "";
+   }
+
+   private String expToString(int exponent) {
+      return exponent > 1 ? String.format("^%d", exponent) : "";
+   }
+
    private String coeffToString(int exponent) {
       
       String output = new String();
       double coeff = this.getCoeff(exponent);
+      double absCoeff = Math.abs(coeff);
 
-      if (coeff != 0) {
-         String digitFormat = coeff == Math.floor(coeff) ? "%.0f" : "%.2f";
-         String digits = Math.abs(coeff) == 1 && exponent > 0 ? "" : 
-            String.format(digitFormat, Math.abs(coeff));
+      if (absCoeff > 0) {
 
-         String variable = exponent > 0 ? "x" : "";
-         String power = exponent > 1 ? String.format("^%d", exponent) : "";
+         String digits;
+         if (absCoeff == 1 && exponent > 0) {
+            digits = "";
+         } else if (absCoeff == Math.floor(absCoeff)) {
+            digits = String.format("%.0f", absCoeff);
+         } else {
+            digits = String.format("%.2f", absCoeff);
+         }
 
-         return digits + variable + power;
+         return digits + varToString(exponent) + expToString(exponent);
       }
       return output;
    }
-
-
-
 
    private String[] operators(double[] nums) {
       String[] operatorList = new String[nums.length];
