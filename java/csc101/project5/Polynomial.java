@@ -1,15 +1,12 @@
-import java.util.Arrays;
-
 /**
  * This class models a polynomial function.
  * It records the degree (highest exponent) of the function and the
  * coefficients for each term in ascending order.
  * Methods allow for adding, evaluating, differentiating, and finding the
  * root of the polynomial.
- * <p>
- * Note: We are assuming that coefficients are integers ascending from zero,
- * and make no allowance for rational or negative exponents.
- * </p>
+ *
+ * Note: We are assuming that coefficients are non-negative integers
+ * ascending from zero.  
  *
  * @author Andrew Cashner, <code>acashner@student.monroecc.edu</code>
  * @version 2024/11/12 (CSC 101, Project 5)
