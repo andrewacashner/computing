@@ -52,8 +52,12 @@ public class Polynomial {
             d.toString("f'", "x"));
 
       Polynomial e = new Polynomial("-4.5 1.5 1");
-      double root = e.findRoot(5);
-      System.out.printf("Root of polynomial {%s} ≈ %.6f\n", e, root);
+      try {
+         double root = e.findRoot(5);
+         System.out.printf("Root of polynomial {%s} ≈ %.6f\n", e, root);
+      } catch (IllegalStateException ex) {
+         System.err.println(ex.getMessage());
+      }
 
    }
 
@@ -65,7 +69,6 @@ public class Polynomial {
    private double[] coefficients;
 
    // STATIC MEMBERS
-
    /** Maximum number of iterations of Newton-Raphson method */
    private static final int MAX_ROOT_ITERATIONS = 1000;
 
@@ -75,19 +78,18 @@ public class Polynomial {
     */
    private static final double ROOT_PRECISION = 0.00001;
 
+   // CONSTRUCTORS
    /** 
     * Create a polynomial from an array of coefficients. The degree is one
     * less than the length of the array. By calling setCoeff, we also trim
-    * the coefficient array to remove trailing zeros.
+    * the coefficient array to remove trailing zeros and update degree to
+    * match the trimmed array.
     *
     * @param coefficients Array of doubles for coefficients to exponents in
     *           ascending order
     */
    private Polynomial(double[] rawCoefficients) {
-      setCoeff(rawCoefficients);
-      
-      // Use the trimmed array length to find the degree
-      setDegree(this.coefficients);
+      setCoeff(rawCoefficients); 
    }
 
    /** The default expression is f(x) = 0. */
@@ -103,7 +105,6 @@ public class Polynomial {
     */
    public Polynomial(String coefficients) {
       this(parseCoeff(coefficients));
-      
    }
 
    /**
@@ -132,22 +133,23 @@ public class Polynomial {
    }
 
    /**
-    * Set the degree to one less than the length of the coefficient array.
-    *
-    * @param degree Double array of coefficients
+    * Set the degree to one less than the length of the stored coefficient
+    * array.
     */
-   private void setDegree(double[] coefficients) {
-      this.degree = coefficients.length - 1;
+   private void setDegree() {
+      this.degree = this.coefficients.length - 1;
    }
 
-   // CREATE LIST OF COEFFICIENTS
+   // CREATING THE LIST OF COEFFICIENTS
    /**
-    * Assign a new array of coefficients with trailing zeros stripped.
+    * Assign a new array of coefficients with trailing zeros stripped and
+    * update degree to match the new array.
     *
     * @param coefficients Double array of coefficient values
     */
    private void setCoeff(double[] coefficients) {
       this.coefficients = stripTrailingZeros(coefficients);
+      this.setDegree();
    }
 
    /**
@@ -161,6 +163,7 @@ public class Polynomial {
       this.setCoeff(parseCoeff(coefficientStr));
    }
 
+   // TODO handle parseDouble NumberFormatException
    /**
     * Given a string with coefficient values for exponents in ascending
     * order, parse the values and store them in our array of coefficient
@@ -394,6 +397,7 @@ public class Polynomial {
       return this.toString("f", "x");
    }
 
+   // EVALUATING f(x) FOR A PARTICULAR x
    /**
     * Evaluate this polynomial function for a given x value.
     *
@@ -410,6 +414,7 @@ public class Polynomial {
       return result;
    }
 
+   // FINDING THE DERIVATIVE
    /**
     * Return a new Polynomial that is a derivative of this polynomial.
     * This class only allows non-negative integer exponents so we don't need
@@ -428,6 +433,7 @@ public class Polynomial {
       return new Polynomial(derivCoefficients);
    }
 
+   // FINDING ROOTS
    /**
     * Return a double representing the root of the equation; that is, the
     * value of x that where f(x) = 0. Using the Newton-Raphson method,
@@ -438,7 +444,7 @@ public class Polynomial {
     * @throws IllegalStateException if the method does not converge within
     *           1000 iterations
     */
-   public double findRoot(double guess) {
+   public double findRoot(double guess) throws IllegalStateException {
       return this.findRoot(guess, 0, MAX_ROOT_ITERATIONS, ROOT_PRECISION);
    }
 
@@ -457,8 +463,8 @@ public class Polynomial {
     * @throws IllegalStateException if the method does not converge within
     *           max number of iterations
     */
-   private double findRoot(double guess, int iteration, 
-         int maxIterations, double precision) {
+   private double findRoot(double guess, int iteration, int maxIterations, 
+         double precision) throws IllegalStateException {
 
       if (iteration > maxIterations) {
          throw new IllegalStateException(
