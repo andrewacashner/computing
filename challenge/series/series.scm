@@ -16,7 +16,7 @@
 
 ;; (series (lambda (x) (expt 3 x)) 0 4) => 121
 
-(define MAX-ITER 1000000)
+(define MAX-ITER (expt 10 100))
 (define PRECISION (/ 1 MAX-ITER))
 
 ;; TODO r6rs exception handling (guard?)
