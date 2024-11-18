@@ -15,3 +15,18 @@
     (apply + (sequence fn low high))))
 
 ;; (series (lambda (x) (expt 3 x)) 0 4) => 121
+
+(define MAX-ITER 1000000)
+(define PRECISION (/ 1 MAX-ITER))
+
+;; TODO r6rs exception handling (guard?)
+(define series-converge
+  (lambda (fn)
+    (let inner-series-converge ([sum 0] [iter 1])
+      (let* ([next (fn iter)]
+             [new-sum (+ next sum)]
+             [diff (- new-sum sum)])
+        (cond
+          [(> iter MAX-ITER) (throw 'exception "Did not converge")]
+          [(< (abs diff) PRECISION) new-sum]
+          [else (inner-series-converge new-sum (+ 1 iter))])))))
