@@ -1,5 +1,12 @@
+#!/usr/bin/env sh
+exec guile -e main -s "$0" "$@"
+!#
+
 ;; Series (sum of finite sequence over a given range)
 ;; Andrew Cashner, 2024/11/16
+
+(use-modules
+  (ice-9 format))
 
 (define range
   (lambda (low high)
@@ -30,3 +37,12 @@
           [(> iter MAX-ITER) (throw 'exception "Did not converge")]
           [(< (abs diff) PRECISION) new-sum]
           [else (inner-series-converge new-sum (+ 1 iter))])))))
+
+(define main
+  (lambda (args)
+    (if (not (eq? 3 (length args)))
+      (format #t "Usage: series MIN MAX\n")
+      (let ([low (string->number (list-ref args 1))]
+            [high (string->number (list-ref args 2))]
+            [fn (lambda (n) (expt 0.25 n))])
+        (format #t "~f\n" (series fn low high))))))
