@@ -26,34 +26,53 @@ public class Polynomial {
       }
 
       String input = args[0];
-      Polynomial fn = new Polynomial(input);
-      System.out.printf("Created polynomial %s\n", fn);
+      Polynomial fn;
+      
+      try {
+         fn = new Polynomial(input);
+         System.out.printf("Created polynomial %s\n", fn);
+
+      } catch (NumberFormatException e) {
+         System.err.println(e.getMessage());
+         return;
+      }
 
       for (double x = 0; x < 5.0; ++x) {
          System.out.printf("Evaluate f(%.0f) = %.4f\n", x, fn.evaluate(x));
       }
 
-      Polynomial empty = new Polynomial();
-      System.out.println(empty.toString("empty", "x"));
+      try {
+         Polynomial empty = new Polynomial();
+         System.out.println(empty.toString("empty", "x"));
 
-      Polynomial a = new Polynomial("1 2 3");
-      Polynomial b = new Polynomial("1 1 1 1");
-      Polynomial c = a.add(b);
-      System.out.printf("Add:\n     %s\n   + %s\n   = %s\n", 
+         Polynomial a = new Polynomial("1 2 3");
+         Polynomial b = new Polynomial("1 1 1 1");
+         Polynomial c = a.add(b);
+         System.out.printf("Add:\n     %s\n   + %s\n   = %s\n", 
             a.toString("a", "x"),
             b.toString("b", "x"),
             c.toString("c", "x"));
+      } catch (NumberFormatException e) {
+         System.err.println(e.getMessage());
+         return;
+      }
 
       Polynomial d = fn.derivative();
       System.out.printf("Derivative of user fn: %s\n", 
             d.toString("f'", "x"));
 
-      Polynomial e = new Polynomial("-4.5 1.5 1");
       try {
+         Polynomial e = new Polynomial("-4.5 1.5 1");
          double root = e.findRoot(5);
          System.out.printf("Root of polynomial {%s} ≈ %.6f\n", e, root);
-      } catch (IllegalStateException ex) {
-         System.err.println(ex.getMessage());
+
+      } catch (NumberFormatException e) {
+         System.err.println(e.getMessage());
+         return;
+
+      } catch (IllegalStateException e) {
+         System.err.println(e.getMessage());
+         return;
       }
 
    }
@@ -99,9 +118,12 @@ public class Polynomial {
     * coefficients in ascending order (using zeros as needed). 
     *
     * @param coefficients String with coefficients in ascending order
+    * @throws NumberFormatException if the input could not be parsed
+    *       correctly
+    * @see #setCoeff(String)
     */
-   public Polynomial(String coefficients) {
-      this(parseCoeff(coefficients));
+   public Polynomial(String coefficientStr) throws NumberFormatException {
+      setCoeff(coefficientStr);
    }
 
    /**
@@ -113,7 +135,7 @@ public class Polynomial {
     */
    public double getCoeff(int exponent) {
       double coefficient = 0;
-      
+
       if (exponent <= this.getDegree()) {
          coefficient = this.coefficients[exponent];
       } 
@@ -155,12 +177,15 @@ public class Polynomial {
     *
     * @param coefficientStr A string with space-separated values for the
     *           coefficients for exponents in ascending order
+    * @throws NumberFormatException if there was a problem reading the input
     */
-   public void setCoeff(String coefficientStr) {
-      this.setCoeff(parseCoeff(coefficientStr));
+   public void setCoeff(String coefficientStr) 
+        throws NumberFormatException {
+
+      double[] coefficients = parseCoeff(coefficientStr);
+      this.setCoeff(coefficients);
    }
 
-   // TODO handle parseDouble NumberFormatException
    /**
     * Given a string with coefficient values for exponents in ascending
     * order, parse the values and store them in our array of coefficient
@@ -168,13 +193,22 @@ public class Polynomial {
     *
     * @param coefficients String with coefficient values, separated by spaces
     * @return Array of coefficient values
+    * @throws NumberFormatException if there was a problem reading the input
     */
-   private static double[] parseCoeff(String input) {
+   private static double[] parseCoeff(String input) 
+         throws NumberFormatException {
+
       String[] tokens = input.trim().split("\\s+");
       double[] coefficients = new double[tokens.length];
 
       for (int i = 0; i < tokens.length; ++i) {
-         coefficients[i] = Double.parseDouble(tokens[i]);
+         try {
+            coefficients[i] = Double.parseDouble(tokens[i]);
+         }
+         catch (NumberFormatException e) {
+            throw new NumberFormatException(
+                  String.format("Invalid input for coefficient \"%s\"", tokens[i]));
+         }
       }
 
       return coefficients;
@@ -210,7 +244,7 @@ public class Polynomial {
          // Just find last nonzero index
       }
       last = i;
-      
+
       return last;
    }
 
@@ -222,7 +256,7 @@ public class Polynomial {
     * @return New shorter array without the trailing zeros
     */
    private static double[] stripTrailingZeros(double[] nums) {
-      if (nums[nums.length - 1] != 0) {
+      if (nums.length == 0 || nums[nums.length - 1] != 0) {
          return nums;
       } else {
          int trimmedLength = lastNonZero(nums) + 1;
@@ -302,7 +336,7 @@ public class Polynomial {
     * @return String representation of coefficient and variable
     */
    private String coeffToString(int exponent, String varName) {
-      
+
       String output = new String();
       double coeff = this.getCoeff(exponent);
       double absCoeff = Math.abs(coeff);
@@ -339,15 +373,17 @@ public class Polynomial {
     * @return String array of operator symbols
     */
    private String[] operators(double[] nums) {
-      String[] operatorList = new String[nums.length];
+      String [] operatorList = new String[nums.length];
 
-      int start = this.firstNonZero(nums);
-      operatorList[start] = nums[start] > 0 ? "" : "-";
+      if (nums.length > 0) {
+         int start = this.firstNonZero(nums);
+         operatorList[start] = nums[start] > 0 ? "" : "-";
 
-      for (int i = start + 1; i < nums.length; ++i) {
-         operatorList[i] = nums[i] > 0 ? " + " : " - ";
+         for (int i = start + 1; i < nums.length; ++i) {
+            operatorList[i] = nums[i] > 0 ? " + " : " - ";
+         }
       }
-      
+
       return operatorList;
    }
 
@@ -362,7 +398,7 @@ public class Polynomial {
     * @return String representation
     */
    public String toString(String functionName, String varName) {
-      
+
       StringBuilder output = new StringBuilder(
             String.format("%s(%s) = ", functionName, varName));
 
@@ -426,7 +462,7 @@ public class Polynomial {
       for (int i = 0; i < this.getDegree(); ++i) {
          derivCoefficients[i] = this.getCoeff(i + 1) * (i + 1);
       }
-      
+
       return new Polynomial(derivCoefficients);
    }
 
