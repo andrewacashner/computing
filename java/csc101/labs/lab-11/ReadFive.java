@@ -4,7 +4,7 @@ import java.util.InputMismatchException;
 public class ReadFive {
    public static void main(String[] args) {
       Scanner kbScan = new Scanner(System.in);
-      System.out.println("READ FIVE: Find the average of five integers");
+      System.out.println("READ FIVE: Find the average of five positive integers");
 
       int[] inputInts = new int[5];
 
