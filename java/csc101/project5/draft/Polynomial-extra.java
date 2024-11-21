@@ -9,15 +9,90 @@
  * ascending from zero.  
  *
  * @author Andrew Cashner, <code>acashner@student.monroecc.edu</code>
- * @version 2024/11/20 CSC 101, Project 5)
+ * @version 2024/11/12 (CSC 101, Project 5)
  */
 public class Polynomial {
 
+   /** 
+    * Main method for testing 
+    *
+    * @param args Command-line arguments: Requires a string of numbers
+    *   representing coefficients for exponents in ascending order
+    * */
+   public static void main(String[] args) {
+      if (args.length < 1) {
+         System.err.println("Usage: java Polynomial \"c0 c1 c2 c3 ...\"");
+         return;
+      }
+
+      String input = args[0];
+      Polynomial fn;
+      
+      try {
+         fn = new Polynomial(input);
+         System.out.printf("Created polynomial %s\n", fn);
+
+      } catch (NumberFormatException e) {
+         System.err.println(e.getMessage());
+         return;
+      }
+
+      for (double x = 0; x < 5.0; ++x) {
+         System.out.printf("Evaluate f(%.0f) = %.4f\n", x, fn.evaluate(x));
+      }
+
+      try {
+         Polynomial empty = new Polynomial();
+         System.out.println(empty.toString("empty", "x"));
+
+         Polynomial a = new Polynomial("1 2 3");
+         Polynomial b = new Polynomial("1 1 1 1");
+         Polynomial c = a.add(b);
+         System.out.printf("Add:\n     %s\n   + %s\n   = %s\n", 
+            a.toString("a", "x"),
+            b.toString("b", "x"),
+            c.toString("c", "x"));
+      } catch (NumberFormatException e) {
+         System.err.println(e.getMessage());
+         return;
+      }
+
+      Polynomial d = fn.derivative();
+      System.out.printf("Derivative of user fn: %s\n", 
+            d.toString("f'", "x"));
+
+      try {
+         Polynomial e = new Polynomial("-4.5 1.5 1");
+         double root = e.findRoot(5);
+         System.out.printf("Root of polynomial {%s} ≈ %.6f\n", e, root);
+
+      } catch (NumberFormatException e) {
+         System.err.println(e.getMessage());
+         return;
+
+      } catch (IllegalStateException e) {
+         System.err.println(e.getMessage());
+         return;
+      }
+
+   }
+
+   // INSTANCE MEMBERS
    /** Highest exponent of the expression */
    private int degree;
 
    /** Array of coefficients in ascending order of exponents */
    private double[] coefficients;
+
+   // STATIC MEMBERS
+   /** Maximum number of iterations of Newton-Raphson method */
+   private static final int MAX_ROOT_ITERATIONS = 1000;
+
+   /** 
+    * Acceptable precision (difference between successive iterations of
+    * Newton-Raphson method) for finding the root
+    */
+   private static final double ROOT_PRECISION = 0.00001;
 
    // CONSTRUCTORS
    /** 
@@ -35,7 +110,7 @@ public class Polynomial {
 
    /** The default expression is f(x) = 0. */
    public Polynomial() {
-      setCoeff(new double[1]);
+      this(new double[1]);
    }
 
    /** 
@@ -181,22 +256,31 @@ public class Polynomial {
     * @return New shorter array without the trailing zeros
     */
    private static double[] stripTrailingZeros(double[] nums) {
-      double[] result;
-
       if (nums.length == 0 || nums[nums.length - 1] != 0) {
-         result = nums;
+         return nums;
       } else {
          int trimmedLength = lastNonZero(nums) + 1;
          double[] trimmed = new double[trimmedLength];
          for (int i = 0; i < trimmedLength; ++i) {
             trimmed[i] = nums[i];
          }
-         result = trimmed;
+         return trimmed;
       }
-      return result;
    }
 
    // ADDING POLYNOMIALS
+   /**
+    * Return the higher of two polynomials, that is, the one with a higher
+    * degree.
+    *
+    * @param a First polynomial
+    * @param b Second polynomial
+    * @return Reference to the polynomial with higher degree
+    */
+   private static Polynomial higher(Polynomial a, Polynomial b) {
+      return a.getDegree() > b.getDegree() ? a : b;
+   }
+
    /**
     * Return a new polynomial that is the sum of this one and another.
     *
@@ -204,16 +288,7 @@ public class Polynomial {
     * @return New Polynomial
     */
    public Polynomial add(Polynomial other) {
-      // The sum array will match the degree of the highest-degree summand.
-      int thisDegree = this.getDegree();
-      int otherDegree = other.getDegree();
-      
-      int length;
-      if (thisDegree > otherDegree) {
-         length = thisDegree + 1;
-      } else {
-         length = otherDegree + 1;
-      }
+      int length = higher(this, other).getDegree() + 1;
       double[] coefficients = new double[length];
 
       for (int i = 0; i < length; ++i) {
@@ -224,6 +299,27 @@ public class Polynomial {
    }
 
    // STRING CONVERSION
+   /** 
+    * A term only includes the variable if exponent is greater than zero.
+    *
+    * @param exponent Integer exponent
+    * @param varName String, name of variable
+    * @return String for variable
+    */
+   private String varToString(int exponent, String varName) {
+      return exponent > 0 ? varName : "";
+   }
+
+   /**
+    * Only show exponents greater than 1.
+    *
+    * @param exponent Integer exponent
+    * @return String for exponent
+    */
+   private String expToString(int exponent) {
+      return exponent > 1 ? String.format("^%d", exponent) : "";
+   }
+
    /**
     * Convert a single coefficient value to a string, using this format:
     * <ol>
@@ -236,50 +332,59 @@ public class Polynomial {
     * </ol>
     *
     * @param exponent Integer value of this coefficient's exponent
-    * @param isFirst True if this is the first coefficient to be printed
+    * @param varName String, name of variable used in this function
     * @return String representation of coefficient and variable
     */
-   private String coeffToString(int exponent, boolean isFirst) {
+   private String coeffToString(int exponent, String varName) {
 
-      StringBuilder output = new StringBuilder();
+      String output = new String();
       double coeff = this.getCoeff(exponent);
+      double absCoeff = Math.abs(coeff);
 
-      if (coeff != 0) {
-         // No operator for first term, just negative sign if needed
-         if (isFirst) {
-            if (coeff < 0) {
-               output.append("-");
-            }
-         } else if (coeff > 0) {
-            output.append(" + ");
+      if (absCoeff > 0) {
+
+         String digits;
+         if (absCoeff == 1 && exponent > 0) {
+            digits = "";
+         } else if (absCoeff == Math.floor(absCoeff)) {
+            digits = String.format("%.0f", absCoeff);
          } else {
-            output.append(" - ");
+            digits = String.format("%.2f", absCoeff);
          }
 
-         // No digit shown if coefficient is 1 and exponent is positive
-         double absCoeff = Math.abs(coeff);
-         if (!(absCoeff == 1 && exponent > 0)) {
-         
-            // No decimal shown if coefficient is an integer
-            if (Math.floor(absCoeff) == absCoeff) {
-               output.append(String.format("%.0f", absCoeff));
-            } else {
-               output.append(String.format("%.2f", absCoeff));
-            }
-         }
+         return digits + 
+            varToString(exponent, varName) + 
+            expToString(exponent);
+      }
+      return output;
+   }
 
-         if (exponent > 0) {
-            // No variable shown if exponent is 0
-            output.append("x");
+   /**
+    * Return a list of string operator symbols to prefix to each element in a
+    * numeric array. (Equivalent to mapping an operatorString function over
+    * the array.)
+    * <p>
+    * We treat the first item differently because it doesn't have
+    * the preceding <code>" + "</code> and if negative, the sign is
+    * immediately next to the coefficient.
+    * </p>
+    *
+    * @param nums Double array
+    * @return String array of operator symbols
+    */
+   private String[] operators(double[] nums) {
+      String [] operatorList = new String[nums.length];
 
-            // No exponent shown if exponent is 1
-            if (exponent > 1) {
-               output.append(String.format("^%d", exponent));
-            }
+      if (nums.length > 0) {
+         int start = this.firstNonZero(nums);
+         operatorList[start] = nums[start] > 0 ? "" : "-";
+
+         for (int i = start + 1; i < nums.length; ++i) {
+            operatorList[i] = nums[i] > 0 ? " + " : " - ";
          }
       }
 
-      return output.toString();
+      return operatorList;
    }
 
    /**
@@ -289,27 +394,40 @@ public class Polynomial {
     * <code>"f(x) = -1 + x - 2x^2 + 3x^4"</code>.
     * 
     * @param functionName String name of function
+    * @param varName String name of variable
     * @return String representation
     */
-   public String toString() {
+   public String toString(String functionName, String varName) {
 
-      StringBuilder output = new StringBuilder("f(x) = ");
+      StringBuilder output = new StringBuilder(
+            String.format("%s(%s) = ", functionName, varName));
 
       int degree = this.getDegree();
 
       if (degree == 0) {
          output.append("0");
       } else {
+         String[] operatorList = this.operators(this.coefficients);
+
          int start = this.firstNonZero(this.coefficients);
          for (int i = start; i < this.coefficients.length; ++i) {
 
             if (this.getCoeff(i) != 0) {
-               boolean isFirst = i == start;
-               output.append(this.coeffToString(i, isFirst));
+               output.append(operatorList[i] + 
+                     this.coeffToString(i, varName));
             }
          }
       }
       return output.toString();
+   }
+
+   /**
+    * Default string representation uses function name f(x).
+    *
+    * @return String representation
+    */
+   public String toString() {
+      return this.toString("f", "x");
    }
 
    // EVALUATING f(x) FOR A PARTICULAR x
@@ -352,37 +470,47 @@ public class Polynomial {
    /**
     * Return a double representing the root of the equation; that is, the
     * value of x that where f(x) = 0. Using the Newton-Raphson method,
-    * iterating until the desired precision or throwing an error if too many
-    * iterations.
+    * iterating until 0.00001 accurate.
     *
     * @param guess Double initial guess value
     * @return Double root
     * @throws IllegalStateException if the method does not converge within
-    *           maximum iterations
+    *           1000 iterations
     */
    public double findRoot(double guess) throws IllegalStateException {
+      return this.findRoot(guess, 0, MAX_ROOT_ITERATIONS, ROOT_PRECISION);
+   }
 
-      double root = guess;
+   /**
+    * Calculate the root using the Newton-Raphson method with the given
+    * initial guess, iterating until the desired accuracy.
+    *
+    * @param guess Double initial guess value
+    * @param iteration How many iterations have we done?
+    * @param maxIterations Maximum number of iterations before giving up
+    * @param precision Desired precision (difference between one guess and
+    *           the next)
+    *
+    * @return Double root (next guess)
+    *
+    * @throws IllegalStateException if the method does not converge within
+    *           max number of iterations
+    */
+   private double findRoot(double guess, int iteration, int maxIterations, 
+         double precision) throws IllegalStateException {
 
-      final int MAX_ITERATIONS = 1000;
-      final double PRECISION = 0.00001;
+      if (iteration > maxIterations) {
+         throw new IllegalStateException(
+               "Did not converge within 1000 iterations");
+      }
 
-      double prev = 0;
-      int i = 0;
-      do {
-         ++i;
-         if (i > MAX_ITERATIONS) {
-            throw new IllegalStateException(
-                  "Did not converge within 1000 iterations");
-         }
+      double root = 
+         guess - this.evaluate(guess) / this.derivative().evaluate(guess);
 
-         double thisValue = this.evaluate(root);
-         double thisDerivValue = this.derivative().evaluate(root);
-         prev = root;
-         root -= thisValue / thisDerivValue;
-
-      } while (Math.abs(root - prev) > PRECISION);
-
-      return root;
+      if (Math.abs(guess - root) < precision) {
+         return root;
+      } else {
+         return this.findRoot(root, iteration + 1, maxIterations, precision);
+      }
    }
 }
