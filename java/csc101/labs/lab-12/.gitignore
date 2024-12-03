@@ -2,3 +2,4 @@
 *.docx
 *.txt
 build/
+output/
