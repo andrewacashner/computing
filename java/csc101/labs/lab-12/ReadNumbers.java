@@ -1,5 +1,6 @@
 import java.util.Scanner;
 import java.io.*;
+import java.util.Arrays;
 
 /**
  * Read numbers from a file and report the following info:
@@ -16,151 +17,160 @@ import java.io.*;
  * @version 2024/12/03 (CSC 101, Lab 12)
  */
 public class ReadNumbers {
-    /**
-     * Ask user for name of input and output files; read and analyze the
-     * input file and write the results to both console and output file.
-     *
-     * @param args Unused command-line arguments
-     */
-    public static void main(String[] args) throws IOException {
-        Scanner kbScan = new Scanner(System.in);
-        System.out.println("NUMBER CRUNCHER: Report info on numbers from a file");
+   /**
+    * Ask user for name of input and output files; read and analyze the
+    * input file and write the results to both console and output file.
+    *
+    * @param args Unused command-line arguments
+    */
+   public static void main(String[] args) throws IOException {
+      Scanner kbScan = new Scanner(System.in);
+      System.out.println("NUMBER CRUNCHER: Report info on numbers from a file");
 
-        System.out.print("Enter the name of an input file in the current directory: ");
-        String infileName = kbScan.nextLine();
+      // Read and store input
+      int inputNums[] = readIntInputs(kbScan);
 
-        System.out.print("Enter the name of an output file in the current directory: ");
-        String outfileName = kbScan.nextLine();
+      if (inputNums == null || inputNums.length == 0) {
+         System.err.println("No input numbers stored.");
+         return;
+      }
 
-        File infile = new File(infileName);
+      System.out.print(Arrays.toString(inputNums));
+      // Generate report
+      String report = numberReport(inputNums);
+     
+      // Print to stdout and file
+      writeToFile(kbScan, report);
+      System.out.println(report);
+   }
 
-        if (!infile.exists()) {
-            System.err.format("Could not open input file %s for reading\n", infileName);
-            return;
-        }
+   private static int countIntInputs(Scanner fileScanner) {
+      int numCount = 0;
+      while (fileScanner.hasNextInt()) {
+         int n = fileScanner.nextInt();
+         ++numCount;
+      }
+      return numCount;
+   }
 
-        int[] inputNums = {};
-        try {
-            Scanner infileReader = new Scanner(infile);
+   private static int[] readIntInputs(Scanner userScanner) 
+         throws FileNotFoundException {
 
-            int numCount = countIntInputs(new Scanner(infile));
+      int[] inputNums = {};
+      Scanner fileScanner = null;
 
+      while (fileScanner == null) {
+         System.out.print("Enter the name of the input file: ");
+         String infileName = userScanner.nextLine();
+
+         try {
+            File infile = new File(infileName);
+            fileScanner = new Scanner(infile);
+
+            int numCount = countIntInputs(fileScanner);
             inputNums = new int[numCount];
 
-            for (int i = 0; infileReader.hasNextInt(); ++i) {
-                inputNums[i] = infileReader.nextInt();
+            System.err.format("Found %d nums\n", numCount);
+
+            // TODO START not getting anything
+            for (int i = 0; fileScanner.hasNextInt(); ++i) {
+               System.err.println("Found one");
+               inputNums[i] = fileScanner.nextInt();
             }
-        }
-        catch (FileNotFoundException e) {
-            System.err.println("File not found: " + e.getMessage());
-            return;
-        }
-        catch (NumberFormatException e) {
-            System.err.println("Problem reading input data: " 
-                    + e.getMessage());
-        } 
+         } 
+         catch (FileNotFoundException e) {
+            System.err.format("Could not open file %s for reading: %s\n", infileName, e.getMessage());
+         }
+         finally {
+            if (fileScanner != null) {
+               fileScanner.close();
+            }
+         }
+      }
 
-        // Generate report
-        if (inputNums.length == 0) {
-            System.err.println("No input numbers stored.");
-            return;
-        }
-        
-        String report = numberReport(inputNums);
-        System.out.println(report);
-       
-        // Write to file
-        File outfile = new File(outfileName);
-        FileOutputStream outfileStream = null; 
-        PrintWriter outfileWriter = null;
-        // Could I just pass the File to PrintWriter and skip the
-        // FileOutputStream?
+      return inputNums;
+   }
 
-        try {
+   private static void writeToFile(Scanner userScanner, String text) {
+
+      PrintWriter writer = null;
+
+      while (writer == null) {
+         System.out.print("Enter the name of an output file in the current directory: ");
+         String outfileName = userScanner.nextLine();
+
+         try {
+            File outfile = new File(outfileName);
             if (!outfile.exists()) {
-                outfile.createNewFile();
+               outfile.createNewFile();
             }
-            
-            outfileStream = new FileOutputStream(outfile);
-            outfileWriter = new PrintWriter(outfileStream);
-            
-            outfileWriter.println(report);
 
-            System.out.format("\nReport written to file %s\n", outfileName);
-        }
-        catch (IOException e) {
+            writer = new PrintWriter(outfile);
+            writer.println(text);
+
+            System.out.format("Report written to file %s\n", outfileName);
+         }
+         catch (IOException e) {
             System.err.format("Problem writing to output file %s: %s",
-                    outfileName, e.getMessage());
-        }
-        finally {
-            if (outfileWriter != null) {
-                outfileWriter.close();
+                  outfileName, e.getMessage());
+         }
+         finally {
+            if (writer != null) {
+               writer.close();
             }
-            if (outfileStream != null) {
-                outfileStream.close(); 
-            }
-        }
-    }
+         }
+      }
+   }
 
-    private static int countIntInputs(Scanner infileScanner) {
-        int numCount = 0;
-        while (infileScanner.hasNextInt()) {
-            int n = infileScanner.nextInt();
-            ++numCount;
-        }
-        return numCount;
-    }
+   private static int maximum(int[] nums) {
+      int max = nums[0];
+      for (int num: nums) {
+         max = Math.max(num, max);
+      }
+      return max;
+   }
 
-    private static int maximum(int[] nums) {
-        int max = nums[0];
-        for (int num: nums) {
-            max = Math.max(num, max);
-        }
-        return max;
-    }
+   private static int minimum(int[] nums) {
+      int min = nums[0];
+      for (int num: nums) {
+         min = Math.min(num, min);
+      }
+      return min;
+   }
 
-    private static int minimum(int[] nums) {
-        int min = nums[0];
-        for (int num: nums) {
-            min = Math.min(num, min);
-        }
-        return min;
-    }
+   private static double average(int[] nums) {
+      int sum = 0;
+      for (int num: nums) {
+         sum += num;
+      }
+      return sum / nums.length;
+   }
 
-    private static double average(int[] nums) {
-        int sum = 0;
-        for (int num: nums) {
-            sum += num;
-        }
-        return sum / nums.length;
-    }
+   private static double stdDeviation(int[] nums) {
+      double avg = average(nums);
+      double numerator = 0;
+      for (int num: nums) {
+         numerator += Math.pow(num - avg, 2);
+      }
+      return Math.sqrt(numerator / nums.length);
+   }
 
-    private static double stdDeviation(int[] nums) {
-        double avg = average(nums);
-        double numerator = 0;
-        for (int num: nums) {
-            numerator += Math.pow(num - avg, 2);
-        }
-        return Math.sqrt(numerator / nums.length);
-    }
+   private static String numberReport(int[] nums) {
+      int max = maximum(nums);
+      int min = minimum(nums);
+      double average = average(nums);
+      double stdDeviation = stdDeviation(nums);
 
-    private static String numberReport(int[] nums) {
-        int max = maximum(nums);
-        int min = minimum(nums);
-        double average = average(nums);
-        double stdDeviation = stdDeviation(nums);
+      String report = String.format(
+            "Read from file: %d values\n" +
+            "     Maximum value = %d\n" +
+            "     Minimum value = %d\n" + 
+            "     Average value = %.2f\n" +
+            "     Standard Deviation = %.2f",
+            nums.length, max, min, average, stdDeviation);
 
-        String report = String.format(
-                "Read from file: %d values\n" +
-                "     Maximum value = %d\n" +
-                "     Minimum value = %d\n" + 
-                "     Average value = %.2f\n" +
-                "     Standard Deviation = %.2f",
-                nums.length, max, min, average, stdDeviation);
-
-        return report;
-    }
-
+      return report;
+   }
 
 }
 
