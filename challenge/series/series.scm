@@ -23,20 +23,26 @@ exec guile -e main -s "$0" "$@"
 
 ;; (series (lambda (x) (expt 3 x)) 0 4) => 121
 
-(define MAX-ITER (expt 10 100))
-(define PRECISION (/ 1 MAX-ITER))
+(define MAX-ITER 10000)
+(define PRECISION 0.00001)
 
 ;; TODO r6rs exception handling (guard?)
 (define series-converge
-  (lambda (fn)
-    (let inner-series-converge ([sum 0] [iter 1])
+  (lambda (fn low)
+    (let inner-series-converge ([sum low] [iter 1])
       (let* ([next (fn iter)]
              [new-sum (+ next sum)]
              [diff (- new-sum sum)])
         (cond
-          [(> iter MAX-ITER) (throw 'exception "Did not converge")]
+          [(> iter MAX-ITER) #f] ;; (throw 'exception "Did not converge")]
           [(< (abs diff) PRECISION) new-sum]
           [else (inner-series-converge new-sum (+ 1 iter))])))))
+
+(define converges?
+  (lambda (fn low)
+    (if (not (series-converge fn low))
+      #f
+      #t)))
 
 (define main
   (lambda (args)
