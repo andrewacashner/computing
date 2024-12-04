@@ -1,6 +1,5 @@
 import java.util.Scanner;
 import java.io.*;
-import java.util.Arrays;
 
 /**
  * Read numbers from a file and report the following info:
@@ -14,7 +13,7 @@ import java.util.Arrays;
  * Display the output on screen and write it to an output file.
  *
  * @author Andrew Cashner, <code>acashner@student.monroecc.edu</code>
- * @version 2024/12/03 (CSC 101, Lab 12)
+ * @version 2024/12/04 (CSC 101, Lab 12)
  */
 public class ReadNumbers {
    /**
@@ -27,63 +26,76 @@ public class ReadNumbers {
       Scanner kbScan = new Scanner(System.in);
       System.out.println("NUMBER CRUNCHER: Report info on numbers from a file");
 
-      // Read and store input
-      int inputNums[] = readIntInputs(kbScan);
+      // Read, store, and check input
+      int inputNums[] = requestReadIntInputs(kbScan);
 
       if (inputNums == null || inputNums.length == 0) {
          System.err.println("No input numbers stored.");
          return;
       }
 
-      System.out.print(Arrays.toString(inputNums));
       // Generate report
       String report = numberReport(inputNums);
      
       // Print to stdout and file
-      writeToFile(kbScan, report);
+      requestWriteFile(kbScan, report);
       System.out.println(report);
    }
 
-   private static int countIntInputs(Scanner fileScanner) {
-      int numCount = 0;
-      while (fileScanner.hasNextInt()) {
-         int n = fileScanner.nextInt();
-         ++numCount;
-      }
-      return numCount;
-   }
-
-   private static int[] readIntInputs(Scanner userScanner) 
+   // INPUT AND OUTPUT
+   /**
+    * Ask the user for the name of an input file and read a series of int
+    * inputs from that file.
+    * If the given file is not found, ask for another name until a good one
+    * is given.
+    * To create the array we have to first count the number of int values
+    * readable from the file.
+    *
+    * @param userScanner Scanner to read values from the user 
+    *       (e.g., from System.in)
+    * @return Array of integers read from file
+    * @throws FileNotFoundException
+    */
+   private static int[] requestReadIntInputs(Scanner userScanner) 
          throws FileNotFoundException {
 
       int[] inputNums = {};
-      Scanner fileScanner = null;
+      Scanner fileReader = null;
 
-      while (fileScanner == null) {
+      while (fileReader == null) {
          System.out.print("Enter the name of the input file: ");
          String infileName = userScanner.nextLine();
 
+         Scanner fileCounter = null;
+         
          try {
             File infile = new File(infileName);
-            fileScanner = new Scanner(infile);
+            fileCounter = new Scanner(infile);
+            fileReader = new Scanner(infile);
 
-            int numCount = countIntInputs(fileScanner);
+            // Just count int values in file
+            int numCount = 0;
+            while (fileCounter.hasNextInt()) {
+               fileCounter.nextInt();
+               ++numCount;
+            }
+
+            // Now populate the array
             inputNums = new int[numCount];
 
-            System.err.format("Found %d nums\n", numCount);
-
-            // TODO START not getting anything
-            for (int i = 0; fileScanner.hasNextInt(); ++i) {
-               System.err.println("Found one");
-               inputNums[i] = fileScanner.nextInt();
+            for (int i = 0; fileReader.hasNextInt(); ++i) {
+               inputNums[i] = fileReader.nextInt();
             }
          } 
          catch (FileNotFoundException e) {
             System.err.format("Could not open file %s for reading: %s\n", infileName, e.getMessage());
          }
          finally {
-            if (fileScanner != null) {
-               fileScanner.close();
+            if (fileCounter != null) {
+               fileCounter.close();
+            }
+            if (fileReader != null) {
+               fileReader.close();
             }
          }
       }
@@ -91,7 +103,14 @@ public class ReadNumbers {
       return inputNums;
    }
 
-   private static void writeToFile(Scanner userScanner, String text) {
+   /**
+    * Ask the user for the name of an output file, creating a new file if the
+    * given one doesn't exist, and write the given text to that file.
+    *
+    * @param userScanner Scanner to read user input
+    * @param text String to write
+    */
+   private static void requestWriteFile(Scanner userScanner, String text) {
 
       PrintWriter writer = null;
 
@@ -122,22 +141,31 @@ public class ReadNumbers {
       }
    }
 
-   private static int maximum(int[] nums) {
+   // GENERATE A REPORT 
+   /**
+    * Return a two-element array containing the minimum and maximum values in
+    * an array of integers.
+    *
+    * @param nums Array of integers
+    * @return Minimum and maximum in two-element array
+    */
+   private static int[] minMax(int[] nums) {
+      int min = nums[0];
       int max = nums[0];
       for (int num: nums) {
+         min = Math.min(num, min);
          max = Math.max(num, max);
       }
-      return max;
+      int[] minMax = { min, max };
+      return minMax;
    }
 
-   private static int minimum(int[] nums) {
-      int min = nums[0];
-      for (int num: nums) {
-         min = Math.min(num, min);
-      }
-      return min;
-   }
-
+   /**
+    * Calculate the average (mean) of an array of integers.
+    *
+    * @param nums Array of integers
+    * @return Double value of average
+    */
    private static double average(int[] nums) {
       int sum = 0;
       for (int num: nums) {
@@ -146,6 +174,12 @@ public class ReadNumbers {
       return sum / nums.length;
    }
 
+   /**
+    * Calculate the standard deviation of an array of integers.
+    *
+    * @param nums Array of integers
+    * @return Double value of standard deviation
+    */
    private static double stdDeviation(int[] nums) {
       double avg = average(nums);
       double numerator = 0;
@@ -155,9 +189,15 @@ public class ReadNumbers {
       return Math.sqrt(numerator / nums.length);
    }
 
+   /**
+    * Generate a report showing length, minimum, maximum, average, and
+    * standard deviation of an array of integers.
+    *
+    * @param nums Array of integers
+    * @return String with report on the data
+    */
    private static String numberReport(int[] nums) {
-      int max = maximum(nums);
-      int min = minimum(nums);
+      int[] minMax = minMax(nums);
       double average = average(nums);
       double stdDeviation = stdDeviation(nums);
 
@@ -167,7 +207,11 @@ public class ReadNumbers {
             "     Minimum value = %d\n" + 
             "     Average value = %.2f\n" +
             "     Standard Deviation = %.2f",
-            nums.length, max, min, average, stdDeviation);
+            nums.length, 
+            minMax[1],
+            minMax[0],
+            average, 
+            stdDeviation);
 
       return report;
    }
