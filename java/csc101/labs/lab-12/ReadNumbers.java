@@ -115,7 +115,7 @@ public class ReadNumbers {
       PrintWriter writer = null;
 
       while (writer == null) {
-         System.out.print("Enter the name of an output file in the current directory: ");
+         System.out.print("Enter the name of an output file: ");
          String outfileName = userScanner.nextLine();
 
          try {
