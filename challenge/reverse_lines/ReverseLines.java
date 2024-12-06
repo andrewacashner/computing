@@ -15,21 +15,26 @@ public class ReverseLines {
         String infileName = args[0];
         String outfileName = args[1];
 
+        Path infile, outfile;
         try {
-            Path infile = Paths.get(infileName);
-            Path outfile = Paths.get(outfileName);
-           
-            Stream<String> lines = Files.lines(infile);
+            infile = Path.of(infileName);
+            outfile = Path.of(outfileName);
+            readWriteReversed(infile, outfile);
+        }
+        catch (InvalidPathException e) {
+            System.err.println(e);
+        }
+    }
 
-            // NB: In Java 21, you could do reverseLines.reversed();
+    // NB: In Java 21, you could do reverseLines.reversed();
+    private static void readWriteReversed(Path infile, Path outfile) {
+        try (Stream<String> lines = Files.lines(infile);) {
             List<String> reverseLines = lines.collect(Collectors.toList()); 
             Collections.reverse(reverseLines); 
-
             Files.write(outfile, reverseLines);
         }
-        catch (InvalidPathException | IOException e) {
-            System.err.println(e.getMessage());
+        catch (IOException e) {
+            System.err.println(e);
         }
-
     }
 }
