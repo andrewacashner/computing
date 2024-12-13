@@ -1,9 +1,9 @@
-enum Pname {
+enum Pname implements PitchComponent {
     C, D, E, F, G, A, B;
 
     public static final Pname DEFAULT = Pname.C;
 
-    public int offset() {
+    public int getOffset() {
         return this.ordinal();
     }
 
@@ -15,7 +15,7 @@ enum Pname {
             return Pname.values()[absValue];
         } else {
             throw new IllegalArgumentException(String.format(
-                        "Pname value %d out of bounds\n", value));
+                        "Pname value %d out of bounds", value));
         }
     }
 
@@ -28,7 +28,7 @@ enum Pname {
         }
         catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(String.format(
-                        "Unrecognized pitch input \"%s\"\n  %s\n", 
+                        "Unrecognized pitch input \"%s\"\n  %s", 
                         pitchString, e.getMessage()));
         }
         return pname;

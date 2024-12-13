@@ -1,28 +1,29 @@
 public class Musarithmetic {
     public static void main(String[] args) {
-        if (args.length != 1) {
-            System.err.println("Usage: java Musarithmetic PITCHNAME");
+        if (args.length != 2) {
+            System.err.println("Usage: java Musarithmetic PITCH1 PITCH2");
             return;
         }
 
-        String pitchNameInput = args[0]; //toLowerCase();
+        String p1Input = args[0];
+        String p2Input = args[1];
 
         try {
-            Pitch p1 = new Pitch(pitchNameInput);
+            Pitch p1 = new Pitch(p1Input);
             System.out.println(p1);
+            System.out.println(p1.toLy());
 
-            Pitch p2 = new Pitch(Pname.of(1));
-            System.out.println(p2);
+            Pitch p2 = new Pitch(p2Input);
+            System.out.println(p1);
+            System.out.println(p2.toLy());
 
-            System.out.format("p2 - p1 = %d\n", 
-                    p2.valueDiatonic() - p1.valueDiatonic());
-
-            Pitch p3 = new Pitch();
-            System.out.println(p3.toLy());
+// TODO Need concept of intervals (doesn't make sense to subtract pitches)
+//            Pitch p3 = p1.diff(p2); 
+//            System.out.format("%d - %d = %s\n", p1, p2, p3);
         } 
         catch (IllegalArgumentException e) {
-            System.err.format("Could not create pitch from input \"%s\"\n"
-                    + "  %s\n", pitchNameInput, e.getMessage());
+            System.err.format("Could not create pitch from input \"%s %s\"\n"
+                    + "  %s\n", p1Input, p2Input, e.getMessage());
 
         }
     }
