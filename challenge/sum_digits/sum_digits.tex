@@ -1,0 +1,14 @@
+% must use pdftex (engine with e-tex extensions)
+% \nonstopmode
+\newcount\sum
+\newcount\digit
+\loop
+    \advance\sum by \numexpr 5 * (9 + 2 * \digit) \relax
+    \advance\digit by 1
+    \ifnum\digit < 10
+\repeat
+\advance\sum by 1
+% \showthe\sum
+\the\sum
+\bye
+    
