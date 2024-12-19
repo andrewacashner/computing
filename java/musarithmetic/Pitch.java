@@ -51,13 +51,17 @@ class Pitch {
                  .collect(Collectors.joining());
     }
 
+    public static int getChromaticOffset(int diatonicOffset) {
+        return Pitch.chromaticOffsets[diatonicOffset];
+    }
+
     public int diatonicValue() {
         return this.pname.getOffset();
     }
 
     public int chromaticValue() {
         int diatonicOffset = this.diatonicValue();
-        int chromaticOffset = Pitch.chromaticOffsets[diatonicOffset];
+        int chromaticOffset = Pitch.getChromaticOffset(diatonicOffset);
         int adjustment = this.accid.getAdjustment();
         int adjustedChromaticOffset = chromaticOffset + adjustment;
         if (adjustedChromaticOffset < 0) {
@@ -88,18 +92,24 @@ class Pitch {
         return this.chromaticOctaveValue() - other.chromaticOctaveValue();
     }
 
-    // TODO Need concept of intervals (doesn't make sense to subtract pitches)
-    public Pitch diff(Pitch other) {
-        int diff7 = this.diffDiatonic(other);
-        Octave octave = new Octave(diff7 / 7);
-        
-        int diatonicBase = Math.abs(diff7) % 7;
-        Pname pname = Pname.of(diatonicBase);
-        
-        int diff12 = this.diffChromatic(other);
-        int chromaticBase = Math.abs(diff12) % 12;
-        int adjustment = chromaticBase - diatonicBase;
+    // - add diatonic value of pitch and interval to get base note name
+    // - add chromatic value of pitch and interval to get enharmonic
+    //      chromatic pitch
+    // - subtract chromatic value of new pitch from diatonic value to get
+    //      accidental adjustment
+    public Pitch inc(Interval interval) {
+        int diatonicTarget = this.diatonicOctaveValue() 
+                                + interval.getDegree();
+
+        int chromaticTarget = this.chromaticOctaveValue() 
+                                + interval.getChromaticOffset();
+
+        Pname pname = Pname.of(diatonicTarget % 7);
+
+        int adjustment = chromaticTarget - diatonicTarget;
         Accid accid = Accid.of(adjustment);
+
+        Octave octave = new Octave(diatonicTarget / 7);
 
         return new Pitch(pname, accid, octave);
     }
