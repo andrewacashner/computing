@@ -34,6 +34,10 @@ enum Pname implements PitchComponent {
         return pname;
     }
 
+    public int getChromaticOffset() {
+        return Pitch.getChromaticOffset(this.ordinal());
+    }
+
     public String toLy() {
         return this.toString().toLowerCase();
     }

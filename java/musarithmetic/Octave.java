@@ -11,11 +11,11 @@ class Octave implements PitchComponent {
         return this.octave;
     }
 
-    public int diatonicOffset() {
+    public int getDiatonicOffset() {
         return this.octave * 7;
     }
 
-    public int chromaticOffset() {
+    public int getChromaticOffset() {
         return this.octave * 12;
     }
 

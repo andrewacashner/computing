@@ -52,44 +52,41 @@ class Pitch {
     }
 
     public static int getChromaticOffset(int diatonicOffset) {
-        return Pitch.chromaticOffsets[diatonicOffset];
+        int base = Math.abs(diatonicOffset) % 7;
+        return Pitch.chromaticOffsets[base];
     }
 
-    public int diatonicValue() {
+    public int getDiatonicValue() {
         return this.pname.getOffset();
     }
 
-    public int chromaticValue() {
-        int diatonicOffset = this.diatonicValue();
+    public int getChromaticValue() {
+        int diatonicOffset = this.getDiatonicValue();
         int chromaticOffset = Pitch.getChromaticOffset(diatonicOffset);
         int adjustment = this.accid.getAdjustment();
         int adjustedChromaticOffset = chromaticOffset + adjustment;
         if (adjustedChromaticOffset < 0) {
-            System.err.format("adjusting: offset %d, adjustment %d\n",
-                    chromaticOffset, adjustment);
             adjustedChromaticOffset += 12;
         }
         int wrappedChromaticOffset = adjustedChromaticOffset % 12;
 
-        System.err.format("diatonic offset %d, chromatic offset %d, adjusted chromatic offset %d, wrapped chromatic offset %d\n", diatonicOffset, chromaticOffset, adjustedChromaticOffset, wrappedChromaticOffset);
-
         return wrappedChromaticOffset;
     }
 
-    public int diatonicOctaveValue() {
-        return this.octave.diatonicOffset() + this.diatonicValue();
+    public int getDiatonicOctaveValue() {
+        return this.octave.getDiatonicOffset() + this.getDiatonicValue();
     }
 
-    public int chromaticOctaveValue() {
-        return this.octave.chromaticOffset() + this.chromaticValue();
+    public int getChromaticOctaveValue() {
+        return this.octave.getChromaticOffset() + this.getChromaticValue();
     }
 
     public int diffDiatonic(Pitch other) {
-        return this.diatonicValue() - other.diatonicValue();
+        return this.getDiatonicValue() - other.getDiatonicValue();
     }
 
     public int diffChromatic(Pitch other) {
-        return this.chromaticOctaveValue() - other.chromaticOctaveValue();
+        return this.getChromaticOctaveValue() - other.getChromaticOctaveValue();
     }
 
     // - add diatonic value of pitch and interval to get base note name
@@ -98,15 +95,17 @@ class Pitch {
     // - subtract chromatic value of new pitch from diatonic value to get
     //      accidental adjustment
     public Pitch inc(Interval interval) {
-        int diatonicTarget = this.diatonicOctaveValue() 
+        int diatonicTarget = this.getDiatonicOctaveValue() 
                                 + interval.getDegree();
 
-        int chromaticTarget = this.chromaticOctaveValue() 
+        int chromaticTarget = this.getChromaticOctaveValue() 
                                 + interval.getChromaticOffset();
 
         Pname pname = Pname.of(diatonicTarget % 7);
 
-        int adjustment = chromaticTarget - diatonicTarget;
+        int adjustment = (chromaticTarget % 12) - pname.getChromaticOffset();
+
+//        System.err.format("chromatic Target %% 12 = %d, diatonic base offset = %d, adjustment = %d\n", chromaticTarget % 12, pname.getChromaticOffset(), adjustment);
         Accid accid = Accid.of(adjustment);
 
         Octave octave = new Octave(diatonicTarget / 7);
