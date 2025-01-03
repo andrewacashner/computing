@@ -1,3 +1,5 @@
+package com.andrewcashner.musarithmetic;
+
 public class Musarithmetic {
     public static void main(String[] args) {
         if (args.length != 2) {
@@ -10,8 +12,8 @@ public class Musarithmetic {
         String intervalInput = args[1];
 
         try {
-            Pitch p1 = new Pitch(pitchInput);
-            Interval interval = new Interval(intervalInput);
+            Pitch p1 = Pitch.of(pitchInput);
+            Interval interval = Interval.of(intervalInput);
 
             Pitch p2 = p1.inc(interval); 
 

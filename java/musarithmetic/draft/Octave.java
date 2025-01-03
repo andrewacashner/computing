@@ -1,3 +1,5 @@
+package com.andrewcashner.musarithmetic;
+
 class Octave implements PitchComponent {
     private int octave;
 
@@ -11,17 +13,22 @@ class Octave implements PitchComponent {
         return this.octave;
     }
 
-    public int getDiatonicOffset() {
+    public int diatonicOffset() {
         return this.octave * 7;
     }
 
-    public int getChromaticOffset() {
+    public int chromaticOffset() {
         return this.octave * 12;
     }
 
+    public static Octave of(int octave) {
+        return new Octave(octave);
+    }
+
     public static Octave of(String input) throws IllegalArgumentException {
-        int value;
         Octave newOct;
+        int value;
+
         if (input.isEmpty()) {
             newOct = Octave.DEFAULT;
         } else {

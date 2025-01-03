@@ -1,7 +1,11 @@
-import java.util.stream.*;
-import java.util.List;
+package com.andrewcashner.musarithmetic;
 
-enum Accid implements PitchComponent {
+import java.util.Arrays;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.function.Consumer;
+
+enum Accid {
     DBL_FLAT    ("bb",  "𝄪",   "eses",  -2),
     FLAT        ("b",   "♭",   "es",    -1),
     NATURAL     ("",    "",    "",       0),
@@ -15,6 +19,20 @@ enum Accid implements PitchComponent {
 
     public static final Accid DEFAULT = Accid.NATURAL;
 
+    private static final Map<String, Accid> lookupByInput
+        = new HashMap<String, Accid>();
+
+    private static final Map<Integer, Accid> lookupByAdjustment
+        = new HashMap<Integer , Accid>();
+
+    static {
+        Arrays.stream(Accid.values())
+            .forEach(a -> {
+                    lookupByInput.put(a.getInput(), a);
+                    lookupByAdjustment.put(a.getAdjustment(), a);
+            });
+    }
+
     private Accid(String input, String outputUnicode, String outputLy,
             int adjustment) {
 
@@ -25,41 +43,32 @@ enum Accid implements PitchComponent {
     }
 
     public static Accid of(int adjustment) throws IllegalArgumentException {
-        List<Accid> matches = 
-            List.of(Accid.values()).stream()
-            .filter(acc -> acc.adjustment == adjustment)
-            .collect(Collectors.toList());
-       
-        Accid match;
-        if (matches.size() == 1) {
-            match = matches.get(0);
-        } else {
+        Accid match = Accid.lookupByAdjustment.get(adjustment);
+        if (match == null) {
             throw new IllegalArgumentException(String.format(
                         "Invalid accidental value %d", adjustment));
         }
         return match;
-
     }
 
     public static Accid of(String input) throws IllegalArgumentException {
-        List<Accid> matches = List.of(Accid.values()).stream()
-                                   .filter(acc -> acc.input.equals(input))
-                                   .collect(Collectors.toList());
-        Accid match;
-        if (matches.size() == 1) {
-            match = matches.get(0);
-        } else {
+        Accid match = Accid.lookupByInput.get(input); 
+        if (match == null) {
             throw new IllegalArgumentException(String.format(
                         "Unrecognized accidental input %s", input));
         }
         return match;
     }
 
-    public String toString() {
+    private String getInput() {
+        return this.input;
+    }
+
+    public String getOutputUnicode() {
         return this.outputUnicode;
     }
 
-    public String toLy() {
+    public String getOutputLy() {
         return this.outputLy;
     }
 
@@ -67,4 +76,11 @@ enum Accid implements PitchComponent {
         return this.adjustment;
     }
 
+    public String toString() {
+        return this.getOutputUnicode();
+    }
+
+    public String toLy() {
+        return this.getOutputLy();
+    }
 }

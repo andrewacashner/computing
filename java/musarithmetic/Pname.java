@@ -1,4 +1,6 @@
-enum Pname implements PitchComponent {
+package com.andrewcashner.musarithmetic;
+
+enum Pname {
     C, D, E, F, G, A, B;
 
     public static final Pname DEFAULT = Pname.C;
@@ -34,8 +36,8 @@ enum Pname implements PitchComponent {
         return pname;
     }
 
-    public int getChromaticOffset() {
-        return Pitch.getChromaticOffset(this.ordinal());
+    public int chromaticOffset() {
+        return Pitch.chromaticOffset(this.ordinal());
     }
 
     public String toLy() {
