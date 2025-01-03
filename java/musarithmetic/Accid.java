@@ -6,11 +6,11 @@ import java.util.HashMap;
 import java.util.function.Consumer;
 
 enum Accid {
-    DBL_FLAT    ("bb",  "𝄪",   "eses",  -2),
+    DBL_FLAT    ("bb",  "𝄫",   "eses",  -2),
     FLAT        ("b",   "♭",   "es",    -1),
     NATURAL     ("",    "",    "",       0),
     SHARP       ("#",   "♯",   "is",     1),
-    DBL_SHARP   ("##",  "𝄫",   "isis",   2);
+    DBL_SHARP   ("##",  "𝄪",   "isis",   2);
 
     private String input;
     private String outputUnicode;

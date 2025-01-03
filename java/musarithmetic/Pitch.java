@@ -8,9 +8,9 @@ class Pitch {
     private int octave;
 
     public Pitch(Pname pname, Accid accid, int octave) {
-        setPname(pname);
-        setAccid(accid);
-        setOctave(octave);
+        this.pname = pname;
+        this.accid = accid;
+        this.octave = octave;
     }
 
     public Pitch() {
@@ -55,18 +55,6 @@ class Pitch {
         return this.octave;
     }
 
-    public void setPname(Pname pname) {
-        this.pname = pname;
-    }
-
-    public void setAccid(Accid accid) {
-        this.accid = accid;
-    }
-
-    public void setOctave(int octave) {
-        this.octave = octave;
-    }
-
     private static int validOctave(String input) 
             throws IllegalArgumentException {
 
@@ -76,8 +64,13 @@ class Pitch {
         } else {
             try {
                 int value = Integer.parseInt(input);
-                octave = value;
-            } catch (NumberFormatException e) {
+                if (value >= 0 && value < 10) {
+                    octave = value;
+                } else {
+                    throw new IllegalArgumentException("Octave out of range");
+                }
+            } 
+            catch (NumberFormatException e) {
                 throw new IllegalArgumentException(String.format(
                             "Could not create octave from input %s\n  %s",
                             input, e.getMessage()));
