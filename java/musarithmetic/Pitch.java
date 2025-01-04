@@ -2,26 +2,23 @@ package com.andrewcashner.musarithmetic;
 
 import java.util.regex.*;
 
-class Pitch {
-    private Pname pname;
-    private Accid accid;
-    private int octave;
-
-    public Pitch(Pname pname, Accid accid, int octave) {
-        this.pname = pname;
-        this.accid = accid;
-        this.octave = octave;
-    }
+record Pitch(Pname pname, Accid accid, Octave octave) {
 
     public Pitch() {
-        this(Pname.DEFAULT, Accid.DEFAULT, Pitch.OCTAVE_DEFAULT);
+        this(Pname.DEFAULT, Accid.DEFAULT, Octave.DEFAULT);
+    }
+
+    private static Pitch of(Pname pname, Accid accid, Octave octave) {
+        return new Pitch(pname, accid, octave);
     }
 
     private static Pitch of(String pnameStr, String accidStr, 
-            String octaveStr) throws IllegalArgumentException {
+                String octaveStr) 
+            throws IllegalArgumentException {
+
         Pname pname = Pname.of(pnameStr);
         Accid accid = Accid.of(accidStr);
-        int octave = Pitch.validOctave(octaveStr);
+        Octave octave = Octave.of(octaveStr);
         return new Pitch(pname, accid, octave);
     }
 
@@ -43,70 +40,18 @@ class Pitch {
         return pitch;
     }
 
-    private Pname getPname() {
-        return this.pname;
-    }
-
-    private Accid getAccid() {
-        return this.accid;
-    }
-
-    private int getOctave() {
-        return this.octave;
-    }
-
-    private static int validOctave(String input) 
-            throws IllegalArgumentException {
-
-        int octave;
-        if (input.isEmpty()) {
-            octave = Pitch.OCTAVE_DEFAULT;
-        } else {
-            try {
-                int value = Integer.parseInt(input);
-                if (value >= 0 && value < 10) {
-                    octave = value;
-                } else {
-                    throw new IllegalArgumentException("Octave out of range");
-                }
-            } 
-            catch (NumberFormatException e) {
-                throw new IllegalArgumentException(String.format(
-                            "Could not create octave from input %s\n  %s",
-                            input, e.getMessage()));
-            }
-        }
-
-        return octave;
-    }
-
-    private static final int OCTAVE_DEFAULT = 4;
-
-    private static String octaveToLy(int octave) {
-        String marker = octave < 3 ? "," : "'";
-        return marker.repeat(Math.abs(octave - 3));
-    }
-
-    private int octaveOffset7() {
-        return this.getOctave() * 7;
-    }
-
-    private int octaveOffset12() {
-        return this.getOctave() * 12;
-    }
-
     public String toString() {
-        return String.format("%s%s%d",
-                this.pname,
-                this.accid,
-                this.octave);
+        return String.format("%s%s%s",
+                this.pname(),
+                this.accid(),
+                this.octave());
     }
 
     public String toLy() {
         return String.format("%s%s%s",
-                this.getPname().toLy() +
-                this.getAccid().toLy() +
-                Pitch.octaveToLy(this.getOctave()));
+                this.pname().toLy() +
+                this.accid().toLy() +
+                this.octave().toLy());
     }
 
     private final static int[] chromaticOffsets = {
@@ -118,14 +63,15 @@ class Pitch {
         return Pitch.chromaticOffsets[base];
     }
 
+    // TODO 'get' prefix or not?
     public int diatonicValue() {
-        return this.pname.getOffset();
+        return this.pname().getOffset();
     }
 
     public int chromaticValue() {
         int diatonicOffset = this.diatonicValue();
         int chromaticOffset = Pitch.chromaticOffset(diatonicOffset);
-        int adjustment = this.accid.getAdjustment();
+        int adjustment = this.accid().getAdjustment();
         int adjustedChromaticOffset = chromaticOffset + adjustment;
         if (adjustedChromaticOffset < 0) {
             adjustedChromaticOffset += 12;
@@ -136,11 +82,11 @@ class Pitch {
     }
 
     public int diatonicOctaveValue() {
-        return this.getOctave() * 7 + this.diatonicValue();
+        return this.octave().offset7() + this.diatonicValue();
     }
 
     public int chromaticOctaveValue() {
-        return this.getOctave() * 12 + this.chromaticValue();
+        return this.octave().offset12() + this.chromaticValue();
     }
 
     public int diffDiatonic(Pitch other) {
@@ -158,7 +104,7 @@ class Pitch {
     //      accidental adjustment
     public Pitch inc(Interval interval) {
         int diatonicTarget = this.diatonicOctaveValue() 
-                                + interval.getDegree();
+                                + interval.degree();
 
         int chromaticTarget = this.chromaticOctaveValue() 
                                 + interval.chromaticOffset();
@@ -168,8 +114,8 @@ class Pitch {
         int adjustment = (chromaticTarget % 12) - pname.chromaticOffset();
         Accid accid = Accid.of(adjustment);
        
-        int octave = diatonicTarget / 7;
+        Octave octave = Octave.of(diatonicTarget / 7);
 
-        return new Pitch(pname, accid, octave);
+        return Pitch.of(pname, accid, octave);
     }
 }

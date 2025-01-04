@@ -1,10 +1,11 @@
 package com.andrewcashner.musarithmetic;
 
-// import java.util.List;
-// import java.util.stream.*;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
+
+// TODO diminished and augmented are different for imperfect and perfect
+// intervals!
 
 enum Quality { 
     MINOR       (-1, "m"), 

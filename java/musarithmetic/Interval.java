@@ -2,14 +2,8 @@ package com.andrewcashner.musarithmetic;
 
 import java.util.regex.*;
 
-public class Interval {
-    private Quality quality;
-    private int degree; // can be negative
-
-    public Interval(Quality quality, int degree) {
-        this.quality = quality;
-        this.degree = degree;
-    }
+record Interval(Quality quality, int degree) {
+    // NB degree is zero-indexed and can be negative
 
     public static Interval of(String inputStr) 
             throws IllegalArgumentException {
@@ -36,22 +30,14 @@ public class Interval {
         return interval;
     }
 
-    public int getDegree() {
-        return this.degree;
-    }
-
-    public Quality getQuality() {
-        return this.quality;
-    }
-
-    public String getSign() {
-        return (this.degree > 0) ? "+" : "-";
+    public String sign() {
+        return (this.degree() > 0) ? "+" : "-";
     }
 
     public int chromaticOffset() {
-        int offset = Pitch.chromaticOffset(this.getDegree())
-                        + this.getQuality().getAdjustment();
-        if (this.getDegree() < 0) {
+        int offset = Pitch.chromaticOffset(this.degree())
+                        + this.quality().getAdjustment();
+        if (this.degree() < 0) {
             offset *= -1;
         }
         return offset;
@@ -59,7 +45,7 @@ public class Interval {
 
     // Return to 1-indexed representation for display
     public String toString() {
-        return String.format("%s%d", this.getQuality(), 
-                Math.abs(this.getDegree()) + 1);
+        return String.format("%s%d", this.quality(), 
+                Math.abs(this.degree()) + 1);
     }
 }

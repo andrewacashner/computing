@@ -18,7 +18,7 @@ public class Musarithmetic {
             Pitch p2 = p1.inc(interval); 
 
             System.out.format("%s %s %s = %s\n", 
-                    p1, interval.getSign(), interval, p2);
+                    p1, interval.sign(), interval, p2);
         } 
         catch (IllegalArgumentException e) {
             System.err.format(
