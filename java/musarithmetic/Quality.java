@@ -1,54 +1,48 @@
 package com.andrewcashner.musarithmetic;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Arrays;
 
-// TODO diminished and augmented are different for imperfect and perfect
-// intervals!
+// Diminished offset values are different for imperfect and perfect
+// intervals; that code is in Interval.java
 
 enum Quality { 
-    MINOR       (-1, "m"), 
-    DIMINISHED  (-1, "d"), 
-    MAJOR       ( 0, "M"), 
-    PERFECT     ( 0, "P"), 
-    AUGMENTED   ( 1, "A");
+    DIMINISHED ("d"),
+    PERFECT    ("P"),
+    AUGMENTED  ("A"),
+    MINOR      ("m"),
+    MAJOR      ("M");
 
-    private int adjustment;
-    private String representation;
+    String symbol;
 
-    private static final Map<String, Quality> lookup 
+    private Quality(String symbol) {
+        this.symbol = symbol;
+    }
+
+    private String symbol() {
+        return this.symbol;
+    }
+
+    private static final Map<String, Quality> lookup
         = new HashMap<String, Quality>();
 
     static {
         Arrays.stream(Quality.values())
-            .forEach(q -> lookup.put(q.representation(), q));
-    }
-
-    private Quality(int adjustment, String representation) {
-        this.adjustment = adjustment;
-        this.representation = representation;
+            .forEach(q -> lookup.put(q.symbol(), q));
     }
 
     public static Quality of(String input) throws IllegalArgumentException {
-        Quality match = Quality.lookup.get(input);
-        if (match == null) {
+        Quality match = lookup.get(input);
+        if (input == null) {
             throw new IllegalArgumentException(String.format(
                         "Unrecognized quality input %s", input));
         }
         return match;
     }
 
-    public int adjustment() {
-        return this.adjustment;
-    }
-
-    private String representation() {
-        return this.representation;
-    }
-
     public String toString() {
-        return this.representation();
+        return this.symbol;
     }
 } 
 

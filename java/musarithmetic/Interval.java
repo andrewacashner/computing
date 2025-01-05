@@ -2,8 +2,58 @@ package com.andrewcashner.musarithmetic;
 
 import java.util.regex.*;
 
+/*
+ * Interval Adjustments
+        perfect
+            diminished -1
+            perfect 0
+            augmented 1
+        imperfect
+            diminished -2
+            minor -1
+            major 0
+            augmented 1
+ */   
+
 record Interval(Quality quality, int degree) {
-    // NB degree is zero-indexed and can be negative
+    // degree is zero-indexed and can be negative
+
+    public Interval {
+        if (!Interval.isValid(quality, degree)) {
+            throw new IllegalArgumentException("Illegal interval degree-quality combination");
+        }
+    }
+
+    private static enum QualityCategory { PERFECT, IMPERFECT };
+    
+    private static QualityCategory category(int degree) {
+        return switch (Math.abs(degree) % 7) {
+            case 0, 3, 4 -> QualityCategory.PERFECT;
+            default      -> QualityCategory.IMPERFECT;
+        };
+    }
+
+    private static boolean isValidImperfect(Quality quality) {
+        return switch (quality) {
+            case DIMINISHED, MINOR, MAJOR, AUGMENTED -> true;
+            default -> false;
+        };
+    }
+
+    private static boolean isValidPerfect(Quality quality) {
+        return switch (quality) {
+            case DIMINISHED, PERFECT, AUGMENTED -> true;
+            default -> false;
+        };
+    }
+
+    private static boolean isValid(Quality quality, int degree) {
+        QualityCategory category = Interval.category(degree);
+        return switch (category) {
+            case IMPERFECT -> isValidImperfect(quality);
+            case PERFECT   -> isValidPerfect(quality);
+        };
+    }
 
     public static Interval of(String inputStr) 
             throws IllegalArgumentException {
@@ -20,7 +70,6 @@ record Interval(Quality quality, int degree) {
             
             if (tokens.group(1).equals("-")) {
                 degree *= -1;
-                System.err.println("Negative interval");
             }
             interval = new Interval(quality, degree);
         } else {
@@ -35,11 +84,21 @@ record Interval(Quality quality, int degree) {
     }
 
     public int offset12() {
-        int offset = Pitch.offset12(this.degree())
-                        + this.quality().adjustment();
+        QualityCategory category = Interval.category(this.degree());
+
+        int adjustment = switch (this.quality()) {
+            case DIMINISHED -> 
+                (category == QualityCategory.IMPERFECT) ? -2 : -1;
+            case MINOR          -> -1;
+            case PERFECT, MAJOR ->  0;
+            case AUGMENTED      ->  1;
+        };
+
+        int offset = Pitch.offset12(this.degree()) + adjustment;
         if (this.degree() < 0) {
             offset *= -1;
         }
+
         return offset;
     }
 
