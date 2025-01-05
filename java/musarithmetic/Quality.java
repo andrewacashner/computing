@@ -22,7 +22,7 @@ enum Quality {
 
     static {
         Arrays.stream(Quality.values())
-            .forEach(q -> lookup.put(q.getRepresentation(), q));
+            .forEach(q -> lookup.put(q.representation(), q));
     }
 
     private Quality(int adjustment, String representation) {
@@ -39,16 +39,16 @@ enum Quality {
         return match;
     }
 
-    public int getAdjustment() {
+    public int adjustment() {
         return this.adjustment;
     }
 
-    private String getRepresentation() {
+    private String representation() {
         return this.representation;
     }
 
     public String toString() {
-        return this.getRepresentation();
+        return this.representation();
     }
 } 
 

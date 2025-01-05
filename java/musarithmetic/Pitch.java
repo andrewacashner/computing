@@ -54,47 +54,46 @@ record Pitch(Pname pname, Accid accid, Octave octave) {
                 this.octave().toLy());
     }
 
-    private final static int[] chromaticOffsets = {
+    private final static int[] offsets12 = {
         0, 2, 4, 5, 7, 9, 11
     };
    
-    public static int chromaticOffset(int diatonicOffset) {
-        int base = Math.abs(diatonicOffset) % 7;
-        return Pitch.chromaticOffsets[base];
+    public static int offset12(int offset7) {
+        int base = Math.abs(offset7) % 7;
+        return Pitch.offsets12[base];
     }
 
-    // TODO 'get' prefix or not?
-    public int diatonicValue() {
-        return this.pname().getOffset();
+    public int value7() {
+        return this.pname().offset();
     }
 
-    public int chromaticValue() {
-        int diatonicOffset = this.diatonicValue();
-        int chromaticOffset = Pitch.chromaticOffset(diatonicOffset);
-        int adjustment = this.accid().getAdjustment();
-        int adjustedChromaticOffset = chromaticOffset + adjustment;
-        if (adjustedChromaticOffset < 0) {
-            adjustedChromaticOffset += 12;
+    public int value12() {
+        int offset7 = this.value7();
+        int offset12 = Pitch.offset12(offset7);
+        int adjustment = this.accid().adjustment();
+        int adjustedOffset12 = offset12 + adjustment;
+        if (adjustedOffset12 < 0) {
+            adjustedOffset12 += 12;
         }
-        int wrappedChromaticOffset = adjustedChromaticOffset % 12;
+        int wrappedOffset12 = adjustedOffset12 % 12;
 
-        return wrappedChromaticOffset;
+        return wrappedOffset12;
     }
 
-    public int diatonicOctaveValue() {
-        return this.octave().offset7() + this.diatonicValue();
+    public int octaveValue7() {
+        return this.octave().offset7() + this.value7();
     }
 
-    public int chromaticOctaveValue() {
-        return this.octave().offset12() + this.chromaticValue();
+    public int octaveValue12() {
+        return this.octave().offset12() + this.value12();
     }
 
-    public int diffDiatonic(Pitch other) {
-        return this.diatonicValue() - other.diatonicValue();
+    public static int diff7(Pitch first, Pitch second) {
+        return first.value7() - second.value7();
     }
 
-    public int diffChromatic(Pitch other) {
-        return this.chromaticOctaveValue() - other.chromaticOctaveValue();
+    public static int diff12(Pitch first, Pitch second) {
+        return first.octaveValue12() - second.octaveValue12();
     }
 
     // - add diatonic value of pitch and interval to get base note name
@@ -102,19 +101,16 @@ record Pitch(Pname pname, Accid accid, Octave octave) {
     //      chromatic pitch
     // - subtract chromatic value of new pitch from diatonic value to get
     //      accidental adjustment
-    public Pitch inc(Interval interval) {
-        int diatonicTarget = this.diatonicOctaveValue() 
-                                + interval.degree();
+    public static Pitch inc(Pitch pitch, Interval interval) {
+        int target7 = pitch.octaveValue7() + interval.degree();
+        int target12 = pitch.octaveValue12() + interval.offset12();
 
-        int chromaticTarget = this.chromaticOctaveValue() 
-                                + interval.chromaticOffset();
-
-        Pname pname = Pname.of(diatonicTarget % 7);
+        Pname pname = Pname.of(target7 % 7);
         
-        int adjustment = (chromaticTarget % 12) - pname.chromaticOffset();
+        int adjustment = (target12 % 12) - pname.offset12();
         Accid accid = Accid.of(adjustment);
        
-        Octave octave = Octave.of(diatonicTarget / 7);
+        Octave octave = Octave.of(target7 / 7);
 
         return Pitch.of(pname, accid, octave);
     }

@@ -5,7 +5,7 @@ enum Pname {
 
     public static final Pname DEFAULT = Pname.C;
 
-    public int getOffset() {
+    public int offset() {
         return this.ordinal();
     }
 
@@ -36,8 +36,8 @@ enum Pname {
         return pname;
     }
 
-    public int chromaticOffset() {
-        return Pitch.chromaticOffset(this.ordinal());
+    public int offset12() {
+        return Pitch.offset12(this.ordinal());
     }
 
     public String toLy() {

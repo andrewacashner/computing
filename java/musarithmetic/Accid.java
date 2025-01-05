@@ -28,8 +28,8 @@ enum Accid {
     static {
         Arrays.stream(Accid.values())
             .forEach(a -> {
-                    lookupByInput.put(a.getInput(), a);
-                    lookupByAdjustment.put(a.getAdjustment(), a);
+                    lookupByInput.put(a.input(), a);
+                    lookupByAdjustment.put(a.adjustment(), a);
             });
     }
 
@@ -60,27 +60,27 @@ enum Accid {
         return match;
     }
 
-    private String getInput() {
+    private String input() {
         return this.input;
     }
 
-    public String getOutputUnicode() {
+    public String outputUnicode() {
         return this.outputUnicode;
     }
 
-    public String getOutputLy() {
+    public String outputLy() {
         return this.outputLy;
     }
 
-    public int getAdjustment() {
+    public int adjustment() {
         return this.adjustment;
     }
 
     public String toString() {
-        return this.getOutputUnicode();
+        return this.outputUnicode();
     }
 
     public String toLy() {
-        return this.getOutputLy();
+        return this.outputLy();
     }
 }

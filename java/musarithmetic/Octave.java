@@ -39,6 +39,10 @@ record Octave(int octave) {
         return this.octave() * 12;
     }
 
+    public String toString() {
+        return Integer.toString(this.octave());
+    }
+
     public String toLy() {
         String marker = this.octave < 3 ? "," : "'";
         return marker.repeat(Math.abs(this.octave - 3));

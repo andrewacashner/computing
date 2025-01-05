@@ -34,9 +34,9 @@ record Interval(Quality quality, int degree) {
         return (this.degree() > 0) ? "+" : "-";
     }
 
-    public int chromaticOffset() {
-        int offset = Pitch.chromaticOffset(this.degree())
-                        + this.quality().getAdjustment();
+    public int offset12() {
+        int offset = Pitch.offset12(this.degree())
+                        + this.quality().adjustment();
         if (this.degree() < 0) {
             offset *= -1;
         }

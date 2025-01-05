@@ -15,7 +15,7 @@ public class Musarithmetic {
             Pitch p1 = Pitch.of(pitchInput);
             Interval interval = Interval.of(intervalInput);
 
-            Pitch p2 = p1.inc(interval); 
+            Pitch p2 = Pitch.inc(p1, interval); 
 
             System.out.format("%s %s %s = %s\n", 
                     p1, interval.sign(), interval, p2);
