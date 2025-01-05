@@ -1,8 +1,6 @@
 package com.andrewcashner.musarithmetic;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Arrays;
+import java.util.*;
 
 // Diminished offset values are different for imperfect and perfect
 // intervals; that code is in Interval.java
@@ -24,8 +22,7 @@ enum Quality {
         return this.symbol;
     }
 
-    private static final Map<String, Quality> lookup
-        = new HashMap<String, Quality>();
+    private static final Map<String, Quality> lookup = new HashMap<>();
 
     static {
         Arrays.stream(Quality.values())

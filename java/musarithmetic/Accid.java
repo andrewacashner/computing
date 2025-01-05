@@ -1,9 +1,6 @@
 package com.andrewcashner.musarithmetic;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.function.Consumer;
+import java.util.*;
 
 enum Accid {
     DBL_FLAT    ("bb",  "𝄫",   "eses",  -2),
@@ -19,11 +16,10 @@ enum Accid {
 
     public static final Accid DEFAULT = Accid.NATURAL;
 
-    private static final Map<String, Accid> lookupByInput
-        = new HashMap<String, Accid>();
+    private static final Map<String, Accid> lookupByInput = new HashMap<>();
 
     private static final Map<Integer, Accid> lookupByAdjustment
-        = new HashMap<Integer , Accid>();
+        = new HashMap<>();
 
     static {
         Arrays.stream(Accid.values())
