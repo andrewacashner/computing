@@ -1,6 +1,6 @@
 package com.andrewcashner.musarithmetic;
 
-record Octave(int octave) {
+record Octave(int octave) implements PitchComponent {
     public Octave {
         if (octave < 0 || octave > 10) {
             throw new IllegalArgumentException("Octave out of range");

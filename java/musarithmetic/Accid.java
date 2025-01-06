@@ -2,8 +2,8 @@ package com.andrewcashner.musarithmetic;
 
 import java.util.*;
 
-enum Accid {
-    TRI_FLAT    ("bbb", "𝄫♭",  "eseses", -3),
+enum Accid implements PitchComponent {
+    TRI_FLAT    ("bbb", "♭♭♭",  "eseses", -3),
     DBL_FLAT    ("bb",  "𝄫",   "eses",   -2),
     FLAT        ("b",   "♭",   "es",     -1),
     NATURAL     ("",    "",    "",        0),

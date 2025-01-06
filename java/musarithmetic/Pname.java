@@ -1,6 +1,6 @@
 package com.andrewcashner.musarithmetic;
 
-enum Pname {
+enum Pname implements PitchComponent {
     C, D, E, F, G, A, B;
 
     public static final Pname DEFAULT = Pname.C;

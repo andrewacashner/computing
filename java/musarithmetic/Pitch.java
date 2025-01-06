@@ -1,10 +1,11 @@
 package com.andrewcashner.musarithmetic;
 
 import java.util.regex.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 record Pitch(Pname pname, Accid accid, Octave octave) {
-
-    public Pitch() {
+public Pitch() {
         this(Pname.DEFAULT, Accid.DEFAULT, Octave.DEFAULT);
     }
 
@@ -40,47 +41,36 @@ record Pitch(Pname pname, Accid accid, Octave octave) {
         return pitch;
     }
 
+    private String formatFields(Pitch p, 
+                                Function<PitchComponent, String> fn) {
+
+        return Stream.of(p.pname(), p.accid(), p.octave())
+                .map(fn).collect(Collectors.joining());
+    }
+
     public String toString() {
-        return String.format("%s%s%s",
-                this.pname(),
-                this.accid(),
-                this.octave());
+        return formatFields(this, PitchComponent::toString);
     }
 
     public String toLy() {
-        return String.format("%s%s%s",
-                this.pname().toLy() +
-                this.accid().toLy() +
-                this.octave().toLy());
+        return formatFields(this, PitchComponent::toLy);
     }
 
-    private final static int[] offsets12 = {
-        0, 2, 4, 5, 7, 9, 11
-    };
-   
     public static int offset12(int offset7) {
+        final int[] offsets = { 0, 2, 4, 5, 7, 9, 11 };
         int base = Math.abs(offset7) % 7;
-        return Pitch.offsets12[base];
+        return offsets[base];
     }
 
     // smallest distance from zero
     // in base 12, 0 - 11 = 1, 11 - 0 = -1
-    private static int cycleDiff(int alpha, int beta, int base) {
-        int alphaMod = alpha % base;
-        int betaMod = beta % base;
-        int diff = alphaMod - betaMod;
-    
-        // 11 - 0 = 11 -> 11 - 12 = -1
-        // OR 11 - 0 -> 11 - (0 + 12) -> 11 - 12 = -1
-        //
-        // 0 - 11 = -11 -> -11 + 12 = 1
-        // OR 0 - 11 -> (0 + 12) - 11 -> 12 - 11 = 1
-        if (Math.abs(diff) > base / 2) {
-            int sign = (diff == 0) ? 1 : diff / diff;
-            diff -= base * sign;
-        }
-        
-        return diff;
+    private int cycleDiff(int n, int m, int base) {
+        int diff = n % base - m % base;
+   
+        Function<Integer, Integer> flip = 
+            (a) -> a + base * Math.negateExact(Integer.signum(a));
+
+        return (Math.abs(diff) > base / 2) ? flip.apply(diff) : diff;
     }
 
     private int value7() {
@@ -118,13 +108,10 @@ record Pitch(Pname pname, Accid accid, Octave octave) {
         int target12 = pitch.octaveValue12() + interval.offset12();
 
         Pname pname = Pname.of(target7 % 7);
-      
-        int adjustment = Pitch.cycleDiff(target12, pname.offset12(), 12);
-        
-        System.err.printf("target 12 %% 12 = %d, pname offset12 = %d, adjustment = %d\n", target12 % 12, pname.offset12(), adjustment);
-        
-        Accid accid = Accid.of(adjustment);
         Octave octave = Octave.of(target7 / 7);
+        
+        int adjustment = cycleDiff(target12, pname.offset12(), 12);
+        Accid accid = Accid.of(adjustment);
 
         return Pitch.of(pname, accid, octave);
     }
