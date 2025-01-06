@@ -5,6 +5,7 @@ import java.util.*;
 // Diminished offset values are different for imperfect and perfect
 // intervals; that code is in Interval.java
 
+// TODO what about double diminished?
 enum Quality { 
     DIMINISHED ("d"),
     PERFECT    ("P"),

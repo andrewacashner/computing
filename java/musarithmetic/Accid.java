@@ -3,11 +3,13 @@ package com.andrewcashner.musarithmetic;
 import java.util.*;
 
 enum Accid {
-    DBL_FLAT    ("bb",  "𝄫",   "eses",  -2),
-    FLAT        ("b",   "♭",   "es",    -1),
-    NATURAL     ("",    "",    "",       0),
-    SHARP       ("#",   "♯",   "is",     1),
-    DBL_SHARP   ("##",  "𝄪",   "isis",   2);
+    TRI_FLAT    ("bbb", "𝄫♭",  "eseses", -3),
+    DBL_FLAT    ("bb",  "𝄫",   "eses",   -2),
+    FLAT        ("b",   "♭",   "es",     -1),
+    NATURAL     ("",    "",    "",        0),
+    SHARP       ("#",   "♯",   "is",      1),
+    DBL_SHARP   ("##",  "𝄪",   "isis",    2),
+    TRI_SHARP   ("###", "♯♯♯", "isisis",  3);
 
     private String input;
     private String outputUnicode;

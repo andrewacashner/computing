@@ -55,28 +55,31 @@ record Interval(Quality quality, int degree) {
         };
     }
 
-    public static Interval of(String inputStr) 
+    public static Interval of(String inputStr, Sign sign)
             throws IllegalArgumentException {
 
         Interval interval;
-        Pattern syntax = Pattern.compile("([+-]??)([mMPdA])([0-9]*)");
+        Pattern syntax = Pattern.compile("([mMPdA])([0-9]*)");
         Matcher tokens = syntax.matcher(inputStr);
 
         if (tokens.matches()) {
-            Quality quality = Quality.of(tokens.group(2));
+            Quality quality = Quality.of(tokens.group(1));
 
-            // Adjust one-indexed interval notation to zero-indexed
-            int degree = Integer.parseInt(tokens.group(3)) - 1;
+            int degree = Integer.parseInt(tokens.group(2));
+            // Adjust one-indexed interval notation to zero-indexed and
+            // make negative if need be
+            degree = sign.apply(degree - 1);
             
-            if (tokens.group(1).equals("-")) {
-                degree *= -1;
-            }
             interval = new Interval(quality, degree);
         } else {
             throw new IllegalArgumentException(String.format(
-                        "Could not parse input %s", inputStr));
+                        "Could not parse input \"%s\"", inputStr));
         }
         return interval;
+    }
+    
+    public static Interval of(String inputStr) {
+        return Interval.of(inputStr, Sign.POSITIVE);
     }
 
     public String sign() {

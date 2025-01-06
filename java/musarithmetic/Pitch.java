@@ -35,7 +35,7 @@ record Pitch(Pname pname, Accid accid, Octave octave) {
                     tokens.group(3));
         } else {
             throw new IllegalArgumentException(String.format(
-                        "Could not parse input %s", inputStr));
+                        "Could not parse input \"%s\"", inputStr));
         }
         return pitch;
     }
@@ -63,11 +63,31 @@ record Pitch(Pname pname, Accid accid, Octave octave) {
         return Pitch.offsets12[base];
     }
 
-    public int value7() {
+    // smallest distance from zero
+    // in base 12, 0 - 11 = 1, 11 - 0 = -1
+    private static int cycleDiff(int alpha, int beta, int base) {
+        int alphaMod = alpha % base;
+        int betaMod = beta % base;
+        int diff = alphaMod - betaMod;
+    
+        // 11 - 0 = 11 -> 11 - 12 = -1
+        // OR 11 - 0 -> 11 - (0 + 12) -> 11 - 12 = -1
+        //
+        // 0 - 11 = -11 -> -11 + 12 = 1
+        // OR 0 - 11 -> (0 + 12) - 11 -> 12 - 11 = 1
+        if (Math.abs(diff) > base / 2) {
+            int sign = (diff == 0) ? 1 : diff / diff;
+            diff -= base * sign;
+        }
+        
+        return diff;
+    }
+
+    private int value7() {
         return this.pname().offset();
     }
 
-    public int value12() {
+    private int value12() {
         int offset7 = this.value7();
         int offset12 = Pitch.offset12(offset7);
         int adjustment = this.accid().adjustment();
@@ -80,20 +100,12 @@ record Pitch(Pname pname, Accid accid, Octave octave) {
         return wrappedOffset12;
     }
 
-    public int octaveValue7() {
+    private int octaveValue7() {
         return this.octave().offset7() + this.value7();
     }
 
-    public int octaveValue12() {
+    private int octaveValue12() {
         return this.octave().offset12() + this.value12();
-    }
-
-    public static int diff7(Pitch first, Pitch second) {
-        return first.value7() - second.value7();
-    }
-
-    public static int diff12(Pitch first, Pitch second) {
-        return first.octaveValue12() - second.octaveValue12();
     }
 
     // - add diatonic value of pitch and interval to get base note name
@@ -106,10 +118,12 @@ record Pitch(Pname pname, Accid accid, Octave octave) {
         int target12 = pitch.octaveValue12() + interval.offset12();
 
         Pname pname = Pname.of(target7 % 7);
+      
+        int adjustment = Pitch.cycleDiff(target12, pname.offset12(), 12);
         
-        int adjustment = (target12 % 12) - pname.offset12();
+        System.err.printf("target 12 %% 12 = %d, pname offset12 = %d, adjustment = %d\n", target12 % 12, pname.offset12(), adjustment);
+        
         Accid accid = Accid.of(adjustment);
-       
         Octave octave = Octave.of(target7 / 7);
 
         return Pitch.of(pname, accid, octave);
