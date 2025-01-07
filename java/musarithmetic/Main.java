@@ -1,6 +1,17 @@
 package com.andrewcashner.musarithmetic;
 
-public class Musarithmetic {
+/**
+ * Evaluate an expression in which an interval is added to or subtraced from
+ * a pitch, returning a new pitch.
+ */
+public class Main {
+    /**
+     * Three required command-line arguments are interpreted as a pitch, an
+     * operation (+ or -), and an interval.
+     * Calculate the resulting pitch and display the full expression.
+     *
+     * @param args Command-line arguments: pitch, operation, interval
+     */
     public static void main(String[] args) {
         if (args.length != 3) {
             System.err.println(

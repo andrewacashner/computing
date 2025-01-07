@@ -1,18 +1,45 @@
 package com.andrewcashner.musarithmetic;
 
-record Octave(int octave) implements PitchComponent {
+/**
+ * The Octave record holds the Helmholtz octave number (where middle C
+ * (<code>c'</code> in Lilypond) is C4).
+ *
+ * @param octave Integer octave number
+ */
+public record Octave(int octave) implements PitchComponent {
+    /**
+     * Default constructor
+     * @param octave Integer Helmholtz octave
+     * @throws IllegalArgumentException if octave out of range
+     */
     public Octave {
         if (octave < 0 || octave > 10) {
             throw new IllegalArgumentException("Octave out of range");
         }
     }
 
+    /** Default octave is 4 (middle C). */
     public final static Octave DEFAULT = new Octave(4);
 
-    public static Octave of(int octave) {
+    /**
+     * Factory method creating Octave from octave number.
+     *
+     * @param octave Integer octave number
+     * @return New Octave instance
+     * @throws IllegalArgumentException if number out of range
+     */
+    public static Octave of(int octave) throws IllegalArgumentException {
         return new Octave(octave);
     }
 
+    /**
+     * Factory method creating Octave from user input.
+     * 
+     * @param input User input string for octave number
+     * @return New Octave instance
+     * @throws IllegalArgumentException if input could not be parsed or is
+     *      out of range
+     */
     public static Octave of(String input) throws IllegalArgumentException {
         Octave octave;
         if (input.isEmpty()) {
@@ -22,7 +49,7 @@ record Octave(int octave) implements PitchComponent {
                 int value = Integer.parseInt(input);
                 octave = new Octave(value);
             }
-            catch (NumberFormatException e) {
+            catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException(String.format(
                             "Could not create octave from input %s\n  %s",
                             input, e.getMessage()));
@@ -31,18 +58,41 @@ record Octave(int octave) implements PitchComponent {
         return octave;
     }
 
+    /**
+     * The diatonic offset starting value for this octave (equivalent to the
+     * diatonic pitch offset of C in this octave).
+     *
+     * @return Integer diatonic offset from C0
+     */
     public int offset7() {
         return this.octave() * 7;
     }
 
+    /**
+     * The chromatic offset starting value for this octave (equivalent to
+     * the chromatic pitch offset of C in this octave).
+     *
+     * @return Integer chromatic offset from C0
+     */
     public int offset12() {
         return this.octave() * 12;
     }
 
+    /**
+     * Simple string representation is just the numeral.
+     *
+     * @return Standard string representation
+     */
     public String toString() {
         return Integer.toString(this.octave());
     }
 
+    /**
+     * Lilypond code uses tick marks above and below for octaves, relative
+     * to C3. (C4 is <code>c'</code>, C2 is <code>c,</code>).
+     *
+     * @return Lilypond code string
+     */
     public String toLy() {
         String marker = this.octave < 3 ? "," : "'";
         return marker.repeat(Math.abs(this.octave - 3));
