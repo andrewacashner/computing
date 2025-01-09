@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <script>
+      async function post(msg) {
+        let response = await fetch(
+          "http://localhost:8000/", {
+          method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(msg)
+          });
+        let text = await response.text();
+        console.log(text);
+        let data = JSON.parse(text);
+        console.log(data);
+        document.querySelector("#display").innerHTML = data;
+      }
+    </script>
+  </head>
+  <body>
+    <button onclick="post('C#5 + m3')">Send</button>
+    <div id="display">
+    </div>
+  </body>
+</html>
