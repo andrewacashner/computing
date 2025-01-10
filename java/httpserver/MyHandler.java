@@ -2,9 +2,6 @@ package com.andrewcashner.server;
 
 import com.sun.net.httpserver.*;
 import java.io.*;
-import com.andrewcashner.musarithmetic.*;
-
-import java.util.function.*;
 
 /** 
  * Adapted from
@@ -20,13 +17,14 @@ public class MyHandler implements HttpHandler {
             System.out.format("GET:\n\'%s\'\n", message);
 
             try {
-                String response = IntervalCalculator.evaluate(message);
+                String response = Flip.reverse(message);
                 connection.sendResponseHeaders(200, response.length());
                 outStream.write(response.getBytes());
                 System.out.format("RESPONSE:\'%s\'\n", response);
             }
             catch (IllegalArgumentException e) {
-                String response = "Could not evaluate input";
+                String response = "Could not evaluate input: " 
+                                    + e.getMessage();
                 connection.sendResponseHeaders(400, response.length());
                 outStream.write(response.getBytes());
                 System.out.format("RESPONSE:\'%s\'\n", response);
