@@ -4,7 +4,7 @@ package = com/andrewcashner/musarithmetic
 class = $(addprefix build/$(package)/,$(src:%.java=%.class))
 doc = doc/index.html
 jar = build/Musarithmetic.jar
-manifest = Manifest.txt
+manifest = MANIFEST.MF
 
 .PHONY: all view clean
 
