@@ -13,13 +13,17 @@ public record Octave(int octave) implements PitchComponent {
      * @throws IllegalArgumentException if octave out of range
      */
     public Octave {
-        if (octave < 0 || octave > 10) {
+        if (octave < Octave.MIN_VALUE || octave > Octave.MAX_VALUE) {
             throw new IllegalArgumentException("Octave out of range");
         }
     }
 
+    public final static int DEFAULT_VALUE = 4;
+    public final static int MIN_VALUE = 0;
+    public final static int MAX_VALUE = 10;
+
     /** Default octave is 4 (middle C). */
-    public final static Octave DEFAULT = new Octave(4);
+    public final static Octave DEFAULT = new Octave(Octave.DEFAULT_VALUE);
 
     /**
      * Factory method creating Octave from octave number.

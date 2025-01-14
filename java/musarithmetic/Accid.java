@@ -14,7 +14,7 @@ public enum Accid implements PitchComponent {
     /** Flat */
     FLAT        ("b",   "♭",   "es",     -1),
     /** Natural */
-    NATURAL     ("",    "",    "",        0),
+    NATURAL     ("",    "♮",    "",       0),
     /** Sharp */
     SHARP       ("#",   "♯",   "is",      1),
     /** Double sharp */

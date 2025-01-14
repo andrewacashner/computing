@@ -25,6 +25,19 @@ public record Pitch(Pname pname, Accid accid, Octave octave) {
     /** Default pitch */
     public static final Pitch DEFAULT = new Pitch();
 
+    public Pitch copyWith(Pname pname) {
+        return new Pitch(pname, this.accid(), this.octave());
+    }
+
+    public Pitch copyWith(Accid accid) {
+        return new Pitch(this.pname(), accid, this.octave());
+    }
+
+    public Pitch copyWith(Octave octave) {
+        return new Pitch(this.pname(), this.accid(), octave);
+    }
+
+
     /**
      * Factory method to create a Pitch from raw user input. Examples of
      * valid input would by "c", "c#4", and "cbb5".
