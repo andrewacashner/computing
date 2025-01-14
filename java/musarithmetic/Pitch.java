@@ -22,6 +22,9 @@ public record Pitch(Pname pname, Accid accid, Octave octave) {
         this(Pname.DEFAULT, Accid.DEFAULT, Octave.DEFAULT);
     }
 
+    /** Default pitch */
+    public static final Pitch DEFAULT = new Pitch();
+
     /**
      * Factory method to create a Pitch from raw user input. Examples of
      * valid input would by "c", "c#4", and "cbb5".

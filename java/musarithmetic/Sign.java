@@ -16,6 +16,9 @@ public enum Sign {
         this.value = value;
     }
 
+    /** Default sign is positive */
+    public static final Sign DEFAULT = Sign.POSITIVE;
+
     private int value() {
         return this.value;
     }

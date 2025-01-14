@@ -34,6 +34,9 @@ public enum Quality {
         return this.symbol;
     }
 
+    /** Default Quality is perfect */
+    public static final Quality DEFAULT = Quality.PERFECT;
+
     // Enable lookup by symbol
     private static final Map<String, Quality> lookup = new HashMap<>();
 

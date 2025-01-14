@@ -50,6 +50,12 @@ public record Interval(Quality quality, int degree) {
         }
     }
 
+    /** Default interval is perfect unison */
+    public static final Interval DEFAULT = new Interval(Quality.PERFECT, 0);
+    
+    /** Default degree */
+    public static final int DEFAULT_DEGREE = 0;
+
     private static enum QualityCategory { PERFECT, IMPERFECT };
    
     // Unison, fourth, and fifth (zero-indexed 0, 3, 4) are perfect
