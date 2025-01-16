@@ -50,6 +50,14 @@ public record Interval(Quality quality, int degree) {
         }
     }
 
+    public Interval copyWith(Quality quality) {
+        return new Interval(quality, this.degree());
+    }
+
+    public Interval copyWith(int degree) {
+        return new Interval(this.quality(), degree);
+    }
+
     /** Default interval is perfect unison */
     public static final Interval DEFAULT = new Interval(Quality.PERFECT, 0);
     
@@ -67,7 +75,7 @@ public record Interval(Quality quality, int degree) {
     }
 
     // Check for valid combination of quality and degree
-    private static boolean isValid(Quality quality, int degree) {
+    public static boolean isValid(Quality quality, int degree) {
 
         Predicate<Quality> isValidImperfect = (qual) ->
             switch (qual) {

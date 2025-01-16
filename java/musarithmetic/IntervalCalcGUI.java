@@ -1,5 +1,10 @@
 package com.andrewcashner.musarithmetic;
 
+// TODO
+// instead of quality (reset degrees) ->  degrees -> octaveInc
+// make a tree menu of degree -> quality with sep octaveInc
+// so there is never an invalid combination;
+// or just a list minor2, major2, aug2, dim3, etc.
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -16,11 +21,11 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
     private Interval interval   = Interval.DEFAULT;
     private Pitch endPitch      = Pitch.DEFAULT;
 
-    private JList pnameSelect, accidSelect, signSelect, qualitySelect;
-    private JSpinner octaveSelect, degreeSelect;
+    private JList pnameSelect, accidSelect, signSelect;
+    private JList qualitySelect, degreeSelect;
+    private JSpinner octaveSelect, octaveIncSelect;
     private JLabel startPitchLabel, signLabel, intervalLabel, endPitchLabel;
     private JPanel selectorPanel, rendererPanel;
-
     public IntervalCalcGUI() {
         super("Interval Calculator");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -32,6 +37,7 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
         add(selectorPanel);
         add(rendererPanel);
 
+        // SELECTORS
         pnameSelect = new JList<Pname>(Pname.values());
         pnameSelect.addListSelectionListener(e -> 
             setPname((Pname)pnameSelect.getSelectedValue()));
@@ -63,17 +69,30 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
                 setSign((Sign)signSelect.getSelectedValue()));
         selectorPanel.add(signSelect);
 
-        // TODO these need to be validated pairs with degree
-        // also full text not abbrev (or tooltips?)
-        // hierarchical menu? e.g., { minor -> 2, 3, 6, 7 }, 
-        //                          { perfect -> ... }
+        // Quality, degree, and octave inc are linked 
         qualitySelect = new JList<Quality>(Quality.values());
+        qualitySelect.addListSelectionListener(e -> 
+                setQualityLimitDegree(
+                    (Quality)qualitySelect.getSelectedValue()));
         selectorPanel.add(qualitySelect);
 
-        SpinnerModel degreeModel = new SpinnerNumberModel(1, 1, null, 1);
-        degreeSelect = new JSpinner(degreeModel);
-        selectorPanel.add(degreeSelect);
+        degreeSelect = new JList<Integer>(
+                legalDegrees(getInterval().quality()));
 
+        SpinnerModel octaveIncModel = new SpinnerNumberModel(0, 0, null, 1);
+        octaveIncSelect = new JSpinner(octaveIncModel);
+        
+        degreeSelect.addListSelectionListener(e ->
+                setDegree((int)degreeSelect.getSelectedValue(),
+                    (int)octaveIncSelect.getValue()));
+        selectorPanel.add(degreeSelect);
+        
+        octaveIncSelect.addChangeListener(e ->
+                setDegree((int)degreeSelect.getSelectedValue(),
+                    (int)octaveIncSelect.getValue()));
+        selectorPanel.add(octaveIncSelect);
+
+        // LABELS
         startPitchLabel = new JLabel(this.getStartPitch().toString(), 
                 JLabel.CENTER);
         rendererPanel.add(startPitchLabel);
@@ -138,14 +157,51 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
         updateExpression();
     }
 
+    // NB 1-indexed for user
+    private Integer[] legalDegrees(Quality quality) {
+        return switch (quality) {
+            case PERFECT        -> new Integer[] { 1, 4, 5 };
+            case MINOR, MAJOR   -> new Integer[] { 2, 3, 6, 7 };
+            case DIMINISHED, 
+                 AUGMENTED      -> new Integer[] { 1, 2, 3, 4, 5, 6, 7 };
+        };
+    }
+
+    private void setQualityLimitDegree(Quality quality) {
+
+        // TODO unchecked warning (is JList<Integer> type being erased?)
+        Integer[] degrees = legalDegrees(quality);
+        degreeSelect.setListData(degrees);
+        
+        if (Interval.isValid(quality, getInterval().degree())) {
+            setInterval(getInterval().copyWith(quality));
+        } else {
+            // The displayed degrees are 1-indexed
+            setInterval(new Interval(quality, degrees[0] - 1));
+        } 
+
+        updateExpression();
+    }
+
+    private void setDegree(int degreeOneIndexed, int octaveInc) {
+        int newDegree = octaveInc * 7 + degreeOneIndexed - 1;
+        setInterval(getInterval().copyWith(newDegree));
+    }
+
+    private void setInterval(Interval interval) {
+        this.interval = interval;
+        updateExpression();
+    }
+
     private void setEndPitch(Pitch pitch) {
         this.endPitch = pitch;
         updateResult();
     }
 
     private void updateExpression() {
-        startPitchLabel.setText(this.getStartPitch().toString());
-        signLabel.setText(this.getSign().toString());
+        startPitchLabel.setText(getStartPitch().toString());
+        signLabel.setText(getSign().toString());
+        intervalLabel.setText(getInterval().toString());
         endPitchLabel.setText(END_PITCH_LABEL_DEFAULT);
     }
 
