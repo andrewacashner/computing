@@ -66,6 +66,10 @@ public record Interval(Quality quality, int degree) {
         return new Interval(this.quality(), degree);
     }
 
+    public Interval signed(Sign sign) {
+        return new Interval(this.quality(), sign.apply(this.degree()));
+    }
+
     private static enum QualityCategory { PERFECT, IMPERFECT };
    
     // Unison, fourth, and fifth (zero-indexed 0, 3, 4) are perfect
@@ -183,7 +187,14 @@ public record Interval(Quality quality, int degree) {
      * @return String representation
      */
     public String toString() {
-        return String.format("%s%d", this.quality(), 
+        String output;
+        if (this.degree() < 0) {
+            output = String.format("%s%d", this.quality(),
+                    this.degree() - 1);
+        } else {
+            output = String.format("%s%d", this.quality(), 
                 Math.abs(this.degree()) + 1);
+        }
+        return output;
     }
 }

@@ -1,10 +1,16 @@
 package com.andrewcashner.musarithmetic;
 
 // TODO
-// instead of quality (reset degrees) ->  degrees -> octaveInc
-// make a tree menu of degree -> quality with sep octaveInc
-// so there is never an invalid combination;
-// or just a list minor2, major2, aug2, dim3, etc.
+// DEBUG
+// interaction between sign, interval degree, octaveInc
+// - not working for negative intervals
+//      - (REALLY should include sign with interval anyway)
+// - octaveInc doesn't ever decrement
+//
+// LAYOUT
+// Layout two full-width panels
+// Interval label-tree layout
+// Interval menu style instead of tree
 import javax.swing.*;
 import javax.swing.tree.*;
 import java.awt.*;
@@ -26,7 +32,7 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
     private Pitch endPitch      = new Pitch();
 
     private JPanel selectorPanel, rendererPanel;
-    private JList pnameSelect, accidSelect, signSelect;
+    private JComboBox pnameSelect, accidSelect, signSelect;
     private JSpinner octaveSelect, octaveIncSelect;
     private JTree intervalSelect;
     private JLabel startPitchLabel, signLabel, intervalLabel, endPitchLabel;
@@ -61,9 +67,10 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
         super("Interval Calculator");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new FlowLayout());
-        setSize(300, 200);
-
-        selectorPanel = new JPanel(); // TODO layout manager (GridBag?)
+        setSize(700, 400);
+        
+        // TODO layout manager (GridBag?)
+        selectorPanel = new JPanel();
         rendererPanel = new JPanel();
         add(selectorPanel);
         add(rendererPanel);
@@ -83,23 +90,29 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
             }
         }
 
-        pnameSelect = new JList<Pname>(Pname.values());
-        pnameSelect.addListSelectionListener(e -> 
-            setPname((Pname)pnameSelect.getSelectedValue()));
-        pnameSelect.setCellRenderer(new PitchComponentCellRenderer());
-        selectorPanel.add(pnameSelect);
+        pnameSelect = new JComboBox<Pname>(Pname.values());
+        pnameSelect.addItemListener(e -> 
+            setPname((Pname)pnameSelect.getSelectedItem()));
+        pnameSelect.setRenderer(new PitchComponentCellRenderer());
+        Box pnameBox = new Box(BoxLayout.Y_AXIS);
+        pnameBox.add(new JLabel("Pitch Name"));
+        pnameBox.add(pnameSelect);
+        selectorPanel.add(pnameBox);
 
-        accidSelect = new JList<Accid>(new Accid[] {
-            Accid.DBL_FLAT,
-            Accid.FLAT,
+        accidSelect = new JComboBox<Accid>(new Accid[] {
             Accid.NATURAL,
+            Accid.FLAT,
+            Accid.DBL_FLAT,
             Accid.SHARP,
             Accid.DBL_SHARP
         });
-        accidSelect.addListSelectionListener(e ->
-            setAccid((Accid)accidSelect.getSelectedValue()));
-        accidSelect.setCellRenderer(new PitchComponentCellRenderer());
-        selectorPanel.add(accidSelect);
+        accidSelect.addItemListener(e ->
+            setAccid((Accid)accidSelect.getSelectedItem()));
+        accidSelect.setRenderer(new PitchComponentCellRenderer());
+        Box accidBox = new Box(BoxLayout.Y_AXIS);
+        accidBox.add(new JLabel("Accidental"));
+        accidBox.add(accidSelect);
+        selectorPanel.add(accidBox);
 
         SpinnerModel octaveModel = new SpinnerNumberModel(
                 Octave.DEFAULT_VALUE, 
@@ -109,25 +122,38 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
         octaveSelect = new JSpinner(octaveModel);
         octaveSelect.addChangeListener(e ->
                 setOctave((int)octaveSelect.getValue()));
-        selectorPanel.add(octaveSelect);
+        Box octaveBox = new Box(BoxLayout.Y_AXIS);
+        octaveBox.add(new JLabel("Octave"));
+        octaveBox.add(octaveSelect);
+        selectorPanel.add(octaveBox);
 
-        signSelect = new JList<Sign>(Sign.values());
-        signSelect.addListSelectionListener(e ->
-                setSign((Sign)signSelect.getSelectedValue()));
+        signSelect = new JComboBox<Sign>(Sign.values());
+        signSelect.addItemListener(e ->
+                setSign((Sign)signSelect.getSelectedItem()));
         selectorPanel.add(signSelect);
 
-        // TODO continue setting this up
+        // TODO menu style instead of tree?
+        // TODO sort the hashtable or build the tree in desired order
         intervalSelect = new JTree(legalIntervals);
         intervalSelect.addTreeSelectionListener(e ->
                 setInterval(intervalSelect.getSelectionPath(),
-                            (int)octaveIncSelect.getValue()));
-        selectorPanel.add(intervalSelect);
+                            (int)octaveIncSelect.getValue(),
+                            (Sign)signSelect.getSelectedItem()));
+        // TODO can't put in box without clipping display of tree
+        JPanel intervalPanel = new JPanel();
+        intervalPanel.add(new JLabel("Interval Quality and Base Degree"));
+        intervalPanel.add(intervalSelect);
+        selectorPanel.add(intervalPanel);
         
         SpinnerModel octaveIncModel = new SpinnerNumberModel(0, 0, null, 1);
         octaveIncSelect = new JSpinner(octaveIncModel);
         octaveIncSelect.addChangeListener(e ->
-                setDegree((int)octaveIncSelect.getValue()));
-        selectorPanel.add(octaveIncSelect);
+                setDegree((int)octaveIncSelect.getValue(),
+                    (Sign)signSelect.getSelectedItem()));
+        Box octaveIncBox = new Box(BoxLayout.Y_AXIS);
+        octaveIncBox.add(new JLabel("Add Octaves"));
+        octaveIncBox.add(octaveIncSelect);
+        selectorPanel.add(octaveIncBox);
 
         // LABELS
         startPitchLabel = new JLabel(this.getStartPitch().toString(), 
@@ -190,31 +216,36 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
 
     private void setSign(Sign sign) {
         this.sign = sign;
+        setInterval(getInterval().signed(sign));
         updateExpression();
     }
 
-    private void setDegree(int octaveInc) {
+    private void setDegree(int octaveInc, Sign sign) {
         int newDegree = octaveInc * 7 + this.interval.degree();
-        setInterval(getInterval().copyWith(newDegree));
+        setInterval(getInterval().copyWith(newDegree).signed(sign));
     }
 
     private void setInterval(Interval interval) {
         this.interval = interval;
+        System.out.format("Interval set to %s\n", interval);
         updateExpression();
     }
 
-    private void setInterval(TreePath path, int octaveInc) {
-        Object[] selections = path.getPath();
-        if (selections.length == 3) {
-            Object qualityObj = 
-                ((DefaultMutableTreeNode)selections[1]).getUserObject();
-            Object degreeObj = 
-                ((DefaultMutableTreeNode)selections[2]).getUserObject();
-            Quality quality = (Quality)qualityObj;
-            // Return to 0 index
-            int degree = octaveInc * 7 + (int)degreeObj - 1;
-            Interval interval = new Interval(quality, degree);
-            setInterval(interval);
+    private void setInterval(TreePath path, int octaveInc, Sign sign) {
+        if (path != null) {
+            Object[] selections = path.getPath();
+            if (selections.length == 3) {
+                Object qualityObj = ((DefaultMutableTreeNode)selections[1])
+                                    .getUserObject();
+                Object degreeObj = ((DefaultMutableTreeNode)selections[2])
+                                    .getUserObject();
+
+                Quality quality = (Quality)qualityObj;
+                // Return to 0 index and apply sign
+                int degree = sign.apply(octaveInc * 7 + (int)degreeObj - 1);
+
+                setInterval(new Interval(quality, degree));
+            }
         }
     }
 
