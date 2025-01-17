@@ -6,11 +6,13 @@ package com.andrewcashner.musarithmetic;
 // so there is never an invalid combination;
 // or just a list minor2, major2, aug2, dim3, etc.
 import javax.swing.*;
+import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import java.util.Hashtable;
+import java.util.Arrays;
 
 /**
  * First try at Java GUI
@@ -23,14 +25,12 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
     private Interval interval   = new Interval();
     private Pitch endPitch      = new Pitch();
 
-    private JList pnameSelect, accidSelect, signSelect;
-    private JList qualitySelect, degreeSelect;
-    private JSpinner octaveSelect, octaveIncSelect;
-    private JLabel startPitchLabel, signLabel, intervalLabel, endPitchLabel;
     private JPanel selectorPanel, rendererPanel;
+    private JList pnameSelect, accidSelect, signSelect;
+    private JSpinner octaveSelect, octaveIncSelect;
     private JTree intervalSelect;
+    private JLabel startPitchLabel, signLabel, intervalLabel, endPitchLabel;
 
-    // TODO move this stuff to Interval?
     // NB 1-indexed for user
     private static final Integer[] legalDegrees(Quality quality) {
         return switch (quality) {
@@ -116,33 +116,17 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
                 setSign((Sign)signSelect.getSelectedValue()));
         selectorPanel.add(signSelect);
 
-
-        // Quality, degree, and octave inc are linked 
-        qualitySelect = new JList<Quality>(Quality.values());
-        qualitySelect.addListSelectionListener(e -> 
-                setQualityLimitDegree(
-                    (Quality)qualitySelect.getSelectedValue()));
-        qualitySelect.setCellRenderer(new PitchComponentCellRenderer());
-        selectorPanel.add(qualitySelect);
-
         // TODO continue setting this up
         intervalSelect = new JTree(legalIntervals);
+        intervalSelect.addTreeSelectionListener(e ->
+                setInterval(intervalSelect.getSelectionPath(),
+                            (int)octaveIncSelect.getValue()));
         selectorPanel.add(intervalSelect);
-
-        degreeSelect = new JList<Integer>(
-                legalDegrees(getInterval().quality()));
-
+        
         SpinnerModel octaveIncModel = new SpinnerNumberModel(0, 0, null, 1);
         octaveIncSelect = new JSpinner(octaveIncModel);
-        
-        degreeSelect.addListSelectionListener(e ->
-                setDegree((int)degreeSelect.getSelectedValue(),
-                    (int)octaveIncSelect.getValue()));
-        selectorPanel.add(degreeSelect);
-        
         octaveIncSelect.addChangeListener(e ->
-                setDegree((int)degreeSelect.getSelectedValue(),
-                    (int)octaveIncSelect.getValue()));
+                setDegree((int)octaveIncSelect.getValue()));
         selectorPanel.add(octaveIncSelect);
 
         // LABELS
@@ -209,30 +193,29 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
         updateExpression();
     }
 
-    private void setQualityLimitDegree(Quality quality) {
-
-        // TODO unchecked warning (is JList<Integer> type being erased?)
-        Integer[] degrees = legalDegrees(quality);
-        degreeSelect.setListData(degrees);
-        
-        if (Interval.isValid(quality, getInterval().degree())) {
-            setInterval(getInterval().copyWith(quality));
-        } else {
-            // The displayed degrees are 1-indexed
-            setInterval(new Interval(quality, degrees[0] - 1));
-        } 
-
-        updateExpression();
-    }
-
-    private void setDegree(int degreeOneIndexed, int octaveInc) {
-        int newDegree = octaveInc * 7 + degreeOneIndexed - 1;
+    private void setDegree(int octaveInc) {
+        int newDegree = octaveInc * 7 + this.interval.degree();
         setInterval(getInterval().copyWith(newDegree));
     }
 
     private void setInterval(Interval interval) {
         this.interval = interval;
         updateExpression();
+    }
+
+    private void setInterval(TreePath path, int octaveInc) {
+        Object[] selections = path.getPath();
+        if (selections.length == 3) {
+            Object qualityObj = 
+                ((DefaultMutableTreeNode)selections[1]).getUserObject();
+            Object degreeObj = 
+                ((DefaultMutableTreeNode)selections[2]).getUserObject();
+            Quality quality = (Quality)qualityObj;
+            // Return to 0 index
+            int degree = octaveInc * 7 + (int)degreeObj - 1;
+            Interval interval = new Interval(quality, degree);
+            setInterval(interval);
+        }
     }
 
     private void setEndPitch(Pitch pitch) {
