@@ -12,26 +12,24 @@ import java.util.*;
  *
  * Note: we do not currently support double (or more) diminished intervals.
  */
-public enum Quality { 
+public enum Quality implements Describable { 
     /** Diminished interval */
-    DIMINISHED ("d"),
+    DIMINISHED ("d", "diminished"),
     /** Perfect */
-    PERFECT    ("P"),
+    PERFECT    ("P", "perfect"),
     /** Augmented */
-    AUGMENTED  ("A"),
+    AUGMENTED  ("A", "augmented"),
     /** Minor */
-    MINOR      ("m"),
+    MINOR      ("m", "minor"),
     /** Major */
-    MAJOR      ("M");
+    MAJOR      ("M", "major");
 
     private String symbol;
+    private String description;
 
-    private Quality(String symbol) {
+    private Quality(String symbol, String description) {
         this.symbol = symbol;
-    }
-
-    private String symbol() {
-        return this.symbol;
+        this.description = description;
     }
 
     /** Default Quality is perfect */
@@ -42,7 +40,7 @@ public enum Quality {
 
     static {
         Arrays.stream(Quality.values())
-            .forEach(q -> lookup.put(q.symbol(), q));
+            .forEach(q -> lookup.put(q.symbol, q));
     }
 
     /**
@@ -52,7 +50,9 @@ public enum Quality {
      * @return New Quality instance
      * @throws IllegalArgumentException if invalid input
      */
-    public static Quality of(String input) throws IllegalArgumentException {
+    public static Quality parse(String input) 
+            throws IllegalArgumentException {
+
         Quality match = lookup.get(input);
         if (input == null) {
             throw new IllegalArgumentException(String.format(
@@ -67,8 +67,10 @@ public enum Quality {
      * @return String representation
      */
     public String toString() {
-        return this.symbol();
+        return this.symbol;
+    }
+
+    public String description() {
+        return this.description;
     }
 } 
-
-

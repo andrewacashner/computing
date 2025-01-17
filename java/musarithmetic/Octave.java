@@ -18,23 +18,14 @@ public record Octave(int octave) implements PitchComponent {
         }
     }
 
+    public Octave() {
+        this(DEFAULT_VALUE);
+    }
+
+    /** Default octave is 4 (middle C). */
     public final static int DEFAULT_VALUE = 4;
     public final static int MIN_VALUE = 0;
     public final static int MAX_VALUE = 10;
-
-    /** Default octave is 4 (middle C). */
-    public final static Octave DEFAULT = new Octave(Octave.DEFAULT_VALUE);
-
-    /**
-     * Factory method creating Octave from octave number.
-     *
-     * @param octave Integer octave number
-     * @return New Octave instance
-     * @throws IllegalArgumentException if number out of range
-     */
-    public static Octave of(int octave) throws IllegalArgumentException {
-        return new Octave(octave);
-    }
 
     /**
      * Factory method creating Octave from user input.
@@ -44,10 +35,12 @@ public record Octave(int octave) implements PitchComponent {
      * @throws IllegalArgumentException if input could not be parsed or is
      *      out of range
      */
-    public static Octave of(String input) throws IllegalArgumentException {
+    public static Octave parse(String input) 
+            throws IllegalArgumentException {
+
         Octave octave;
         if (input.isEmpty()) {
-            octave = Octave.DEFAULT;
+            octave = new Octave();
         } else {
             try {
                 int value = Integer.parseInt(input);
@@ -100,5 +93,9 @@ public record Octave(int octave) implements PitchComponent {
     public String toLy() {
         String marker = this.octave < 3 ? "," : "'";
         return marker.repeat(Math.abs(this.octave - 3));
+    }
+
+    public String description() {
+        return this.toString();
     }
 }

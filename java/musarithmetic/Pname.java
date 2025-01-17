@@ -24,22 +24,15 @@ public enum Pname implements PitchComponent {
     public static final Pname DEFAULT = Pname.C;
 
     /** 
-     * Zero-indexed diatonic offset from C 
-     *
-     * @return Integer diatonic offset
-     */
-    public int offset7() {
-        return this.ordinal();
-    }
-
-    /** 
      * Factory method to look up a pitch name from its offset value. 
      *
      * @param value Diatonic offset value
      * @return Matching Pname enum
      * @throws IllegalArgumentException if value is out of range
      */
-    public static Pname of(int value) throws IllegalArgumentException {
+    public static Pname fromValue(int value) 
+            throws IllegalArgumentException {
+
         int absValue = Math.abs(value);
         if (absValue < Pname.values().length) {
             return Pname.values()[absValue];
@@ -57,7 +50,7 @@ public enum Pname implements PitchComponent {
      * @return Matching Pname enum
      * @throws IllegalArgumentException if not found
      */
-    public static Pname of(String pitchString) 
+    public static Pname parse(String pitchString) 
             throws IllegalArgumentException {
 
         Pname pname;
@@ -72,6 +65,15 @@ public enum Pname implements PitchComponent {
         return pname;
     }
 
+    /** 
+     * Zero-indexed diatonic offset from C 
+     *
+     * @return Integer diatonic offset
+     */
+    public int offset7() {
+        return this.ordinal();
+    }
+
     /**
      * Chromatic offset corresponding to the base (natural) value at this
      * pitch name, zero-indexed from C.
@@ -80,7 +82,7 @@ public enum Pname implements PitchComponent {
      * @return Chromatic pitch number
      */
     public int offset12() {
-        return Pitch.offset12(this.ordinal());
+        return Pitch.convertOffset7to12(this.ordinal());
     }
 
     /**
@@ -91,5 +93,9 @@ public enum Pname implements PitchComponent {
      */
     public String toLy() {
         return this.toString().toLowerCase();
+    }
+
+    public String description() {
+        return this.toString();
     }
 }

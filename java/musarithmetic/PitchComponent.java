@@ -4,7 +4,8 @@ package com.andrewcashner.musarithmetic;
  * Every component of a pitch must report its own chromatic offset and
  * represent itself as a standard string and as Lilypond code.
  */
-public interface PitchComponent {
+public interface PitchComponent extends Describable {
+   
     /** 
      * Chromatic offset of this component 
      *

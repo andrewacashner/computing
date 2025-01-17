@@ -19,10 +19,6 @@ public enum Sign {
     /** Default sign is positive */
     public static final Sign DEFAULT = Sign.POSITIVE;
 
-    private int value() {
-        return this.value;
-    }
-
     /**
      * Factory method to create a Sign from string input ("+" or "-")
      *
@@ -30,7 +26,7 @@ public enum Sign {
      * @return Sign instance
      * @throws IllegalArgumentException if invalid input 
      */
-    public static Sign of(String input) throws IllegalArgumentException {
+    public static Sign parse(String input) throws IllegalArgumentException {
         return switch (input) {
             case "+" -> Sign.POSITIVE;
             case "-" -> Sign.NEGATIVE;
@@ -47,7 +43,7 @@ public enum Sign {
      * @return Value with sign applied
      */
     public int apply(int n) {
-        return n * this.value();
+        return n * this.value;
     }
 
     /**

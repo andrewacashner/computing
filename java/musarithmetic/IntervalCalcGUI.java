@@ -10,22 +10,53 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import java.util.Hashtable;
+
 /**
  * First try at Java GUI
  * @author Andrew Cashner
  * @version Started 2025/01/14
  */
 public class IntervalCalcGUI extends JFrame implements ActionListener {
-    private Pitch startPitch    = Pitch.DEFAULT;
+    private Pitch startPitch    = new Pitch();
     private Sign sign           = Sign.DEFAULT;
-    private Interval interval   = Interval.DEFAULT;
-    private Pitch endPitch      = Pitch.DEFAULT;
+    private Interval interval   = new Interval();
+    private Pitch endPitch      = new Pitch();
 
     private JList pnameSelect, accidSelect, signSelect;
     private JList qualitySelect, degreeSelect;
     private JSpinner octaveSelect, octaveIncSelect;
     private JLabel startPitchLabel, signLabel, intervalLabel, endPitchLabel;
     private JPanel selectorPanel, rendererPanel;
+    private JTree intervalSelect;
+
+    // TODO move this stuff to Interval?
+    // NB 1-indexed for user
+    private static final Integer[] legalDegrees(Quality quality) {
+        return switch (quality) {
+            case PERFECT        -> new Integer[] { 1, 4, 5 };
+            case MINOR, MAJOR   -> new Integer[] { 2, 3, 6, 7 };
+            case DIMINISHED, 
+                 AUGMENTED      -> new Integer[] { 1, 2, 3, 4, 5, 6, 7 };
+        };
+    }
+
+    private static final Hashtable<Quality, Integer[]> legalIntervals = 
+        new Hashtable<>();
+
+    static {
+        legalIntervals.put(
+                Quality.PERFECT, legalDegrees(Quality.PERFECT));
+        legalIntervals.put(
+                Quality.MINOR, legalDegrees(Quality.MINOR));
+        legalIntervals.put(
+                Quality.MAJOR, legalDegrees(Quality.MAJOR));
+        legalIntervals.put(
+                Quality.DIMINISHED, legalDegrees(Quality.DIMINISHED));
+        legalIntervals.put(
+                Quality.AUGMENTED, legalDegrees(Quality.AUGMENTED));
+    }
+
     public IntervalCalcGUI() {
         super("Interval Calculator");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -38,9 +69,24 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
         add(rendererPanel);
 
         // SELECTORS
+        class PitchComponentCellRenderer extends JLabel 
+                implements ListCellRenderer<Object> {
+
+            public Component getListCellRendererComponent(
+                    JList<?> list, 
+                    Object value, 
+                    int index,
+                    boolean isSelected, 
+                    boolean cellHasFocus) {
+                setText(((Describable)value).description());
+                return this;
+            }
+        }
+
         pnameSelect = new JList<Pname>(Pname.values());
         pnameSelect.addListSelectionListener(e -> 
             setPname((Pname)pnameSelect.getSelectedValue()));
+        pnameSelect.setCellRenderer(new PitchComponentCellRenderer());
         selectorPanel.add(pnameSelect);
 
         accidSelect = new JList<Accid>(new Accid[] {
@@ -52,6 +98,7 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
         });
         accidSelect.addListSelectionListener(e ->
             setAccid((Accid)accidSelect.getSelectedValue()));
+        accidSelect.setCellRenderer(new PitchComponentCellRenderer());
         selectorPanel.add(accidSelect);
 
         SpinnerModel octaveModel = new SpinnerNumberModel(
@@ -69,12 +116,18 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
                 setSign((Sign)signSelect.getSelectedValue()));
         selectorPanel.add(signSelect);
 
+
         // Quality, degree, and octave inc are linked 
         qualitySelect = new JList<Quality>(Quality.values());
         qualitySelect.addListSelectionListener(e -> 
                 setQualityLimitDegree(
                     (Quality)qualitySelect.getSelectedValue()));
+        qualitySelect.setCellRenderer(new PitchComponentCellRenderer());
         selectorPanel.add(qualitySelect);
+
+        // TODO continue setting this up
+        intervalSelect = new JTree(legalIntervals);
+        selectorPanel.add(intervalSelect);
 
         degreeSelect = new JList<Integer>(
                 legalDegrees(getInterval().quality()));
@@ -148,23 +201,12 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
     }
 
     private void setOctave(int value) {
-        Octave newOctave = Octave.of(value);
-        setStartPitch(getStartPitch().copyWith(newOctave));
+        setStartPitch(getStartPitch().copyWith(new Octave(value)));
     }
 
     private void setSign(Sign sign) {
         this.sign = sign;
         updateExpression();
-    }
-
-    // NB 1-indexed for user
-    private Integer[] legalDegrees(Quality quality) {
-        return switch (quality) {
-            case PERFECT        -> new Integer[] { 1, 4, 5 };
-            case MINOR, MAJOR   -> new Integer[] { 2, 3, 6, 7 };
-            case DIMINISHED, 
-                 AUGMENTED      -> new Integer[] { 1, 2, 3, 4, 5, 6, 7 };
-        };
     }
 
     private void setQualityLimitDegree(Quality quality) {
@@ -211,7 +253,7 @@ public class IntervalCalcGUI extends JFrame implements ActionListener {
 
 
     public void actionPerformed(ActionEvent e) {
-        Pitch result = Pitch.inc(this.getStartPitch(), this.getInterval());
+        Pitch result = this.getStartPitch().inc(this.getInterval());
         setEndPitch(result);
         updateResult();
     }

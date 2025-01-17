@@ -50,6 +50,14 @@ public record Interval(Quality quality, int degree) {
         }
     }
 
+    /** Default degree */
+    public static final int DEFAULT_DEGREE = 0;
+    
+    /** Default interval is perfect unison */
+    public Interval() {
+        this(Quality.PERFECT, DEFAULT_DEGREE);
+    }
+
     public Interval copyWith(Quality quality) {
         return new Interval(quality, this.degree());
     }
@@ -57,12 +65,6 @@ public record Interval(Quality quality, int degree) {
     public Interval copyWith(int degree) {
         return new Interval(this.quality(), degree);
     }
-
-    /** Default interval is perfect unison */
-    public static final Interval DEFAULT = new Interval(Quality.PERFECT, 0);
-    
-    /** Default degree */
-    public static final int DEFAULT_DEGREE = 0;
 
     private static enum QualityCategory { PERFECT, IMPERFECT };
    
@@ -106,7 +108,7 @@ public record Interval(Quality quality, int degree) {
      * @return new Interval instance
      * @throws IllegalArgumentException if invalid input
      */
-    public static Interval of(String inputStr, Sign sign)
+    public static Interval parse(String inputStr, Sign sign)
             throws IllegalArgumentException {
 
         Interval interval;
@@ -114,7 +116,7 @@ public record Interval(Quality quality, int degree) {
         Matcher tokens = syntax.matcher(inputStr);
 
         if (tokens.matches()) {
-            Quality quality = Quality.of(tokens.group(1));
+            Quality quality = Quality.parse(tokens.group(1));
 
             int degree = Integer.parseInt(tokens.group(2));
 
@@ -137,8 +139,8 @@ public record Interval(Quality quality, int degree) {
      * @param inputStr User input
      * @return New Interval instance
      */
-    public static Interval of(String inputStr) {
-        return Interval.of(inputStr, Sign.POSITIVE);
+    public static Interval parse(String inputStr) {
+        return Interval.parse(inputStr, Sign.POSITIVE);
     }
 
     /**
@@ -167,7 +169,7 @@ public record Interval(Quality quality, int degree) {
             case AUGMENTED      ->  1;
         };
 
-        int offset = Pitch.offset12(this.degree()) + adjustment;
+        int offset = Pitch.convertOffset7to12(this.degree()) + adjustment;
         if (this.degree() < 0) {
             offset *= -1;
         }

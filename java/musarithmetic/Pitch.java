@@ -19,11 +19,8 @@ public record Pitch(Pname pname, Accid accid, Octave octave) {
      * Default pitch 
      */
     public Pitch() {
-        this(Pname.DEFAULT, Accid.DEFAULT, Octave.DEFAULT);
+        this(Pname.DEFAULT, Accid.DEFAULT, new Octave());
     }
-
-    /** Default pitch */
-    public static final Pitch DEFAULT = new Pitch();
 
     public Pitch copyWith(Pname pname) {
         return new Pitch(pname, this.accid(), this.octave());
@@ -47,7 +44,7 @@ public record Pitch(Pname pname, Accid accid, Octave octave) {
      * @throws IllegalArgumentException if user input cannot be parsed
      * correctly
      */
-    public static Pitch of(String inputStr) 
+    public static Pitch parse(String inputStr) 
             throws IllegalArgumentException {
 
         Pitch pitch;
@@ -55,9 +52,9 @@ public record Pitch(Pname pname, Accid accid, Octave octave) {
         Matcher tokens = syntax.matcher(inputStr);
        
         if (tokens.matches()) {
-            Pname pname = Pname.of(tokens.group(1));
-            Accid accid = Accid.of(tokens.group(2));
-            Octave octave = Octave.of(tokens.group(3));
+            Pname pname = Pname.parse(tokens.group(1));
+            Accid accid = Accid.parse(tokens.group(2));
+            Octave octave = Octave.parse(tokens.group(3));
             pitch = new Pitch(pname, accid, octave);
         } else {
             throw new IllegalArgumentException(String.format(
@@ -112,7 +109,7 @@ public record Pitch(Pname pname, Accid accid, Octave octave) {
      * @param offset7 Diatonic offset (zero-indexed)
      * @return Chromatic offset (zero-indexed)
      */
-    public static int offset12(int offset7) {
+    public static int convertOffset7to12(int offset7) {
         final int[] offsets = { 0, 2, 4, 5, 7, 9, 11 };
         int base = Math.abs(offset7) % 7;
         return offsets[base];
@@ -180,19 +177,18 @@ public record Pitch(Pname pname, Accid accid, Octave octave) {
      * </li>
      * </ol>
      *
-     * @param pitch Starting Pitch
      * @param interval Interval to add (can be negative)
      * @return New Pitch
      */
-    public static Pitch inc(Pitch pitch, Interval interval) {
-        int target7 = pitch.octaveValue7() + interval.degree();
-        int target12 = pitch.octaveValue12() + interval.offset12();
+    public Pitch inc(Interval interval) {
+        int target7 = this.octaveValue7() + interval.degree();
+        int target12 = this.octaveValue12() + interval.offset12();
 
-        Pname pname = Pname.of(target7 % 7);
-        Octave octave = Octave.of(target7 / 7);
+        Pname pname = Pname.fromValue(target7 % 7);
+        Octave octave = new Octave(target7 / 7);
         
         int adjustment = Pitch.cycleDiff(target12, pname.offset12(), 12);
-        Accid accid = Accid.of(adjustment);
+        Accid accid = Accid.fromValue(adjustment);
 
         return new Pitch(pname, accid, octave);
     }

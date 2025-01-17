@@ -43,10 +43,10 @@ public class IntervalCalculator {
 
         String result = "";
         try {
-            Pitch p1 = Pitch.of(pitchStr);
-            Sign sign = Sign.of(signStr);
-            Interval interval = Interval.of(intervalStr, sign);
-            Pitch p2 = Pitch.inc(p1, interval);
+            Pitch p1 = Pitch.parse(pitchStr);
+            Sign sign = Sign.parse(signStr);
+            Interval interval = Interval.parse(intervalStr, sign);
+            Pitch p2 = p1.inc(interval);
             result = p2.toString();
         }
         catch (IllegalArgumentException e) {
