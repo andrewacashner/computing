@@ -27,4 +27,39 @@ public class Binary {
                 binaryToDecimal(binM));
     }
 
+    public static String decimalToHex(int decimal) {
+        return Integer.toHexString(decimal);
+    }
+    
+    public static String binaryToHex(String binary) {
+        return decimalToHex(binaryToDecimal(binary));
+    }
+
+    public static int hexToDecimal(String hex) {
+        return Integer.parseInt(hex, 16);
+    }
+
+    public static String hexToBinary(String hex) {
+        return decimalToBinary(hexToDecimal(hex));
+    }
+
+    public static String hexAdd(String h1, String h2) {
+        return decimalToHex(hexToDecimal(h1) + hexToDecimal(h2));
+    }
+
+    public static String binaryAND(String bin1, String bin2) {
+        return decimalToBinary(binaryToDecimal(bin1) & 
+                binaryToDecimal(bin2));
+    }
+
+    public static String binaryOR(String bin1, String bin2) {
+        return decimalToBinary(binaryToDecimal(bin1) |
+                binaryToDecimal(bin2));
+    }
+
+    public static String binaryXOR(String bin1, String bin2) {
+        return decimalToBinary(binaryToDecimal(bin1) ^
+                binaryToDecimal(bin2));
+    }
+
 }
