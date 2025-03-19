@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <unistd.h>
+#include <time.h>
 
 #define SCROLL_REPEATS 3
 
@@ -44,6 +44,8 @@ void queue_destroy(Queue_ptr queue);
 Queue_ptr queue_create_from_string(char *str);
 Queue_ptr queue_advance_head(Queue_ptr queue);
 
+void wait();
+
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Usage: scroll \"STRING\"\n");
@@ -63,8 +65,8 @@ void scroll(char *msg, int repeats) {
     for (int i = 0; i < repeats; ++i) {
         for (char *c = msg; *c != '\0'; ++c) {
             queue_print(queue);
+            wait();
             printf("\n");
-            sleep(1);
             queue = queue_advance_head(queue);
         }
     }
@@ -186,4 +188,9 @@ Queue_ptr queue_advance_head(Queue_ptr queue) {
         queue->last = first;
     }
     return queue;
+}
+
+void wait() {
+    const struct timespec timing = { .tv_sec = 0, .tv_nsec = 50000000 };
+    nanosleep(&timing, NULL);
 }
