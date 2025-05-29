@@ -1,0 +1,15 @@
+# add: First MIPS program 
+# Andrew Cashner, 2025/05/29
+#
+# t0 := 1 + 1
+
+        .data
+
+        .text
+
+main:   
+        li      $t0, 1
+        addi    $t0, $t0, 1
+
+        li      $v0, 10         # exit
+        syscall
