@@ -1,0 +1,50 @@
+# average: Calculate the arithmetic mean of the 'values' array
+# Andrew Cashner, 2025/06/09
+
+        .data
+values:
+        .word       67, 92, 80, 85, 90
+
+value_count: 
+        .word       5
+        
+        .text
+main:
+        la          $t1, values         # t1 := &values[0]
+        lw          $t2, value_count    # t2 := max values
+
+sum:
+        sll         $t3, $t0, 2         # t0 = index, offset by bytes
+        add         $t3, $t3, $t1       # t3 = &values[i]
+       
+        l.s         $f0, ($t3)          # float f = values[i]
+        add.s       $f1, $f1, $f0       # sum += f
+
+        addi        $t0, 1              # increment index
+        blt         $t0, $t2, sum       # loop until index reaches max values
+
+avg:    
+        l.s         $f2, value_count    # Load value count as float
+        div.s       $f12, $f1, $f2      # Calculcate mean: sum / count
+
+        li          $v0, 2              # Print float
+        syscall
+
+exit:
+        jal         newline             # Print newline
+        li          $v0, 10             # Exit
+        syscall
+
+#-----------------------------------------------------------------------------
+# Print a CR LF newline
+#
+newline:
+        li      $v0, 11             # print_char
+        li      $a0, 0x0D           # CR
+        syscall
+
+        li      $a0, 0x0A           # LF
+        syscall
+
+        jr      $ra
+#-----------------------------------------------------------------------------
