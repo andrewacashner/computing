@@ -1,0 +1,41 @@
+# countup: Print digits from MIN to MAX, inclusive
+# Andrew Cashner, 2025/06/09
+
+        .data
+
+min:    .word   3
+max:    .word   10
+
+        .text
+
+main:   
+        lw      $t1, max
+        addi    $t1, 1              # t1 := max + 1
+        lw      $t2, min            
+        sub     $t0, $t1, $t2       # t2 := max - min
+
+loop:
+        li      $v0, 1              # syscall 1: print_int
+        sub     $a0, $t1, $t0       # Print digit (offset from 10)
+        syscall
+
+        addi    $t0, $t0, -1        # decrement
+        
+        beq     $t0, $zero, exit    
+    
+        li      $v0, 11             # syscall 11: print_char
+        li      $a0, 0x20           # ASCII space char
+        syscall
+
+        j       loop
+
+exit:   
+        li      $v0, 11             # print_char
+        li      $a0, 0x0D           # CR
+        syscall
+
+        li      $a0, 0x0A           # LF
+        syscall
+
+        li      $v0, 10             # exit
+        syscall
