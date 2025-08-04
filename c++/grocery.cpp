@@ -2,22 +2,17 @@
  *
  * Andrew Cashner, 2025/09/21
  *
- * Keep a grocery list sorted by item category.
- * Add to the list at the command line.
+ * Keep a grocery list sorted alphabetically.
+ * Modify the list at the command line.
  *
- *      grocery --base "$HOME"/.grocery/grocery.txt
+ *      grocery --list "$HOME"/.grocery/grocery.txt
  *      grocery --restart 
  *      grocery --add milk
  *      grocery --add eggs --add flour
- *      grocery --add-all butter margarine oil
  *      grocery --remove margarine
- *      grocery --print current_grocery_list.txt
+ *      grocery --print 
+ *      grocery --list party.txt --add seltzer --add cupcakes --print
  */
-
-// TODO
-// - support add-all
-// - use enum for actions stored in Command
-// - make hashmap for command -> function
 
 #include <iostream>
 #include <fstream>
@@ -26,108 +21,175 @@
 #include <vector>
 #include <algorithm>
 #include <iterator>
+#include <functional>
 
-using namespace std;
-
-string list_filename { "grocery_list.txt" };
+using std::string;
 
 class Command {
-    private:
-        enum Action { 
-            BASE, RESET, ADD, ADD_ALL, REMOVE, PRINT 
-        };
+    public:
+        enum class Action { LIST, RESET, ADD, REMOVE, PRINT };
 
+    private:
+        std::vector<string> words { "list", "reset", "add", "remove", "print" };
+       
         Action action;
         string arg { "" };
 
-        vector<string> action_strings { 
-            "base", "reset", "add", "add_all", "remove", "print" 
-        };
-        
-        void set_base() { list_filename = arg; } // TODO global, bad
-
-        void reset() {}
-        void add() {};
-        void add_all() {};
-        void remove() {};
-        void print() {};
-
     public:
-        Command(string action_str, string arg) :arg(arg) { 
-            auto match = find(action_strings.begin(), 
-                    action_strings.end(), action_str);
+        Command(string word, string arg) :arg(arg) 
+        { 
+            auto match = find(words.begin(), words.end(), word);
 
-            if (match != action_strings.end()) {
-                action = (Action) distance(action_strings.begin(), match);
-            } else {
-                throw invalid_argument{ "Unrecognized action '" + action_str + "'" };
-            }
+            if (match != words.end()) {
+                action = (Action) std::distance(words.begin(), match);
+            } 
+            else throw std::invalid_argument{ "Unrecognized action '" + word + "'" };
         }
 
         Command(string action_str) { Command(action_str, ""); }
 
         Action get_action() { return action; }
-        string to_string() { return action_strings[(int) action] + "(" + arg + ")"; }
+        string get_arg()    { return arg; }
 
-        void execute() { 
-            switch (action) {
-                case BASE:
-                    set_base();
+        string to_string()  { return words[(int) action] + "(" + arg + ")"; }
+};
+
+class GroceryList {
+    private:
+        std::list<string> items;
+        string source_file { "grocery_list.txt" };
+
+        bool contains(string item) {
+            return (std::find(items.begin(), items.end(), item) != items.end());
+        }
+
+        void set_list(string filename)
+        {
+            source_file = filename;
+            load();
+        }
+
+        void reset() { items.clear(); }
+
+        void add(string item)
+        {
+            if (contains(item)) {
+                std::cout << "Item '" << item << "' already on list\n";
+            }
+            else {
+                items.push_back(item);
+                save();
+            }
+        }
+
+        void remove(string item)
+        {
+            if (!contains(item)) {
+                std::cout << "Item '" << item << "' not on list; could not remove\n";
+            }
+            else {
+                items.remove(item);
+                save();
+            }
+        }
+
+        void print()
+        {
+            std::cout << "\nGrocery List\n" << "------------\n";
+            for (string item : items) {
+                std::cout << item << "\n";
+            }
+        }
+
+    public:
+        GroceryList()   { load(); }
+        ~GroceryList()  { save(); }
+
+        void load()
+        {
+            items.clear();
+
+            std::fstream list_file { source_file, std::fstream::in };
+
+            string line;
+            while (std::getline(list_file, line)) {
+                items.push_back(line);
+            }
+
+            list_file.close();
+        }
+
+        void save()
+        {
+            std::fstream list_file { source_file, 
+                std::fstream::out | std::fstream::trunc };
+          
+            items.sort();
+
+            for (string item : items) {
+                list_file << item << "\n";
+            }
+            
+            list_file.close();
+        }
+
+
+        void execute(Command& cmd)
+        { 
+            switch (cmd.get_action()) {
+                case Command::Action::LIST:
+                    set_list(cmd.get_arg());
                     break;
-                case RESET:
+
+                case Command::Action::RESET:
                     reset();
                     break;
-                case ADD:
-                    add();
+
+                case Command::Action::ADD:
+                    add(cmd.get_arg());
                     break;
-                case ADD_ALL:
-                    add_all();
+
+                case Command::Action::REMOVE:
+                    remove(cmd.get_arg());
                     break;
-                case REMOVE:
-                    remove();
-                    break;
-                case PRINT:
+
+                default: // Command::Action::PRINT:
                     print();
-                    break;
-                default:
                     break;
             }
         }
 };
 
-list<Command> parse_args(char **argv);
+std::list<Command> parse_args(char **argv);
 
 int main(int argc, char *argv[])
 {
     if (argc < 2) {
-        cout << "Usage: grocery --COMMAND arg[, arg2]\n";
+        std::cout << "Usage: grocery --COMMAND arg[, arg2]\n";
         return EXIT_FAILURE;
     }
 
     try {
-        // Create and/or open list file
-        fstream list_file { list_filename , fstream::in | fstream::out };
+        GroceryList grocery_list;
 
-        list<Command> commands = parse_args(argv);
+        std::list<Command> commands = parse_args(argv);
         for (Command command : commands) {
-            cout << command.to_string() << "\n";
-            command.execute();
+            // cout << command.to_string() << "\n";
+            grocery_list.execute(command);
         }
     }
-    catch (const invalid_argument& ex) {
-        cout << ex.what() << "\n";
+
+    catch (const std::invalid_argument& ex) {
+        std::cerr << ex.what() << "\n";
         return EXIT_FAILURE;
     }
-    // finally { // TODO
-    //     // Close list file
-    // }
 
     return 0;
 }
 
-list<Command> parse_args(char **argv)
+std::list<Command> parse_args(char **argv)
 {
-    list<Command> commands;
+    std::list<Command> commands;
 
     for (int i = 1; argv[i]; ++i) {
         if (string word = argv[i]; word.starts_with("--")) {
@@ -141,7 +203,7 @@ list<Command> parse_args(char **argv)
             commands.push_back(Command { word.substr(2), next });
         } 
         else {
-            throw invalid_argument{ "Invalid argument '" + word + "'" };
+            throw std::invalid_argument{ "Invalid argument '" + word + "'" };
         }
     }
 
