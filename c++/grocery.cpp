@@ -29,18 +29,28 @@
 
 using namespace std;
 
+string list_filename { "grocery_list.txt" };
+
 class Command {
     private:
-        enum class Action { 
+        enum Action { 
             BASE, RESET, ADD, ADD_ALL, REMOVE, PRINT 
         };
+
+        Action action;
+        string arg { "" };
 
         vector<string> action_strings { 
             "base", "reset", "add", "add_all", "remove", "print" 
         };
+        
+        void set_base() { list_filename = arg; } // TODO global, bad
 
-        Action action;
-        string arg = "";
+        void reset() {}
+        void add() {};
+        void add_all() {};
+        void remove() {};
+        void print() {};
 
     public:
         Command(string action_str, string arg) :arg(arg) { 
@@ -50,7 +60,7 @@ class Command {
             if (match != action_strings.end()) {
                 action = (Action) distance(action_strings.begin(), match);
             } else {
-                throw invalid_argument("Unrecognized action '" + action_str + "'");
+                throw invalid_argument{ "Unrecognized action '" + action_str + "'" };
             }
         }
 
@@ -58,11 +68,34 @@ class Command {
 
         Action get_action() { return action; }
         string to_string() { return action_strings[(int) action] + "(" + arg + ")"; }
+
+        void execute() { 
+            switch (action) {
+                case BASE:
+                    set_base();
+                    break;
+                case RESET:
+                    reset();
+                    break;
+                case ADD:
+                    add();
+                    break;
+                case ADD_ALL:
+                    add_all();
+                    break;
+                case REMOVE:
+                    remove();
+                    break;
+                case PRINT:
+                    print();
+                    break;
+                default:
+                    break;
+            }
+        }
 };
 
 list<Command> parse_args(char **argv);
-
-const string list_filename = "grocery_list.txt";
 
 int main(int argc, char *argv[])
 {
@@ -78,7 +111,7 @@ int main(int argc, char *argv[])
         list<Command> commands = parse_args(argv);
         for (Command command : commands) {
             cout << command.to_string() << "\n";
-            // command.execute(); TODO
+            command.execute();
         }
     }
     catch (const invalid_argument& ex) {
