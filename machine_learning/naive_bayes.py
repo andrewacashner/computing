@@ -95,7 +95,7 @@ class NaiveBayesClassifier:
         words.sort()
         return np.array(words)
 
-    def docs_to_matrix(self, docs: list[list[str]]) -> np.array:
+    def docs_to_matrix(self, docs: list[str]) -> np.array:
         vocab = self.extract_vocabulary(docs)
 
         vectors = []
@@ -117,7 +117,8 @@ class NaiveBayesClassifier:
     def conditional_probability(self, docs_in_class: np.array, 
                                 word_index: int) -> float:
         frequency = np.sum(docs_in_class[:, word_index]) + 1
-        complement = np.sum(np.sum(np.delete(docs_in_class, word_index, axis=1) + 1))
+        complement = np.sum(np.sum(np.delete(docs_in_class, 
+                                             word_index, axis=1) + 1))
         return frequency / complement
 
     def word_probability(self, word: str, label: Label) -> float:
@@ -151,7 +152,8 @@ def main():
 
     predicted_labels = classifier.predict(testing_documents)
     print("\nPredictions for test data:")
-    print(predicted_labels)
+    print([label.name.lower() for label in predicted_labels])
+
 
 if __name__ == '__main__':
     main()
