@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
     long long product { karatsuba_multiply(num_A, num_B) };
 
     std::print("{} x {} = {}\n", num_A, num_B, product);
+//    std::cout << num_A << " x " << num_B << " = " << product << "\n";
 
     return 0;
 }

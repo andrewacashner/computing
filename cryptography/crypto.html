@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Cryptography</title>
+    <link rel="stylesheet" href="crypto.css">
+    <script src="caesar.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <h1>Cryptography</h1>
+    </header>
+    <main>
+      <!-- select crypto type -->
+      <!-- select key -->
+      <section id="sec:caesar">
+        <h2>Caesar Cipher</h2>
+        <section id="sec:caesar:key">
+          <h3>Key</h3>
+          <form id="form:key">
+            <label for="input:key">Select a Shift Amount</label>
+            <input type="number" id="input:key" min="-25" max="25" value="0" />
+          </form>
+        </section>
+        <section class="io">
+          <section id="sec:caesar:input">
+            <h3>Input</h3>
+            <form class="message" id="form:message">
+              <textarea class="inputArea" form="form:message" id="input:message"></textarea>
+              <div class="inputButtons">
+                <button type="button" id="button:encrypt">Encrypt</button>
+                <button type="button" id="button:decrypt">Decrypt</button>
+              </div>
+            </form>
+          </section>
+          <section id="sec:caesar:output">
+            <h3>Output</h3>
+              <textarea class="outputArea" id="outputArea"></textarea>
+              <button type="button" id="button:copyBack">Copy output to input</button>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>

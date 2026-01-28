@@ -1,0 +1,40 @@
+body {
+  font-family: monospace;
+}
+
+h1, h2 {
+  font-family: sans-serif;
+}
+
+section.io {
+  display: flex;
+  flex-direction: row;
+}
+
+section.io section {
+  width: 50vw;
+  height: 50vh;
+}
+
+textarea {
+  height: 12em;
+  width: 95%;
+}
+
+div.inputButtons {
+  display: flex;
+  flex-direction: row;
+}
+
+textarea.inputArea {
+  color: ForestGreen;
+}
+
+textarea.outputArea {
+  color: Maroon;
+}
+
+button {
+  margin: 1ex;
+}
+
