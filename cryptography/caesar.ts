@@ -1,82 +1,124 @@
-function shift(c: string, shiftAmount: number): string {
-    let alphabet: string;
-    
-    let numbers: string = "0123456789";
+/* Caesar Cipher */
+"use strict";
 
-    if (numbers.includes(c)) {
-        alphabet = numbers;
-    } else {
-        let alphabetLower: string = "abcdefghijklmnopqrstuvwxyz";
-        let alphabetUpper: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        alphabet = c.toUpperCase() === c ? alphabetUpper : alphabetLower;
+class CaesarCipher {
+    #key = 0;
+
+    constructor(key : number = 0) {
+        this.#key = key;
+        console.log(`Created new cipher with key ${this.#key}`)
     }
 
-    let shifted: string = c;    // No change if not in alphabet
-    let index: number = alphabet.indexOf(c); 
+    setKey = (key: number): void => {
+        this.#key = key;
+        console.log(`Set new key to ${this.#key}`);
+    }
 
-    if (index >= 0) {
-        index += shiftAmount;
+    static #alphabetLower = "abcdefghijklmnopqrstuvwxyz";
+    static #alphabetUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static #numbers       = "0123456789";
 
-        if (index < 0) {
-            index += alphabet.length;
-        } else if (index >= alphabet.length) {
-            index -= alphabet.length;
+    #selectAlphabet = (c: string): string => {
+        let alphabet: string;
+
+        if (CaesarCipher.#numbers.includes(c)) {
+            alphabet = CaesarCipher.#numbers;
+        } else {
+            alphabet = (c.toUpperCase() === c)
+                        ? CaesarCipher.#alphabetUpper 
+                        : CaesarCipher.#alphabetLower;
         }
 
-        shifted = alphabet[index];
-        console.log(`${c} -> ${shifted}`);
-    } 
+        return alphabet;
+    }
 
-    return shifted;
+    #shift = (c: string, shiftAmount: number): string => {
+        let alphabet: string = this.#selectAlphabet(c);
+
+        let shifted: string = c;    // No change if not in alphabet
+        let index: number = alphabet.indexOf(c); 
+
+        if (index >= 0) {
+            index += shiftAmount;
+
+            if (index < 0) {
+                index += alphabet.length;
+            } else if (index >= alphabet.length) {
+                index -= alphabet.length;
+            }
+
+            shifted = alphabet[index];
+            // console.log(`${c} -> ${shifted}`);
+        } 
+
+        return shifted;
+    }
+
+    #caesarEncrypt = (shiftAmount: number, msg: string): string => 
+        msg.split("").map(c => this.#shift(c, shiftAmount)).join("");
+
+    encrypt = (msg: string) => this.#caesarEncrypt(this.#key, msg);
+    decrypt = (msg: string) => this.#caesarEncrypt(-this.#key, msg);
+
+    
 }
 
-function caesarEncrypt(plaintext: string, shiftAmount: number): string {
-    return plaintext.split("").map(c => shift(c, shiftAmount)).join("");
+function requestCrypto(action: string, 
+                       msg: string, 
+                       element: HTMLElement): void {
+    let cryptEvent = new CustomEvent(action, { detail: { "msg": msg }});
+    console.log(`Sending message '${msg}' for action '${action}'`);
+    element.dispatchEvent(cryptEvent);
 }
 
-function caesarDecrypt(ciphertext: string, shiftAmount: number): string {
-    return caesarEncrypt(ciphertext, -shiftAmount);
-}
-
-let g_key = 0;
-let keyForm = document.getElementById("form:key");
-let keyInput = document.getElementById("input:key") as HTMLInputElement;
-
-keyForm.addEventListener("input", (event) => {
-    g_key = parseInt(keyInput.value);
-    console.log(`New key: ${g_key}`);
+window.addEventListener("load", () => {
+        globalThis.cipher = new CaesarCipher();
+        setupKeyForm();
+        setupTextForm();
 });
 
-let encryptButton = document.getElementById("button:encrypt");
-let decryptButton = document.getElementById("button:decrypt");
+function setupKeyForm(): void {
+    let keyForm = document.getElementById("form:key");
+    let keyInput = document.getElementById("input:key") as HTMLInputElement;
 
-let message = document.getElementById("input:message") as HTMLInputElement;
-let outputArea = document.getElementById("outputArea");
-
-function crypt(
-    name: string, 
-    fn: (msg: string, key: number) => string,
-    msg: string,
-    key: number
-): void {
-    console.log(name);
-    let output = fn(msg, key);
-    console.log(output);
-    outputArea.textContent = output;
+    keyForm.addEventListener("input", () => 
+                             globalThis.cipher.setKey(parseInt(keyInput.value)));
 }
 
-let inputForm = document.getElementById("sec:caesar:input");
-inputForm.addEventListener("submit", (event) => event.preventDefault());
+function setupTextForm(): void {
+    let encryptButton = document.getElementById("button:encrypt");
+    let decryptButton = document.getElementById("button:decrypt");
 
-encryptButton.addEventListener("click", () => crypt("encrypt", caesarEncrypt, 
-                                                    message.value, g_key));
+    let message = document.getElementById("input:message") as HTMLInputElement;
+    let outputArea = document.getElementById("outputArea");
 
-decryptButton.addEventListener("click", () => crypt("decrypt", caesarDecrypt, 
-                                                    message.value, g_key));
+    let inputForm = document.getElementById("sec:caesar:input");
+    inputForm.addEventListener("submit", (event) => event.preventDefault());
 
-let copyButton = document.getElementById("button:copyBack");
-copyButton.addEventListener("click", () => {
-    console.log("Copy output to input");
-    message.value = outputArea.textContent;
-});
+    encryptButton.addEventListener("click", () => 
+                                   requestCrypto("encrypt", message.value, outputArea));
+
+    decryptButton.addEventListener("click", () => 
+                                   requestCrypto("decrypt", message.value, outputArea));
+
+    outputArea.addEventListener("encrypt", (event: CustomEventInit<string>) => {
+        console.log("Encrypt message received");
+        let plaintext = event.detail["msg"];
+        let ciphertext = globalThis.cipher.encrypt(plaintext);
+        outputArea.textContent = ciphertext;
+    });
+    
+    outputArea.addEventListener("decrypt", (event: CustomEventInit<string>) => {
+        console.log("Decrypt message received");
+        let ciphertext = event.detail["msg"];
+        let plaintext = globalThis.cipher.decrypt(ciphertext);
+        outputArea.textContent = plaintext;
+    });
+
+    let copyButton = document.getElementById("button:copyBack");
+    copyButton.addEventListener("click", () => {
+        console.log("Copy output to input");
+        message.value = outputArea.textContent;
+    });
+}
 
