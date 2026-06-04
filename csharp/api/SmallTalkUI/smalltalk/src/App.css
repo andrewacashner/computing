@@ -1,0 +1,6 @@
+div.chatbox {
+  width: 20em;
+  height: 80vh;
+  border: 1px solid black;
+  overflow: scroll;
+}

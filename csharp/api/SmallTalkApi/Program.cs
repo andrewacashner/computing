@@ -2,9 +2,10 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<SmallTalkDb>(opt => 
-        opt.UseInMemoryDatabase("SmallTalk"));
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+// DATABASE
+builder.Services.AddDbContextPool<SmallTalkDb>(opt => 
+        opt.UseSqlite(
+                builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApiDocument(config =>
@@ -16,6 +17,7 @@ builder.Services.AddOpenApiDocument(config =>
 
 var app = builder.Build();
 
+// SWAGGER
 if (app.Environment.IsDevelopment())
 {
     app.UseOpenApi();
@@ -28,6 +30,8 @@ if (app.Environment.IsDevelopment())
             });
 }
 
+int myId = 0;
+
 app.MapGet("/", () => "Hello!");
 
 app.MapGet("/log", async (SmallTalkDb db) =>
@@ -36,8 +40,13 @@ app.MapGet("/log", async (SmallTalkDb db) =>
 app.MapPost("/chat", async (Message message, SmallTalkDb db) =>
         {
         db.Messages.Add(message);
+        int partnerId = message.SenderId; 
+        // TODO really partner should first state a registered ID or request
+        // one; at minimum should assert partnerId != myId
+
         // return Results.Created($"/chat/{message.Id}", message);
-        Message response = new (message.Id + 1, "Nice day, isn't it?");
+        Message response = new (myId, partnerId, DateTimeOffset.Now, 
+                                "Nice day, isn't it?");
         db.Messages.Add(response);
         await db.SaveChangesAsync();
         return response;
