@@ -1,6 +1,50 @@
+body {
+  font-family: sans-serif;
+}
+
 div.chatbox {
   width: 20em;
   height: 80vh;
   border: 1px solid black;
+  padding: 1ex;
+}
+
+div.conversation {
+  display: flex;
+  flex-direction: column;
   overflow: scroll;
+  height: 85%;
+}
+
+div.messageToMe {
+  border: 1px solid black;
+  background-color: lightBlue;
+  border-radius: 1ex 1ex 1ex 0;
+  width: 60%;
+  margin-bottom: 1ex;
+  margin-right: 0;
+  margin-left: auto;
+  text-align: right;
+}
+
+div.messageFromMe {
+  border: 1px solid black;
+  background-color: lightYellow;
+  border-radius: 1ex 1ex 0 1ex;
+  width: 60%;
+  margin-bottom: 1ex;
+}
+
+p.chatText {
+  margin: 5%;
+}
+
+p.chatTime {
+  margin: 5%;
+  font-size: 40%;
+}
+
+form.messageInputForm {
+  border-top: 1px solid black;
+  padding-top: 1em;
 }

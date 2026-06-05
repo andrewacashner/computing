@@ -15,6 +15,18 @@ builder.Services.AddOpenApiDocument(config =>
         config.Version      = "0";
         });
 
+string allowedOrigins = "SmallTalkUI";
+
+builder.Services.AddCors(options =>
+        { 
+        options.AddPolicy(name: allowedOrigins,
+                policy => { 
+                policy.WithOrigins("http://localhost:5173")
+                      .AllowAnyHeader()
+                      .AllowAnyMethod(); 
+                      });
+        });
+
 var app = builder.Build();
 
 // SWAGGER
@@ -30,12 +42,16 @@ if (app.Environment.IsDevelopment())
             });
 }
 
+app.UseCors(allowedOrigins);
+
 int myId = 0;
 
 app.MapGet("/", () => "Hello!");
 
 app.MapGet("/log", async (SmallTalkDb db) =>
         await db.Messages.ToListAsync());
+
+string greeting = "It is a good day to chat.";
 
 app.MapPost("/chat", async (Message message, SmallTalkDb db) =>
         {
@@ -44,12 +60,11 @@ app.MapPost("/chat", async (Message message, SmallTalkDb db) =>
         // TODO really partner should first state a registered ID or request
         // one; at minimum should assert partnerId != myId
 
-        // return Results.Created($"/chat/{message.Id}", message);
-        Message response = new (myId, partnerId, DateTimeOffset.Now, 
-                                "Nice day, isn't it?");
+        Message response = new (myId, partnerId, DateTimeOffset.Now, greeting);
         db.Messages.Add(response);
         await db.SaveChangesAsync();
         return response;
         });
+
 
 app.Run();
