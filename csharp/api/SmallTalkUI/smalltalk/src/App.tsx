@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 
 const backendApi = "http://localhost:5009";
 
-let partnerId = 1; // TODO assign (get from server)
-let myId = 0; // TODO get from server
+// TODO START here: assign random user id and only show that user's messages
+let userId = Math.floor(Math.random() * 1000); // TODO assign (get from server)
+let computerId = 0; // TODO get from server
 
 // TODO make form send message
 function MessageInputForm({ setMessages }) {
@@ -13,6 +14,7 @@ function MessageInputForm({ setMessages }) {
 
     const form = event.target;
     const formData = new FormData(form);
+    event.target.reset();
 
     let response = await fetch(`${backendApi}/chat`, { 
       method: "POST", 
@@ -20,8 +22,8 @@ function MessageInputForm({ setMessages }) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "senderId":     partnerId,
-        "recipientId":  myId,
+        "senderId":     userId,
+        "recipientId":  computerId,
         "time":         new Date().toISOString(),
         "text":         formData.get("text"),
       }),
@@ -56,12 +58,11 @@ function messageDisplay(message: Message) {
   console.log(message);
 
   let messageType;
-  if (message.recipientId == myId) {
-    messageType = "messageToMe";
-  } else if (message.senderId == myId) {
-    messageType = "messageFromMe";
+  if (message.recipientId == computerId) {
+    messageType = "messageToComputer";
+  } else if (message.senderId == computerId) {
+    messageType = "messageFromComputer";
   } // else? TODO should only show messages from one sender
-  // TODO this is backwards somehow
 
   // console.log(messageType);
 
@@ -75,20 +76,31 @@ function messageDisplay(message: Message) {
 
 function chatTimeFormat(timeString) {
   // TODO only show time if date is today
-  return new Date(timeString).toISOString();
+  return new Date(timeString).toLocaleTimeString();
 }
 
 const Conversation = ({ messages }) => {
   console.log(messages);
   return (
     <div className="conversation">
-      {messages.reverse().map(messageDisplay)}
+      <div className="messageScroll">
+        {messages.map(messageDisplay)}
+      </div>
     </div>
   );
 }
 
 async function updateMessages(setMessages): void {
-  let response = await fetch(`${backendApi}/log`);
+  let response = await fetch(`${backendApi}/history`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      "userId":     userId,
+    }),
+  });
+
   console.log(response);
   
   let json = await response.json();

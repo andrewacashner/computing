@@ -2,24 +2,36 @@ body {
   font-family: sans-serif;
 }
 
+h1 {
+  width: 100%;
+  text-align: center;
+}
+
 div.chatbox {
+  margin-left: auto;
+  margin-right: auto;
   width: 20em;
   height: 80vh;
-  border: 1px solid black;
+  border: 2px solid black;
+  background-color: lightGray;
   padding: 1ex;
 }
 
 div.conversation {
-  display: flex;
-  flex-direction: column;
-  overflow: scroll;
   height: 85%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column-reverse;
+
 }
 
-div.messageToMe {
+div.messageScroll {
+}
+
+div.messageToComputer {
   border: 1px solid black;
   background-color: lightBlue;
-  border-radius: 1ex 1ex 1ex 0;
+  border-radius: 2ex 2ex 2ex 0;
   width: 60%;
   margin-bottom: 1ex;
   margin-right: 0;
@@ -27,10 +39,10 @@ div.messageToMe {
   text-align: right;
 }
 
-div.messageFromMe {
+div.messageFromComputer {
   border: 1px solid black;
   background-color: lightYellow;
-  border-radius: 1ex 1ex 0 1ex;
+  border-radius: 2ex 2ex 0 2ex;
   width: 60%;
   margin-bottom: 1ex;
 }
@@ -45,6 +57,19 @@ p.chatTime {
 }
 
 form.messageInputForm {
-  border-top: 1px solid black;
-  padding-top: 1em;
+  border: 1px solid black;
+  padding: 1ex;
+  background-color: skyBlue;
+  height: 3em;
+}
+
+form.messageInputForm input {
+  width: 80%;
+  margin-top: 1ex;
+  margin-right: 0.25ex;
+}
+
+form.messageInputForm label {
+  font-size: 80%;
+  font-style: italic;
 }

@@ -1,5 +1,24 @@
 using Microsoft.EntityFrameworkCore;
 
+List<string> chitchat = new List<string> { 
+    "How about those clouds!",
+    "Do you think the Bills will go all the way this time?",
+    "What's new with you?",
+    "Aren't baby groundhogs cute?",
+    "I hear what you're saying.",
+    "That's just what I was thinking.",
+    "Could be!",
+    "That's so interesting!",
+    "Well with this weather, anything could happen.",
+    "Well, you know what they say...",
+    "You got that right!",
+    "I can't complain!",
+};
+
+const int computerId = 0;
+
+Random randomizer = new();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // DATABASE
@@ -44,23 +63,26 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(allowedOrigins);
 
-int myId = 0;
-
 app.MapGet("/", () => "Hello!");
 
 app.MapGet("/log", async (SmallTalkDb db) =>
         await db.Messages.ToListAsync());
 
-string greeting = "It is a good day to chat.";
+app.MapPost("/history", async (User user, SmallTalkDb db) =>
+        await db.Messages
+                .Where(msg => msg.RecipientId == user.Id
+                              || msg.SenderId == user.Id)
+                .ToListAsync());
 
 app.MapPost("/chat", async (Message message, SmallTalkDb db) =>
         {
         db.Messages.Add(message);
         int partnerId = message.SenderId; 
         // TODO really partner should first state a registered ID or request
-        // one; at minimum should assert partnerId != myId
+        // one; at minimum should assert partnerId != computerId
 
-        Message response = new (myId, partnerId, DateTimeOffset.Now, greeting);
+        string text = chitchat[randomizer.Next(chitchat.Count)];
+        Message response = new (computerId, partnerId, DateTimeOffset.Now, text);
         db.Messages.Add(response);
         await db.SaveChangesAsync();
         return response;
