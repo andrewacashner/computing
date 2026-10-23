@@ -1,5 +1,6 @@
 /* Polish notation calculator 
  * Recursive implementation with function pointers
+ * NB - incomplete: use polish-calc.c instead
  * Andrew Cashner, 2017/03/23
  */
 
