@@ -1,11 +1,12 @@
-﻿namespace Pets;
+﻿using Pets;
 
 class DogHouse 
 {
 
-    static void ReportStatus<T>(List<T> pets)
+    static void ReportStatus<T>(List<T> pets) where T: Creature
     {
-        Console.WriteLine($"\n{string.Join("\n", pets)}\n");
+        List<string> petStatus = [.. pets.Select(pet => pet.HappinessStatus())];
+        Console.WriteLine($"\n{string.Join("\n", petStatus)}\n");
     }
 
     static void Main(string[] args)
@@ -16,7 +17,7 @@ class DogHouse
         Dog Rex = new("Rex", "Dachshund", 3);
         Corgy Norbert = new("Norbert", 1);
 
-        List<Dog> dogs = new List<Dog> { Fido, Rex, Norbert };
+        List<Dog> dogs = [Fido, Rex, Norbert];
         ReportStatus(dogs);
 
         Fido.Pet();
@@ -39,7 +40,7 @@ class DogHouse
 
         Cat Susan = new("Susan", "Domestic shorthair", 6, 10);
         Cat Lucy = new("Lucy", "Domestic shorthair", 6, 100);
-        List<Cat> cats = new List<Cat> { Susan, Lucy };
+        List<Cat> cats = [Susan, Lucy];
 
         ReportStatus(cats);
 
