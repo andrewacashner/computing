@@ -11,14 +11,16 @@ public class HarmonicsApp
         }
 
         string fundamentalStr = args[0];
+        
         try
         {
             int fundamental = Int32.Parse(fundamentalStr);
+            const int NUM_PARTIALS = 6;
 
-            int[] partials = HarmonicSeries.Generate(fundamental, 6);
+            HarmonicSeries series = new(fundamental, NUM_PARTIALS);
 
             string summary = string.Join("\n",
-                [.. partials.Select(
+                [.. series.Partials.Select(
                     (partial, index) => $"{index}: {partial} Hz")]);
             Console.WriteLine(summary);
         }
